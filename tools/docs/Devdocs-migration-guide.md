@@ -48,7 +48,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/modules/tools/server/agent/index.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/agent/index.ts) |
+| **当前 TS 源文件** | [src/modules/tools/server/agent/index.ts](../../src/modules/tools/server/agent/index.ts) |
 | **当前职责** | 分析用户考试答题历史 → 统计各技术标签正确率 → 识别薄弱点（阈值 <60%） → 匹配资源库推荐学习资源 |
 | **为什么迁移到 Python** | • **LLM 接入**：LangChain / LlamaIndex 原生语言，便于未来扩展对话式辅导、RAG 知识库、题目智能解析<br>• **学习分析**：scikit-learn + pandas 可实现 IRT（项目反应理论）、知识追踪（DKT/BKT）、个性化学习路径推荐<br>• **题目分析**：jieba 分词做题目去重、知识点聚类；BERT-Chinese 做题目相似性检测 |
 | **推荐 Python 栈** | FastAPI + Pydantic v2 + SQLAlchemy 2.0 + LangChain + pandas + scikit-learn |
@@ -60,7 +60,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/modules/community/server/forum/moderation.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/community/server/forum/moderation.ts) |
+| **当前 TS 源文件** | [src/modules/community/server/forum/moderation.ts](../../src/modules/community/server/forum/moderation.ts) |
 | **当前职责** | 管理员手动 hide/restore 主题与回复；无自动内容审核 |
 | **为什么迁移到 Python** | • **NLP 生态**：中文文本处理全靠 Python（jieba 分词、snownlp 情感、THULAC、BERT-Chinese 分类）<br>• **敏感词检测**：DFA 敏感词过滤库 + 自定义词库<br>• **图片审核**：OCR（PaddleOCR/Tesseract）+ NSFW 检测模型（OpenNSFW），防止夹带违规图片上传<br>• **用户画像**：历史违规率 + 主题文本特征构建用户风险分 |
 | **推荐 Python 栈** | FastAPI + jieba + snownlp + PaddleOCR + transformers（BERT） |
@@ -75,7 +75,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/shared/utils/mail.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/utils/mail.ts)、[src/modules/notification/server/notification-events.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/notification/server/notification-events.ts) |
+| **当前 TS 源文件** | [src/shared/utils/mail.ts](../../src/shared/utils/mail.ts)、[src/modules/notification/server/notification-events.ts](../../src/modules/notification/server/notification-events.ts) |
 | **当前职责** | nodemailer SMTP 发送注册验证码 / 忘记密码邮件；站内通知基于进程内事件总线 |
 | **为什么迁移到 Python** | • **异步队列**：Celery + Redis 对批量邮件、定时提醒、重试策略的支持远优于 Node<br>• **多渠道扩展**：Python 社区的钉钉/飞书/企业微信/Bark/Server 酱 PushDeer SDK 完整度最高<br>• **模板渲染**：Jinja2 模板做富文本邮件、邮件 inline CSS（premailer 库） |
 | **推荐 Python 栈** | FastAPI + Celery + Redis + Jinja2 + premailer + 飞书/钉钉 SDK |
@@ -86,7 +86,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/shared/utils/image-utils.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/utils/image-utils.ts)（魔数校验）、[src/modules/community/server/forum/uploads.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/community/server/forum/uploads.ts)、[src/modules/tools/server/resource/upload.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/resource/upload.ts) |
+| **当前 TS 源文件** | [src/shared/utils/image-utils.ts](../../src/shared/utils/image-utils.ts)（魔数校验）、[src/modules/community/server/forum/uploads.ts](../../src/modules/community/server/forum/uploads.ts)、[src/modules/tools/server/resource/upload.ts](../../src/modules/tools/server/resource/upload.ts) |
 | **当前职责** | 文件魔数校验（JPEG/PNG/GIF/WebP 前 12 字节）；头像/论坛图/资源上传 |
 | **为什么迁移到 Python** | • **Pillow（PIL）**：压缩、裁剪、缩略图、格式转换（WebP/AVIF）、EXIF 剥离、水印、自适应调色板，一站式解决<br>• **二维码**：`qrcode` 库生成 2FA 二维码、活动签到二维码，与 TOTP secret 生成配合<br>• **头像生成**：未来扩展 Identicon / Dicebear 风格头像生成，Python PIL 实现简单 |
 | **推荐 Python 栈** | FastAPI + Pillow + qrcode + python-multipart |
@@ -96,7 +96,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/modules/events/server/stats.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/events/server/stats.ts)（活动统计）、[src/modules/admin/server/audit.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/admin/server/audit.ts)（审计日志查询） |
+| **当前 TS 源文件** | [src/modules/events/server/stats.ts](../../src/modules/events/server/stats.ts)（活动统计）、[src/modules/admin/server/audit.ts](../../src/modules/admin/server/audit.ts)（审计日志查询） |
 | **当前职责** | 活动报名 / 签到等基础聚合统计；审计日志按条件筛选 |
 | **为什么迁移到 Python** | • **pandas**：多维度交叉分析、时间序列重采样、缺失值填充、同比环比，代码量是 SQL + TS 的 1/5<br>• **可视化**：matplotlib / plotly 生成活动趋势图、用户增长曲线，直接嵌入管理员面板或导出 PDF<br>• **报表导出**：openpyxl 生成 Excel（带格式/图表）、python-docx 生成 Word 报告 |
 | **推荐 Python 栈** | FastAPI + pandas + plotly + openpyxl |
@@ -110,7 +110,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/shared/security/rate-limiter.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/security/rate-limiter.ts) |
+| **当前 TS 源文件** | [src/shared/security/rate-limiter.ts](../../src/shared/security/rate-limiter.ts) |
 | **当前实现** | 进程内 Map 单实例实现；注释已注明「多实例需换 Redis」 |
 | **为什么迁移到 Python** | Redis 限流的 Lua 脚本在 Python `redis-py` 侧写起来非常顺手，**但该模块也可直接在 TS 端换 `ioredis` 实现，非强制 Python** |
 | **推荐 Python 栈** | FastAPI + redis-py + Lua 脚本（滑动窗口 / 令牌桶） |
@@ -120,7 +120,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/modules/tools/server/exam/questions.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/exam/questions.ts) |
+| **当前 TS 源文件** | [src/modules/tools/server/exam/questions.ts](../../src/modules/tools/server/exam/questions.ts) |
 | **当前职责** | CRUD 题目（单选 / 编程题），无批量导入导出 |
 | **为什么迁移到 Python** | `openpyxl` 读 Excel 模板、`python-docx` 解析 Word 题库、图片与公式提取，是 Python 生态最成熟的场景 |
 | **推荐 Python 栈** | FastAPI + openpyxl + python-docx |
@@ -141,7 +141,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | • 会话：[src/modules/auth/server/session.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/auth/server/session.ts)<br>• 身份：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/auth/server/identity.ts)<br>• TOTP 2FA：[src/modules/auth/server/totp.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/auth/server/totp.ts)（自实现 RFC 6238 + AES-256-GCM + HKDF）<br>• OAuth：[src/modules/auth/server/oauth.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/auth/server/oauth.ts)（GitHub OAuth）<br>• 密码：[src/modules/auth/server/password.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/auth/server/password.ts)（自实现 scrypt）<br>• 权限：[src/shared/security/permissions.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/security/permissions.ts) |
+| **当前 TS 源文件** | • 会话：[src/modules/auth/server/session.ts](../../src/modules/auth/server/session.ts)<br>• 身份：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts)<br>• TOTP 2FA：[src/modules/auth/server/totp.ts](../../src/modules/auth/server/totp.ts)（自实现 RFC 6238 + AES-256-GCM + HKDF）<br>• OAuth：[src/modules/auth/server/oauth.ts](../../src/modules/auth/server/oauth.ts)（GitHub OAuth）<br>• 密码：[src/modules/auth/server/password.ts](../../src/modules/auth/server/password.ts)（自实现 scrypt）<br>• 权限：[src/shared/security/permissions.ts](../../src/shared/security/permissions.ts) |
 | **当前职责** | 自实现：scrypt 哈希、HKDF 密钥派生、AES-256-GCM 加密 TOTP secret、RFC 6238 TOTP 算法、Session Token 生成、6 种角色 × 20+ 权限点矩阵 |
 | **为什么迁移到 Java** | • **Spring Security 6**：业界标杆，Session 管理、TOTP（内置 `TOTPTokenGenerator`）、OAuth2 Login、RBAC、Remember-Me、CSRF 防护全部开箱即用<br>• **密码学标准化**：不要再自造 scrypt/HKDF/AES-GCM 轮子 → 用 `Spring Security Crypto` + `BouncyCastle` 标准化实现，减少密码学漏洞风险<br>• **6 角色 RBAC**：`admin / root / content_moderator / exam_admin / task_publisher / user` 正是 `@PreAuthorize("hasRole('ADMIN') and hasPermission(#targetId, 'user', 'edit')")` 的典型用例 |
 | **推荐 Java 栈** | Spring Boot 3 + Spring Security 6 + Spring Session Data Redis + JWT（或 Session Cookie）+ Spring Authorization Server（如果以后要做 OAuth Provider） |
@@ -152,7 +152,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/shared/security/audit.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/security/audit.ts) |
+| **当前 TS 源文件** | [src/shared/security/audit.ts](../../src/shared/security/audit.ts) |
 | **当前职责** | 每个 Service 函数手动调用 `logAdminAction()` 埋点，`maskSensitiveFields()` 脱敏后写 `admin_actions` 表 |
 | **为什么迁移到 Java** | • **Spring AOP**：自定义 `@AuditLog(action = "USER_DISABLE", target = "#userId")` 注解，切面无侵入拦截所有管理后台方法，不用每个函数手动写埋点<br>• **一致性**：统一记录操作人、IP、UA、方法入参、返回值、耗时、异常堆栈，绝不漏埋<br>• **脱敏**：Jackson 自定义序列化或 `@Sensitive` 注解统一处理密码、邮箱等字段 |
 | **推荐 Java 栈** | Spring Boot AOP + 自定义注解 + Jackson 脱敏序列化器 |
@@ -166,7 +166,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | • 角色：[src/modules/admin/server/roles.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/admin/server/roles.ts)<br>• 用户：[src/modules/admin/server/users.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/admin/server/users.ts)<br>• 密码重置：[src/modules/admin/server/password-reset.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/admin/server/password-reset.ts) |
+| **当前 TS 源文件** | • 角色：[src/modules/admin/server/roles.ts](../../src/modules/admin/server/roles.ts)<br>• 用户：[src/modules/admin/server/users.ts](../../src/modules/admin/server/users.ts)<br>• 密码重置：[src/modules/admin/server/password-reset.ts](../../src/modules/admin/server/password-reset.ts) |
 | **当前职责** | 用户/角色/权限的 CRUD、关系维护、条件检索分页、批量操作 |
 | **为什么迁移到 Java** | • **JPA 关系映射**：User ↔ Role ↔ Permission 多对多关系，JPA `@ManyToMany` + `@JoinTable` 天然适合<br>• **Spring Data JPA `Pageable`**：多条件复杂检索 + 分页 + 排序，一行代码解决 |
 | **推荐 Java 栈** | Spring Boot + Spring Data JPA + QueryDSL / Specification（动态条件） + MapStruct（DTO 转换） |
@@ -175,7 +175,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | • 答题记录：[src/modules/tools/server/exam/attempts.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/exam/attempts.ts)<br>• 考试 CRUD：[src/modules/tools/server/exam/crud.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/exam/crud.ts) |
+| **当前 TS 源文件** | • 答题记录：[src/modules/tools/server/exam/attempts.ts](../../src/modules/tools/server/exam/attempts.ts)<br>• 考试 CRUD：[src/modules/tools/server/exam/crud.ts](../../src/modules/tools/server/exam/crud.ts) |
 | **当前职责** | 答题提交（答案写入 + 自动判分）、结束考试（多表更新）、排行榜计算 |
 | **为什么迁移到 Java** | • **强一致事务**：「答案写入 + 分数计算 + 排名更新 + 积分发放」是典型多表原子操作，`@Transactional(isolation = REPEATABLE_READ)` + 乐观锁保证一致性<br>• **并发安全**：考试结束瞬间大量提交，用 Spring 并发编程 + Redis 预计算降低 DB 压力<br>• **未来扩展**：防作弊（IP 去重、切题次数检测、雷同卷余弦相似度）适合用 Java 批处理异步跑 |
 | **推荐 Java 栈** | Spring Boot + Spring Data JPA + Redis（排行榜 ZSet） + Redisson 分布式锁 |
@@ -184,7 +184,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | • 总线：[src/shared/events/event-bus.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/shared/events/event-bus.ts)（进程内发布订阅）<br>• 事件：[src/modules/notification/server/notification-events.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/notification/server/notification-events.ts) |
+| **当前 TS 源文件** | • 总线：[src/shared/events/event-bus.ts](../../src/shared/events/event-bus.ts)（进程内发布订阅）<br>• 事件：[src/modules/notification/server/notification-events.ts](../../src/modules/notification/server/notification-events.ts) |
 | **当前职责** | 进程内 `EventEmitter` 实现事件扇出：`UserRegisteredEvent → 发送邮件 + 发送站内信 + 记录审计 + 发放注册积分` |
 | **为什么迁移到 Java** | • **MQ 标准化**：RabbitMQ / Kafka / RocketMQ 的 Spring 客户端（Spring AMQP / Spring Kafka）最成熟<br>• **可靠性**：消息持久化、ACK 机制、死信队列、延迟队列（到期自动关闭考试）<br>• **解耦**：未来 Python / Java / TS 各服务都能订阅同一事件总线 |
 | **推荐 Java 栈** | Spring Boot + Spring Kafka 或 Spring AMQP（RabbitMQ） + 领域事件（`ApplicationEventPublisher`） |
@@ -197,7 +197,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | • 报名：[src/modules/events/server/registration.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/events/server/registration.ts)<br>• 签到：[src/modules/events/server/checkin.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/events/server/checkin.ts) |
+| **当前 TS 源文件** | • 报名：[src/modules/events/server/registration.ts](../../src/modules/events/server/registration.ts)<br>• 签到：[src/modules/events/server/checkin.ts](../../src/modules/events/server/checkin.ts) |
 | **当前职责** | 活动限额报名、二维码签到核销 |
 | **为什么迁移到 Java** | 高并发签到「超卖防重」是经典场景：Redis 预扣库存 + Redisson 分布式锁 + DB 最终一致性 + MQ 异步落库，Java 方案非常成熟 |
 
@@ -205,7 +205,7 @@
 
 | 项 | 说明 |
 |----|------|
-| **当前 TS 源文件** | [src/modules/tools/server/points.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/Fztbu-CS-WebProject/src/modules/tools/server/points.ts) |
+| **当前 TS 源文件** | [src/modules/tools/server/points.ts](../../src/modules/tools/server/points.ts) |
 | **当前职责** | 按行为事件累计积分，返回用户总积分；排行榜现算 |
 | **为什么迁移到 Java** | • **Spring Batch**：每日跑批刷新日榜 / 周榜 / 月榜，写入 Redis ZSet，Top-N 查询 O(1)<br>• **流式计算**：未来接入 Flink / Kafka Streams 做实时积分窗口 |
 

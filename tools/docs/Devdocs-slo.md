@@ -56,13 +56,13 @@ GET  /api/notifications           — 通知（轮询高频）
 | 预警 | 月消耗 50%–80% | oncall 在月度 review 中标记，分析根因 |
 | 警戒 | 月消耗 80%–100% | 暂停非紧急功能迭代，优先修复可靠性问题 |
 | 超支 | 月消耗 > 100% | 冻结所有非可靠性相关发布，直至下月预算重置 |
-| 考试期紧急 | 考试提交成功率 < 99.9% | 立即介入，按 [runbook 考试失败场景](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-runbook.md) 处置 |
+| 考试期紧急 | 考试提交成功率 < 99.9% | 立即介入，按 [runbook 考试失败场景](Devdocs-runbook.md) 处置 |
 
 ### 2. 预算冻结与解冻
 
 - 冻结条件：月可用性预算超支（> 7.2 小时宕机）或考试期 SLO 违约
 - 冻结范围：所有非 hotfix 发布暂停；hotfix 须经 oncall 批准
-- 解冻条件：下一测量窗口开始 + 根因分析文档完成（写入 [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) ADR）
+- 解冻条件：下一测量窗口开始 + 根因分析文档完成（写入 [Devdocs-roadmap.md](Devdocs-roadmap.md) ADR）
 
 ---
 
@@ -107,6 +107,6 @@ GET  /api/notifications           — 通知（轮询高频）
 
 ## 五、相关文档与 ADR
 
-- [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) — ADR-018（0.9.1 SLO 定义与单实例风险接受）、R18（SLO 未接入外部探针前的降级风险）
-- [Devdocs-runbook.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-runbook.md) — SLO 违约时的运维处置流程
-- [Devdocs-deployment-guide.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-deployment-guide.md) — 部署与回滚（影响可用性）
+- [Devdocs-roadmap.md](Devdocs-roadmap.md) — ADR-018（0.9.1 SLO 定义与单实例风险接受）、R18（SLO 未接入外部探针前的降级风险）
+- [Devdocs-runbook.md](Devdocs-runbook.md) — SLO 违约时的运维处置流程
+- [Devdocs-deployment-guide.md](Devdocs-deployment-guide.md) — 部署与回滚（影响可用性）

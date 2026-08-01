@@ -37,22 +37,22 @@
 ### A01: 访问控制失效
 
 #### 发现 1 - 2FA 相关端点缺少 Origin 校验 🟠高 ✅ 已修复（2026-07-31，ADR-015）
-- 位置：[src/app/api/auth/2fa/verify/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/2fa/verify/route.ts#L15-L69)
+- 位置：[src/app/api/auth/2fa/verify/route.ts](../../src/app/api/auth/2fa/verify/route.ts#L15-L69)
 - 描述：2FA 验证（登录模式）和 2FA 禁用端点未执行 `assertAllowedOrigin()` 校验。登录 API 有 Origin 白名单校验，但 2FA 验证作为登录流程第二步，缺少同等防护。
 - 影响：攻击者可能通过 CSRF 诱使已输入正确密码的用户完成 2FA 验证，劫持登录流程。
 - 修复：verify（setup+login 双模式）/disable/setup/backup-codes 全部补齐 `assertAllowedOrigin(req)`（移至 body 解析前）。
 
 #### 发现 2 - 2FA 设置端点缺少速率限制 🟡中 ✅ 已修复（2026-07-31，ADR-015）
-- 位置：[src/app/api/auth/2fa/setup/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/2fa/setup/route.ts#L15-L34), [src/app/api/auth/2fa/disable/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/2fa/disable/route.ts#L12-L31)
+- 位置：[src/app/api/auth/2fa/setup/route.ts](../../src/app/api/auth/2fa/setup/route.ts#L15-L34), [src/app/api/auth/2fa/disable/route.ts](../../src/app/api/auth/2fa/disable/route.ts#L12-L31)
 - 描述：2FA 设置、禁用、备用码重新生成端点未实施速率限制。攻击者可频繁调用进行资源消耗攻击。
 - 修复：添加 `twoFactorSetupLimiter`（3 次/分钟/IP+用户）。
 
 #### 发现 3 - Admin 路由权限检查一致性良好 ✅
-- 位置：[src/modules/admin/server/require.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/admin/server/require.ts)
+- 位置：[src/modules/admin/server/require.ts](../../src/modules/admin/server/require.ts)
 - 评价：`requireAdmin` / `requireRoot` 每次都从 DB 实时读取 role 和 is_active，不依赖 session 缓存。高危操作有 `requirePasswordConfirmation` 二次确认。权限模型完善（root -> admin -> 细粒度角色）。
 
 #### 发现 4 - 细粒度角色缺少模块级别 enforce 🟡中 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/modules/auth/types/index.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/types/index.ts#L65-L97), [src/modules/admin/server/require.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/admin/server/require.ts#L99-L114)
+- 位置：[src/modules/auth/types/index.ts](../../src/modules/auth/types/index.ts#L65-L97), [src/modules/admin/server/require.ts](../../src/modules/admin/server/require.ts#L99-L114)
 - 描述：`isAdminRole()` 将 `content_moderator` / `exam_admin` / `task_publisher` 全部视为管理员，`hasModulePermission()` 细粒度检查已定义但未在 API 路由层广泛使用。例如 `content_moderator` 可能访问 `exam` 管理接口。
 - 修复：
   1. 扩展 `AdminModule` 类型并实现 `ROLE_MODULE_MAP` 角色-模块映射，`hasModulePermission()` 改为基于此映射校验
@@ -64,7 +64,7 @@
 ### A02: 加密失效
 
 #### 发现 5 - TOTP Secret 加密密钥派生不够健壮 🟡中 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/modules/auth/server/totp.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/totp.ts)
+- 位置：[src/modules/auth/server/totp.ts](../../src/modules/auth/server/totp.ts)
 - 描述：TOTP secret 的加密密钥从 `TOTP_ENCRYPTION_KEY` 或 `AUTH_SESSION_SECRET` 通过 SHA-256 哈希派生。开发环境使用硬编码字符串 `'dev-only-insecure-key-do-not-use-in-production'`，可能导致配置意外泄漏到生产。
 - 修复：
   1. 生产环境强制要求 `TOTP_ENCRYPTION_KEY`，缺失时 `[FATAL]` + `process.exit(1)`
@@ -72,15 +72,15 @@
   3. 开发环境使用 `globalThis` 缓存的随机密钥替代硬编码字符串
 
 #### 发现 6 - 密码哈希实现良好 ✅
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts#L152-L172)
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts#L152-L172)
 - 评价：使用 `scryptSync` + 随机 16 字节 salt，存储格式 `salt:hash`。验证使用 `timingSafeEqual` 防止时序攻击。`authenticateUser` 在用户不存在时执行 dummy scrypt 均衡时序。
 
 #### 发现 7 - Session Token 存储设计良好 ✅
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts#L57-L59)
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts#L57-L59)
 - 评价：DB 存储 token 的 HMAC-SHA256 签名值而非原始 token，即使数据库泄露攻击者也无法直接复用。原始 token 仅存于 cookie。
 
 #### 发现 8 - 生产环境 AUTH_SESSION_SECRET 缺失时仅警告 ✅ 已修复（2026-07-31）
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts#L53-L60)
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts#L53-L60)
 - 描述：生产环境缺少 `AUTH_SESSION_SECRET` 时只输出 `console.warn`，服务仍继续运行，进程级随机密钥在重启后全部 session 失效。
 - 修复：生产环境缺失时 `[FATAL]` + `process.exit(1)` 拒绝启动；开发环境回退到 globalThis 缓存的随机密钥（解决 Next.js dev 模块重载导致密钥不一致问题）。
 
@@ -97,16 +97,16 @@
 ### A04: 不安全的设计
 
 #### 发现 10 - 速率限制为单进程内存实现 🟡中 ✅ 已标注（2026-07-31，第二轮）
-- 位置：[src/shared/security/security.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/security.ts#L248-L296)
+- 位置：[src/shared/security/security.ts](../../src/shared/security/security.ts#L248-L296)
 - 描述：`RateLimiter` 基于内存 Map 实现，单实例部署时正常工作。多进程/多实例部署时限流将失效。
-- 修复：[Devdocs-architecture.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-architecture.md) 明确标注当前为单进程架构，速率限制基于内存 Map；多实例部署前必须迁移至 Redis 等共享存储。当前单实例部署下风险可控。
+- 修复：[Devdocs-architecture.md](Devdocs-architecture.md) 明确标注当前为单进程架构，速率限制基于内存 Map；多实例部署前必须迁移至 Redis 等共享存储。当前单实例部署下风险可控。
 
 #### 发现 11 - 输入校验良好 ✅
-- 位置：[src/shared/security/security.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/security.ts#L61-L80)
+- 位置：[src/shared/security/security.ts](../../src/shared/security/security.ts#L61-L80)
 - 评价：所有 API 入口使用 Zod schema 校验，`validateBody` 组合 Content-Type 校验 + JSON 解析 + 结构校验。密码长度有上限（1024 字节）防 scrypt DoS。
 
 #### 发现 12 - 速率限制覆盖全面 ✅
-- 位置：[src/shared/security/security.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/security.ts#L365-L386)
+- 位置：[src/shared/security/security.ts](../../src/shared/security/security.ts#L365-L386)
 - 评价：覆盖登录、注册、论坛、上传、考试等 18 种场景，支持环境变量动态调整。限流粒度合理（登录按 IP+邮箱，注册按 IP）。
 
 ---
@@ -114,20 +114,20 @@
 ### A05: 安全配置错误
 
 #### 发现 13 - 安全头配置良好，但 CSP 存在 unsafe-inline 🟢低 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[next.config.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/next.config.ts), [src/proxy.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/proxy.ts)
+- 位置：[next.config.ts](../../next.config.ts), [src/proxy.ts](../../src/proxy.ts)
 - 描述：CSP 中 `script-src` 包含 `'unsafe-inline'` 和 `'unsafe-eval'`，削弱了 CSP 对 XSS 的防护能力。
 - 修复：`buildCsp(nonce)` 按环境分流——生产 `script-src 'self' 'nonce-${nonce}'`（移除 unsafe-eval/inline），开发保留 `'unsafe-eval'` 依赖热重载；`style-src` 暂保留 `'unsafe-inline'`（Next.js 内联样式与 Tailwind 注入需要，已添加注释说明）。
 
 #### 发现 14 - 安全头配置总体良好 ✅
-- 位置：[next.config.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/next.config.ts#L27-L90)
+- 位置：[next.config.ts](../../next.config.ts#L27-L90)
 - 评价：HSTS max-age=2年含 includeSubDomains 和 preload，X-Frame-Options DENY，X-Content-Type-Options nosniff，Permissions-Policy 禁用敏感 API。CSP 中 frame-ancestors 'none'、base-uri 'self'、form-action 'self' 配置合理。
 
 #### 发现 15 - 错误响应不泄露内部信息 ✅
-- 位置：[src/shared/security/security.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/security.ts#L145-L162)
+- 位置：[src/shared/security/security.ts](../../src/shared/security/security.ts#L145-L162)
 - 评价：`errorResponse` 对已知错误返回映射后的消息，未知错误返回通用 "请求失败，请稍后再试" 并记录日志。不会向客户端泄露堆栈信息。
 
 #### 发现 16 - 生产环境 ALLOWED_ORIGINS 未配置时回退到 localhost ✅ 已修复（2026-07-31）
-- 位置：[src/shared/config/auth-constants.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/config/auth-constants.ts#L77-L108)
+- 位置：[src/shared/config/auth-constants.ts](../../src/shared/config/auth-constants.ts#L77-L108)
 - 描述：`ALLOWED_ORIGINS` 默认值为 `http://localhost:2333,http://localhost:3000`。生产环境忘记配置时，Origin 校验形同虚设，Login CSRF 防护失效。
 - 修复：`ALLOWED_ORIGINS` 派生逻辑按 `NODE_ENV` 分流——生产环境未配置时 `[FATAL]` + `process.exit(1)` 拒绝启动；开发环境才回退到 localhost + 局域网 IP 白名单。
 
@@ -136,35 +136,35 @@
 ### A06: 脆弱的组件
 
 #### 发现 17 - 依赖版本较新但缺少自动化漏洞扫描 🟡中 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[package.json](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/package.json), [.github/workflows/audit.yml](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/.github/workflows/audit.yml)
+- 位置：[package.json](../../package.json), [.github/workflows/audit.yml](../../.github/workflows/audit.yml)
 - 描述：关键依赖版本较新（next 16.2.12、better-sqlite3 ^12.11.1、react 19.2.8、react-markdown ^10.1.0、rehype-sanitize ^6.0.0、nodemailer ^9.0.3、zod ^4.4.3），但未集成 `npm audit` 或 Dependabot/Snyk 等自动化漏洞扫描。
-- 修复：新增 [.github/workflows/audit.yml](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/.github/workflows/audit.yml)，触发条件：push/PR 改动 `package.json` 或 `pnpm-lock.yaml`、每周一定时、手动触发；执行 `pnpm audit --audit-level=high`，high 及以上漏洞阻断构建。
+- 修复：新增 [.github/workflows/audit.yml](../../.github/workflows/audit.yml)，触发条件：push/PR 改动 `package.json` 或 `pnpm-lock.yaml`、每周一定时、手动触发；执行 `pnpm audit --audit-level=high`，high 及以上漏洞阻断构建。
 
 ---
 
 ### A07: 认证失效
 
 #### 发现 18 - 登录尝试限制良好 ✅
-- 位置：[src/app/api/auth/login/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/login/route.ts#L33-L84)
+- 位置：[src/app/api/auth/login/route.ts](../../src/app/api/auth/login/route.ts#L33-L84)
 - 评价：登录端点安全控制完善：Origin 校验 -> Content-Type 校验 -> Zod schema -> IP+邮箱速率限制（10/min）-> 时序均衡密码验证 -> 2FA 检查。`authenticateUser` 对不存在的用户执行 dummy scrypt 防枚举。
 
 #### 发现 19 - 2FA 登录模式重新验证密码 ✅ 已修复（2026-07-31）
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts#L313-L361)（`create2FAToken`/`verify2FAToken`）
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts#L313-L361)（`create2FAToken`/`verify2FAToken`）
 - 描述：2FA 验证的登录模式要求客户端再次发送 email + password 明文，密码在前端临时存储且通过 HTTP 传输两次。
 - 修复：登录成功但启用 2FA 时，改由 `create2FAToken` 发放 5 分钟有效期的加密签名预认证 token（含 jti 防重放，HMAC 校验），2FA 验证接口只需 token + TOTP 码，不再传输密码；OAuth 流程的 token 改用 `__Host-oauth_2fa` HttpOnly cookie 传递，避免经 URL/Referer/日志泄漏。
 
 #### 发现 20 - 2FA 验证码无速率限制 🟠高 ✅ 已修复（2026-07-31，ADR-015）
-- 位置：[src/app/api/auth/2fa/verify/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/2fa/verify/route.ts#L15-L69)
+- 位置：[src/app/api/auth/2fa/verify/route.ts](../../src/app/api/auth/2fa/verify/route.ts#L15-L69)
 - 描述：2FA 验证端点没有速率限制。攻击者获取到用户的临时凭据后，可在窗口期内暴力尝试 6 位 TOTP 码。
 - 修复：verify（setup+login 双模式）/disable/backup-codes 全部补齐 `twoFactorLimiter.check(${ip}:${userId})`。
 
 #### 发现 21 - Cookie 安全属性 🟢低 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/app/api/auth/login/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/login/route.ts#L76-L82), [src/shared/config/auth-constants.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/config/auth-constants.ts)
+- 位置：[src/app/api/auth/login/route.ts](../../src/app/api/auth/login/route.ts#L76-L82), [src/shared/config/auth-constants.ts](../../src/shared/config/auth-constants.ts)
 - 描述：Cookie 配置 `httpOnly: true`, `sameSite: 'lax'`, `secure` 在生产环境启用，但缺少 `__Host-` 前缀（需 `path=/` 且 `secure` 且不含 `domain`）。
 - 修复：`AUTH_COOKIE_NAME` 按环境分流——生产 `__Host-auth_session`（强制 Secure + Path=/ + 无 Domain），开发因 HTTP 无法满足 `__Host-` 前缀的 Secure 要求，保留无前缀的 `auth_session`。
 
 #### 发现 22 - Session 管理良好 ✅
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts#L258-L370)
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts#L258-L370)
 - 评价：7 天 TTL，过期自动删除，禁用账号的 session 立即失效并清除所有 session。支持用户查看和远程注销其他 session。支持记录登录历史（IP、User-Agent）。
 
 ---
@@ -172,11 +172,11 @@
 ### A08: 软件和数据完整性故障
 
 #### 发现 23 - 文件上传安全良好 ✅
-- 位置：[src/modules/community/server/forum/uploads.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/community/server/forum/uploads.ts#L46-L111)
+- 位置：[src/modules/community/server/forum/uploads.ts](../../src/modules/community/server/forum/uploads.ts#L46-L111)
 - 评价：论坛图片上传多层防护：文件大小校验（≤ 5MB）、MIME 白名单（JPEG/PNG/WebP/GIF）、扩展名白名单、魔数校验、文件名随机化（userId+timestamp+随机后缀）、存储路径限定、读取时路径遍历防护。
 
 #### 发现 24 - 论坛图片读取端点无访问控制 🟡中 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/app/api/community/forum/images/[filename]/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/community/forum/images/[filename]/route.ts)
+- 位置：[src/app/api/community/forum/images/[filename]/route.ts](../../src/app/api/community/forum/images/[filename]/route.ts)
 - 描述：`readForumImage` 函数和 `/api/community/forum/images/[filename]` API 路由没有访问控制——任何知道文件名的用户都可以读取。
 - 修复：API 路由添加 session 校验：从 cookie 提取 `AUTH_COOKIE_NAME`，调用 `getSession(token)` 验证登录态，未登录或会话失效返回 401；`Cache-Control` 从 `public` 改为 `private`，防止公共代理缓存泄漏敏感图片。
 
@@ -185,11 +185,11 @@
 ### A09: 安全日志和监控故障
 
 #### 发现 25 - 审计日志设计良好但缺少失败尝试记录 🟢低
-- 位置：[src/modules/admin/server/audit.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/admin/server/audit.ts)
+- 位置：[src/modules/admin/server/audit.ts](../../src/modules/admin/server/audit.ts)
 - 评价：`logAdminAction` 记录管理员操作，包含操作者 ID、action 类型、目标用户、详情、IP、User-Agent。支持查询和删除。删除操作自我审计。
 
 #### 发现 26 - 登录历史只记录成功登录 🟢低 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/modules/auth/server/identity.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/modules/auth/server/identity.ts), [src/app/api/auth/login/route.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/app/api/auth/login/route.ts), [src/shared/db/migrations.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/db/migrations.ts)
+- 位置：[src/modules/auth/server/identity.ts](../../src/modules/auth/server/identity.ts), [src/app/api/auth/login/route.ts](../../src/app/api/auth/login/route.ts), [src/shared/db/migrations.ts](../../src/shared/db/migrations.ts)
 - 描述：`recordLoginHistory` 只在成功登录时调用，不记录失败登录尝试，不利于检测暴力破解攻击。
 - 修复：
   1. 扩展 `recordLoginHistory` 签名，新增 `success` 与 `attemptedEmail` 参数，支持 `userId=null` 表示用户不存在
@@ -197,9 +197,9 @@
   3. 登录路由在认证失败（用户不存在/密码错误）与账号禁用分支调用 `recordLoginHistory(null, ip, userAgent, false, email.toLowerCase())`，统一返回 401 防邮箱枚举
 
 #### 发现 27 - 错误日志仅用 console.error 🟢低 ✅ 已修复（2026-07-31，第二轮）
-- 位置：[src/shared/logger.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/logger.ts), [package.json](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/package.json)
+- 位置：[src/shared/logger.ts](../../src/shared/logger.ts), [package.json](../../package.json)
 - 描述：错误日志使用 `console.error`，未集成结构化日志系统。
-- 修复：集成 [pino](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/logger.ts) + `pino-pretty`：dev 美化输出，生产 NDJSON；封装 `createRequestLogger(req)` 自动从请求头提取 `x-request-id` 绑定到子 logger。已在 33 个 API 路由/服务端模块替换 `console.error`。
+- 修复：集成 [pino](../../src/shared/logger.ts) + `pino-pretty`：dev 美化输出，生产 NDJSON；封装 `createRequestLogger(req)` 自动从请求头提取 `x-request-id` 绑定到子 logger。已在 33 个 API 路由/服务端模块替换 `console.error`。
 
 ---
 
@@ -215,13 +215,13 @@
 ### CSRF 防护
 
 #### 发现 29 - Login CSRF 防护良好，但 SameSite=Lax 不是银弹 ✅
-- 位置：[src/shared/security/security.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/security.ts#L203-L233)
+- 位置：[src/shared/security/security.ts](../../src/shared/security/security.ts#L203-L233)
 - 评价：所有 POST 端点实施 Origin/Referer 白名单校验，配合 `SameSite=Lax` cookie 双重防护。Origin 匹配使用精确 `new URL().origin` 比较而非前缀匹配，防子域名绕过。2FA 验证端点原缺少此校验，已在发现 1 修复。
 
 ### XSS 防护
 
 #### 发现 30 - Markdown 渲染使用 rehype-sanitize ✅
-- 位置：[package.json](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/package.json#L37-L38)
+- 位置：[package.json](../../package.json#L37-L38)
 - 评价：使用 `react-markdown` + `rehype-sanitize` + `rehype-highlight` 渲染 Markdown。`rehype-sanitize` 默认使用 GitHub 的 HTML 白名单，可有效防止 XSS 通过 Markdown 注入。默认配置已足够严格，无需额外调整。
 
 ---
@@ -459,7 +459,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_root_unique
 
 # Part 3: 事件驱动安全与运行时监测
 
-> 承接 [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) 中 ADR-013 / ADR-014 / R7 / R8 的决策，描述事件总线、2FA 流程加固与运行时安全监测的实施规范。
+> 承接 [Devdocs-roadmap.md](Devdocs-roadmap.md) 中 ADR-013 / ADR-014 / R7 / R8 的决策，描述事件总线、2FA 流程加固与运行时安全监测的实施规范。
 > 状态：已实施（ADR-013 落地，2FA 流程加固与运行时监测已实施）| 最后更新：2026-07-30
 
 ---
@@ -470,7 +470,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_root_unique
 
 背景：`notification/server/index.ts` 原通过模块加载副作用 `_initEvents()` 注册监听器，依赖"该模块被任意路径间接 import"的隐式假设。Next.js 按需加载可能导致某些启动路径未触发该 import，通知静默失效（R7）。
 
-实施（[ADR-013](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md#adr-013-事件监听器显式初始化)，2026-07-29 落地）：
+实施（[ADR-013](Devdocs-roadmap.md#adr-013-事件监听器显式初始化)，2026-07-29 落地）：
 
 1. 显式初始化入口 ✅：`src/instrumentation.ts`（Next.js 启动钩子）显式调用 `initNotificationEvents()`
 2. 幂等保护 ✅：`initNotificationEvents()` 内部维护 `let initialized = false` 标志，重复调用安全
@@ -503,7 +503,7 @@ export async function register() {
 
 背景：`appBus.emit` 同步执行所有监听器。`createNotificationForAll` 大用户量广播与 `reply.created` 大量 @提及会同步阻塞请求，延长 P95（R8）。
 
-决策（[ADR-014](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md#adr-014-事件总线异步化时机)）：
+决策（[ADR-014](Devdocs-roadmap.md#adr-014-事件总线异步化时机)）：
 
 - 当前阶段（活跃用户 ≤ 500）：维持同步 emit，保证事务内一致性语义
 - 触发异步化条件：活跃用户 > 500 或某事件监听器 P95 > 500ms
@@ -627,7 +627,7 @@ function recordLoginHistory(
 
 > ✅ 已实施（2026-07-31，第二轮）——详见发现 27。
 
-集成 `pino` + `pino-pretty`（[src/shared/logger.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/logger.ts)）；dev 美化输出，生产 NDJSON；封装 `createRequestLogger(req)` 自动从请求头提取 `x-request-id` 绑定到子 logger。已在 33 个 API 路由/服务端模块替换 `console.error`。
+集成 `pino` + `pino-pretty`（[src/shared/logger.ts](../../src/shared/logger.ts)）；dev 美化输出，生产 NDJSON；封装 `createRequestLogger(req)` 自动从请求头提取 `x-request-id` 绑定到子 logger。已在 33 个 API 路由/服务端模块替换 `console.error`。
 
 目标格式（JSON Lines）：
 
@@ -651,7 +651,7 @@ function recordLoginHistory(
 
 > ✅ 已实施（2026-07-31，第二轮）——详见发现 17。
 
-新增 [.github/workflows/audit.yml](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/.github/workflows/audit.yml)，触发条件：push/PR 改动 `package.json` 或 `pnpm-lock.yaml`、每周一定时、手动触发；执行 `pnpm audit --audit-level=high`，high 及以上漏洞阻断构建。
+新增 [.github/workflows/audit.yml](../../.github/workflows/audit.yml)，触发条件：push/PR 改动 `package.json` 或 `pnpm-lock.yaml`、每周一定时、手动触发；执行 `pnpm audit --audit-level=high`，high 及以上漏洞阻断构建。
 
 后续加固路径：启用 GitHub Dependabot 自动提 PR 更新依赖；`better-sqlite3` 升级时检查原生二进制安全公告；CI 生成 SBOM（Software Bill of Materials）便于漏洞响应。
 
@@ -680,7 +680,7 @@ function recordLoginHistory(
 
 ## 13. 安全不变量（可测属性）
 
-> 以下不变量需保持可测，防止安全属性退化。对应 [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) 健壮函数 FF5。
+> 以下不变量需保持可测，防止安全属性退化。对应 [Devdocs-roadmap.md](Devdocs-roadmap.md) 健壮函数 FF5。
 
 | ID | 不变属性 | 度量 | 阈值 | 检查方式 |
 |----|---------|------|------|---------|

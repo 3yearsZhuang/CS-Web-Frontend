@@ -171,7 +171,7 @@ import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
 
 ## 五、已知待统一项
 
-[events/[id]/page.tsx](file:///src/app/events/[id]/page.tsx) 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未使用项目封装的 `MarkdownRenderer`，也没有配置 `rehype-sanitize` 安全过滤。后续迭代建议统一替换为 `MarkdownRenderer`。
+[events/[id]/page.tsx](../../src/app/events/[id]/page.tsx) 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未使用项目封装的 `MarkdownRenderer`，也没有配置 `rehype-sanitize` 安全过滤。后续迭代建议统一替换为 `MarkdownRenderer`。
 
 ## 六、新增页面接入指南
 

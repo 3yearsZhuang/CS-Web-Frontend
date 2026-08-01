@@ -108,7 +108,7 @@ SQLite 使用 `?` 占位符，PG 使用 `$1, $2, ...` 占位符。PG Driver 内�
 | 任务 | `task.schema.ts` | tasks / task_claims / points_transactions |
 | 博客 | `blog.schema.ts` | blog_posts / blog_series / blog_likes |
 
-聚合 barrel：[src/shared/db/schema/index.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/db/schema/index.ts)
+聚合 barrel：[src/shared/db/schema/index.ts](../../src/shared/db/schema/index.ts)
 
 ### Schema 设计模式
 
@@ -353,5 +353,5 @@ src/shared/db/
 
 ### 配置
 
-- [drizzle.config.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/drizzle.config.ts) - Drizzle Kit 双引擎配置
-- [src/shared/security/tenant-context.ts](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/src/shared/security/tenant-context.ts) - 多租户上下文（预留）
+- [drizzle.config.ts](../../drizzle.config.ts) - Drizzle Kit 双引擎配置
+- [src/shared/security/tenant-context.ts](../../src/shared/security/tenant-context.ts) - 多租户上下文（预留）

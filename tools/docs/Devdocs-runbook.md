@@ -1,7 +1,7 @@
 # 运维 Runbook
 
 > 文档类型：how-to（操作手册）| 受众：oncall / 站点 owner / 运维人员
-> Source of truth：运维操作手册唯一权威位置；SLO 阈值引用 [Devdocs-slo.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-slo.md)
+> Source of truth：运维操作手册唯一权威位置；SLO 阈值引用 [Devdocs-slo.md](Devdocs-slo.md)
 > 最后验证：2026-07-31 | cadence：每季度演练（restore drill + rollback）+ 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行 | 变更触发：部署架构变更 / 新增故障场景 / SLO 阈值调整
 
@@ -94,7 +94,7 @@ docker compose build app && docker compose up -d app
 
 ### 5. 数据库迁移兼容性矩阵
 
-> 详见 [ADR-009](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) 与 [Devdocs-project-rules.md 防再犯 #5](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-project-rules.md)
+> 详见 [ADR-009](Devdocs-roadmap.md) 与 [Devdocs-project-rules.md 防再犯 #5](Devdocs-project-rules.md)
 
 | 迁移类型 | 可逆性 | 回滚策略 |
 |---------|--------|---------|
@@ -111,7 +111,7 @@ docker compose build app && docker compose up -d app
 - [ ] 登录功能正常（session 表结构兼容）
 - [ ] 核心读路径正常（论坛/活动/考试列表）
 - [ ] pino 日志无 ERROR 级别条目（连续 5 分钟）
-- [ ] 在 [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) 新增 ADR 记录回滚事件
+- [ ] 在 [Devdocs-roadmap.md](Devdocs-roadmap.md) 新增 ADR 记录回滚事件
 
 ---
 
@@ -253,7 +253,7 @@ ls -lh backups/wal/  # 应有新文件生成
 bash tools/scripts/restore-drill.sh
 ```
 
-SLO 影响：备份中断期间，数据丢失风险升高。若中断 > 1 小时，按 [Devdocs-slo.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-slo.md) error budget 消耗规则标记为"警戒"。
+SLO 影响：备份中断期间，数据丢失风险升高。若中断 > 1 小时，按 [Devdocs-slo.md](Devdocs-slo.md) error budget 消耗规则标记为"警戒"。
 
 ---
 
@@ -342,7 +342,7 @@ bash tools/scripts/restore-drill.sh
 # 通过全站公告发布（admin 后台 -> 创建公告）
 ```
 
-SLO 违约后：按 [Devdocs-slo.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-slo.md) 二·1 规则，立即介入 + 根因分析写入 ADR。
+SLO 违约后：按 [Devdocs-slo.md](Devdocs-slo.md) 二·1 规则，立即介入 + 根因分析写入 ADR。
 
 ---
 
@@ -433,7 +433,7 @@ bash tools/scripts/restore-drill.sh
 
 ## 五、相关文档
 
-- [Devdocs-slo.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-slo.md) - SLO 阈值与 error budget 消耗规则
-- [Devdocs-deployment-guide.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-deployment-guide.md) - 部署配置与环境变量
-- [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) - ADR 记录（回滚事件需新增 ADR）
-- [Devdocs-project-rules.md 防再犯清单](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-project-rules.md) - 迁移幂等性与事务安全
+- [Devdocs-slo.md](Devdocs-slo.md) - SLO 阈值与 error budget 消耗规则
+- [Devdocs-deployment-guide.md](Devdocs-deployment-guide.md) - 部署配置与环境变量
+- [Devdocs-roadmap.md](Devdocs-roadmap.md) - ADR 记录（回滚事件需新增 ADR）
+- [Devdocs-project-rules.md 防再犯清单](Devdocs-project-rules.md) - 迁移幂等性与事务安全

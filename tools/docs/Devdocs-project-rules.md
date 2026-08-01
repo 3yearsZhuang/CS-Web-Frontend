@@ -44,7 +44,7 @@
 
 ## 三、模块化开发规范
 
-> 详见 [Devdocs-architecture.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-architecture.md)，以下仅列出关键约束。
+> 详见 [Devdocs-architecture.md](Devdocs-architecture.md)，以下仅列出关键约束。
 
 ### 1. 模块结构
 
@@ -102,7 +102,7 @@ appBus.on('topic.created', (payload) => {
 
 ### 5. 依赖矩阵维护
 
-新增模块或修改模块依赖时，必须同步更新 [Devdocs-architecture.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-architecture.md) 的「2.3 直接导入依赖矩阵」。该矩阵是架构不变量 FF1（依赖方向单向）的检查依据。
+新增模块或修改模块依赖时，必须同步更新 [Devdocs-architecture.md](Devdocs-architecture.md) 的「2.3 直接导入依赖矩阵」。该矩阵是架构不变量 FF1（依赖方向单向）的检查依据。
 
 ---
 
@@ -120,7 +120,7 @@ appBus.on('topic.created', (payload) => {
 
 ### 2. ADR 格式
 
-所有 ADR 记录在 [Devdocs-roadmap.md](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md) 的「五、架构决策记录」章节，格式：
+所有 ADR 记录在 [Devdocs-roadmap.md](Devdocs-roadmap.md) 的「五、架构决策记录」章节，格式：
 
 ```markdown
 ### ADR-XXX: <决策标题>
@@ -140,7 +140,7 @@ appBus.on('topic.created', (payload) => {
 当某个文档需要引用 ADR 时，使用锚点链接：
 
 ```markdown
-对应 [ADR-013](file:///Users/3yearszhuang/Documents/Zhuang's_Projects/fztbucs-projects/tools/docs/Devdocs-roadmap.md#adr-013-事件监听器显式初始化)
+对应 [ADR-013](Devdocs-roadmap.md#adr-013-事件监听器显式初始化)
 ```
 
 锚点规则：GitHub 风格锚点 = 标题转小写 + 空格转连字符 + 移除标点。中文保留。
@@ -166,11 +166,10 @@ appBus.on('topic.created', (payload) => {
 
 | 文档 | Diátaxis 象限 | 职责 | 更新触发 | Stale 信号 |
 |------|------|------|---------|---------|
-| `Devdocs-architecture.md` | reference | 项目结构、模块化分析、代码质量、依赖矩阵 | 目录结构调整、新增模块、依赖矩阵变更 | 矩阵与实际 import 不一致 |
+| `Devdocs-architecture.md` | reference | 项目结构、模块化分析、代码质量、依赖矩阵、API 端点/鉴权/速率限制/状态码（Part B） | 目录结构调整、新增模块、依赖矩阵变更、新增/修改 API、安全措施变更 | 矩阵与实际 import 不一致；端点签名与路由 handler 不一致 |
 | `Devdocs-roadmap.md` | explanation + operational | 路线图、ADR、风险登记、健壮函数、里程碑 | 架构决策、风险识别、里程碑推进 | ADR 状态与实施记录不一致；R 项等级未随修复更新 |
 | `Devdocs-security.md` | reference | 安全审计、角色权限、事件驱动安全、运行时监测 | 安全发现、2FA/权限变更、ADR-013/014 推进 | 发现项状态与代码现状不一致 |
 | `Devdocs-project-rules.md` | reference + explanation | 项目规则、模块协作规范、ADR 引用规则、防再犯清单 | 新增禁止事项、协作流程变更、新增 ADR | ADR 编号与 roadmap 最新不一致；禁止事项与实际依赖冲突 |
-| `Devdocs-api-reference.md` | reference | API 端点、鉴权、速率限制、状态码 | 新增/修改 API、安全措施变更 | 端点签名与路由 handler 不一致 |
 | `Devdocs-design-spec.md` | reference | 设计规范、视觉交互 | 新增页面/组件、视觉变更 | 组件清单与实际文件不一致 |
 | `Devdocs-deployment-guide.md` | how-to | 部署配置、环境变量 | 部署流程变更、新增环境变量 | 环境变量表与 `.env.example` 不一致 |
 | `Devdocs-onboarding-guide.md` | tutorial | 新人上手指南 | 开发环境变更、启动流程变更 | 启动命令与 package.json scripts 不一致 |
@@ -187,7 +186,7 @@ appBus.on('topic.created', (payload) => {
 | 风险登记 | `Devdocs-roadmap.md` R 表 |
 | 模块依赖矩阵 | `Devdocs-architecture.md` 2.3 节 |
 | 安全发现 | `Devdocs-security.md` |
-| API 契约 | `Devdocs-api-reference.md` |
+| API 契约 | `Devdocs-architecture.md` Part B（原 Devdocs-api-reference.md 已合并） |
 | 环境变量 | `Devdocs-deployment-guide.md`（权威）+ `README.md`（摘要） |
 
 重复处理：发现重复时，非权威位置必须删除内容并改为锚点引用；禁止两处同时维护同一信息。重复维护必然产生漂移。
@@ -197,8 +196,8 @@ appBus.on('topic.created', (payload) => {
 完成代码修改后，逐项确认（作为 PR 自检模板）：
 
 - [ ] `pnpm run ts-check` 通过（类型检查）
-- [ ] 如调整目录结构 -> 更新 `Devdocs-architecture.md`
-- [ ] 如新增/修改 API -> 更新 `Devdocs-api-reference.md`
+- [ ] 如调整目录结构 -> 更新 `Devdocs-architecture.md` Part A
+- [ ] 如新增/修改 API -> 更新 `Devdocs-architecture.md` Part B
 - [ ] 如新增/修改管理员权限 -> 更新 `Devdocs-security.md` Part 2
 - [ ] 如做出架构决策 -> 在 `Devdocs-roadmap.md` 新增 ADR
 - [ ] 如新增禁止事项 -> 更新本文档
