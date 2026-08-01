@@ -3,7 +3,7 @@
  *
  * 包含用户、会话、登录历史表的建表与增量列迁移。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中用户模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中用户模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

@@ -402,7 +402,7 @@ RTO：≤ 10 分钟（从决策到服务恢复）。
 ### 4. 方案 B：不可回滚（含不可逆迁移，必须 hotfix）
 
 ```bash
-git diff v0.9.0..HEAD -- src/shared/db/schema.ts   # 评估 hotfix 范围
+git diff v0.9.0..HEAD -- src/shared/db/sqlite-init.ts   # 评估 hotfix 范围
 git checkout -b hotfix/critical-issue-<date>
 pnpm ts-check && pnpm test -- --run
 docker compose build app && docker compose up -d app   # 跳过 CI 等待

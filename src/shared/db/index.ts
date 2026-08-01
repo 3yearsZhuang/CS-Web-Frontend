@@ -15,10 +15,10 @@ export {
   initBlogSchema,
   initNotificationSchema,
   initSystemSchema,
-} from './schemas/index';
-export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './seeds';
+} from './sqlite/index';
+export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './seeds/seeds';
 export { cleanupExpiredData } from './cleanup';
 export { runMigrations, getAppliedMigrations } from './migrations';
-export { COMPONENT_SEEDS } from './component-seeds';
-export type { ComponentSeed } from './component-seeds';
-export { SEED_EVENT_PLANS, SEED_EVENT_ARCHIVES } from './seed-events-data';
+export { COMPONENT_SEEDS } from './seeds/component-seeds';
+export type { ComponentSeed } from './seeds/component-seeds';
+export { SEED_EVENT_PLANS, SEED_EVENT_ARCHIVES } from './seeds/seed-events-data';

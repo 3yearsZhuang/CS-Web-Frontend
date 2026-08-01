@@ -3,7 +3,7 @@
  *
  * 包含博客文章、系列、点赞表。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中博客模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中博客模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

@@ -9,12 +9,12 @@ import path from 'node:path';
 import fs from 'node:fs';
 import 'server-only';
 import { runMigrations } from './db/migrations';
-import { initSchema } from './db/schema';
+import { initSchema } from './db/sqlite-init';
 
 // re-export 子模块公开 API，保持 `import { ... } from '@/shared/db'` 不变
 export { cleanupExpiredData } from './db/cleanup';
-export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './db/seeds';
-export { initSchema } from './db/schema';
+export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './db/seeds/seeds';
+export { initSchema } from './db/sqlite-init';
 
 /** SQLite 数据库实例类型 */
 export type DB = Database.Database;

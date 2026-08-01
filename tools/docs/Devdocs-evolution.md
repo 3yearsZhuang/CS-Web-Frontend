@@ -152,11 +152,14 @@
 
 ### ADR-009：Repository 抽象层
 
-- **状态**：已实施（2026-07-30）
+- **状态**：部分实施（模板已落地，2026-07-30）
 - **背景**：服务层直接持 `better-sqlite3` 实例，换库成本高、单测难 mock
 - **决策**：在 `db.ts` 上抽象 `Repository` 接口，服务层通过 Repository 访问数据，不感知底层 DB
 - **后果**：换库只需替换 Repository 实现；为 [Part B](#part-b-postgresql-迁移) Phase 4 双引擎切换铺路；单测可 mock Repository
-- **实施**：写入路径全部经 Repository（只读查询仍直连 `db`）；`src/shared/db/repository.ts` 导出 `getRepositories()` 工厂
+- **实施**：
+  - `DbEngine` 抽象（`src/shared/db/drivers/`，sqlite/pg 双驱动）已落地，`audit.repo.ts` 是首个迁移到该抽象的模板（经 `getDbEngine()` 访问）
+  - **当前仅 `audit` 模块使用 Repository 抽象**；其余 ~50 个 server 文件仍直连 `getDb()`（legacy SQLite 路径），未迁移
+  - ⚠️ 文档早期表述的 `src/shared/db/repository.ts` 导出 `getRepositories()` 工厂 **尚未实现**——该文件不存在，仅 `src/shared/db/repositories/audit.repo.ts` 落地。请勿在代码中引用 `getRepositories()`
 
 ### ADR-010：客户端/服务端边界澄清
 
@@ -290,9 +293,9 @@
                  │  │(exam/...)│  │ (audit/ops)      │  │
                  │  └──────────┘  └──────────────────┘  │
                  └──────────────────────┬──────────────┘
-                                        │ Repository
+                                        │ DbEngine / getDb()
                                  ┌──────┴──────┐
-                                 │   SQLite    │ (→ PostgreSQL, see Part B)
+                                 │   SQLite    │ (→ PostgreSQL, see Part B；仅 audit 经 Repository 抽象)
                                  └─────────────┘
 ```
 
@@ -304,7 +307,7 @@
 |---------|--------|---------|------|
 | 通知 | community/events/tools | notification | 发布 `*.created` 事件 |
 | 权限 | 所有模块 | auth | 调用 `requirePermission` |
-| 数据 | 所有 server | db（Repository） | 经 Repository 访问 |
+| 数据 | 所有 server | db（`getDb()` / `DbEngine`） | 当前仅 `audit` 经 Repository 抽象；其余直连 `getDb()`（见 ADR-009） |
 | 审核 | resource/blog/task | shared/workflow | 状态机复用 |
 | 配置 | 所有 | shared/config | 读取 env 常量 |
 
@@ -327,7 +330,7 @@
   → Next.js Route Handler
   → requireAuth/requirePermission
   → Service（业务规则）
-  → Repository（ADR-009）
+  → DbEngine / getDb()（仅 audit 经 Repository，ADR-009）
   → SQLite（WAL）
   → 响应（结构化日志 + requestId）
 事件分支：
@@ -356,7 +359,7 @@
 
 # Part B: PostgreSQL 迁移
 
-> 最后更新：2026-07-31（Phase 0 + Phase 1 完成；dialect 切换、db 单例、Repository 工厂、迁移系统改造均落地；CI 集成 pending）
+> 最后更新：2026-07-31（Phase 0 + Phase 1 完成；dialect 切换、db 单例、迁移系统改造均落地；**Repository 工厂未落地，仅 audit 模块经 DbEngine 抽象**，详见 ADR-009；CI 集成 pending）
 > 验证 cadence：每个 Phase 完成时 | Stale 信号：Phase 清单与代码目录不一致 / 待办项状态未更新
 > 关联：[Part A](#part-a-迭代路线图) ADR-002/005/009（数据库演进决策）；[Part C](#part-c-多语言微服务迁移) 共享 PG 通信契约；[Devdocs-Sec.md](Devdocs-Sec.md) 密钥管理
 
@@ -420,8 +423,8 @@
 
 | 项 | 状态 | 说明 |
 |----|------|------|
-| 实现 `PostgresRepository` 全套（对应 SQLite 版） | ⬜ | 复用 ADR-009 接口 |
-| 双 Repository 共存，按 dialect 返回 | ⬜ | `getRepositories()` 分支 |
+| 实现 `PostgresRepository` 全套（对应 SQLite 版） | ⬜ | 复用 ADR-009 `DbEngine` 接口（当前仅 `audit.repo` 落地，需先补 `getRepositories()` 工厂） |
+| 双 Repository 共存，按 dialect 返回 | ⬜ | `getRepositories()` 分支（待工厂实现后）|
 | 单元测试双 dialect 覆盖 | ⬜ | vitest 注入 `DATABASE_DIALECT=mock-pg` 或用 `pg-mem` |
 | 集成测试 PG 真实连接 | ⬜ | CI 起 PG 容器 |
 
@@ -466,10 +469,11 @@
 |------|------|
 | `src/shared/db/db.ts` | db 单例，按 dialect 初始化 |
 | `src/shared/db/drizzle.ts` | 双 dialect Drizzle 实例 |
-| `src/shared/db/repository.ts` | `getRepositories()` 工厂（ADR-009）|
+| `src/shared/db/repositories/audit.repo.ts` | 首个 DbEngine 抽象 Repository 模板（ADR-009；`getRepositories()` 工厂尚未实现）|
 | `src/shared/db/migrations.ts` | 双 dialect 迁移执行 |
 | `drizzle.config.ts` | Drizzle 配置（dialect 切换）|
-| `src/shared/db/schema/` | 各模块 schema 定义 |
+| `src/shared/db/drizzle/` | 各模块 Drizzle/PG schema 定义（getXxxSchema 工厂） |
+| `src/shared/db/sqlite/` | 各模块 SQLite 建表脚本（initXxxSchema） |
 
 ---
 
@@ -721,7 +725,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | db 单例（`db.ts`）按 dialect 返回 | ✅ | `src/shared/db/db.ts` 启动时初始化，根据 `DATABASE_DIALECT` 选择连接 |
-| Repository 工厂（`getRepositories()`） | ✅ | 返回对应 dialect 的 Repository 实现（ADR-009 落地） |
+| Repository 工厂（`getRepositories()`） | ⬜ | **未落地**：`repository.ts` 不存在，仅 `repositories/audit.repo.ts` 经 `DbEngine` 抽象实现；其余模块仍直连 `getDb()`（详见 ADR-009） |
 | 迁移系统改造（双 dialect 迁移） | ✅ | `src/shared/db/migrations.ts` 支持按 dialect 执行对应迁移文件 |
 | schema 定义双 dialect 兼容 | ✅ | Drizzle schema 用通用类型，避免 SQLite 专属语法 |
 

@@ -4,7 +4,7 @@
  * 包含论坛版块、主题、回复、点赞、收藏、浏览记录、@提及表，以及 FTS5 全文搜索
  * 虚拟表与同步触发器。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中论坛模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中论坛模块部分。
  * 设计参见 docs/forum-plan.md
  */
 import type { Database as DB } from 'better-sqlite3';

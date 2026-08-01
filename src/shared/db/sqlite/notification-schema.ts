@@ -3,7 +3,7 @@
  *
  * 包含站内通知与全站公告表。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中通知模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中通知模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

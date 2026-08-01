@@ -8,7 +8,7 @@
 import type { Database as DB } from 'better-sqlite3';
 import { logger } from '@/shared/logger';
 import { BUILTIN_ROLES, isRootOnlyPermission } from '@/shared/security/permissions';
-import { COMPONENT_SEEDS } from '@/shared/db/component-seeds';
+import { COMPONENT_SEEDS } from '@/shared/db/seeds/component-seeds';
 
 /** 迁移定义 */
 interface Migration {

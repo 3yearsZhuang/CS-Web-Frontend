@@ -181,8 +181,8 @@ pnpm e2e              # Playwright E2E 测试
 | 管理后台-公告 | — | `modules/announcement/server/index.ts` | `app/api/admin/announcements/*/route.ts` |
 | 管理后台-审计日志 | — | `modules/admin/server/audit.ts` | `app/api/admin/actions/route.ts` |
 | 管理后台-密码重置审批 | — | `modules/admin/server/password-reset.ts` | `app/api/admin/password-resets/*/route.ts` |
-| 数据库 Schema | — | `shared/db/schema.ts`（所有 CREATE TABLE + 迁移） | — |
-| 种子数据 | — | `shared/db/seeds.ts`、`seed-events-data.ts` | — |
+| 数据库 Schema | — | `shared/db/sqlite-init.ts`（CREATE TABLE 编排入口）、`shared/db/sqlite/*`（各模块建表）、`shared/db/drizzle/*`（Drizzle/PG schema） | — |
+| 种子数据 | — | `shared/db/seeds/`（seeds.ts / seed-events-data.ts / component-seeds.ts） | — |
 | 邮件发送 | — | `shared/utils/mail.ts` | — |
 | 安全头/CSRF | — | `shared/security/security.ts` | — |
 | 共享类型/权限 | — | `shared/security/permissions.ts`、`schemas.ts`、`utils/tech-tags.ts` | — |

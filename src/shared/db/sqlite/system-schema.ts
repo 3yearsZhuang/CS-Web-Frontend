@@ -4,7 +4,7 @@
  * 包含管理员审计日志、验证码、密码重置申请、组件注册表、系统设置、学习资源、
  * 入社申请表，以及 admin_actions 表的审计完整性迁移。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中系统模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中系统模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

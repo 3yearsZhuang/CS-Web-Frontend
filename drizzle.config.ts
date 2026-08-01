@@ -10,7 +10,7 @@
  *
  * 前置条件：
  * - 已安装 drizzle-orm、drizzle-kit、better-sqlite3、postgres
- * - schema 文件位于 src/shared/db/schema/*.ts
+ * - schema 文件位于 src/shared/db/drizzle/*.ts
  *
  * 用法：
  *   pnpm drizzle-kit generate      生成迁移 SQL
@@ -25,7 +25,7 @@ const provider = process.env.DATABASE_PROVIDER ?? 'sqlite';
 export default defineConfig(
   provider === 'pg'
     ? {
-        schema: './src/shared/db/schema/*.ts',
+        schema: './src/shared/db/drizzle/*.ts',
         out: './drizzle/pg',
         dialect: 'postgresql',
         dbCredentials: {
@@ -35,7 +35,7 @@ export default defineConfig(
         verbose: true,
       }
     : {
-        schema: './src/shared/db/schema/*.ts',
+        schema: './src/shared/db/drizzle/*.ts',
         out: './drizzle/sqlite',
         dialect: 'sqlite',
         dbCredentials: {

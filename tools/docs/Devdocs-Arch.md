@@ -66,7 +66,7 @@ shared/
 ├── app-error.ts          # 应用错误基类 + assertOwnership
 ├── logger.ts             # pino 结构化日志（Q4，dev pino-pretty / 生产 NDJSON）
 ├── server-only.ts        # server-only 本地空实现（M11，自定义 dev server 兼容）
-├── db/                   # drivers/（sqlite/pg）repositories/（audit.repo）schema/（Drizzle）schemas/（手写 DDL）schema.ts seeds.ts cleanup.ts
+├── db/                   # drivers/（DbEngine 抽象）repositories/（audit.repo 模板）drizzle/（Drizzle/PG schema）sqlite/（手写 DDL）sqlite-init.ts（CREATE TABLE 编排入口）seeds/（种子数据）cleanup.ts（数据清理）
 ├── events/               # event-bus.ts（进程内总线）+ event-types.ts
 ├── config/               # avatar-presets / admin-avatars / header-images / auth-constants
 ├── hooks/                # 客户端 hooks（全 'use client'，M11）：use-auth / use-collapsing-hero / use-debounce / use-focus-trap / use-topic-detail / use-topic-actions(Q1) / use-reply-actions(Q1)

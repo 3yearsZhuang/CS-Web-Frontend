@@ -3,7 +3,7 @@
  *
  * 包含考试、题目、选项、答题记录表。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中考试模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中考试模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

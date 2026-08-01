@@ -3,7 +3,7 @@
  *
  * 包含活动、活动报名、活动签到、活动参与记录表，以及 events 表的废弃列清理迁移。
  *
- * 拆分自 src/shared/db/schema.ts 的 initSchema 中活动模块部分。
+ * 拆分自 src/shared/db/sqlite-init.ts 的 initSchema 中活动模块部分。
  */
 import type { Database as DB } from 'better-sqlite3';
 

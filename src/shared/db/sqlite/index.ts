@@ -4,7 +4,7 @@
  * 集中导出各业务模块 schema 初始化函数，由 initSchema 统一编排。server-only（依赖 better-sqlite3）。
  */
 import type { Database as DB } from 'better-sqlite3';
-import { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from '../seeds';
+import { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from '../seeds/seeds';
 import { cleanupExpiredData } from '../cleanup';
 
 export { initUserSchema } from './user-schema';
