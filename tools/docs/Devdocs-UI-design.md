@@ -1,7 +1,23 @@
-# 设计规范 - 编辑式技术极简
+# FZTBUCS-UI-设计规范（编辑式技术极简）
 
-> 本文合并自 `sidebar-design.md` + `ui-guidelines.md`，是前端开发的唯一视觉与交互依据。所有新页面、组件、改动都必须遵循以下规范。
-> 最后更新：2026-08-01（同步组件目录重构 + 修复 community 路径重复）| 维护人：@3yearszhuang
+> 文档定位：前端视觉与交互设计规范（reference）
+> 受众：前端开发者 / UI 评审 / 设计者
+> Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
+> 关联：组件清单见 [Devdocs-Arch.md](Devdocs-Arch.md)；新页面接入见 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md)
+> 最后更新：2026-08-01（同步组件目录重构 + 修复 community 路径重复）
+> 维护人：@3yearszhuang
+> 变更触发：新增页面 / 组件 / 视觉变更
+> Stale 信号：组件清单与实际文件不一致 / Checklist 与实际组件不符
+
+## 文档结构
+
+- **§0 设计哲学** — 三条不可妥协原则
+- **§1–3** 颜色 / 字体 / 布局系统
+- **§4** 悬浮折叠胶囊（Floating Capsule Sidebar）
+- **§5–7** 组件规范 / 动效系统 / 视觉装饰
+- **§8–10** 移动端适配 / 交互规范 / 代码规范
+- **§11–12** 禁止清单 / 新增页面 Checklist
+- **§13 / 附录 A** 参考文件 / 侧边栏备选方案（未采用）
 
 ---
 
@@ -496,7 +512,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/components/layout/navbar.tsx` | 全局导航 |
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
-| `tools/docs/Devdocs-design-spec.md` | 本文档 - 完整设计规范 |
+| `tools/docs/Devdocs-UI-design.md` | 本文档 - 完整设计规范 |
 
 ---
 

@@ -3,7 +3,7 @@
 > 最后更新：2026-08-01（合并 deployment-guide + SLO + runbook）｜类型：reference + how-to
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：运维操作、SLO 阈值、回滚流程的唯一权威位置
-> 关联：架构与 API 见 [Devdocs-Arch.md](Devdocs-Arch.md)；安全见 [Devdocs-Sec.md](Devdocs-Sec.md)；演进与 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)；工程规则见 [Devdocs-project-rules.md](Devdocs-project-rules.md)
+> 关联：架构与 API 见 [Devdocs-Arch.md](Devdocs-Arch.md)；安全见 [Devdocs-Sec.md](Devdocs-Sec.md)；演进与 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)；工程规则见 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md)
 > 变更触发：部署架构变更 / SLO 阈值调整 / 新增故障场景 / 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行
 
@@ -411,7 +411,7 @@ docker compose build app && docker compose up -d app   # 跳过 CI 等待
 
 ### 5. 迁移兼容性矩阵
 
-> 详见 [ADR-009](Devdocs-evolution.md) 与 [Devdocs-project-rules.md 防再犯 #5](Devdocs-project-rules.md)
+> 详见 [ADR-009](Devdocs-evolution.md) 与 [Devdocs-onboarding-guide.md 防再犯 #5](Devdocs-onboarding-guide.md#85-文档维护流程how-to)
 
 | 迁移类型 | 可逆性 | 回滚策略 |
 |---------|--------|---------|
@@ -594,7 +594,7 @@ bash tools/scripts/restore-drill.sh
 
 - 本文档 Part B — SLO 阈值与 error budget 规则｜Part A — 部署配置与环境变量
 - [Devdocs-evolution.md](Devdocs-evolution.md) — ADR 记录（回滚事件需新增 ADR）
-- [Devdocs-project-rules.md](Devdocs-project-rules.md) — 防再犯清单（迁移幂等性与事务安全）
+- [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md#88-反复出现的错误与防再犯清单explanation) — 防再犯清单（迁移幂等性与事务安全）
 
 ---
 

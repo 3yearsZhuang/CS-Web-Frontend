@@ -41,7 +41,7 @@
 - 高危操作二次确认（密码二次确认守卫）
 - 依赖漏洞扫描命令可用（`pnpm audit` 可执行，CI 集成见 Q4）
 - 2FA 预认证 token 防重放（消除密码二次传输，ADR-015）
-- TOTP 密钥 HKDF-SHA256 派生（替换硬编码/SHA-256，生产强制 `TOTP_ENCRYPTION_KEY`）
+- TOTP 密钥 HKDF-SHA256 派生（由 `AUTH_SESSION_SECRET` 派生，替换硬编码/SHA-256，无需独立加密变量）
 - Cookie `__Host-` 前缀（生产 `__Host-auth_session`，防 cookie 注入）
 - 论坛图片读取端点 session 访问控制（未登录返回 401）
 - 安全审计日志增强
@@ -55,8 +55,8 @@
 - 请求 ID 注入（server.ts + proxy.ts，Q6）
 - 错误率监控告警（error-rate-monitor，1.0 SLO 告警）
 - 可选 Sentry 接入（SENTRY_DSN 环境变量驱动，动态 import）
-- SLO 定义与 error budget 管理（Devdocs-slo.md）
-- 运维 runbook（Devdocs-runbook.md）
+- SLO 定义与 error budget 管理（现合并于 Devdocs-Ops.md Part B）
+- 运维 runbook（现合并于 Devdocs-Ops.md Part C）
 - Litestream restore drill 脚本（tools/scripts/restore-drill.sh）
 - k6 负载测试脚本（tools/tests/load/k6-load-test.js）
 - CI 集成 build 验证 + 依赖审计（pnpm audit --prod）
@@ -88,7 +88,7 @@
 - `security.test.ts` 迁移：`shared/`→`tools/tests/`
 - 未使用 import 清理：`resource/index.ts` 移除冗余 `TECH_TAGS`
 - Q1 TopicDetail 拆分：主组件 < 200 行，拆出 `TopicHero`/`TopicContent`/`TopicReplySection` + `useTopicActions`/`useReplyActions`
-- 生产启动强制校验：`AUTH_SESSION_SECRET`/`ALLOWED_ORIGINS`/`TOTP_ENCRYPTION_KEY` 缺失即 `process.exit(1)` 拒绝启动
+- 生产启动强制校验：`AUTH_SESSION_SECRET`/`ALLOWED_ORIGINS` 缺失即 `process.exit(1)` 拒绝启动（2FA TOTP 密钥由 `AUTH_SESSION_SECRET` 经 HKDF-SHA256 派生，无需独立变量）
 - 模块级权限守卫 `requireModuleAdmin(req, module)` 落地（forum/exam/task 共 19 路由）
 
 ### Fixed
@@ -108,9 +108,8 @@
 - Cloudflare Tunnel 内网穿透（开发调试）
 
 ### Documentation
-- Devdocs-slo.md（0.9.1 SLO 定义与 error budget 管理）
-- Devdocs-runbook.md（运维操作手册 + 回滚流程 + 5 个故障场景）
-- Devdocs-project-rules.md 新增「反复出现的错误与防再犯清单」（7 类根因）
+- Devdocs-Ops.md（合并原 Devdocs-slo.md + Devdocs-runbook.md + Devdocs-deployment-guide.md：部署指南 + SLO 与错误预算 + 运维 Runbook）
+- Devdocs-onboarding-guide.md（合并原 Devdocs-project-rules.md，含「反复出现的错误与防再犯清单」7 类根因）
 - ADR 记录 19 条（ADR-001 ~ ADR-019），全部已实施
   - ADR-019：内容审核工作流抽象（pending/approved/rejected/archived，2026-07-31）
 - 风险登记表 R1-R20

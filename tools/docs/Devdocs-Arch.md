@@ -1,12 +1,16 @@
-# FZTBUCS-Arch-架构和API文档
+# FZTBUCS-Arch-架构与 API 文档
 
 > 文档定位：架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
-> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)
+> Source of truth：项目结构、模块化分析、代码质量、API 端点与契约、状态码、事件总线、依赖矩阵的唯一权威位置
+> 关联：安全与权限设计见 [Devdocs-Sec.md](Devdocs-Sec.md)；运维/SLO/Runbook 见 [Devdocs-Ops.md](Devdocs-Ops.md)；演进路线 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)；工程规则见 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md#八项目规则)
+> 最后更新：2026-08-01（合并原 Devdocs-architecture.md + Devdocs-api-reference.md）
+> 变更触发：目录结构调整 / 新增模块 / 依赖矩阵变更 / 新增或修改 API / 安全措施变更
+> Stale 信号：依赖矩阵与实际 import 不一致 / 端点签名与路由 handler 不一致 / 状态码与代码不符
 
 ## 文档结构
 
-- **[Part A: 项目架构](#part-a-项目架构)**（原 Devdocs-architecture.md）
+- **[Part A: 项目架构](#part-a-项目架构)**（原 Devdocs-architecture.md，已合并入本文件）
   - [一、项目结构](#一项目结构) · [二、模块化分析](#二模块化分析) · [三、代码质量](#三代码质量)
 - **[Part B: API 接口参考](#part-b-api-接口参考)**（原 Devdocs-api-reference.md）
   - [一、通用约定](#一通用约定) · [二、认证](#二认证模块api-auth) · [三、个人资料](#三个人资料模块api-profile) · [四、活动](#四活动模块api-events) · [五、论坛](#五论坛模块api-communityforum) · [六、通知](#六通知模块api-notifications) · [七、管理后台](#七管理后台api-admin) · [八、博客](#八博客模块api-communityblog) · [九、工具集](#九工具集模块api-tools) · [十、成员与入社](#十成员与入社模块) · [十一、会话](#十一会话管理模块api-sessions) · [十二、速率限制](#十二速率限制参考) · [十三、状态码](#十三状态码约定) · [十四、错误响应](#十四错误响应扩展) · [十五、事件总线](#十五事件总线接口) · [十六、版本化策略](#十六版本化与兼容性策略) · [十七、健康检查](#十七健康检查端点)
@@ -121,7 +125,7 @@ shared/
 
 `tools/scripts/`：`build-app.mjs`、`dev-server.mjs`(端口 2333)、`start-server.mjs`、`install-deps.sh`、`create-user.mjs`(CLI 提权)、`seed-exam-data.mjs`、`cloudflare-tunnel.mjs`、`setup-litestream.sh`。
 
-部署：Docker + Caddy + Litestream，详见 [Devdocs-ops.md](Devdocs-ops.md) Part A。
+部署：Docker + Caddy + Litestream，详见 [Devdocs-Ops.md](Devdocs-Ops.md) Part A。
 
 ### 数据库与部署模型
 
@@ -139,7 +143,7 @@ DB 文件 `data/app.db`（gitignored），首次启动自动建表 + seed。用�
 多实例迁移清单（完成前禁止横向扩展）：
 1. 速率限制迁 Redis（替换 `RateLimiter` Map）
 2. 2FA `consumed jti` 集合迁 Redis SET（5min TTL）
-3. 事件总线评估跨实例广播（见 [Devdocs-security.md](Devdocs-security.md) ADR-014）
+3. 事件总线评估跨实例广播（见 [Devdocs-Sec.md](Devdocs-Sec.md) ADR-014）
 
 ---
 
@@ -499,7 +503,7 @@ community/
 | `code` | ✅ | 机器可读码（见 14.2） |
 | `details` | ❌ | 字段级错误（仅 Zod 失败时） |
 
-**14.2 错误码清单**（对应 [Devdocs-security.md](Devdocs-security.md) 发现 15）
+**14.2 错误码清单**（对应 [Devdocs-Sec.md](Devdocs-Sec.md) 发现 15）
 
 | code | HTTP | 触发场景 |
 |------|:----:|---------|
@@ -532,7 +536,7 @@ community/
 
 ## 十五、事件总线接口
 
-> 进程内通信（非 HTTP）。对应 [Devdocs-project-rules.md](Devdocs-project-rules.md) 模块协作规范、[Devdocs-evolution.md](Devdocs-evolution.md) ADR-013/014。
+> 进程内通信（非 HTTP）。对应 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md#83-模块化开发规范) 模块协作规范、[Devdocs-evolution.md](Devdocs-evolution.md) ADR-013/014。
 
 **15.1 API**
 
@@ -581,7 +585,7 @@ export async function register() {
 | 新增端点 / 可选请求字段 / 响应字段 | ✅ 允许（客户端容错未知字段） |
 | 修改字段语义 | 🚫 禁止，新增字段替代 |
 | 移除字段 | 🚫 先标记 `@deprecated`，下个大版本移除 |
-| 改变鉴权 | 须在 [Devdocs-security.md](Devdocs-security.md) 记录并通告 |
+| 改变鉴权 | 须在 [Devdocs-Sec.md](Devdocs-Sec.md) 记录并通告 |
 
 **16.2 破坏性变更处理**：① 评估能否新增字段避免（[Devdocs-evolution.md](Devdocs-evolution.md) FF2）② 记 ADR ③ 双写过渡（旧字段 `@deprecated`）④ 客户端迁移窗口 ⑤ 移除旧字段。
 
@@ -603,7 +607,7 @@ export async function register() {
 
 > 对应 [Devdocs-evolution.md](Devdocs-evolution.md) Q5（2026-07-29）。
 
-**17.2 安全健康检查（规划）**：`GET /api/health/events`（root，监听器状态）、`GET /api/health/security`（root，限流器/会话/迁移状态）。对应 [Devdocs-security.md](Devdocs-security.md) 第十一章。
+**17.2 安全健康检查（规划）**：`GET /api/health/events`（root，监听器状态）、`GET /api/health/security`（root，限流器/会话/迁移状态）。对应 [Devdocs-Sec.md](Devdocs-Sec.md) 第十一章。
 
 ---
 

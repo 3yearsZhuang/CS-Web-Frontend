@@ -2,18 +2,22 @@
 
 > 文档定位：安全与权限设计权威文档（reference）
 > 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
-> 关联：权限矩阵见 [Devdocs-Arch.md](Devdocs-Arch.md)；部署模型单进程假设见同文档 §部署模型；演进路线 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)
+> Source of truth：安全审计发现、角色体系、权限矩阵、安全不变量、加固变更记录的唯一权威位置
+> 关联：权限矩阵与部署模型见 [Devdocs-Arch.md](Devdocs-Arch.md)；运维见 [Devdocs-Ops.md](Devdocs-Ops.md)；演进路线 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)
+> 最后更新：2026-08-01（合并原 Devdocs-security.md + Devdocs-security-hardening-record.md）
+> 变更触发：安全发现 / 2FA 或权限变更 / ADR-013/014 推进 / 新漏洞类
+> Stale 信号：发现项状态与代码现状不一致 / 权限矩阵与实际 handler 不符
 
 ## 文档结构
 
-- **Part 1: 安全审计** — 对照 OWASP Top 10 (2021) 的发现与修复状态（28 项，全部已修复）
-- **Part 2: 权限设计** — 角色、权限点、权限矩阵（RBAC）
-- **Part 3: 事件驱动安全与运行时监测** — 事件总线、2FA 加固、运行时监测
-- **Part 4: 安全加固变更记录** — 可审计证据包（原 Devdocs-security-hardening-record.md）
+- **Part A: 安全审计** — 对照 OWASP Top 10 (2021) 的发现与修复状态（28 项，全部已修复）
+- **Part B: 权限设计** — 角色、权限点、权限矩阵（RBAC）
+- **Part C: 事件驱动安全与运行时监测** — 事件总线、2FA 加固、运行时监测
+- **Part D: 安全加固变更记录** — 可审计证据包（原 Devdocs-security-hardening-record.md）
 
 ---
 
-# Part 1: 安全审计
+# Part A: 安全审计
 
 > 项目：fztbucs-projects | 审计日期：2026-07-27 | 范围：全量代码审查，对照 OWASP Top 10 (2021)
 > 方法：静态代码分析 + 架构审查 | 状态：所有发现已于 2026-07-31 修复（ADR-015 及第二轮加固）
@@ -57,7 +61,7 @@
 
 | # | 发现 | 等级 | 位置 | 修复 | 状态 |
 |---|------|------|------|------|:---:|
-| 10 | 速率限制为单进程内存实现 | 🟡中 | `shared/security/security.ts` | 架构文档标注单进程假设，多实例前须迁 Redis（见 Part 4 例外 1） | ✅ 已标注 |
+| 10 | 速率限制为单进程内存实现 | 🟡中 | `shared/security/security.ts` | 架构文档标注单进程假设，多实例前须迁 Redis（见 Part D 例外 1） | ✅ 已标注 |
 | 11 | 输入校验 | — | `shared/security/security.ts` | 全入口 Zod `validateBody` + Content-Type 校验；密码上限 1024 字节防 scrypt DoS | ✅ 良好 |
 | 12 | 速率限制覆盖 | — | `shared/security/security.ts` | 覆盖登录/注册/论坛/上传/考试等 18 场景，环境变量可调 | ✅ 良好 |
 
@@ -128,7 +132,7 @@
 
 ---
 
-# Part 2: 角色权限设计
+# Part B: 角色权限设计
 
 > 描述 root / admin / 细粒度角色 / user 的权限划分、数据库约束、API 行为、审计日志与安全约束。状态：已实施。
 
@@ -217,7 +221,7 @@ root 额外保护：不可降级/禁用/删除、不可被任何角色重置密�
 
 ---
 
-# Part 3: 事件驱动安全与运行时监测
+# Part C: 事件驱动安全与运行时监测
 
 > 承接 [Devdocs-evolution.md](Devdocs-evolution.md) ADR-013 / ADR-014 / R7 / R8。状态：已实施。
 
@@ -261,7 +265,7 @@ root 额外保护：不可降级/禁用/删除、不可被任何角色重置密�
 
 ---
 
-# Part 4: 安全加固变更记录（Engineering Control Evidence）
+# Part D: 安全加固变更记录（Engineering Control Evidence）
 
 > 范围：2026-07-31 两轮加固（4 高 + 7 中 + 5 低 = 16 项 + ADR-015 新增 4 项 = 20 项已落地）。状态：✅ 全部通过验证（tsc 0 errors / 441 tests passed）。关联：[Devdocs-Arch.md](Devdocs-Arch.md) 部署模型、[Devdocs-evolution.md](Devdocs-evolution.md) ADR-015 / R7 / R8。
 

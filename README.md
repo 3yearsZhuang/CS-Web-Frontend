@@ -209,9 +209,7 @@ tools/tests/
 | [运维文档](tools/docs/Devdocs-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
 | [演进与 ADR](tools/docs/Devdocs-evolution.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/Devdocs-markdown-editor.md) | 编辑器使用指南 |
-| [项目规则](tools/docs/Devdocs-project-rules.md) | 开发约定与工程规范（防再犯清单） |
-| [入职指南](tools/docs/Devdocs-onboarding-guide.md) | 新开发者快速上手 |
-| [API 文档](tools/docs/Devdocs-API文档.md) | API 契约独立参考 |
+| [入职指南 + 项目规则](tools/docs/Devdocs-onboarding-guide.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单 |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 
 ---
