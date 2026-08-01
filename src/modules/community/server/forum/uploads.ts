@@ -69,7 +69,7 @@ export function saveForumImage(
     throw new AppError('图片保存失败', 'SAVE_FAILED');
   }
 
-  return `/api/forum/images/${filename}`;
+  return `/api/community/forum/images/${filename}`;
 }
 
 /** 读取上传的论坛图片 — 严格文件名校验 + 防路径遍历，文件不存在或非法时返回 null */

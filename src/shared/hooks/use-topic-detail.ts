@@ -81,7 +81,7 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   // 加载主题详情
   const loadTopic = useCallback(async () => {
     try {
-      const res = await fetch(`/api/forum/topics/${topicId}`);
+      const res = await fetch(`/api/community/forum/topics/${topicId}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error('主题不存在或已删除');
         throw new Error('加载失败');
@@ -96,7 +96,7 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   // 加载主回复列表
   const loadReplies = useCallback(async () => {
     try {
-      const url = `/api/forum/topics/${topicId}/replies?page=${replyPage}&page_size=${REPLIES_PAGE_SIZE}`;
+      const url = `/api/community/forum/topics/${topicId}/replies?page=${replyPage}&page_size=${REPLIES_PAGE_SIZE}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('加载回复失败');
       const data = (await res.json()) as PaginatedReplies;
@@ -129,7 +129,7 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   const nestedRepliesLoader = useCallback(
     async (parentId: string): Promise<NestedRepliesResult | null> => {
       try {
-        const res = await fetch(`/api/forum/replies/${parentId}/nested`);
+        const res = await fetch(`/api/community/forum/replies/${parentId}/nested`);
         if (!res.ok) return null;
         return (await res.json()) as NestedRepliesResult;
       } catch {

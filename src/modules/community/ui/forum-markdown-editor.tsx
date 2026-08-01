@@ -78,7 +78,7 @@ export function MarkdownEditor({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/forum/upload', {
+      const res = await fetch('/api/community/forum/upload', {
         method: 'POST',
         body: formData,
       });

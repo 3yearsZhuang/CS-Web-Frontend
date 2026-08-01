@@ -25,7 +25,7 @@ export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) 
     setSavingTopic(true);
     setTopicEditError(null);
     try {
-      const res = await fetch(`/api/forum/topics/${topic.id}`, {
+      const res = await fetch(`/api/community/forum/topics/${topic.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
