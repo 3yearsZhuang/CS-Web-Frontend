@@ -3,7 +3,7 @@
 > 最后更新：2026-08-01（同步 shared/security 与 community/server 子目录拆分；合并 API 接口参考）
 > 文档定位：架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
-> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署步骤见 [Devdocs-deployment-guide.md](Devdocs-deployment-guide.md)；演进路线 ADR 见 [Devdocs-roadmap.md](Devdocs-roadmap.md)
+> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-roadmap.md](Devdocs-roadmap.md)
 
 ## 文档结构
 
@@ -283,7 +283,7 @@ Node.js 自定义服务器入口，通过 `tsx watch src/server.ts`（开发）�
 
 ### 部署配置（`tools/deploy/`）
 
-Docker + Caddy + Litestream 方案，详见 [Devdocs-deployment-guide.md](Devdocs-deployment-guide.md)。
+Docker + Caddy + Litestream 方案，详见 [Devdocs-ops.md](Devdocs-ops.md) Part A。
 
 ### 数据库
 

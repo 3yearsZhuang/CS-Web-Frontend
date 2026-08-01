@@ -205,7 +205,7 @@ pnpm e2e              # Playwright E2E 测试
 |------|------|
 | [architecture](./Devdocs-architecture.md) | 完整目录结构 + 页面路由表 + 组件清单 + 模块化分析 + **API 端点契约（Part B）** |
 | [architecture · Part B](./Devdocs-architecture.md) | 所有 API 端点、鉴权约定、请求/响应格式、速率限制、错误码 |
-| [deployment-guide](./Devdocs-deployment-guide.md) | Docker 部署、Caddy 配置、Litestream 备份 |
+| [ops](./Devdocs-ops.md) | 部署（Part A）、SLO（Part B）、Runbook（Part C）：Docker 部署、Caddy 配置、Litestream 备份、回滚与故障处置 |
 | [design-spec](./Devdocs-design-spec.md) | 设计规范：颜色、字体、动画、组件风格 |
 | [security](./Devdocs-security.md) | 安全审计 + 角色体系与权限矩阵 |
 | [roadmap](./Devdocs-roadmap.md) | 迭代计划与已完成功能清单 |

@@ -171,7 +171,7 @@ appBus.on('topic.created', (payload) => {
 | `Devdocs-security.md` | reference | 安全审计、角色权限、事件驱动安全、运行时监测 | 安全发现、2FA/权限变更、ADR-013/014 推进 | 发现项状态与代码现状不一致 |
 | `Devdocs-project-rules.md` | reference + explanation | 项目规则、模块协作规范、ADR 引用规则、防再犯清单 | 新增禁止事项、协作流程变更、新增 ADR | ADR 编号与 roadmap 最新不一致；禁止事项与实际依赖冲突 |
 | `Devdocs-design-spec.md` | reference | 设计规范、视觉交互 | 新增页面/组件、视觉变更 | 组件清单与实际文件不一致 |
-| `Devdocs-deployment-guide.md` | how-to | 部署配置、环境变量 | 部署流程变更、新增环境变量 | 环境变量表与 `.env.example` 不一致 |
+| `Devdocs-ops.md` | how-to + reference | 部署配置、环境变量、SLO、Runbook（Part A/B/C） | 部署流程变更、新增环境变量、SLO 阈值调整、新增故障场景 | 环境变量表与 `.env.example` 不一致 |
 | `Devdocs-onboarding-guide.md` | tutorial | 新人上手指南 | 开发环境变更、启动流程变更 | 启动命令与 package.json scripts 不一致 |
 | `Devdocs-markdown-editor.md` | how-to | Markdown 编辑器使用 | 编辑器功能变更 | 功能描述与组件实现不一致 |
 
@@ -187,7 +187,7 @@ appBus.on('topic.created', (payload) => {
 | 模块依赖矩阵 | `Devdocs-architecture.md` 2.3 节 |
 | 安全发现 | `Devdocs-security.md` |
 | API 契约 | `Devdocs-architecture.md` Part B（原 Devdocs-api-reference.md 已合并） |
-| 环境变量 | `Devdocs-deployment-guide.md`（权威）+ `README.md`（摘要） |
+| 环境变量 | `Devdocs-ops.md` Part A（权威）+ `README.md`（摘要） |
 
 重复处理：发现重复时，非权威位置必须删除内容并改为锚点引用；禁止两处同时维护同一信息。重复维护必然产生漂移。
 
@@ -202,7 +202,7 @@ appBus.on('topic.created', (payload) => {
 - [ ] 如做出架构决策 -> 在 `Devdocs-roadmap.md` 新增 ADR
 - [ ] 如新增禁止事项 -> 更新本文档
 - [ ] 如新增页面/组件 -> 更新 `Devdocs-design-spec.md`
-- [ ] 如新增环境变量 -> 更新 `Devdocs-deployment-guide.md` 与 `README.md` 环境变量表
+- [ ] 如新增环境变量 -> 更新 `Devdocs-ops.md` Part A 与 `README.md` 环境变量表
 - [ ] 如完成路线图项 -> 在 `Devdocs-roadmap.md` 标注 `✅` + 完成日期
 - [ ] 如修改 2FA/OAuth/密码重置/限流 -> 更新 `Devdocs-security.md` 对应发现项 + roadmap ADR
 - [ ] 如修改 events.date 格式或归档逻辑 -> 同步前后端解析（SQL REPLACE + regex），补充回归测试
