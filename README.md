@@ -1,6 +1,6 @@
 # FZTBU CS — 计算机协会官网
 
-编辑式技术极简美学的校园技术社区官网，融合明日方舟工业终端质感与粒子莫比乌斯环视觉元素。
+编辑式技术极简美学的校园技术社区官网，融合工业终端质感与粒子莫比乌斯环视觉元素。
 
 ---
 
@@ -38,11 +38,11 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 基于 Next.js 16 App Router 的全栈应用，采用模块化单体架构：
 
-- 业务模块：9 个独立模块位于 `src/modules/`（admin / auth / community / events / join / notification / announcement / tools / user）
+- 业务模块：位于 `src/modules/`，按业务域拆分（admin / announcement / auth / community / events / join / notification / tools / user）。其中 `community` 已扁平化合并原 forum / blog / members 三个子域
 - 共享基础设施：`src/shared/`（数据库/邮件/安全/事件总线/配置/hooks）
 - 测试：`tools/tests/`（Vitest 单元 + Playwright E2E）
 
-详细结构见 [架构文档](tools/docs/Devdocs-architecture.md)。
+详细结构见 [架构文档](tools/docs/Devdocs-Arch.md)。
 
 ---
 
@@ -86,10 +86,10 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | 数据库 | better-sqlite3（同步，WAL 模式，无外部依赖） |
 | 认证 | scrypt 密码哈希 · 服务端 session · HMAC 验证码 · TOTP 2FA · GitHub OAuth |
 | 邮件 | nodemailer |
-| 双因素认证 | TOTP (RFC 6238) · AES-256-GCM 加密 · 备用码 · OAuth 2FA 强制 |
+| 双因素认证 | TOTP (RFC 6238) · 密钥由 `AUTH_SESSION_SECRET` 经 HKDF-SHA256 派生 AES-256-GCM 加密 · 备用码 · OAuth 2FA 强制 |
 | 测试 | Vitest（单元，441+）· Playwright（E2E） |
 | 代码检查 | ESLint 9 · TypeScript 5 |
-| 日志/监控 | pino 结构化日志（NDJSON）· 请求 ID 链路 · 健康检查端点 · 可选接入 Sentry |
+| 日志/监控 | pino 结构化日志（NDJSON）· 请求 ID 链路 · 健康检查端点 · 错误率监控 · 可选 Sentry（`SENTRY_DSN` 动态接入） |
 
 ---
 
@@ -150,12 +150,10 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `NEXT_PUBLIC_SITE_URL` | 站点 URL | `http://localhost:2333` |
 | `ALLOWED_ORIGINS` | Origin 白名单（逗号分隔） | `http://localhost:2333,http://localhost:3000` |
 | `SMTP_HOST/PORT/USER/PASS/FROM` | 邮件服务配置 | 控制台输出验证码 |
-| `PASSWORD_RESET_DEFAULT` | 管理员重置密码时使用的默认密码（必填，无回退） | — |
+| `PASSWORD_RESET_DEFAULT` | 管理员重置密码时使用的默认密码（建议改为更复杂值） | `FZTBU_CS` |
 | `TRUST_PROXY` | 是否信任反向代理头 | `false` |
-| `TOTP_ENCRYPTION_KEY` | TOTP 密钥加密密钥（生产必填） | 随机 |
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry 错误监控 DSN（可选） | 未启用 |
-| `SENTRY_RELEASE` | Sentry 发布版本标识 | `dev` |
-| `GITHUB_CLIENT_ID/SECRET` | GitHub OAuth 配置 | 未启用 |
+| `SENTRY_DSN` | Sentry 错误监控（可选，运行时动态导入，留空不启用） | 未启用 |
+| `GITHUB_CLIENT_ID/SECRET/CALLBACK_URL` | GitHub OAuth 第三方登录配置 | 未启用 |
 
 ---
 
@@ -206,19 +204,14 @@ tools/tests/
 
 | 文档 | 说明 |
 |------|------|
-| [架构文档](tools/docs/Devdocs-architecture.md) | 完整目录结构、页面路由、组件清单、模块分析 |
-| [API 接口参考](tools/docs/Devdocs-api-reference.md) | 完整 API 端点与契约 |
-| [部署指南](tools/docs/Devdocs-deployment-guide.md) | Docker + Caddy + Litestream 部署 |
-| [迭代路线图](tools/docs/Devdocs-roadmap.md) | 已完成功能 + 未来迭代规划 |
-| [设计规范](tools/docs/Devdocs-design-spec.md) | 设计哲学、视觉规范、组件系统 |
-| [安全文档](tools/docs/Devdocs-security.md) | 安全审计 + 角色体系与权限矩阵 |
+| [架构 + API 文档](tools/docs/Devdocs-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
+| [安全文档](tools/docs/Devdocs-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
+| [运维文档](tools/docs/Devdocs-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
+| [演进与 ADR](tools/docs/Devdocs-evolution.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/Devdocs-markdown-editor.md) | 编辑器使用指南 |
-| [项目规则](tools/docs/Devdocs-project-rules.md) | 开发约定与工程规范 |
+| [项目规则](tools/docs/Devdocs-project-rules.md) | 开发约定与工程规范（防再犯清单） |
 | [入职指南](tools/docs/Devdocs-onboarding-guide.md) | 新开发者快速上手 |
-| [运维 Runbook](tools/docs/Devdocs-runbook.md) | 故障处置 + 回滚流程 + RTO 目标 |
-| [SLO 与错误预算](tools/docs/Devdocs-slo.md) | SLO 定义 + error budget 管理 |
-| [安全加固记录](tools/docs/Devdocs-security-hardening-record.md) | 安全加固变更可审计记录 |
-| [PostgreSQL 迁移](tools/docs/Devdocs-pg-migration.md) | PG 迁移进度（Phase 0+1 完成） |
+| [API 文档](tools/docs/Devdocs-API文档.md) | API 契约独立参考 |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 
 ---

@@ -518,13 +518,4 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ---
 
-## 附录 B：变更记录
-
-| 日期 | 变更 |
-|------|------|
-| 2026-07-26 | 初始实现：FloatingCapsuleSidebar 组件 + admin/profile/events 三个页面接入 |
-| 2026-07-26 | 添加亚克力材质（`hero-acrylic`）作为胶囊背景 |
-| 2026-07-26 | 接入 `/about`、`/community/forum`、`/community/forum/[category]`、`/community/forum/[category]/[topicId]` 页面 |
-| 2026-07-26 | 实现与 `use-collapsing-hero` 的联动淡入/淡出动画 |
-| 2026-07-26 | 合并 sidebar-design.md + ui-guidelines.md -> design-spec.md |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

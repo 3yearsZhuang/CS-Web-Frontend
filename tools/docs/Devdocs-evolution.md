@@ -684,4 +684,3 @@
 
 ---
 
-*本文档由 2026-08-01 合并 Devdocs-roadmap.md + Devdocs-pg-migration.md + Devdocs-migration-guide.md 生成，原三份文档内容完整保留于 Part A / Part B / Part C。*

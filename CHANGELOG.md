@@ -40,6 +40,10 @@
 - 会话管理增强（设备列表、远程登出）
 - 高危操作二次确认（密码二次确认守卫）
 - 依赖漏洞扫描命令可用（`pnpm audit` 可执行，CI 集成见 Q4）
+- 2FA 预认证 token 防重放（消除密码二次传输，ADR-015）
+- TOTP 密钥 HKDF-SHA256 派生（替换硬编码/SHA-256，生产强制 `TOTP_ENCRYPTION_KEY`）
+- Cookie `__Host-` 前缀（生产 `__Host-auth_session`，防 cookie 注入）
+- 论坛图片读取端点 session 访问控制（未登录返回 401）
 - 安全审计日志增强
 
 #### 架构与工程质量
@@ -84,6 +88,8 @@
 - `security.test.ts` 迁移：`shared/`→`tools/tests/`
 - 未使用 import 清理：`resource/index.ts` 移除冗余 `TECH_TAGS`
 - Q1 TopicDetail 拆分：主组件 < 200 行，拆出 `TopicHero`/`TopicContent`/`TopicReplySection` + `useTopicActions`/`useReplyActions`
+- 生产启动强制校验：`AUTH_SESSION_SECRET`/`ALLOWED_ORIGINS`/`TOTP_ENCRYPTION_KEY` 缺失即 `process.exit(1)` 拒绝启动
+- 模块级权限守卫 `requireModuleAdmin(req, module)` 落地（forum/exam/task 共 19 路由）
 
 ### Fixed
 - events.date 自由格式与 ISO 时间戳字典序比较缺陷（ADR-016）
