@@ -186,16 +186,19 @@ export function initSystemSchema(db: DB): void {
       reason TEXT NOT NULL,
       contact_qq TEXT,
       contact_phone TEXT,
+      user_id TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
       reviewed_by TEXT,
       review_note TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+      FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_join_applications_status ON join_applications(status);
     CREATE INDEX IF NOT EXISTS idx_join_applications_created_at ON join_applications(created_at);
+    CREATE INDEX IF NOT EXISTS idx_join_applications_user_id ON join_applications(user_id);
 
     -- ============= 系统设置（key-value 配置） =============
     -- module: 模块标识（如 events、forum、users 等）

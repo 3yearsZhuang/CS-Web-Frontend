@@ -1,23 +1,34 @@
 /**
- * @file 入社申请页（/join）— 公开表单无需登录，客户端 + 服务端双重校验
+ * @file 入社申请页（/join）— 需登录，客户端 + 服务端双重校验
  */
 
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { TechTagSelector } from '@/components/tech-tag-selector';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { formatDate } from '@/shared/utils/utils';
 
 const TECH_TAG_OPTIONS = [
   '前端', '后端', 'AI', '安全', '设计', '移动端', '运维', '数据科学', '嵌入式', '游戏开发',
 ];
 
+interface ExistingApplication {
+  id: string;
+  applicantName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewNote: string | null;
+  createdAt: string;
+}
+
 export default function JoinPage() {
+  const router = useRouter();
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -26,6 +37,11 @@ export default function JoinPage() {
     onRevealComplete,
     onTitleClick,
   };
+
+  // 认证 + 数据状态
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [existingApps, setExistingApps] = useState<ExistingApplication[]>([]);
 
   const [form, setForm] = useState({
     applicantName: '',
@@ -40,6 +56,41 @@ export default function JoinPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  /** 初次加载：检查登录状态（可选）+ 获取已有申请 + 预填用户信息 */
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch('/api/join/mine').then(async (r) => ({ ok: r.ok, status: r.status, data: r.ok ? await r.json() : null })),
+      fetch('/api/profile').then(async (r) => ({ ok: r.ok, data: r.ok ? await r.json() : null })),
+    ]).then(([mineRes, profileRes]) => {
+      if (cancelled) return;
+      // 未登录（401）不再跳转登录页，游客可直接填写表单
+      if (mineRes.ok) {
+        setLoggedIn(true);
+        if (mineRes.data?.applications) {
+          setExistingApps(mineRes.data.applications);
+        }
+      }
+      // 预填用户信息（仅登录用户）
+      if (profileRes.data?.user) {
+        const u = profileRes.data.user;
+        setForm((f) => ({
+          ...f,
+          applicantName: u.displayName || '',
+          techTags: u.techTags || [],
+        }));
+      }
+      setAuthChecked(true);
+    }).catch(() => {
+      if (cancelled) return;
+      setAuthChecked(true);
+    });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 初始化加载
+  }, [router]);
+
+  const pendingApp = existingApps.find((a) => a.status === 'pending');
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
@@ -79,7 +130,16 @@ export default function JoinPage() {
         return;
       }
 
-      setMessage({ type: 'success', text: '申请已提交，管理员审核后会通过你提供的联系方式通知你。' });
+      setMessage({
+        type: 'success',
+        text: loggedIn
+          ? '申请已提交，管理员审核后会通过站内通知告知你结果。'
+          : '申请已提交，管理员会通过你留下的联系方式与你沟通结果。建议注册账号以便后续跟踪申请状态。',
+      });
+      // 将新申请加入已有列表
+      if (data.application) {
+        setExistingApps((prev) => [data.application, ...prev]);
+      }
       setForm({
         applicantName: '',
         studentId: '',
@@ -95,6 +155,15 @@ export default function JoinPage() {
       setSubmitting(false);
     }
   };
+
+  // 未完成认证检查时的加载状态
+  if (!authChecked) {
+    return (
+      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+        <div className="meta-mono text-[var(--muted-foreground)]">Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative pt-16">
@@ -164,16 +233,39 @@ export default function JoinPage() {
           </div>
 
           <div className="max-w-2xl">
-            {message?.type === 'success' ? (
+            {/* 已有待审核申请 — 显示状态卡片 */}
+            {pendingApp && message?.type !== 'success' ? (
+              <div className="p-6 border-l-2 border-amber-500/60 bg-amber-500/[0.04]">
+                <div className="meta-mono text-amber-500 mb-2">[ 审核中 / Under Review ]</div>
+                <p className="text-[14px] text-[var(--foreground)] leading-relaxed mb-4">
+                  你已有一个待审核的入社申请（提交于 {formatDate(pendingApp.createdAt)}），请耐心等待管理员审核。
+                </p>
+                <Link
+                  href="/profile?tab=join"
+                  className="meta-mono text-[var(--primary)] underline-grow"
+                >
+                  在个人中心查看 →
+                </Link>
+              </div>
+            ) : message?.type === 'success' ? (
               <div className="p-6 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04]">
                 <div className="meta-mono text-[var(--primary)] mb-2">[ 已提交 / Submitted ]</div>
                 <p className="text-[14px] text-[var(--foreground)] leading-relaxed">{message.text}</p>
-                <Link
-                  href="/"
-                  className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
-                >
-                  ← 返回首页
-                </Link>
+                {loggedIn ? (
+                  <Link
+                    href="/profile?tab=join"
+                    className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
+                  >
+                    在个人中心查看申请状态 →
+                  </Link>
+                ) : (
+                  <Link
+                    href="/register"
+                    className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
+                  >
+                    注册账号 →
+                  </Link>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-8">

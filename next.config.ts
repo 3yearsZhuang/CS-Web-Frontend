@@ -41,11 +41,15 @@ import type { NextConfig } from 'next';
  *
  * allowedDevOrigins 接受 hostname（不含协议），如 'bond-prize-limitations-squad.trycloudflare.com'。
  * tunnel.mjs 更新 .env 的 ALLOWED_ORIGINS 时自动覆盖此列表。
+ *
+ * 注意：未设置 ALLOWED_ORIGINS 时返回 undefined（而非空数组 []），
+ * Next.js 默认允许所有 origin 访问 dev 资源，避免 IDE 预览浏览器等
+ * 非 localhost 环境出现 net::ERR_ABORTED 错误。
  */
-const allowedDevOrigins: string[] = (() => {
+const allowedDevOrigins: string[] | undefined = (() => {
   const env = process.env.ALLOWED_ORIGINS;
-  if (!env) return [];
-  return env
+  if (!env) return undefined;
+  const origins = env
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -57,6 +61,7 @@ const allowedDevOrigins: string[] = (() => {
         return o;
       }
     });
+  return origins.length > 0 ? origins : undefined;
 })();
 
 const nextConfig: NextConfig = {

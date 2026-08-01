@@ -39,7 +39,7 @@ interface PasswordForm {
   confirmPassword: string;
 }
 
-type ProfileTab = 'profile' | 'security' | 'activity' | 'forum';
+type ProfileTab = 'profile' | 'security' | 'activity' | 'forum' | 'join';
 
 function ProfileContent() {
   const router = useRouter();
@@ -54,6 +54,7 @@ function ProfileContent() {
     { key: 'security', num: '02', label: '安全 / Security' },
     { key: 'activity', num: '03', label: '活动 / Activity' },
     { key: 'forum', num: '04', label: '论坛 / Forum' },
+    { key: 'join', num: '05', label: '入社申请 / Join' },
   ];
 
   // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
@@ -112,6 +113,12 @@ function ProfileContent() {
 
   /** 初次加载：获取个人资料 */
   useEffect(() => {
+    // 支持 ?tab=join 等 URL 参数直接切换 Tab
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'security', 'activity', 'forum', 'join'].includes(tabParam)) {
+      setActiveTab(tabParam as ProfileTab);
+    }
+
     // 检测 GitHub 自动绑定提示
     if (searchParams.get('github_bound') === '1') {
       setGithubBound(true);
@@ -505,7 +512,9 @@ function ProfileContent() {
                         ? '账号安全'
                         : activeTab === 'activity'
                           ? '活动记录'
-                          : '论坛活动'}
+                          : activeTab === 'forum'
+                            ? '论坛活动'
+                            : '入社申请'}
                     <span className="text-[var(--muted-foreground)]">
                       {' '}
                       /{' '}
@@ -515,7 +524,9 @@ function ProfileContent() {
                           ? 'Security'
                           : activeTab === 'activity'
                             ? 'Activity'
-                            : 'Forum'}
+                            : activeTab === 'forum'
+                              ? 'Forum'
+                              : 'Join'}
                     </span>
                   </h1>
                 </RevealTitle>
@@ -1032,6 +1043,9 @@ function ProfileContent() {
 
           {/* ============ Tab 04 — 论坛活动（我的主题 / 回复 / 收藏） ============ */}
           {activeTab === 'forum' && user && <ProfileForumTab userId={user.id} />}
+
+          {/* ============ Tab 05 — 入社申请（我的申请列表） ============ */}
+          {activeTab === 'join' && <ProfileJoinTab />}
         </div>
       </section>
     </main>
@@ -1142,6 +1156,133 @@ function SessionManager() {
               </div>
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** 入社申请 Tab — 展示当前用户的入社申请列表 + 状态 */
+function ProfileJoinTab() {
+  const [applications, setApplications] = useState<Array<{
+    id: string;
+    applicantName: string;
+    studentId: string;
+    major: string;
+    techTags: string[];
+    reason: string;
+    status: 'pending' | 'approved' | 'rejected';
+    reviewNote: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/join/mine')
+      .then(async (res) => {
+        if (!res.ok) throw new Error('加载失败');
+        const data = await res.json();
+        if (cancelled) return;
+        setApplications(data.applications || []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : '加载失败');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const statusLabel = (s: string) => s === 'pending' ? '待审' : s === 'approved' ? '已通过' : '已拒绝';
+  const statusClass = (s: string) =>
+    s === 'pending' ? 'border-amber-500/40 text-amber-500'
+    : s === 'approved' ? 'border-emerald-500/40 text-emerald-500'
+    : 'border-red-400/40 text-red-400';
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
+        <div className="col-span-12 md:col-span-8 md:col-start-3 p-6 sm:p-8">
+          <div className="meta-mono text-[var(--muted-foreground)]">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
+        <div className="col-span-12 md:col-span-8 md:col-start-3 p-6 sm:p-8">
+          <div className="meta-mono text-[var(--destructive)]">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
+      <div className="col-span-12 md:col-span-8 md:col-start-3">
+        {applications.length === 0 ? (
+          <div className="p-8 sm:p-12 text-center">
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">
+              [ No Application ]
+            </div>
+            <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
+              你还没有提交过入社申请。
+            </p>
+            <Link
+              href="/join"
+              className="meta-mono text-[var(--primary)] underline-grow"
+            >
+              去填写申请表 →
+            </Link>
+          </div>
+        ) : (
+          <ul>
+            {applications.map((app, idx) => (
+              <li
+                key={app.id}
+                className={`p-6 sm:p-8 ${idx < applications.length - 1 ? 'border-b border-[var(--border)]' : ''}`}
+              >
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                  <span className="meta-mono text-[var(--primary)] text-[12px]">
+                    {formatDate(app.createdAt)}
+                  </span>
+                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${statusClass(app.status)}`}>
+                    {statusLabel(app.status)}
+                  </span>
+                </div>
+                <div className="text-[15px] text-[var(--foreground)] mb-2">
+                  {app.applicantName} · 学号 {app.studentId} · {app.major}
+                </div>
+                {app.techTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {app.techTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {app.reviewNote && (
+                  <div className="mt-3 p-3 border-l-2 border-[var(--border)] bg-[var(--muted)]/[0.04]">
+                    <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-1">
+                      [ 审批备注 / Review Note ]
+                    </div>
+                    <p className="text-[12px] text-[var(--foreground)]">{app.reviewNote}</p>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

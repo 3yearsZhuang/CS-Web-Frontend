@@ -111,6 +111,25 @@ function buildCsp(nonce: string): string {
   ].join('; ');
 }
 
+/**
+ * 开发环境禁用缓存响应头 — 彻底解决旧 chunk 缓存问题
+ *
+ * Next.js dev server 重启后 chunk hash 会变，若浏览器缓存了旧 HTML，
+ * 旧 HTML 引用旧 hash chunk → 404 → React 无法 hydrate → 按钮无响应。
+ *
+ * 通过 HTTP 响应头告知浏览器不缓存任何响应，每次都向服务器取最新版：
+ *   - Cache-Control: no-cache, no-store, must-revalidate  主流浏览器
+ *   - Pragma: no-cache                                   HTTP/1.0 兼容
+ *   - Expires: 0                                         强制过期
+ *
+ * 仅在开发环境注入，生产环境不受影响。
+ */
+const DEV_NO_CACHE_HEADERS: Record<string, string> = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
+
 export function proxy(request: NextRequest): NextResponse {
   // Q6：请求 ID 注入（优先复用客户端传入，否则生成）
   const incomingRequestId = request.headers.get(REQUEST_ID_HEADER.toLowerCase());
@@ -134,6 +153,13 @@ export function proxy(request: NextRequest): NextResponse {
   response.headers.set('Content-Security-Policy', buildCsp(nonce));
   for (const [key, value] of Object.entries(BASE_SECURITY_HEADERS)) {
     response.headers.set(key, value);
+  }
+
+  // 开发环境：禁用浏览器缓存，防止旧 chunk hash 引用失效
+  if (process.env.NODE_ENV !== 'production') {
+    for (const [key, value] of Object.entries(DEV_NO_CACHE_HEADERS)) {
+      response.headers.set(key, value);
+    }
   }
 
   // 响应头暴露 requestId（客户端可观测，便于排障）

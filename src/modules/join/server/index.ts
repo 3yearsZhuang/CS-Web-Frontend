@@ -1,11 +1,12 @@
 /**
- * @file 入社申请服务层 — 公开提交，管理员审批（路由层 requireAdmin 守卫）
+ * @file 入社申请服务层 — 登录提交（关联 userId），管理员审批（路由层 requireAdmin 守卫）
  */
 import crypto from 'node:crypto';
 import 'server-only';
 import { getDb } from '@/shared/db';
 import { AppError } from '@/shared/app-error';
 import { logAdminAction } from '@/shared/security/audit';
+import { createNotification } from '@/modules/notification/server/notification-core';
 import type { JoinApplication, JoinApplicationInput, JoinApplicationStatus } from '../types';
 
 export type { JoinApplication, JoinApplicationInput, JoinApplicationStatus };
@@ -19,6 +20,7 @@ interface JoinApplicationRow {
   reason: string;
   contact_qq: string | null;
   contact_phone: string | null;
+  user_id: string | null;
   status: string;
   reviewed_by: string | null;
   review_note: string | null;
@@ -42,6 +44,7 @@ function toJoinApplication(row: JoinApplicationRow): JoinApplication {
     reason: row.reason,
     contactQq: row.contact_qq ?? null,
     contactPhone: row.contact_phone ?? null,
+    userId: row.user_id ?? null,
     status: row.status as JoinApplicationStatus,
     reviewedBy: row.reviewed_by ?? null,
     reviewNote: row.review_note ?? null,
@@ -78,7 +81,7 @@ function validateInput(input: JoinApplicationInput): string | null {
   return null;
 }
 
-/** 提交入社申请（公开） */
+/** 提交入社申请（需登录，关联 userId） */
 export function submitJoinApplication(input: JoinApplicationInput): JoinApplication {
   const validationErr = validateInput(input);
   if (validationErr) throw new AppError(validationErr, 'VALIDATION_ERROR');
@@ -88,8 +91,8 @@ export function submitJoinApplication(input: JoinApplicationInput): JoinApplicat
   const techTagsStr = input.techTags?.length ? JSON.stringify(input.techTags) : null;
 
   db.prepare(
-    `INSERT INTO join_applications (id, applicant_name, student_id, major, tech_tags, reason, contact_qq, contact_phone)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO join_applications (id, applicant_name, student_id, major, tech_tags, reason, contact_qq, contact_phone, user_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     input.applicantName.trim(),
@@ -99,10 +102,20 @@ export function submitJoinApplication(input: JoinApplicationInput): JoinApplicat
     input.reason.trim(),
     input.contactQq?.trim() || null,
     input.contactPhone?.trim() || null,
+    input.userId ?? null,
   );
 
   const row = db.prepare('SELECT * FROM join_applications WHERE id = ?').get(id) as JoinApplicationRow;
   return toJoinApplication(row);
+}
+
+/** 查询当前用户的入社申请列表 */
+export function listMyJoinApplications(userId: string): JoinApplication[] {
+  const db = getDb();
+  const rows = db
+    .prepare('SELECT * FROM join_applications WHERE user_id = ? ORDER BY created_at DESC')
+    .all(userId) as JoinApplicationRow[];
+  return rows.map(toJoinApplication);
 }
 
 /** 查询入社申请列表（管理员，支持按状态筛选） */
@@ -149,6 +162,17 @@ export function reviewJoinApplication(
     studentId: existing.student_id,
     reviewNote,
   });
+
+  // 如果申请关联了用户，发送站内通知
+  if (existing.user_id) {
+    const title = status === 'approved' ? '入社申请已通过' : '入社申请未通过';
+    const content = reviewNote
+      ? `${status === 'approved' ? '恭喜！你的入社申请已通过。' : '你的入社申请未通过。'} 备注：${reviewNote}`
+      : status === 'approved'
+        ? '恭喜！你的入社申请已通过。'
+        : '你的入社申请未通过。';
+    createNotification(existing.user_id, 'admin', title, content, adminId);
+  }
 
   const row = db.prepare('SELECT * FROM join_applications WHERE id = ?').get(applicationId) as JoinApplicationRow;
   return toJoinApplication(row);

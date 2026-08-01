@@ -256,6 +256,22 @@ const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 7,
+    description: '入社申请关联用户：join_applications 新增 user_id 列（可空，关联 users 表）',
+    up: (db: DB) => {
+      // 幂等：检查列是否已存在
+      const columns = db.prepare('PRAGMA table_info(join_applications)').all() as Array<{ name: string }>;
+      if (!columns.some((c) => c.name === 'user_id')) {
+        db.exec(`
+          ALTER TABLE join_applications ADD COLUMN user_id TEXT REFERENCES users(id) ON DELETE SET NULL;
+        `);
+      }
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_join_applications_user_id ON join_applications(user_id);
+      `);
+    },
+  },
 ];
 
 /** 执行所有未应用的迁移 */

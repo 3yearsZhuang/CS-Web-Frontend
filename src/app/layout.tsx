@@ -67,17 +67,41 @@ export const metadata: Metadata = {
 };
 
 /**
- * Service Worker 注册脚本
+ * Service Worker 注册 + 缓存清理脚本
  *
- * 在页面加载后注册 sw.js，启用离线缓存和 PWA 支持。
+ * 生产环境：注册 sw.js，启用离线缓存和 PWA 支持。
+ * 开发环境：
+ *   1. 主动注销所有旧 SW（防止历史遗留 SW 缓存旧 HTML → chunk hash 失效）
+ *   2. 注入 meta no-cache 标签（双保险，防止浏览器缓存 HTML）
+ *
  * 仅在支持 serviceWorker 的浏览器中执行，静默失败不影响主流程。
  */
 const swRegisterScript = `
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').catch(function() {});
-  });
-}
+(function() {
+  var isDev = ${JSON.stringify(process.env.NODE_ENV)} !== 'production';
+
+  // 开发环境：注销所有 Service Worker（清除历史遗留的 SW 缓存）
+  if (isDev && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) { reg.unregister(); });
+    });
+  }
+
+  // 开发环境：注入 meta no-cache 标签（双保险，某些浏览器对 HTTP 头处理不一致）
+  if (isDev) {
+    var meta = document.createElement('meta');
+    meta.httpEquiv = 'Cache-Control';
+    meta.content = 'no-cache, no-store, must-revalidate';
+    document.head.appendChild(meta);
+  }
+
+  // 生产环境：注册 Service Worker
+  if (!isDev && 'serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js').catch(function() {});
+    });
+  }
+})();
 `;
 
 /**

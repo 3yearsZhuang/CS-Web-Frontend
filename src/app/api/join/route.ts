@@ -1,11 +1,13 @@
 /**
  * @file 入社申请 API 路由 — POST /api/join
  *
- * POST: 提交入社申请（公开，无需登录）
+ * POST: 提交入社申请（游客可提交，登录用户自动关联 userId）
  */
 import { NextResponse } from 'next/server';
 import { submitJoinApplication } from '@/modules/join/server';
-import { parseJsonBody, getClientIp, jsonError } from '@/shared/security/security';
+import { getSession } from '@/modules/auth/server';
+import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
+import { parseJsonBody, getCookieValue, getClientIp, jsonError } from '@/shared/security/security';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -21,6 +23,11 @@ const submitSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // 可选登录：有 session 则关联 userId，无 session 则游客提交（userId = null）
+  const token = getCookieValue(req, AUTH_COOKIE_NAME);
+  const session = token ? getSession(token) : null;
+  const userId = session?.user.id ?? null;
+
   const ip = getClientIp(req);
 
   const parsed = await parseJsonBody(req);
@@ -35,7 +42,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const application = submitJoinApplication(result.data);
+    const application = submitJoinApplication({ ...result.data, userId: userId ?? undefined });
     return NextResponse.json({ application }, { status: 201 });
   } catch (err) {
     if (err instanceof Error && err.name === 'VALIDATION_ERROR') {

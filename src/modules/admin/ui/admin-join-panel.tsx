@@ -26,6 +26,7 @@ interface JoinApplication {
   reason: string;
   contactQq: string | null;
   contactPhone: string | null;
+  userId: string | null;
   status: AppStatus;
   reviewedBy: string | null;
   reviewNote: string | null;
@@ -263,6 +264,9 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                       <span>学号 / {app.studentId}</span>
                       <span>专业 / {app.major}</span>
                       <span>提交 / {formatDate(app.createdAt)}</span>
+                      {app.userId && (
+                        <span className="text-[var(--primary)]">已关联用户</span>
+                      )}
                     </div>
                   </div>
                 </div>

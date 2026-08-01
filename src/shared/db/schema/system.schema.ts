@@ -255,6 +255,7 @@ export const joinApplicationsSqlite = sqliteTable(
     reason: text('reason').notNull(),
     contactQq: text('contact_qq'),
     contactPhone: text('contact_phone'),
+    userId: text('user_id'),
     status: text('status').notNull().default('pending'),
     reviewedBy: text('reviewed_by'),
     reviewNote: text('review_note'),
@@ -264,6 +265,7 @@ export const joinApplicationsSqlite = sqliteTable(
   (table) => ({
     statusIdx: index('idx_join_applications_status').on(table.status),
     createdAtIdx: index('idx_join_applications_created_at').on(table.createdAt),
+    userIdIdx: index('idx_join_applications_user_id').on(table.userId),
   }),
 );
 
@@ -278,6 +280,7 @@ export const joinApplicationsPg = pgTable(
     reason: pgText('reason').notNull(),
     contactQq: pgText('contact_qq'),
     contactPhone: pgText('contact_phone'),
+    userId: pgText('user_id'),
     status: pgText('status').notNull().default('pending'),
     reviewedBy: pgText('reviewed_by'),
     reviewNote: pgText('review_note'),
@@ -287,6 +290,7 @@ export const joinApplicationsPg = pgTable(
   (table) => ({
     statusIdx: pgIndex('idx_join_applications_status').on(table.status),
     createdAtIdx: pgIndex('idx_join_applications_created_at').on(table.createdAt),
+    userIdIdx: pgIndex('idx_join_applications_user_id').on(table.userId),
   }),
 );
 
