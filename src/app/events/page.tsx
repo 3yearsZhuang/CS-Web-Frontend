@@ -90,7 +90,6 @@ export default function EventsPage() {
 
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
-  const [tagFilter, setTagFilter] = useState('');
 
   // 时间轴子视图模式：时间轴 / 日历（M3 活动日历视图）
   const [viewMode, setViewMode] = useState<TimelineViewMode>('timeline');
@@ -104,13 +103,12 @@ export default function EventsPage() {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set('search', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
-    if (tagFilter) params.set('tag', tagFilter);
 
     const res = await fetch(`/api/events?${params.toString()}`);
     if (!res.ok) throw new Error('加载失败');
     const data = await res.json();
     return data.events ?? [];
-  }, [debouncedSearch, statusFilter, tagFilter]);
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -289,11 +287,8 @@ export default function EventsPage() {
                 <EventFilterBar
                   searchInput={searchInput}
                   statusFilter={statusFilter}
-                  tagFilter={tagFilter}
-                  events={events}
                   onSearchChange={setSearchInput}
                   onStatusChange={setStatusFilter}
-                  onTagChange={setTagFilter}
                 />
 
                 {/* 视图内容：时间轴（年份手风琴 + 铁路线）或日历 */}

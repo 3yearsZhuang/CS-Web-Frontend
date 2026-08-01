@@ -9,33 +9,33 @@ import {
   FORUM_LIMITS,
   SLUG_PATTERN,
   toCategory,
-  type ForumCategory,
-  type ForumCategoryRow,
+  type CommunityCategory,
+  type CategoryRow,
 } from './shared';
 
 /** 列出所有版块（按 sort_order 升序），含统计数 */
-export function listCategories(): ForumCategory[] {
+export function listCategories(): CommunityCategory[] {
   const db = getDb();
   const rows = db
-    .prepare('SELECT * FROM forum_categories ORDER BY sort_order ASC, created_at ASC')
-    .all() as ForumCategoryRow[];
+    .prepare('SELECT * FROM community_categories ORDER BY sort_order ASC, created_at ASC')
+    .all() as CategoryRow[];
   return rows.map(toCategory);
 }
 
 /** 按 slug 查询版块 */
-export function getCategoryBySlug(slug: string): ForumCategory | null {
+export function getCategoryBySlug(slug: string): CommunityCategory | null {
   const db = getDb();
   const row = db
-    .prepare('SELECT * FROM forum_categories WHERE slug = ?')
-    .get(slug) as ForumCategoryRow | undefined;
+    .prepare('SELECT * FROM community_categories WHERE slug = ?')
+    .get(slug) as CategoryRow | undefined;
   return row ? toCategory(row) : null;
 }
 
 /** 按 ID 查询版块 */
-export function getCategoryById(id: string): ForumCategory | null {
+export function getCategoryById(id: string): CommunityCategory | null {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM forum_categories WHERE id = ?').get(id) as
-    | ForumCategoryRow
+  const row = db.prepare('SELECT * FROM community_categories WHERE id = ?').get(id) as
+    | CategoryRow
     | undefined;
   return row ? toCategory(row) : null;
 }
@@ -72,12 +72,12 @@ function validateCategoryInput(input: CategoryInput, isUpdate = false): void {
 }
 
 /** 创建版块（管理员）— slug 冲突抛 'SLUG_EXISTS' */
-export function createCategory(adminId: string, input: CategoryInput): ForumCategory {
+export function createCategory(adminId: string, input: CategoryInput): CommunityCategory {
   validateCategoryInput(input);
   const db = getDb();
 
   const existing = db
-    .prepare('SELECT id FROM forum_categories WHERE slug = ?')
+    .prepare('SELECT id FROM community_categories WHERE slug = ?')
     .get(input.slug);
   if (existing) {
     throw new AppError('slug 已存在', 'SLUG_EXISTS');
@@ -85,7 +85,7 @@ export function createCategory(adminId: string, input: CategoryInput): ForumCate
 
   const id = crypto.randomUUID();
   db.prepare(
-    `INSERT INTO forum_categories (id, slug, name, description, icon, sort_order, created_by)
+    `INSERT INTO community_categories (id, slug, name, description, icon, sort_order, created_by)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
@@ -103,7 +103,7 @@ export function createCategory(adminId: string, input: CategoryInput): ForumCate
     name: input.name,
   });
 
-  const row = db.prepare('SELECT * FROM forum_categories WHERE id = ?').get(id) as ForumCategoryRow;
+  const row = db.prepare('SELECT * FROM community_categories WHERE id = ?').get(id) as CategoryRow;
   return toCategory(row);
 }
 
@@ -112,11 +112,11 @@ export function updateCategory(
   adminId: string,
   categoryId: string,
   input: Partial<CategoryInput>,
-): ForumCategory {
+): CommunityCategory {
   const db = getDb();
   const existing = db
-    .prepare('SELECT * FROM forum_categories WHERE id = ?')
-    .get(categoryId) as ForumCategoryRow | undefined;
+    .prepare('SELECT * FROM community_categories WHERE id = ?')
+    .get(categoryId) as CategoryRow | undefined;
   if (!existing) {
     throw new AppError('版块不存在', 'NOT_FOUND');
   }
@@ -133,7 +133,7 @@ export function updateCategory(
   // slug 变更时检查冲突
   if (input.slug !== undefined && input.slug !== existing.slug) {
     const conflict = db
-      .prepare('SELECT id FROM forum_categories WHERE slug = ? AND id != ?')
+      .prepare('SELECT id FROM community_categories WHERE slug = ? AND id != ?')
       .get(input.slug, categoryId);
     if (conflict) {
       throw new AppError('slug 已存在', 'SLUG_EXISTS');
@@ -166,13 +166,13 @@ export function updateCategory(
 
   sets.push("updated_at = datetime('now')");
   values.push(categoryId);
-  db.prepare(`UPDATE forum_categories SET ${sets.join(', ')} WHERE id = ?`).run(...values);
+  db.prepare(`UPDATE community_categories SET ${sets.join(', ')} WHERE id = ?`).run(...values);
 
   logAdminAction(adminId, 'forum_update_category', null, { categoryId, changes: input });
 
   const row = db
-    .prepare('SELECT * FROM forum_categories WHERE id = ?')
-    .get(categoryId) as ForumCategoryRow;
+    .prepare('SELECT * FROM community_categories WHERE id = ?')
+    .get(categoryId) as CategoryRow;
   return toCategory(row);
 }
 
@@ -180,13 +180,13 @@ export function updateCategory(
 export function deleteCategory(adminId: string, categoryId: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, slug, name FROM forum_categories WHERE id = ?')
+    .prepare('SELECT id, slug, name FROM community_categories WHERE id = ?')
     .get(categoryId) as { id: string; slug: string; name: string } | undefined;
   if (!existing) {
     throw new AppError('版块不存在', 'NOT_FOUND');
   }
 
-  db.prepare('DELETE FROM forum_categories WHERE id = ?').run(categoryId);
+  db.prepare('DELETE FROM community_categories WHERE id = ?').run(categoryId);
 
   logAdminAction(adminId, 'forum_delete_category', null, {
     categoryId,

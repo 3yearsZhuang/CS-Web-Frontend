@@ -5,11 +5,11 @@
 
 import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
-import type { ForumTopicDetail, ForumTopic } from '@/modules/community/types';
+import type { CommunityPostDetail, CommunityPost } from '@/modules/community/types';
 
 interface TopicSidebarProps {
-  topic: ForumTopicDetail;
-  relatedTopics: ForumTopic[];
+  topic: CommunityPostDetail;
+  relatedTopics: CommunityPost[];
   className?: string;
 }
 

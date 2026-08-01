@@ -8,12 +8,12 @@ import { TopicReplyEditor } from '@/modules/community/ui/forum-topic-reply-edito
 import { ReplySortBar, type ReplySortMode } from '@/modules/community/ui/forum-reply-sort-bar';
 import type {
   CurrentUser,
-  ForumReplyDetail,
-  NestedRepliesResult,
+  CommunityCommentDetail,
+  NestedCommentsResult,
 } from '@/modules/community/types';
 
 interface TopicReplySectionProps {
-  replies: ForumReplyDetail[];
+  replies: CommunityCommentDetail[];
   replyPage: number;
   replyTotalPages: number;
   currentUser: CurrentUser | null;
@@ -24,7 +24,7 @@ interface TopicReplySectionProps {
   replyParentId: string | null;
   replyError: string | null;
   submittingReply: boolean;
-  nestedRepliesLoader: (parentId: string) => Promise<NestedRepliesResult | null>;
+  nestedRepliesLoader: (parentId: string) => Promise<NestedCommentsResult | null>;
   onSortChange: (mode: ReplySortMode) => void;
   onContentChange: (content: string) => void;
   onSubmit: () => Promise<void>;

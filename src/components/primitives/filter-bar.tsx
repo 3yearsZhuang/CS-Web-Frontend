@@ -5,6 +5,8 @@
 'use client';
 
 import { ScrollIndicator } from '@/components/effects/scroll-indicator';
+import type { EventStatus } from '@/modules/events/types';
+import { EventStatusDot } from '@/modules/events/ui/event-status-badge';
 
 /** 筛选选项 */
 export interface FilterBarOption {
@@ -14,6 +16,8 @@ export interface FilterBarOption {
   label: string;
   /** 可选编号前缀，如 "01" */
   num?: string;
+  /** 可选：前置状态圆点（活动状态筛选场景） */
+  dot?: EventStatus;
 }
 
 interface FilterBarProps {
@@ -61,12 +65,13 @@ export function FilterBar({
               <button
                 key={opt.value}
                 onClick={() => onChange(opt.value)}
-                className={`whitespace-nowrap px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors focus-amber ${
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors focus-amber ${
                   active
                     ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
                     : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                 }`}
               >
+                {opt.dot && <EventStatusDot status={opt.dot} className="shrink-0" />}
                 {showNumber && opt.num && (
                   <span className="opacity-60 mr-2">{opt.num}</span>
                 )}

@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import type { EventItem } from '@/modules/events/types';
+import { EventStatusBadge } from './event-status-badge';
 
 interface EventCardProps {
   event: EventItem;
@@ -14,15 +15,6 @@ interface EventCardProps {
 /** 活动卡片组件 — 左右交替排列的时间轴节点 */
 export function EventCard({ event, isLeft }: EventCardProps) {
   const isArchived = event.status === 'ended';
-  const statusLabel =
-    isArchived ? 'ARCHIVED' :
-    event.status === 'upcoming' ? 'UPCOMING' :
-    event.status === 'ongoing' ? 'ONGOING' : '—';
-  const statusDot =
-    isArchived ? 'bg-[var(--muted-foreground)]/30 border-[var(--muted-foreground)]/30' :
-    event.status === 'upcoming' ? 'border-[var(--primary)] bg-transparent' :
-    event.status === 'ongoing' ? 'bg-[var(--primary)] border-[var(--primary)]' :
-    'bg-[var(--muted-foreground)]/30 border-[var(--muted-foreground)]/30';
 
   return (
     <div
@@ -30,9 +22,9 @@ export function EventCard({ event, isLeft }: EventCardProps) {
         isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
       } flex-row`}
     >
-      <div className={`absolute left-[12px] md:left-1/2 top-[34px] md:-translate-x-1/2 z-10 w-[15px] h-[15px] rounded-full border-2 bg-[var(--background)] transition-all duration-300 group-hover:scale-125 group-hover:shadow-[0_0_0_4px_var(--primary)]/20 shrink-0 ${statusDot}`} aria-hidden="true" />
-      <div className={`w-full md:w-[calc(50%-32px)] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0`}>
-        <Link href={`/events/${event.id}`} className="block card-minimal focus-amber group/link">
+      <div className="absolute left-[12px] md:left-1/2 top-[34px] md:-translate-x-1/2 z-10 w-[15px] h-[15px] rounded-full border-2 bg-[var(--background)] transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none group-hover:shadow-[0_0_0_4px_var(--primary)]/20 shrink-0 border-[var(--primary)] pointer-events-none" aria-hidden="true" />
+      <div className={`relative z-20 w-full md:w-[calc(50%-32px)] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0`}>
+        <Link href={`/events/${event.id}`} className="block card-minimal focus-amber group/link relative z-20">
           <article className={`border p-5 sm:p-6 transition-colors ${
             isArchived
               ? 'border-[var(--border)] opacity-70 hover:opacity-100 hover:border-[var(--primary)]/50'
@@ -47,17 +39,7 @@ export function EventCard({ event, isLeft }: EventCardProps) {
                   [PINNED]
                 </span>
               )}
-              <span className={`font-mono uppercase tracking-wider px-2 py-0.5 border text-[10px] ${
-                isArchived
-                  ? 'border-[var(--border)] text-[var(--muted-foreground)]'
-                  : event.status === 'upcoming'
-                    ? 'border-[var(--primary)] text-[var(--primary)]'
-                    : event.status === 'ongoing'
-                      ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                      : 'border-[var(--border)] text-[var(--muted-foreground)]'
-              }`}>
-                [{statusLabel}]
-              </span>
+              <EventStatusBadge status={event.status} />
             </div>
             <h3 className={`display-serif text-[clamp(18px,3vw,24px)] mb-3 group-hover/link:text-[var(--primary)] transition-colors leading-[1.2] ${
               isArchived ? 'text-[var(--muted-foreground)]' : 'text-[var(--foreground)]'

@@ -10,11 +10,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import type {
   CurrentUser,
-  ForumReplyDetail,
-  ForumTopic,
-  ForumTopicDetail,
-  NestedRepliesResult,
-  PaginatedReplies,
+  CommunityCommentDetail,
+  CommunityPost,
+  CommunityPostDetail,
+  NestedCommentsResult,
+  PaginatedComments,
 } from '@/modules/community/types';
 
 const REPLIES_PAGE_SIZE = 10;
@@ -27,15 +27,15 @@ interface CurrentUserResponse {
 }
 
 interface TopicResponse {
-  topic: ForumTopicDetail;
+  topic: CommunityPostDetail;
 }
 
 /** 主题详情页状态 */
 export interface TopicDetailState {
-  topic: ForumTopicDetail | null;
-  setTopic: (topic: ForumTopicDetail | null) => void;
-  replies: ForumReplyDetail[];
-  setReplies: (updater: ForumReplyDetail[] | ((prev: ForumReplyDetail[]) => ForumReplyDetail[])) => void;
+  topic: CommunityPostDetail | null;
+  setTopic: (topic: CommunityPostDetail | null) => void;
+  replies: CommunityCommentDetail[];
+  setReplies: (updater: CommunityCommentDetail[] | ((prev: CommunityCommentDetail[]) => CommunityCommentDetail[])) => void;
   replyPage: number;
   setReplyPage: (page: number) => void;
   replyTotalPages: number;
@@ -44,23 +44,23 @@ export interface TopicDetailState {
   error: string | null;
   setError: (err: string | null) => void;
   currentUser: CurrentUser | null;
-  relatedTopics: ForumTopic[];
+  relatedTopics: CommunityPost[];
   loadTopic: () => Promise<void>;
   loadReplies: () => Promise<void>;
-  nestedRepliesLoader: (parentId: string) => Promise<NestedRepliesResult | null>;
+  nestedRepliesLoader: (parentId: string) => Promise<NestedCommentsResult | null>;
 }
 
 /** 主题详情页数据加载 hook */
 export function useTopicDetail(topicId: string): TopicDetailState {
-  const [topic, setTopic] = useState<ForumTopicDetail | null>(null);
-  const [replies, setReplies] = useState<ForumReplyDetail[]>([]);
+  const [topic, setTopic] = useState<CommunityPostDetail | null>(null);
+  const [replies, setReplies] = useState<CommunityCommentDetail[]>([]);
   const [replyPage, setReplyPage] = useState(1);
   const [replyTotalPages, setReplyTotalPages] = useState(0);
   const [replyTotal, setReplyTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [relatedTopics, setRelatedTopics] = useState<ForumTopic[]>([]);
+  const [relatedTopics, setRelatedTopics] = useState<CommunityPost[]>([]);
 
   // 加载当前用户（可选，未登录也允许浏览）
   useEffect(() => {
@@ -99,7 +99,7 @@ export function useTopicDetail(topicId: string): TopicDetailState {
       const url = `/api/community/forum/topics/${topicId}/replies?page=${replyPage}&page_size=${REPLIES_PAGE_SIZE}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('加载回复失败');
-      const data = (await res.json()) as PaginatedReplies;
+      const data = (await res.json()) as PaginatedComments;
       setReplies(data.items ?? []);
       setReplyTotalPages(data.totalPages ?? 0);
       setReplyTotal(data.total ?? 0);
@@ -127,11 +127,11 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   }, [topicId]);
 
   const nestedRepliesLoader = useCallback(
-    async (parentId: string): Promise<NestedRepliesResult | null> => {
+    async (parentId: string): Promise<NestedCommentsResult | null> => {
       try {
         const res = await fetch(`/api/community/forum/replies/${parentId}/nested`);
         if (!res.ok) return null;
-        return (await res.json()) as NestedRepliesResult;
+        return (await res.json()) as NestedCommentsResult;
       } catch {
         return null;
       }
@@ -150,7 +150,7 @@ export function useTopicDetail(topicId: string): TopicDetailState {
     fetch(`/api/community/forum/topics?${params.toString()}`)
       .then(async (res) => {
         if (!res.ok) return null;
-        const data = (await res.json()) as { items: ForumTopic[] };
+        const data = (await res.json()) as { items: CommunityPost[] };
         return data.items ?? [];
       })
       .then((items) => {

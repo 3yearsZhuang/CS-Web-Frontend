@@ -11,10 +11,10 @@ import { formatDateTime } from '@/shared/utils/utils';
 import { SectionLoading } from '@/components';
 import { SectionNav } from '@/components/primitives/section-nav';
 import type {
-  ForumTopic,
-  ForumReplyDetail,
-  PaginatedTopics,
-  PaginatedReplies,
+  CommunityPost,
+  CommunityCommentDetail,
+  PaginatedPosts,
+  PaginatedComments,
 } from '@/modules/community/types';
 
 const PAGE_SIZE = 10;
@@ -44,9 +44,9 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
   const [activeSubTab, setActiveSubTab] = useState<ForumSubTab>('topics');
 
   // 主题列表（topics / favorites 共用）
-  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [topics, setTopics] = useState<CommunityPost[]>([]);
   // 回复列表
-  const [replies, setReplies] = useState<ForumReplyDetail[]>([]);
+  const [replies, setReplies] = useState<CommunityCommentDetail[]>([]);
 
   // 分页状态
   const [page, setPage] = useState(1);
@@ -77,13 +77,13 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
       }
 
       if (activeSubTab === 'replies') {
-        const data = (await res.json()) as PaginatedReplies;
+        const data = (await res.json()) as PaginatedComments;
         setReplies(data.items ?? []);
         setTopics([]);
         setTotal(data.total ?? 0);
         setTotalPages(data.totalPages ?? 0);
       } else {
-        const data = (await res.json()) as PaginatedTopics;
+        const data = (await res.json()) as PaginatedPosts;
         setTopics(data.items ?? []);
         setReplies([]);
         setTotal(data.total ?? 0);

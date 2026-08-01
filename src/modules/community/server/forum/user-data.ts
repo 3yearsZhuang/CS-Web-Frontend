@@ -10,19 +10,19 @@ import {
 } from './shared';
 import {
   listTopics,
-  type PaginatedTopics,
+  type PaginatedPosts,
 } from './topics';
 import {
   buildReplyDetails,
 } from './replies';
-import type { PaginatedReplies } from '../../types';
+import type { PaginatedComments } from '../../types';
 
 /** 列出某用户发布的主题（公开） */
 export function listUserTopics(
   userId: string,
   page: number = 1,
   pageSize: number = FORUM_LIMITS.TOPICS_PAGE_SIZE,
-): PaginatedTopics {
+): PaginatedPosts {
   return listTopics({ authorId: userId, page, pageSize });
 }
 
@@ -31,7 +31,7 @@ export function listUserReplies(
   userId: string,
   page: number = 1,
   pageSize: number = FORUM_LIMITS.REPLIES_PAGE_SIZE,
-): PaginatedReplies {
+): PaginatedComments {
   const db = getDb();
   const { page: safePage, pageSize: safePageSize, offset } = computePagination({
     page,
@@ -42,16 +42,16 @@ export function listUserReplies(
 
   const where = "author_id = ? AND status = 'published'";
   const totalRow = db
-    .prepare(`SELECT COUNT(*) as count FROM forum_replies WHERE ${where}`)
+    .prepare(`SELECT COUNT(*) as count FROM community_comments WHERE ${where}`)
     .get(userId) as { count: number };
   const total = totalRow.count;
   const totalPages = computeTotalPages(total, safePageSize);
 
   const rows = db
     .prepare(
-      `SELECT * FROM forum_replies WHERE ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      `SELECT * FROM community_comments WHERE ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     )
-    .all(userId, safePageSize, offset) as import('./shared').ForumReplyRow[];
+    .all(userId, safePageSize, offset) as import('./shared').CommentRow[];
 
   const result = buildReplyDetails(rows, undefined, total, safePage, safePageSize, totalPages);
 
@@ -66,7 +66,7 @@ export function listUserReplies(
       const placeholders = topicIds.map(() => '?').join(',');
       const topicRows = db
         .prepare(
-          `SELECT id, title, category_id FROM forum_topics WHERE id IN (${placeholders})`,
+          `SELECT id, title, category_id FROM community_posts WHERE id IN (${placeholders}) AND kind = 'topic'`,
         )
         .all(...topicIds) as Array<{
           id: string;
@@ -89,7 +89,7 @@ export function listUserReplies(
 
     // 为每条回复附加 topic 摘要
     result.items = result.items.map((reply) => {
-      const t = topicMap.get(reply.topicId);
+      const t = topicMap.get(reply.topicId ?? '');
       if (!t) return reply;
       const cat = categoryMap.get(t.categoryId) ?? null;
       return {

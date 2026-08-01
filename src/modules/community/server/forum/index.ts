@@ -9,15 +9,15 @@ export {
   MENTION_PATTERN,
   VIEW_DEDUP_WINDOW_HOURS,
   hashIpForView,
-  type ForumStatus,
+  type PostStatus,
   type LikeTargetType,
   type MentionSourceType,
-  type ForumCategory,
-  type ForumAuthorSummary,
-  type ForumTopic,
-  type ForumTopicDetail,
-  type ForumReply,
-  type ForumReplyDetail,
+  type CommunityCategory,
+  type AuthorSummary,
+  type CommunityPost,
+  type CommunityPostDetail,
+  type CommunityComment,
+  type CommunityCommentDetail,
 } from './shared';
 
 // ============= 版块 =============
@@ -40,8 +40,8 @@ export {
   deleteTopic,
   recordTopicView,
   type ListTopicsFilters,
-  type PaginatedTopics,
-  type TopicInput,
+  type PaginatedPosts,
+  type PostInput,
 } from './topics';
 
 // ============= 回复 =============
@@ -52,7 +52,7 @@ export {
   updateReply,
   deleteReply,
   type ListRepliesFilters,
-  type NestedRepliesResult,
+  type NestedCommentsResult,
   type ReplyInput,
 } from './replies';
 

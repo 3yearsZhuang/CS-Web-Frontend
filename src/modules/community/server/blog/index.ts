@@ -13,6 +13,7 @@ export {
   getPostBySlug,
   listPosts,
   getUserPosts,
+  incrementViewCount,
 } from './posts';
 
 // ============= 系列 =============
@@ -25,7 +26,6 @@ export {
 
 // ============= 点赞 =============
 export {
-  incrementViewCount,
   toggleLike,
   hasLiked,
 } from './likes';

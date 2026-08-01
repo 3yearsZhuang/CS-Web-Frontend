@@ -22,6 +22,9 @@ pnpm-debug.log*
 
 # 数据库
 data/
+# 例外：保留 tools/data 子模块的目录结构占位
+!tools/data/
+!tools/data/.gitkeep
 
 # Litestream 备份
 backups/

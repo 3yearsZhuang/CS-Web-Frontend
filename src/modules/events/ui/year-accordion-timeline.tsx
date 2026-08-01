@@ -5,8 +5,10 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import { EASE } from '@/shared/utils/ui-constants';
+import { isPastDate } from '@/shared/utils/event-date';
 import { SectionLoading } from '@/components';
 import { EventCard } from './event-card';
+import { EventStatusDot } from './event-status-badge';
 import type { EventItem } from '@/modules/events/types';
 
 /** 年份分组，包含年份标签和对应活动列表 */
@@ -78,7 +80,7 @@ export function YearAccordionTimeline({
                   className="relative z-10 w-full flex items-center gap-4 py-6 group cursor-pointer focus-amber"
                 >
                   {/* 铁路线上的菱形节点 */}
-                  <div className={`absolute left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 ${
+                  <div className={`absolute left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 motion-reduce:transition-none ${
                     isExpanded
                       ? 'bg-[var(--primary)] border-[var(--primary)] shadow-[0_0_12px_var(--primary)]/30'
                       : 'bg-[var(--background)] border-[var(--border)] group-hover:border-[var(--primary)]/50'
@@ -98,12 +100,14 @@ export function YearAccordionTimeline({
                       {group.events.length} 个活动
                     </span>
                     {activeCount > 0 && (
-                      <span className="meta-mono text-[10px] text-[var(--primary)] px-2 py-0.5 border border-[var(--primary)]/30">
+                      <span className="flex items-center gap-1.5 meta-mono text-[10px] text-[var(--primary)] px-2 py-0.5 border border-[var(--primary)]/30">
+                        <EventStatusDot status="ongoing" />
                         {activeCount} active
                       </span>
                     )}
                     {pastCount > 0 && (
-                      <span className="meta-mono text-[10px] text-[var(--muted-foreground)] px-2 py-0.5 border border-[var(--border)]">
+                      <span className="flex items-center gap-1.5 meta-mono text-[10px] text-[var(--muted-foreground)] px-2 py-0.5 border border-[var(--border)]">
+                        <EventStatusDot status="ended" />
                         {pastCount} archived
                       </span>
                     )}
@@ -149,25 +153,4 @@ export function YearAccordionTimeline({
       )}
     </div>
   );
-}
-
-/** 判断活动日期是否已过
- *
- * 兼容 admin 表单的多种日期格式：YYYY.MM.DD / YYYY-MM-DD / YYYY/MM/DD
- * （new Date('2026.09.15') 在多数 JS 引擎返回 Invalid Date，需手动解析）
- */
-function isPastDate(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  const match = dateStr.trim().match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
-  if (!match) return false;
-  const year = parseInt(match[1], 10);
-  const month = parseInt(match[2], 10) - 1;
-  const day = parseInt(match[3], 10);
-  if (month < 0 || month > 11 || day < 1 || day > 31) return false;
-  const d = new Date(year, month, day);
-  if (isNaN(d.getTime())) return false;
-  // 同日比较：活动当日不算"已过"（与后端 autoArchive 的 < 语义一致，当日仍可见）
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return d < today;
 }

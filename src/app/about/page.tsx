@@ -149,9 +149,9 @@ export default function AboutPage() {
   const [activeTab, setActiveTab] = useState<AboutTab>('belief');
 
   const aboutTabs: CapsuleTab[] = [
-    { key: 'belief', num: '01', label: '信念 & 期望 / Belief & Expectation' },
+    { key: 'belief', num: '01', label: '关于 / About' },
     { key: 'directions', num: '02', label: '方向 / Directions' },
-    { key: 'process', num: '03', label: '流程 & 加入 / Process & Join' },
+    { key: 'process', num: '03', label: '加入 / Join' },
   ];
 
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();

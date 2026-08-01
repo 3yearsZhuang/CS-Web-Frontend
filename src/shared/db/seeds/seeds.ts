@@ -29,15 +29,15 @@ export function seedEventsIfEmpty(db: DB): void {
   });
 }
 
-/** 首次创建 forum_categories 表时插入 4 个默认版块（幂等，仅空表执行） */
-export function seedForumCategoriesIfEmpty(db: DB): void {
+/** 首次创建 community_categories 表时插入 4 个默认版块（幂等，仅空表执行） */
+export function seedCommunityCategoriesIfEmpty(db: DB): void {
   const count = db
-    .prepare('SELECT COUNT(*) as cnt FROM forum_categories')
+    .prepare('SELECT COUNT(*) as cnt FROM community_categories')
     .get() as { cnt: number };
   if (count.cnt > 0) return;
 
   const insert = db.prepare(
-    `INSERT INTO forum_categories (id, slug, name, description, sort_order)
+    `INSERT INTO community_categories (id, slug, name, description, sort_order)
      VALUES (?, ?, ?, ?, ?)`,
   );
 

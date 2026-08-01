@@ -13,7 +13,7 @@ import { initSchema } from './db/sqlite-init';
 
 // re-export 子模块公开 API，保持 `import { ... } from '@/shared/db'` 不变
 export { cleanupExpiredData } from './db/cleanup';
-export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './db/seeds/seeds';
+export { seedEventsIfEmpty, seedCommunityCategoriesIfEmpty } from './db/seeds/seeds';
 export { initSchema } from './db/sqlite-init';
 
 /** SQLite 数据库实例类型 */

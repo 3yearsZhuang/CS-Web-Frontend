@@ -6,18 +6,18 @@
 import { ForumReplyItem } from './forum-reply-item';
 import type {
   CurrentUser,
-  ForumReplyDetail,
-  NestedRepliesResult,
+  CommunityCommentDetail,
+  NestedCommentsResult,
 } from '@/modules/community/types';
 
 interface TopicRepliesProps {
-  replies: ForumReplyDetail[];
+  replies: CommunityCommentDetail[];
   replyPage: number;
   replyTotalPages: number;
   currentUser: CurrentUser | null;
   isCurrentUserAdmin: boolean;
   isLoggedIn: boolean;
-  nestedRepliesLoader: (parentId: string) => Promise<NestedRepliesResult | null>;
+  nestedRepliesLoader: (parentId: string) => Promise<NestedCommentsResult | null>;
   onReplyLike: (targetType: 'topic' | 'reply', targetId: string) => Promise<void>;
   onReplyToParent: (parentReplyId: string) => void;
   onEditReply: (replyId: string, content: string) => void | Promise<void>;

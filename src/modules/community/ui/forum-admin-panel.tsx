@@ -12,9 +12,9 @@ import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type {
-  ForumCategory,
-  ForumTopic,
-  PaginatedTopics,
+  CommunityCategory,
+  CommunityPost,
+  PaginatedPosts,
 } from '@/modules/community/types';
 
 /* ============= 类型定义 ============= */
@@ -32,7 +32,7 @@ interface CategoryInput {
 }
 
 interface CategoriesResponse {
-  items: ForumCategory[];
+  items: CommunityCategory[];
 }
 
 /* ============= 常量 ============= */
@@ -136,7 +136,7 @@ export function AdminForumPanel() {
 /* ============= 版块管理 ============= */
 
 function CategoriesManager() {
-  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -169,7 +169,7 @@ function CategoriesManager() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/community/community/forum/categories');
+      const res = await fetch('/api/admin/community/forum/categories');
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(getError(data, '加载失败'));
@@ -197,7 +197,7 @@ function CategoriesManager() {
     }
     setCreating(true);
     try {
-      const res = await fetch('/api/admin/community/community/forum/categories', {
+      const res = await fetch('/api/admin/community/forum/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -223,7 +223,7 @@ function CategoriesManager() {
   };
 
   /** 进入编辑模式 */
-  const startEdit = (cat: ForumCategory) => {
+  const startEdit = (cat: CommunityCategory) => {
     setEditingId(cat.id);
     setEditForm({
       slug: cat.slug,
@@ -244,7 +244,7 @@ function CategoriesManager() {
     }
     setSavingEdit(true);
     try {
-      const res = await fetch(`/api/admin/community/community/forum/categories/${id}`, {
+      const res = await fetch(`/api/admin/community/forum/categories/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -269,7 +269,7 @@ function CategoriesManager() {
   };
 
   /** 删除版块（带二次确认） */
-  const handleDelete = async (cat: ForumCategory) => {
+  const handleDelete = async (cat: CommunityCategory) => {
     const confirmed = await confirm({
       title: '删除版块',
       message: `确定要删除版块「${cat.name}」吗？\n该操作将级联删除其下所有主题与回复，且不可恢复。`,
@@ -279,7 +279,7 @@ function CategoriesManager() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/admin/community/community/forum/categories/${cat.id}`, {
+      const res = await fetch(`/api/admin/community/forum/categories/${cat.id}`, {
         method: 'DELETE',
       });
       const data = await res.json().catch(() => null);
@@ -837,7 +837,7 @@ function DashboardManager() {
       fetch('/api/admin/users?pageSize=1').then((r) => r.json()),
       fetch('/api/community/feed?stats=1').then((r) => r.json()),
       fetch('/api/admin/announcements').then((r) => r.json()),
-      fetch('/api/admin/community/community/forum/categories').then((r) => r.json()),
+      fetch('/api/admin/community/forum/categories').then((r) => r.json()),
     ])
       .then(([usersData, feedStats, announcementsData, categoriesData]) => {
         setStats({
@@ -1105,8 +1105,8 @@ function UsersManager() {
 /* ============= 主题审核 ============= */
 
 function TopicsManager() {
-  const [topics, setTopics] = useState<ForumTopic[]>([]);
-  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [topics, setTopics] = useState<CommunityPost[]>([]);
+  const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -1129,7 +1129,7 @@ function TopicsManager() {
 
   /** 加载版块（用于筛选下拉） */
   useEffect(() => {
-    fetch('/api/admin/community/community/forum/categories')
+    fetch('/api/admin/community/forum/categories')
       .then(async (res) => {
         if (!res.ok) return null;
         const data = (await res.json()) as CategoriesResponse;
@@ -1157,12 +1157,12 @@ function TopicsManager() {
       if (categoryFilter) params.set('category', categoryFilter);
       if (search.trim()) params.set('search', search.trim());
 
-      const res = await fetch(`/api/admin/community/community/forum/topics?${params}`);
+      const res = await fetch(`/api/admin/community/forum/topics?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(getError(data, '加载失败'));
       }
-      const data = (await res.json()) as PaginatedTopics;
+      const data = (await res.json()) as PaginatedPosts;
       setTopics(data.items ?? []);
       setTotal(data.total ?? 0);
       setTotalPages(data.totalPages ?? 0);
@@ -1209,10 +1209,10 @@ function TopicsManager() {
   };
 
   /** 隐藏主题 */
-  const handleHide = (topic: ForumTopic) => {
+  const handleHide = (topic: CommunityPost) => {
     const reason = window.prompt(`隐藏主题「${topic.title}」\n请输入隐藏原因（可选）：`) ?? '';
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/forum/topics/${topic.id}/hide`, {
+      fetch(`/api/admin/community/forum/topics/${topic.id}/hide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: reason.trim() || undefined }),
@@ -1221,16 +1221,16 @@ function TopicsManager() {
   };
 
   /** 恢复主题 */
-  const handleRestore = (topic: ForumTopic) => {
+  const handleRestore = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/forum/topics/${topic.id}/restore`, { method: 'POST' }),
+      fetch(`/api/admin/community/forum/topics/${topic.id}/restore`, { method: 'POST' }),
     );
   };
 
   /** 切换置顶 */
-  const handleTogglePin = (topic: ForumTopic) => {
+  const handleTogglePin = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/forum/topics/${topic.id}/pin`, {
+      fetch(`/api/admin/community/forum/topics/${topic.id}/pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pinned: !topic.isPinned }),
@@ -1239,9 +1239,9 @@ function TopicsManager() {
   };
 
   /** 切换加精 */
-  const handleToggleFeature = (topic: ForumTopic) => {
+  const handleToggleFeature = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/forum/topics/${topic.id}/feature`, {
+      fetch(`/api/admin/community/forum/topics/${topic.id}/feature`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ featured: !topic.isFeatured }),
@@ -1250,7 +1250,7 @@ function TopicsManager() {
   };
 
   /** 硬删除主题 */
-  const handleHardDelete = (topic: ForumTopic) => {
+  const handleHardDelete = (topic: CommunityPost) => {
     void (async () => {
       const confirmed = await confirm({
         title: '硬删除主题',
@@ -1260,7 +1260,7 @@ function TopicsManager() {
       });
       if (!confirmed) return;
       doAction(topic.id, () =>
-        fetch(`/api/admin/community/community/forum/topics/${topic.id}`, { method: 'DELETE' }),
+        fetch(`/api/admin/community/forum/topics/${topic.id}`, { method: 'DELETE' }),
       );
     })();
   };

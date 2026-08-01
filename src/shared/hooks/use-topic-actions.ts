@@ -9,11 +9,11 @@
 
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityPostDetail } from '@/modules/community/types';
 
 interface UseTopicActionsParams {
-  topic: ForumTopicDetail | null;
-  setTopic: (topic: ForumTopicDetail | null) => void;
+  topic: CommunityPostDetail | null;
+  setTopic: (topic: CommunityPostDetail | null) => void;
   setError: (err: string | null) => void;
   categorySlug: string;
 }

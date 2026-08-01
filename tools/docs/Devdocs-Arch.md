@@ -25,7 +25,7 @@
 
 ```
 fztbucs-projects/
-├── tools/                   # 工具集（docs / tests / scripts / deploy）
+├── tools/                   # 工具集（docs / tests / scripts / deploy / data）
 ├── public/                  # 静态资源（头像预设、logo）
 ├── src/                     # 源代码
 │   ├── app/                 # Next.js App Router（页面 + API 路由）
@@ -123,9 +123,11 @@ shared/
 
 ### 脚本与部署
 
-`tools/scripts/`：`build-app.mjs`、`dev-server.mjs`(端口 2333)、`start-server.mjs`、`install-deps.sh`、`create-user.mjs`(CLI 提权)、`seed-exam-data.mjs`、`cloudflare-tunnel.mjs`、`setup-litestream.sh`。
+`tools/scripts/`：`build-app.mjs`、`dev-server.mjs`(端口 2333)、`start-server.mjs`、`install-deps.sh`、`create-user.mjs`(CLI 提权)、`seed-exam-data.mjs`、`cloudflare-tunnel.mjs`、`setup-litestream.sh`(裸机安装 Litestream + systemd)、`restore-drill.sh`(恢复演练 + 完整性校验)。
 
-部署：Docker + Caddy + Litestream，详见 [Devdocs-Ops.md](Devdocs-Ops.md) Part A。
+部署：Docker + Caddy + Litestream，详见 [Devdocs-Ops.md](Devdocs-Ops.md) Part A。容器编排见 `tools/deploy/docker-compose.yml`（应用 + Caddy），由 `pnpm deploy:*` 系列脚本管理。
+
+`tools/data/`：运行时数据占位目录（数据库/上传文件实际落于仓库根 `data/`，此处仅保留目录结构，已由 `.gitkeep` 跟踪）。
 
 ### 数据库与部署模型
 

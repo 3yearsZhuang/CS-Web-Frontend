@@ -8,12 +8,12 @@
  */
 
 import { useCallback, useState } from 'react';
-import type { ForumReplyDetail, ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityCommentDetail, CommunityPostDetail } from '@/modules/community/types';
 
 interface UseReplyActionsParams {
-  topic: ForumTopicDetail | null;
+  topic: CommunityPostDetail | null;
   setReplies: (
-    updater: ForumReplyDetail[] | ((prev: ForumReplyDetail[]) => ForumReplyDetail[]),
+    updater: CommunityCommentDetail[] | ((prev: CommunityCommentDetail[]) => CommunityCommentDetail[]),
   ) => void;
   loadReplies: () => Promise<void>;
   setError: (err: string | null) => void;

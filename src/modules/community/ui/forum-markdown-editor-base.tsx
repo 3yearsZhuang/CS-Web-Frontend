@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState } from 'react';
 import { MarkdownRenderer } from './forum-markdown-renderer';
 import { InlineTabs } from '@/components/primitives/inline-tabs';
 

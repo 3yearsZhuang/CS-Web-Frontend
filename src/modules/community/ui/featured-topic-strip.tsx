@@ -6,10 +6,10 @@
 import Link from 'next/link';
 import { ScrollIndicator } from '@/components/effects/scroll-indicator';
 import { Avatar } from '@/components/avatar';
-import type { ForumTopic } from '@/modules/community/types';
+import type { CommunityPost } from '@/modules/community/types';
 
 interface FeaturedTopicStripProps {
-  topics: ForumTopic[];
+  topics: CommunityPost[];
   className?: string;
 }
 
@@ -104,7 +104,7 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
  * 根据帖子是否有回复、点赞等状态生成自然的描述性文案，
  * 提升 Feed 的社交感。
  */
-function generateSocialCopy(topic: ForumTopic): string {
+function generateSocialCopy(topic: CommunityPost): string {
   const parts: string[] = [];
 
   if (topic.replyCount > 0) {

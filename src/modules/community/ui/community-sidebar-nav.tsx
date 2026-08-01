@@ -4,10 +4,10 @@
 'use client';
 
 import Link from 'next/link';
-import type { ForumCategory } from '@/modules/community/types';
+import type { CommunityCategory } from '@/modules/community/types';
 
 interface CommunitySidebarNavProps {
-  categories: ForumCategory[];
+  categories: CommunityCategory[];
   activeSection?: string;
   className?: string;
 }
@@ -26,7 +26,7 @@ export function CommunitySidebarNav({
         </h3>
         <nav className="space-y-0">
           <Link
-            href="/community/forum"
+            href="/community/posts?kind=topic"
             className={`block py-2.5 font-mono text-[12px] transition-colors focus-amber ${
               activeSection === 'all'
                 ? 'text-[var(--primary)] border-l-2 border-[var(--primary)] pl-3'
@@ -38,7 +38,7 @@ export function CommunitySidebarNav({
           {categories.map((cat) => (
             <Link
               key={cat.id}
-              href={`/community/forum/${cat.slug}`}
+              href={`/community/posts?kind=topic&category=${cat.slug}`}
               className={`block py-2.5 font-mono text-[12px] transition-colors focus-amber ${
                 activeSection === cat.slug
                   ? 'text-[var(--primary)] border-l-2 border-[var(--primary)] pl-3'
@@ -61,13 +61,13 @@ export function CommunitySidebarNav({
         </h3>
         <nav className="space-y-0">
           <Link
-            href="/community/forum"
+            href="/community/posts?kind=topic"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
             → 论坛首页
           </Link>
           <Link
-            href="/community/blog"
+            href="/community/posts?kind=post"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
             → 博客

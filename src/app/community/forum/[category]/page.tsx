@@ -15,7 +15,7 @@ import { ScrollIndicator } from '@/components/effects/scroll-indicator';
 import { ForumTopicItem } from '@/modules/community/ui/forum-topic-item';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
-import type { ForumCategory, ForumTopic, PaginatedTopics } from '@/modules/community/types';
+import type { CommunityCategory, CommunityPost, PaginatedPosts } from '@/modules/community/types';
 
 type CategoryTab = 'topics' | 'rules';
 type FilterStatus = 'all' | 'pinned' | 'featured';
@@ -36,7 +36,7 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
 ];
 
 interface CategoriesResponse {
-  items: ForumCategory[];
+  items: CommunityCategory[];
 }
 
 export default function CategoryPage() {
@@ -54,8 +54,8 @@ export default function CategoryPage() {
     onTitleClick,
   };
 
-  const [category, setCategory] = useState<ForumCategory | null>(null);
-  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [category, setCategory] = useState<CommunityCategory | null>(null);
+  const [topics, setTopics] = useState<CommunityPost[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,7 @@ export default function CategoryPage() {
       params.set('sort', sort);
       const res = await fetch(`/api/community/forum/topics?${params.toString()}`);
       if (!res.ok) throw new Error('加载失败');
-      const data = (await res.json()) as PaginatedTopics;
+      const data = (await res.json()) as PaginatedPosts;
       let items = data.items ?? [];
       // 客户端筛选（后端暂未支持 pinned/featured 过滤）
       if (statusFilter === 'pinned') {

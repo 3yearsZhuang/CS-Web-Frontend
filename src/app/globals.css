@@ -470,6 +470,164 @@ body {
   background: var(--border);
 }
 
+/* ============= 长文排版 — 活动详情正文 =============
+ * 编辑式技术极简：衬线正文 + 等宽元信息 + 发丝线分割
+ * 全站唯一权威来源（原散落在 events/[id] 的内联 <style jsx global> 已迁移至此） */
+.prose-ark {
+  --prose-gap: 1.5rem;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: 0.005em;
+  max-width: 68ch;
+}
+
+.prose-ark > * + * {
+  margin-top: var(--prose-gap);
+}
+
+/* 章节标题 */
+.prose-ark h1,
+.prose-ark h2,
+.prose-ark h3,
+.prose-ark h4 {
+  font-family: var(--font-serif);
+  font-weight: 350;
+  font-optical-sizing: auto;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+  scroll-margin-top: 6rem;
+}
+.prose-ark h2 {
+  font-size: 1.6rem;
+  margin-top: 3rem;
+  /* 编辑式章节标记：标题上方加发丝线与章节号风格引导 */
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.prose-ark h3 {
+  font-size: 1.25rem;
+  margin-top: 2.25rem;
+}
+.prose-ark h4 {
+  font-size: 1.05rem;
+  margin-top: 1.75rem;
+  color: var(--muted-foreground);
+}
+
+/* 行内代码 */
+.prose-ark code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--hover-overlay);
+  border: 1px solid var(--border);
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+  color: var(--primary);
+}
+
+/* 代码块 — 终端风格 */
+.prose-ark pre {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  background: color-mix(in srgb, var(--muted) 40%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+}
+.prose-ark pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--foreground);
+}
+
+/* 引用 — 左侧发丝线 */
+.prose-ark blockquote {
+  border-left: 2px solid var(--primary);
+  padding-left: 1.25rem;
+  margin-left: 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+  font-family: var(--font-serif);
+  font-weight: 350;
+}
+
+/* 链接 — 下划线从左滑出 */
+.prose-ark a {
+  color: var(--foreground);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: border-color 0.3s var(--ease-ark);
+}
+.prose-ark a:hover {
+  border-color: var(--primary);
+}
+
+/* 有序/无序列表 */
+.prose-ark ul,
+.prose-ark ol {
+  padding-left: 1.5rem;
+}
+.prose-ark li {
+  margin-top: 0.5rem;
+}
+.prose-ark ul li::marker {
+  color: var(--primary);
+}
+.prose-ark ol li::marker {
+  font-family: var(--font-mono);
+  color: var(--muted-foreground);
+}
+
+/* 图片 — 圆角 + 轻微描边 */
+.prose-ark img {
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  width: 100%;
+}
+
+/* 表格 — 等宽元信息 + 发丝线 */
+.prose-ark table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.prose-ark th,
+.prose-ark td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+}
+.prose-ark th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* 水平分割 — 编辑式发丝线 */
+.prose-ark hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 3rem 0;
+}
+
+/* 动效守卫 — 尊重用户减少动态偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .prose-ark a,
+  .prose-ark * {
+    transition: none !important;
+  }
+}
+
 /* 滚动条 */
 ::-webkit-scrollbar {
   width: 4px;

@@ -1,37 +1,50 @@
 /**
- * @file 博客点赞服务
+ * @file 博客点赞服务（统一重构：blog_likes → community_reactions）
  */
-
 import crypto from 'node:crypto';
 import { getDb } from '@/shared/db';
+import { AppError } from '@/shared/app-error';
 
-/** 增加文章浏览次数 */
-export function incrementViewCount(postId: string): void {
-  const db = getDb();
-  db.prepare('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?').run(postId);
-}
-
-/** 切换文章点赞状态 */
+/** 切换博客文章点赞（登录用户） */
 export function toggleLike(postId: string, userId: string): { liked: boolean; likeCount: number } {
   const db = getDb();
-  const existing = db.prepare('SELECT id FROM blog_likes WHERE post_id = ? AND user_id = ?').get(postId, userId) as { id: string } | undefined;
+  const post = db
+    .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'post' AND status = 'published'")
+    .get(postId);
+  if (!post) throw new AppError('文章不存在或已删除', 'NOT_FOUND');
 
-  if (existing) {
-    db.prepare('DELETE FROM blog_likes WHERE id = ?').run(existing.id);
-    db.prepare('UPDATE blog_posts SET like_count = like_count - 1 WHERE id = ?').run(postId);
-    const row = db.prepare('SELECT like_count FROM blog_posts WHERE id = ?').get(postId) as { like_count: number };
-    return { liked: false, likeCount: row.like_count };
-  }
+  const existing = db
+    .prepare("SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
+    .get(userId, postId) as { id: string } | undefined;
 
-  const id = crypto.randomUUID();
-  db.prepare('INSERT INTO blog_likes (id, post_id, user_id) VALUES (?, ?, ?)').run(id, postId, userId);
-  db.prepare('UPDATE blog_posts SET like_count = like_count + 1 WHERE id = ?').run(postId);
-  const row = db.prepare('SELECT like_count FROM blog_posts WHERE id = ?').get(postId) as { like_count: number };
-  return { liked: true, likeCount: row.like_count };
+  let liked: boolean;
+  let likeCount: number;
+  const tx = db.transaction(() => {
+    if (existing) {
+      db.prepare('DELETE FROM community_reactions WHERE id = ?').run(existing.id);
+      db.prepare("UPDATE community_posts SET like_count = MAX(like_count - 1, 0) WHERE id = ?").run(postId);
+      liked = false;
+    } else {
+      const id = crypto.randomUUID();
+      db.prepare(
+        "INSERT INTO community_reactions (id, user_id, target_type, target_id) VALUES (?, ?, 'post', ?)",
+      ).run(id, userId, postId);
+      db.prepare("UPDATE community_posts SET like_count = like_count + 1 WHERE id = ?").run(postId);
+      liked = true;
+    }
+    const row = db.prepare('SELECT like_count FROM community_posts WHERE id = ?').get(postId) as { like_count: number } | undefined;
+    likeCount = row?.like_count ?? 0;
+  });
+  tx();
+
+  return { liked: liked!, likeCount: likeCount! };
 }
 
-/** 检查用户是否已点赞 */
+/** 查询用户是否已点赞 */
 export function hasLiked(postId: string, userId: string): boolean {
   const db = getDb();
-  return !!db.prepare('SELECT id FROM blog_likes WHERE post_id = ? AND user_id = ?').get(postId, userId);
+  const row = db
+    .prepare("SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
+    .get(userId, postId);
+  return !!row;
 }

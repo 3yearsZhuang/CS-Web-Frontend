@@ -8,15 +8,14 @@
 export {
   initSchema,
   initUserSchema,
-  initForumSchema,
   initExamSchema,
   initTaskSchema,
   initEventSchema,
-  initBlogSchema,
+  initCommunitySchema,
   initNotificationSchema,
   initSystemSchema,
 } from './sqlite/index';
-export { seedEventsIfEmpty, seedForumCategoriesIfEmpty } from './seeds/seeds';
+export { seedEventsIfEmpty, seedCommunityCategoriesIfEmpty } from './seeds/seeds';
 export { cleanupExpiredData } from './cleanup';
 export { runMigrations, getAppliedMigrations } from './migrations';
 export { COMPONENT_SEEDS } from './seeds/component-seeds';

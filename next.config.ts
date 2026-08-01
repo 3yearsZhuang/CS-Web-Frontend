@@ -76,11 +76,6 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      {
-        source: '/join',
-        destination: '/about',
-        permanent: true,
-      },
       // 社区聚合：独立列表页永久重定向到 /community
       // 详情页（/forum/[category]/[topicId]、/blog/[slug]、/users/[id]）不受影响
       {
@@ -96,6 +91,17 @@ const nextConfig: NextConfig = {
       {
         source: '/forum/search',
         destination: '/community',
+        permanent: true,
+      },
+      // 社区统一重构：forum/blog 顶层列表合并为 /community/posts
+      {
+        source: '/community/forum',
+        destination: '/community/posts?kind=topic',
+        permanent: true,
+      },
+      {
+        source: '/community/blog',
+        destination: '/community/posts?kind=post',
         permanent: true,
       },
     ];

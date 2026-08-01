@@ -9,7 +9,7 @@ import { logAdminAction } from '@/shared/security/audit';
 export function hideTopic(adminId: string, topicId: string, reason?: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status, category_id FROM forum_topics WHERE id = ?')
+    .prepare('SELECT id, status, category_id FROM community_posts WHERE id = ?')
     .get(topicId) as
     | { id: string; status: string; category_id: string }
     | undefined;
@@ -23,14 +23,14 @@ export function hideTopic(adminId: string, topicId: string, reason?: string): vo
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE forum_topics
+      `UPDATE community_posts
        SET status = 'hidden', hidden_by = ?, hidden_at = datetime('now'), hidden_reason = ?,
            updated_at = datetime('now')
        WHERE id = ?`,
     ).run(adminId, reason ?? null, topicId);
-    // 反范式计数：版块 topic_count - 1（隐藏不展示在公开列表）
+    // 反范式计数：版块 post_count - 1（隐藏不展示在公开列表）
     db.prepare(
-      'UPDATE forum_categories SET topic_count = MAX(topic_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
+      'UPDATE community_categories SET post_count = MAX(post_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
     ).run(existing.category_id);
   });
   tx();
@@ -42,7 +42,7 @@ export function hideTopic(adminId: string, topicId: string, reason?: string): vo
 export function restoreTopic(adminId: string, topicId: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status, category_id FROM forum_topics WHERE id = ?')
+    .prepare('SELECT id, status, category_id FROM community_posts WHERE id = ?')
     .get(topicId) as
     | { id: string; status: string; category_id: string }
     | undefined;
@@ -56,13 +56,13 @@ export function restoreTopic(adminId: string, topicId: string): void {
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE forum_topics
+      `UPDATE community_posts
        SET status = 'published', hidden_by = NULL, hidden_at = NULL, hidden_reason = NULL,
            updated_at = datetime('now')
        WHERE id = ?`,
     ).run(topicId);
     db.prepare(
-      'UPDATE forum_categories SET topic_count = topic_count + 1, updated_at = datetime(\'now\') WHERE id = ?',
+      'UPDATE community_categories SET post_count = post_count + 1, updated_at = datetime(\'now\') WHERE id = ?',
     ).run(existing.category_id);
   });
   tx();
@@ -74,7 +74,7 @@ export function restoreTopic(adminId: string, topicId: string): void {
 export function setTopicPinned(adminId: string, topicId: string, pinned: boolean): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status FROM forum_topics WHERE id = ?')
+    .prepare('SELECT id, status FROM community_posts WHERE id = ?')
     .get(topicId) as { id: string; status: string } | undefined;
   if (!existing) {
     throw new AppError('主题不存在', 'NOT_FOUND');
@@ -84,7 +84,7 @@ export function setTopicPinned(adminId: string, topicId: string, pinned: boolean
   }
 
   db.prepare(
-    "UPDATE forum_topics SET is_pinned = ?, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE community_posts SET is_pinned = ?, updated_at = datetime('now') WHERE id = ?",
   ).run(pinned ? 1 : 0, topicId);
 
   logAdminAction(adminId, 'forum_pin_topic', null, { topicId, pinned });
@@ -94,7 +94,7 @@ export function setTopicPinned(adminId: string, topicId: string, pinned: boolean
 export function setTopicFeatured(adminId: string, topicId: string, featured: boolean): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status FROM forum_topics WHERE id = ?')
+    .prepare('SELECT id, status FROM community_posts WHERE id = ?')
     .get(topicId) as { id: string; status: string } | undefined;
   if (!existing) {
     throw new AppError('主题不存在', 'NOT_FOUND');
@@ -104,7 +104,7 @@ export function setTopicFeatured(adminId: string, topicId: string, featured: boo
   }
 
   db.prepare(
-    "UPDATE forum_topics SET is_featured = ?, updated_at = datetime('now') WHERE id = ?",
+    "UPDATE community_posts SET is_featured = ?, updated_at = datetime('now') WHERE id = ?",
   ).run(featured ? 1 : 0, topicId);
 
   logAdminAction(adminId, 'forum_feature_topic', null, { topicId, featured });
@@ -119,7 +119,7 @@ export function setTopicFeatured(adminId: string, topicId: string, featured: boo
 export function hardDeleteTopic(adminId: string, topicId: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, title, status, category_id FROM forum_topics WHERE id = ?')
+    .prepare('SELECT id, title, status, category_id FROM community_posts WHERE id = ?')
     .get(topicId) as
     | { id: string; title: string; status: string; category_id: string }
     | undefined;
@@ -128,11 +128,11 @@ export function hardDeleteTopic(adminId: string, topicId: string): void {
   }
 
   const tx = db.transaction(() => {
-    db.prepare('DELETE FROM forum_topics WHERE id = ?').run(topicId);
+    db.prepare('DELETE FROM community_posts WHERE id = ?').run(topicId);
     // 反范式计数：仅当原状态为 published/hidden 时回退（已 deleted 的不计入版块计数）
     if (existing.status === 'published' || existing.status === 'hidden') {
       db.prepare(
-        'UPDATE forum_categories SET topic_count = MAX(topic_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
+        'UPDATE community_categories SET post_count = MAX(post_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
       ).run(existing.category_id);
     }
   });
@@ -148,7 +148,7 @@ export function hardDeleteTopic(adminId: string, topicId: string): void {
 export function hideReply(adminId: string, replyId: string, reason?: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status, topic_id, parent_reply_id FROM forum_replies WHERE id = ?')
+    .prepare('SELECT id, status, topic_id, parent_reply_id FROM community_comments WHERE id = ?')
     .get(replyId) as
     | { id: string; status: string; topic_id: string; parent_reply_id: string | null }
     | undefined;
@@ -162,7 +162,7 @@ export function hideReply(adminId: string, replyId: string, reason?: string): vo
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE forum_replies
+      `UPDATE community_comments
        SET status = 'hidden', hidden_by = ?, hidden_at = datetime('now'), hidden_reason = ?,
            updated_at = datetime('now')
        WHERE id = ?`,
@@ -170,16 +170,16 @@ export function hideReply(adminId: string, replyId: string, reason?: string): vo
     // 反范式计数回退（隐藏不展示）
     if (existing.status === 'published') {
       db.prepare(
-        'UPDATE forum_topics SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
+        'UPDATE community_posts SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
       ).run(existing.topic_id);
       db.prepare(
-        `UPDATE forum_categories
+        `UPDATE community_categories
          SET post_count = MAX(post_count - 1, 0), updated_at = datetime('now')
-         WHERE id = (SELECT category_id FROM forum_topics WHERE id = ?)`,
+         WHERE id = (SELECT category_id FROM community_posts WHERE id = ?)`,
       ).run(existing.topic_id);
       if (existing.parent_reply_id) {
         db.prepare(
-          'UPDATE forum_replies SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
+          'UPDATE community_comments SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
         ).run(existing.parent_reply_id);
       }
     }
@@ -193,7 +193,7 @@ export function hideReply(adminId: string, replyId: string, reason?: string): vo
 export function restoreReply(adminId: string, replyId: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, status, topic_id, parent_reply_id FROM forum_replies WHERE id = ?')
+    .prepare('SELECT id, status, topic_id, parent_reply_id FROM community_comments WHERE id = ?')
     .get(replyId) as
     | { id: string; status: string; topic_id: string; parent_reply_id: string | null }
     | undefined;
@@ -207,22 +207,22 @@ export function restoreReply(adminId: string, replyId: string): void {
 
   const tx = db.transaction(() => {
     db.prepare(
-      `UPDATE forum_replies
+      `UPDATE community_comments
        SET status = 'published', hidden_by = NULL, hidden_at = NULL, hidden_reason = NULL,
            updated_at = datetime('now')
        WHERE id = ?`,
     ).run(replyId);
     db.prepare(
-      'UPDATE forum_topics SET reply_count = reply_count + 1 WHERE id = ?',
+      'UPDATE community_posts SET reply_count = reply_count + 1 WHERE id = ?',
     ).run(existing.topic_id);
     db.prepare(
-      `UPDATE forum_categories
+      `UPDATE community_categories
        SET post_count = post_count + 1, updated_at = datetime('now')
-       WHERE id = (SELECT category_id FROM forum_topics WHERE id = ?)`,
+       WHERE id = (SELECT category_id FROM community_posts WHERE id = ?)`,
     ).run(existing.topic_id);
     if (existing.parent_reply_id) {
       db.prepare(
-        'UPDATE forum_replies SET reply_count = reply_count + 1 WHERE id = ?',
+        'UPDATE community_comments SET reply_count = reply_count + 1 WHERE id = ?',
       ).run(existing.parent_reply_id);
     }
   });
@@ -240,7 +240,7 @@ export function hardDeleteReply(adminId: string, replyId: string): void {
   const db = getDb();
   const existing = db
     .prepare(
-      'SELECT id, topic_id, parent_reply_id, status FROM forum_replies WHERE id = ?',
+      'SELECT id, topic_id, parent_reply_id, status FROM community_comments WHERE id = ?',
     )
     .get(replyId) as
     | { id: string; topic_id: string; parent_reply_id: string | null; status: string }
@@ -250,20 +250,20 @@ export function hardDeleteReply(adminId: string, replyId: string): void {
   }
 
   const tx = db.transaction(() => {
-    db.prepare('DELETE FROM forum_replies WHERE id = ?').run(replyId);
+    db.prepare('DELETE FROM community_comments WHERE id = ?').run(replyId);
     // 反范式计数回退（仅 published/hidden 状态才在计数中）
     if (existing.status === 'published' || existing.status === 'hidden') {
       db.prepare(
-        'UPDATE forum_topics SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
+        'UPDATE community_posts SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
       ).run(existing.topic_id);
       db.prepare(
-        `UPDATE forum_categories
+        `UPDATE community_categories
          SET post_count = MAX(post_count - 1, 0), updated_at = datetime('now')
-         WHERE id = (SELECT category_id FROM forum_topics WHERE id = ?)`,
+         WHERE id = (SELECT category_id FROM community_posts WHERE id = ?)`,
       ).run(existing.topic_id);
       if (existing.parent_reply_id) {
         db.prepare(
-          'UPDATE forum_replies SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
+          'UPDATE community_comments SET reply_count = MAX(reply_count - 1, 0) WHERE id = ?',
         ).run(existing.parent_reply_id);
       }
     }

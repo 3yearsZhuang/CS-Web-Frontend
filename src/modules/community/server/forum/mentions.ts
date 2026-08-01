@@ -7,7 +7,6 @@ import { appBus } from '@/shared/events/event-bus';
 import {
   FORUM_LIMITS,
   MENTION_PATTERN,
-  type MentionSourceType,
 } from './shared';
 
 /**
@@ -34,7 +33,7 @@ export function scanMentions(content: string): string[] {
  */
 export function notifyMentionsForContent(
   content: string,
-  sourceType: MentionSourceType,
+  sourceType: 'topic' | 'reply' | 'post' | 'comment',
   sourceId: string,
   sourceAuthorId: string,
 ): void {
@@ -60,10 +59,12 @@ export function notifyMentionsForContent(
 
     // 写入提及记录（用于审计与统计）
     const mentionId = crypto.randomUUID();
+    // 统一映射：topic→post，reply→comment
+    const unifiedSourceType = sourceType === 'topic' ? 'post' : sourceType === 'reply' ? 'comment' : sourceType;
     db.prepare(
-      `INSERT INTO forum_mentions (id, mentioned_user_id, source_type, source_id, source_author_id, is_notified)
+      `INSERT INTO community_mentions (id, mentioned_user_id, source_type, source_id, source_author_id, is_notified)
        VALUES (?, ?, ?, ?, ?, 1)`,
-    ).run(mentionId, user.id, sourceType, sourceId, sourceAuthorId);
+    ).run(mentionId, user.id, unifiedSourceType, sourceId, sourceAuthorId);
   }
 
   // 通过事件总线发送通知（通知模块订阅此事件）

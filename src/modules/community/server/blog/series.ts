@@ -38,7 +38,7 @@ export function getSeriesById(seriesId: string): BlogSeries | null {
   const row = db.prepare('SELECT * FROM blog_series WHERE id = ?').get(seriesId) as BlogSeriesRow | undefined;
   if (!row) return null;
 
-  const postCount = (db.prepare('SELECT COUNT(*) AS c FROM blog_posts WHERE series_id = ?').get(seriesId) as { c: number }).c;
+  const postCount = (db.prepare('SELECT COUNT(*) AS c FROM community_posts WHERE series_id = ?').get(seriesId) as { c: number }).c;
 
   return {
     id: row.id,
@@ -57,7 +57,7 @@ export function listSeries(): BlogSeries[] {
   const rows = db.prepare('SELECT * FROM blog_series ORDER BY created_at DESC').all() as BlogSeriesRow[];
 
   return rows.map((row) => {
-    const postCount = (db.prepare('SELECT COUNT(*) AS c FROM blog_posts WHERE series_id = ?').get(row.id) as { c: number }).c;
+    const postCount = (db.prepare('SELECT COUNT(*) AS c FROM community_posts WHERE series_id = ?').get(row.id) as { c: number }).c;
     return {
       id: row.id,
       title: row.title,
@@ -78,6 +78,6 @@ export function deleteSeries(userId: string, seriesId: string, isAdmin: boolean)
 
   assertOwnership(userId, existing.created_by, isAdmin, '系列', '删除');
 
-  db.prepare('UPDATE blog_posts SET series_id = NULL WHERE series_id = ?').run(seriesId);
+  db.prepare('UPDATE community_posts SET series_id = NULL WHERE series_id = ?').run(seriesId);
   db.prepare('DELETE FROM blog_series WHERE id = ?').run(seriesId);
 }

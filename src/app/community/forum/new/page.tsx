@@ -15,7 +15,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import type { ForumCategory } from '@/modules/community/types';
+import type { CommunityCategory } from '@/modules/community/types';
 
 /** 后端长度限制（与 server/forum.ts LIMITS 保持一致） */
 const LIMITS = {
@@ -33,7 +33,7 @@ interface CurrentUserResponse {
 }
 
 interface CategoriesResponse {
-  items: ForumCategory[];
+  items: CommunityCategory[];
 }
 
 interface CreateTopicResponse {
@@ -69,7 +69,7 @@ function ComposePageContent() {
   const initialCategory = searchParams.get('category') ?? '';
 
   // 数据状态
-  const [categories, setCategories] = useState<ForumCategory[]>([]);
+  const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

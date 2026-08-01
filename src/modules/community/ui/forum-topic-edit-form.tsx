@@ -7,12 +7,12 @@ import { useState } from 'react';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { MarkdownEditor } from './forum-markdown-editor';
 import { Button } from '@/components';
-import type { ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityPostDetail } from '@/modules/community/types';
 
 interface TopicEditFormProps {
-  topic: ForumTopicDetail;
+  topic: CommunityPostDetail;
   onCancel: () => void;
-  onSaved: (topic: ForumTopicDetail) => void;
+  onSaved: (topic: CommunityPostDetail) => void;
 }
 
 export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) {
@@ -37,7 +37,7 @@ export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) 
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? '保存失败');
       }
-      const data = (await res.json()) as { topic: ForumTopicDetail };
+      const data = (await res.json()) as { topic: CommunityPostDetail };
       onSaved(data.topic);
     } catch (err) {
       setTopicEditError(err instanceof Error ? err.message : '保存失败');

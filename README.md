@@ -173,6 +173,12 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `pnpm test` | 运行单元测试（Vitest） |
 | `pnpm lint` | ESLint 检查 |
 | `pnpm ts-check` | TypeScript 类型检查 |
+| `pnpm db:setup-litestream` | 裸机安装 Litestream 并注册 systemd 服务 |
+| `pnpm db:restore-drill` | 隔离环境演练 Litestream 备份恢复（数据完整性校验） |
+| `pnpm deploy:build` | 构建部署镜像（Docker Compose，tools/deploy） |
+| `pnpm deploy:up` | 启动部署（应用 + Caddy 反向代理） |
+| `pnpm deploy:down` | 停止部署 |
+| `pnpm deploy:logs` | 跟踪部署日志 |
 
 ---
 

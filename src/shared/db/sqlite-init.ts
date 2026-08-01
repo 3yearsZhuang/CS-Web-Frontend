@@ -6,11 +6,9 @@
 export {
   initSchema,
   initUserSchema,
-  initForumSchema,
   initExamSchema,
   initTaskSchema,
   initEventSchema,
-  initBlogSchema,
   initNotificationSchema,
   initSystemSchema,
 } from './sqlite/index';

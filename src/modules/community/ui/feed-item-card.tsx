@@ -166,7 +166,7 @@ function PostCard({
   badge: { label: string; color: string };
 }) {
   const post = item.data;
-  const categoryLabel = BLOG_CATEGORY_LABELS[post.category] ?? post.category ?? '未分类';
+  const categoryLabel = BLOG_CATEGORY_LABELS[post.category?.slug ?? ''] ?? post.category?.name ?? '未分类';
 
   return (
     <Link href={`/community/blog/${post.slug}`} className="block group focus-amber" aria-label={`查看文章 ${post.title}`}>

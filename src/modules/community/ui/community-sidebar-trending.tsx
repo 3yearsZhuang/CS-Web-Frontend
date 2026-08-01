@@ -5,11 +5,11 @@
 
 import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
-import type { ForumTopic } from '@/modules/community/types';
+import type { CommunityPost } from '@/modules/community/types';
 import type { MemberItem } from '@/modules/community/types';
 
 interface CommunitySidebarTrendingProps {
-  hotTopics: ForumTopic[];
+  hotTopics: CommunityPost[];
   activeMembers: MemberItem[];
   stats?: {
     todayTopics: number;

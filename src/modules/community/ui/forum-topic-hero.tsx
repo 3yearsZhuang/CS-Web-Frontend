@@ -8,10 +8,10 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { formatDateTime } from '@/shared/utils/utils';
-import type { ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityPostDetail } from '@/modules/community/types';
 
 interface TopicHeroProps {
-  topic: ForumTopicDetail;
+  topic: CommunityPostDetail;
   categorySlug: string;
   replyTotal: number;
   hero: HeroState;

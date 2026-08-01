@@ -10,12 +10,11 @@ import { Avatar } from '@/components/avatar';
 import { MarkdownRenderer } from './forum-markdown-renderer';
 import { ForumActions } from './forum-actions';
 import { formatDateTime } from '@/shared/utils/utils';
-import { SectionLoading } from '@/components';
-import type { ForumReplyDetail, NestedRepliesResult } from '@/modules/community/types';
+import type { CommunityCommentDetail, NestedCommentsResult } from '@/modules/community/types';
 
 interface ForumReplyItemProps {
   /** 主回复数据 */
-  reply: ForumReplyDetail;
+  reply: CommunityCommentDetail;
   /** 当前登录用户 ID（用于判断是否为作者） */
   currentUserId?: string;
   /** 是否为管理员 */
@@ -23,7 +22,7 @@ interface ForumReplyItemProps {
   /** 是否已登录（控制操作按钮显隐） */
   isLoggedIn?: boolean;
   /** 回复楼中楼加载器 — 由父级传入以避免重复请求 */
-  nestedRepliesLoader?: (parentId: string) => Promise<NestedRepliesResult | null>;
+  nestedRepliesLoader?: (parentId: string) => Promise<NestedCommentsResult | null>;
   /** 回复按钮回调 — 用于打开楼中楼编辑器 */
   onReply?: (parentReplyId: string) => void;
   /** 编辑回调 */
@@ -51,7 +50,7 @@ export function ForumReplyItem({
   onLike,
   className = '',
 }: ForumReplyItemProps) {
-  const [nested, setNested] = useState<ForumReplyDetail[]>([]);
+  const [nested, setNested] = useState<CommunityCommentDetail[]>([]);
   const [nestedTotal, setNestedTotal] = useState(reply.replyCount);
   const [nestedLoading, setNestedLoading] = useState(false);
   const [nestedExpanded, setNestedExpanded] = useState(false);

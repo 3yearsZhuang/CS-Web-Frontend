@@ -14,19 +14,20 @@ import {
   loadCategorySummaries,
   toAuthorSummary,
   topicRowToBase,
-  type ForumStatus,
-  type ForumTopic,
-  type ForumTopicDetail,
-  type ForumTopicRow,
+  type PostStatus,
+  type CommunityPost,
+  type CommunityPostDetail,
+  type PostRow,
   type UserSummaryRow,
 } from './shared';
 import { notifyMentionsForContent } from './mentions';
+import type { PostKind } from '../../types';
 
 /** 主题列表筛选 */
 export interface ListTopicsFilters {
   categoryId?: string;
   search?: string;
-  status?: ForumStatus;
+  status?: PostStatus;
   authorId?: string;
   sort?: 'latest' | 'hot' | 'top';
   page?: number;
@@ -36,8 +37,8 @@ export interface ListTopicsFilters {
 }
 
 /** 主题分页结果 */
-export interface PaginatedTopics {
-  items: ForumTopic[];
+export interface PaginatedPosts {
+  items: CommunityPost[];
   total: number;
   page: number;
   pageSize: number;
@@ -45,9 +46,9 @@ export interface PaginatedTopics {
 }
 
 /** 列出主题（公开） */
-export function listTopics(filters: ListTopicsFilters = {}): PaginatedTopics {
+export function listTopics(filters: ListTopicsFilters = {}): PaginatedPosts {
   const db = getDb();
-  const where: string[] = [];
+  const where: string[] = ["kind = 'topic'"];
   const params: unknown[] = [];
 
   // 默认仅展示 published；管理员视角可包含 hidden（仍排除 deleted）
@@ -71,7 +72,7 @@ export function listTopics(filters: ListTopicsFilters = {}): PaginatedTopics {
   if (filters.search && filters.search.trim()) {
     // 使用 FTS5 全文搜索，支持布尔操作符和相关性排序
     const keyword = filters.search.trim();
-    where.push('t.rowid IN (SELECT rowid FROM forum_topics_fts WHERE forum_topics_fts MATCH ?)');
+    where.push('t.rowid IN (SELECT rowid FROM community_posts_fts WHERE community_posts_fts MATCH ?)');
     params.push(keyword);
   }
 
@@ -99,25 +100,25 @@ export function listTopics(filters: ListTopicsFilters = {}): PaginatedTopics {
   });
 
   const totalRow = db
-    .prepare(`SELECT COUNT(*) as count FROM forum_topics t ${whereSql}`)
+    .prepare(`SELECT COUNT(*) as count FROM community_posts t ${whereSql}`)
     .get(...params) as { count: number };
   const total = totalRow.count;
   const totalPages = computeTotalPages(total, pageSize);
 
   const rows = db
     .prepare(
-      `SELECT t.* FROM forum_topics t ${whereSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      `SELECT t.* FROM community_posts t ${whereSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
     )
-    .all(...params, pageSize, offset) as ForumTopicRow[];
+    .all(...params, pageSize, offset) as PostRow[];
 
   // 批量加载作者与版块摘要
   const authorMap = loadAuthorSummaries(rows.map((r) => r.author_id));
   const categoryMap = loadCategorySummaries(rows.map((r) => r.category_id));
 
-  const items: ForumTopic[] = rows.map((row) => ({
+  const items: CommunityPost[] = rows.map((row) => ({
     ...topicRowToBase(row),
     author: authorMap.get(row.author_id) ?? null,
-    category: categoryMap.get(row.category_id) ?? null,
+    category: categoryMap.get(row.category_id ?? '') ?? null,
   }));
 
   return { items, total, page, pageSize, totalPages };
@@ -131,10 +132,10 @@ export function listTopics(filters: ListTopicsFilters = {}): PaginatedTopics {
 export function getTopicById(
   topicId: string,
   currentUserId?: string,
-): ForumTopicDetail | null {
+): CommunityPostDetail | null {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM forum_topics WHERE id = ?').get(topicId) as
-    | ForumTopicRow
+  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as
+    | PostRow
     | undefined;
   if (!row) return null;
 
@@ -144,7 +145,7 @@ export function getTopicById(
       .get(row.author_id) as UserSummaryRow | undefined,
   );
   const categoryRow = db
-    .prepare('SELECT id, slug, name FROM forum_categories WHERE id = ?')
+    .prepare('SELECT id, slug, name FROM community_categories WHERE id = ?')
     .get(row.category_id) as { id: string; slug: string; name: string } | undefined;
 
   let isLikedByMe = false;
@@ -152,12 +153,12 @@ export function getTopicById(
   if (currentUserId) {
     const liked = db
       .prepare(
-        "SELECT id FROM forum_likes WHERE user_id = ? AND target_type = 'topic' AND target_id = ?",
+        "SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?",
       )
       .get(currentUserId, topicId);
     isLikedByMe = !!liked;
     const favorited = db
-      .prepare('SELECT id FROM forum_favorites WHERE user_id = ? AND topic_id = ?')
+      .prepare("SELECT id FROM community_favorites WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
       .get(currentUserId, topicId);
     isFavoritedByMe = !!favorited;
   }
@@ -171,15 +172,18 @@ export function getTopicById(
   };
 }
 
-/** 创建主题的输入 */
-export interface TopicInput {
-  categoryId: string;
+/** 创建主题的输入（兼容统一 PostInput） */
+export interface PostInput {
+  kind?: PostKind;
+  categoryId?: string | null;
   title: string;
   contentMarkdown: string;
+  isPinned?: boolean;
+  isFeatured?: boolean;
 }
 
 /** 校验主题输入 */
-function validateTopicInput(input: TopicInput): void {
+function validateTopicInput(input: PostInput): void {
   if (!input.categoryId) {
     throw new AppError('请选择版块', 'VALIDATION_ERROR');
   }
@@ -198,12 +202,12 @@ function validateTopicInput(input: TopicInput): void {
 }
 
 /** 创建主题（登录用户）— 版块不存在抛 'NOT_FOUND' */
-export function createTopic(authorId: string, input: TopicInput): ForumTopic {
+export function createTopic(authorId: string, input: PostInput): CommunityPost {
   validateTopicInput(input);
   const db = getDb();
 
   const category = db
-    .prepare('SELECT id FROM forum_categories WHERE id = ?')
+    .prepare('SELECT id FROM community_categories WHERE id = ?')
     .get(input.categoryId);
   if (!category) {
     throw new AppError('版块不存在', 'NOT_FOUND');
@@ -212,12 +216,12 @@ export function createTopic(authorId: string, input: TopicInput): ForumTopic {
   const id = crypto.randomUUID();
   const tx = db.transaction(() => {
     db.prepare(
-      `INSERT INTO forum_topics (id, category_id, author_id, title, content_markdown)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO community_posts (id, kind, category_id, author_id, title, content_markdown)
+       VALUES (?, 'topic', ?, ?, ?, ?)`,
     ).run(id, input.categoryId, authorId, input.title.trim(), input.contentMarkdown);
-    // 反范式计数：版块 topic_count + 1
+    // 反范式计数：版块 post_count + 1
     db.prepare(
-      'UPDATE forum_categories SET topic_count = topic_count + 1, post_count = post_count + 1, updated_at = datetime(\'now\') WHERE id = ?',
+      'UPDATE community_categories SET post_count = post_count + 1, updated_at = datetime(\'now\') WHERE id = ?',
     ).run(input.categoryId);
   });
   tx();
@@ -226,7 +230,7 @@ export function createTopic(authorId: string, input: TopicInput): ForumTopic {
   try {
     notifyMentionsForContent(
       input.contentMarkdown,
-      'topic',
+      'post',
       id,
       authorId,
     );
@@ -234,7 +238,7 @@ export function createTopic(authorId: string, input: TopicInput): ForumTopic {
     logger.error({ err }, '主题 @ 提及通知失败');
   }
 
-  const row = db.prepare('SELECT * FROM forum_topics WHERE id = ?').get(id) as ForumTopicRow;
+  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(id) as PostRow;
   return topicRowToBase(row);
 }
 
@@ -243,11 +247,11 @@ export function updateTopic(
   userId: string,
   isAdmin: boolean,
   topicId: string,
-  input: Partial<Pick<TopicInput, 'title' | 'contentMarkdown'>>,
-): ForumTopic {
+  input: Partial<Pick<PostInput, 'title' | 'contentMarkdown'>>,
+): CommunityPost {
   const db = getDb();
-  const existing = db.prepare('SELECT * FROM forum_topics WHERE id = ?').get(topicId) as
-    | ForumTopicRow
+  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as
+    | PostRow
     | undefined;
   if (!existing) throw new AppError('主题不存在', 'NOT_FOUND');
 
@@ -256,8 +260,8 @@ export function updateTopic(
   // 已删除的主题不允许编辑
   if (existing.status === 'deleted') throw new AppError('主题已删除', 'STATUS_CONFLICT');
 
-  const merged: TopicInput = {
-    categoryId: existing.category_id,
+  const merged: PostInput = {
+    categoryId: existing.category_id ?? null,
     title: input.title !== undefined ? input.title : existing.title,
     contentMarkdown:
       input.contentMarkdown !== undefined ? input.contentMarkdown : existing.content_markdown,
@@ -265,7 +269,7 @@ export function updateTopic(
   validateTopicInput(merged);
 
   db.prepare(
-    `UPDATE forum_topics
+    `UPDATE community_posts
      SET title = ?, content_markdown = ?, updated_at = datetime('now')
      WHERE id = ?`,
   ).run(merged.title.trim(), merged.contentMarkdown, topicId);
@@ -274,7 +278,7 @@ export function updateTopic(
   try {
     notifyMentionsForContent(
       merged.contentMarkdown,
-      'topic',
+      'post',
       topicId,
       existing.author_id,
     );
@@ -282,7 +286,7 @@ export function updateTopic(
     logger.error({ err }, '主题编辑 @ 提及通知失败');
   }
 
-  const row = db.prepare('SELECT * FROM forum_topics WHERE id = ?').get(topicId) as ForumTopicRow;
+  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as PostRow;
   return topicRowToBase(row);
 }
 
@@ -294,7 +298,7 @@ export function updateTopic(
 export function deleteTopic(userId: string, isAdmin: boolean, topicId: string): void {
   const db = getDb();
   const existing = db
-    .prepare('SELECT id, author_id, status, category_id FROM forum_topics WHERE id = ?')
+    .prepare("SELECT id, author_id, status, category_id FROM community_posts WHERE id = ? AND kind = 'topic'")
     .get(topicId) as
     | { id: string; author_id: string; status: string; category_id: string }
     | undefined;
@@ -306,12 +310,12 @@ export function deleteTopic(userId: string, isAdmin: boolean, topicId: string): 
 
   const tx = db.transaction(() => {
     db.prepare(
-      "UPDATE forum_topics SET status = 'deleted', updated_at = datetime('now') WHERE id = ?",
+      "UPDATE community_posts SET status = 'deleted', updated_at = datetime('now') WHERE id = ?",
     ).run(topicId);
-    // 反范式计数：版块 topic_count - 1（仅当原状态为 published/hidden）
+    // 反范式计数：版块 post_count - 1（仅当原状态为 published/hidden）
     if (existing.status === 'published' || existing.status === 'hidden') {
       db.prepare(
-        'UPDATE forum_categories SET topic_count = MAX(topic_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
+        'UPDATE community_categories SET post_count = MAX(post_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
       ).run(existing.category_id);
     }
   });
@@ -337,7 +341,7 @@ export function recordTopicView(
 
   // 主题必须存在且为 published
   const topic = db
-    .prepare("SELECT id FROM forum_topics WHERE id = ? AND status = 'published'")
+    .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'topic' AND status = 'published'")
     .get(topicId) as { id: string } | undefined;
   if (!topic) return false;
 
@@ -347,8 +351,8 @@ export function recordTopicView(
     // 登录用户：检查 24h 内是否已记录
     const existing = db
       .prepare(
-        `SELECT id FROM forum_topic_views
-         WHERE topic_id = ? AND user_id = ? AND viewed_at >= ${since}`,
+        `SELECT id FROM community_post_views
+         WHERE post_id = ? AND user_id = ? AND viewed_at >= ${since}`,
       )
       .get(topicId, currentUserId);
     if (existing) return false;
@@ -356,10 +360,10 @@ export function recordTopicView(
     const id = crypto.randomUUID();
     const tx = db.transaction(() => {
       db.prepare(
-        'INSERT OR IGNORE INTO forum_topic_views (id, topic_id, user_id) VALUES (?, ?, ?)',
+        'INSERT OR IGNORE INTO community_post_views (id, post_id, user_id) VALUES (?, ?, ?)',
       ).run(id, topicId, currentUserId);
       db.prepare(
-        "UPDATE forum_topics SET view_count = view_count + 1 WHERE id = ?",
+        "UPDATE community_posts SET view_count = view_count + 1 WHERE id = ?",
       ).run(topicId);
     });
     tx();
@@ -369,8 +373,8 @@ export function recordTopicView(
   if (ipHash) {
     const existing = db
       .prepare(
-        `SELECT id FROM forum_topic_views
-         WHERE topic_id = ? AND ip_hash = ? AND viewed_at >= ${since}`,
+        `SELECT id FROM community_post_views
+         WHERE post_id = ? AND ip_hash = ? AND viewed_at >= ${since}`,
       )
       .get(topicId, ipHash);
     if (existing) return false;
@@ -378,10 +382,10 @@ export function recordTopicView(
     const id = crypto.randomUUID();
     const tx = db.transaction(() => {
       db.prepare(
-        'INSERT OR IGNORE INTO forum_topic_views (id, topic_id, ip_hash) VALUES (?, ?, ?)',
+        'INSERT OR IGNORE INTO community_post_views (id, post_id, ip_hash) VALUES (?, ?, ?)',
       ).run(id, topicId, ipHash);
       db.prepare(
-        "UPDATE forum_topics SET view_count = view_count + 1 WHERE id = ?",
+        "UPDATE community_posts SET view_count = view_count + 1 WHERE id = ?",
       ).run(topicId);
     });
     tx();

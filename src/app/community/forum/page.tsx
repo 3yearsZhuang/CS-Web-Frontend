@@ -10,18 +10,17 @@ import { useRouter } from 'next/navigation';
 import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { ScrollIndicator } from '@/components/effects/scroll-indicator';
-import { ForumTopicItem } from '@/modules/community/ui/forum-topic-item';
 import { Button, SectionLoading } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import type { ForumCategory, ForumTopic } from '@/modules/community/types';
+import type { CommunityCategory, CommunityPost } from '@/modules/community/types';
 
-interface CategoryWithPreview extends ForumCategory {
-  latestTopics: ForumTopic[];
+interface CategoryWithPreview extends CommunityCategory {
+  latestTopics: CommunityPost[];
 }
 
 interface ForumOverview {
   categories: CategoryWithPreview[];
-  hotTopics: ForumTopic[];
+  hotTopics: CommunityPost[];
 }
 
 export default function ForumPage() {
@@ -131,6 +130,10 @@ export default function ForumPage() {
                   <Link href="/community/forum/new" className="shrink-0">
                     <Button>发布新帖 →</Button>
                   </Link>
+                  {/* 统一入口：帖子聚合页 */}
+                  <Link href="/community/posts" className="shrink-0">
+                    <Button variant="outline">全部帖子</Button>
+                  </Link>
                 </div>
 
                 {/* 全局热帖 */}
@@ -143,7 +146,7 @@ export default function ForumPage() {
                       </h2>
                     </div>
                     <ScrollIndicator className="pb-2" gap="gap-4">
-                      {data.hotTopics.map((topic, i) => (
+                      {data.hotTopics.map((topic) => (
                         <Link
                           key={topic.id}
                           href={`/community/forum/${topic.category?.slug ?? 'general'}/${topic.id}`}
@@ -188,7 +191,7 @@ export default function ForumPage() {
                     {data.categories.map((cat) => (
                       <Link
                         key={cat.id}
-                        href={`/community/forum/${cat.slug}`}
+                        href={`/community/posts?kind=topic&category=${cat.slug}`}
                         className="group focus-amber"
                       >
                         <article className="border border-[var(--border)] p-6 sm:p-8 card-minimal hover:border-[var(--primary)] transition-colors h-full flex flex-col">

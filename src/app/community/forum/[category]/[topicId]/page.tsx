@@ -24,7 +24,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTopicDetail } from '@/shared/hooks/use-topic-detail';
 import { useTopicActions } from '@/shared/hooks/use-topic-actions';
 import { useReplyActions } from '@/shared/hooks/use-reply-actions';
-import type { ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityPostDetail } from '@/modules/community/types';
 
 export default function TopicDetailPage() {
   const params = useParams<{ category: string; topicId: string }>();
@@ -152,7 +152,7 @@ export default function TopicDetailPage() {
         isLoggedIn={isLoggedIn}
         isCurrentUserAdmin={isCurrentUserAdmin}
         onCancelEdit={() => setEditingTopic(false)}
-        onSavedEdit={(updated: ForumTopicDetail) => {
+        onSavedEdit={(updated: CommunityPostDetail) => {
           setTopic(updated);
           setEditingTopic(false);
         }}

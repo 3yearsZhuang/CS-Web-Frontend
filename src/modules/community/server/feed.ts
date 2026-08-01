@@ -60,7 +60,7 @@ function itemMatchesTag(item: FeedItem, tag: string): boolean {
     case 'post':
       return (
         item.data.tags.some((tag) => tag.toLowerCase().includes(t)) ||
-        item.data.category.toLowerCase().includes(t)
+        (item.data.category?.name?.toLowerCase().includes(t) ?? false)
       );
     case 'member':
       return item.data.techTags.some((tag) => tag.toLowerCase().includes(t));
@@ -163,9 +163,12 @@ export function getFeedTags(): FeedTag[] {
       entry.postCount++;
       tagMap.set(tag, entry);
     }
-    const catEntry = tagMap.get(post.category) ?? { topicCount: 0, postCount: 0, memberCount: 0 };
-    catEntry.postCount++;
-    tagMap.set(post.category, catEntry);
+    const catName = post.category?.name;
+    if (catName) {
+      const catEntry = tagMap.get(catName) ?? { topicCount: 0, postCount: 0, memberCount: 0 };
+      catEntry.postCount++;
+      tagMap.set(catName, catEntry);
+    }
   }
 
   const memberTags = listAllTechTags();

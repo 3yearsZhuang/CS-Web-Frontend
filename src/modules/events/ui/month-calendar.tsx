@@ -7,7 +7,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { EASE } from '@/shared/utils/ui-constants';
+import { formatDateKey, parseEventDate } from '@/shared/utils/event-date';
 import type { EventItem } from '@/modules/events/types';
+import { EventStatusBadge, EventStatusDot } from './event-status-badge';
 
 interface MonthCalendarProps {
   events: EventItem[];
@@ -22,24 +24,10 @@ const MONTH_LABELS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ] as const;
 
-/**
- * 解析活动 date 字段为 { year, month (0-11), day } 三元组
- *
- * 支持格式（由 admin 表单 placeholder 2026.09.15 推导）：
- *   - YYYY.MM.DD / YYYY-MM-DD / YYYY/MM/DD
- *   - 不匹配则返回 null（该活动不入日历网格，归入"未排期"列表）
- */
-function parseEventDate(dateStr: string | null): { year: number; month: number; day: number } | null {
-  if (!dateStr) return null;
-  const match = dateStr.trim().match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
-  if (!match) return null;
-  const year = parseInt(match[1], 10);
-  const month = parseInt(match[2], 10) - 1;
-  const day = parseInt(match[3], 10);
-  if (month < 0 || month > 11) return null;
-  if (day < 1 || day > 31) return null;
-  return { year, month, day };
-}
+/** 日历网格固定 6 行 × 7 列，覆盖整月 + 首尾溢出 */
+const CALENDAR_GRID_CELLS = 42;
+/** 单日最多展示的圆点数量，超出以 +N 计数 */
+const MAX_DAY_DOTS = 3;
 
 /** 计算日历网格所需的日期矩阵（6 行 × 7 列，覆盖整月 + 首尾溢出） */
 function buildMonthMatrix(year: number, month: number): Array<{
@@ -51,34 +39,12 @@ function buildMonthMatrix(year: number, month: number): Array<{
   const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
   const gridStart = new Date(year, month, 1 - firstWeekday);
   const cells: Array<{ date: Date; isCurrentMonth: boolean }> = [];
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < CALENDAR_GRID_CELLS; i++) {
     const date = new Date(gridStart);
     date.setDate(gridStart.getDate() + i);
     cells.push({ date, isCurrentMonth: date.getMonth() === month });
   }
   return cells;
-}
-
-/** 状态 → 指示点样式类 */
-function statusDotClass(status: EventItem['status']): string {
-  if (status === 'upcoming') return 'border-[var(--primary)] bg-transparent';
-  if (status === 'ongoing') return 'bg-[var(--primary)] border-[var(--primary)]';
-  return 'bg-[var(--muted-foreground)]/40 border-[var(--muted-foreground)]/40';
-}
-
-/** 状态 → 徽章样式类（日详情列表用） */
-function statusBadgeClass(status: EventItem['status']): string {
-  if (status === 'upcoming') return 'border-[var(--primary)] text-[var(--primary)]';
-  if (status === 'ongoing') return 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5';
-  return 'border-[var(--border)] text-[var(--muted-foreground)]';
-}
-
-/** 状态 → 文案 */
-function statusLabel(status: EventItem['status']): string {
-  if (status === 'upcoming') return 'UPCOMING';
-  if (status === 'ongoing') return 'ONGOING';
-  if (status === 'ended') return 'ARCHIVED';
-  return '—';
 }
 
 /** 月历视图组件 — 按月渲染网格，点击日期查看当日活动详情 */
@@ -98,7 +64,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
         unscheduled.push(e);
         continue;
       }
-      const key = `${parsed.year}-${String(parsed.month + 1).padStart(2, '0')}-${String(parsed.day).padStart(2, '0')}`;
+      const key = formatDateKey(new Date(parsed.year, parsed.month, parsed.day));
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(e);
     }
@@ -115,9 +81,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
     return count;
   }, [events, viewYear, viewMonth]);
 
-  const selectedKey = selectedDate
-    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
-    : null;
+  const selectedKey = selectedDate ? formatDateKey(selectedDate) : null;
   const selectedEvents = selectedKey ? (eventsByDate.get(selectedKey) ?? []) : [];
 
   const isToday = (d: Date) =>
@@ -219,7 +183,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
           className="grid grid-cols-7 border-l border-t border-[var(--border)]"
         >
           {matrix.map(({ date, isCurrentMonth }, idx) => {
-            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const key = formatDateKey(date);
             const dayEvents = eventsByDate.get(key) ?? [];
             const hasEvents = dayEvents.length > 0;
             const todayFlag = isToday(date);
@@ -230,10 +194,10 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                 key={idx}
                 type="button"
                 onClick={() => hasEvents ? setSelectedDate(date) : null}
-                className={`relative aspect-square border-r border-b border-[var(--border)] p-1 sm:p-2 flex flex-col items-start transition-colors ${
-                  hasEvents && isCurrentMonth ? 'cursor-pointer hover:bg-[var(--primary)]/5' : 'cursor-default'
+                className={`relative aspect-square border-r border-b border-[var(--border)] p-1 sm:p-2 flex flex-col items-start transition-colors motion-reduce:transition-none ${
+                  hasEvents && isCurrentMonth ? 'cursor-pointer hover:bg-[var(--primary)]/5 hover:ring-1 hover:ring-inset hover:ring-[var(--primary)]/40' : 'cursor-default'
                 } ${!isCurrentMonth ? 'opacity-30' : ''} ${
-                  selectedFlag ? 'bg-[var(--primary)]/10' : ''
+                  selectedFlag ? 'bg-[var(--primary)]/10 ring-1 ring-inset ring-[var(--primary)]/40' : ''
                 }`}
               >
                 {/* 日期数字 */}
@@ -256,14 +220,14 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                 {hasEvents && (
                   <div className="mt-auto w-full flex flex-col gap-0.5 sm:gap-1">
                     <div className="flex flex-wrap gap-0.5 sm:gap-1">
-                      {dayEvents.slice(0, 3).map((e) => (
-                        <span
+                      {dayEvents.slice(0, MAX_DAY_DOTS).map((e) => (
+                        <EventStatusDot
                           key={e.id}
-                          className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full border ${statusDotClass(e.status)}`}
-                          aria-hidden="true"
+                          status={e.status}
+                          className="w-1 h-1 sm:w-1.5 sm:h-1.5"
                         />
                       ))}
-                      {dayEvents.length > 3 && (
+                      {dayEvents.length > MAX_DAY_DOTS && (
                         <span className="meta-mono text-[8px] sm:text-[9px] text-[var(--muted-foreground)] leading-none">
                           +{dayEvents.length - 3}
                         </span>
@@ -325,9 +289,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                     >
                       <article className="border border-[var(--border)] p-4 sm:p-5 hover:border-[var(--primary)] transition-colors flex items-start gap-4">
                         {/* 状态徽章 */}
-                        <span className={`meta-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border shrink-0 ${statusBadgeClass(e.status)}`}>
-                          [{statusLabel(e.status)}]
-                        </span>
+                        <EventStatusBadge status={e.status} className="shrink-0" />
                         {/* 标题 + 描述 */}
                         <div className="flex-1 min-w-0">
                           <h4 className="display-serif text-[clamp(16px,2.5vw,20px)] leading-[1.2] group-hover:text-[var(--primary)] transition-colors">
@@ -378,9 +340,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                 className="block card-minimal focus-amber group"
               >
                 <article className="border border-[var(--border)] p-4 sm:p-5 hover:border-[var(--primary)] transition-colors flex items-center gap-4">
-                  <span className="meta-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border shrink-0 border-[var(--border)] text-[var(--muted-foreground)]">
-                    [{statusLabel(e.status)}]
-                  </span>
+                  <EventStatusBadge status={e.status} className="shrink-0 self-center" />
                   <span className="meta-mono text-[11px] text-[var(--muted-foreground)] shrink-0">
                     {e.date || e.month || e.year || '—'}
                   </span>

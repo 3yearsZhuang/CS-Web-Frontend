@@ -8,17 +8,17 @@ import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer
 import { ForumActions } from '@/modules/community/ui/forum-actions';
 import { TopicEditForm } from '@/modules/community/ui/forum-topic-edit-form';
 import { TopicSidebar } from '@/modules/community/ui/forum-topic-sidebar';
-import type { ForumTopic, ForumTopicDetail } from '@/modules/community/types';
+import type { CommunityPost, CommunityPostDetail } from '@/modules/community/types';
 
 interface TopicContentProps {
-  topic: ForumTopicDetail;
-  relatedTopics: ForumTopic[];
+  topic: CommunityPostDetail;
+  relatedTopics: CommunityPost[];
   editingTopic: boolean;
   isAuthor: boolean;
   isLoggedIn: boolean;
   isCurrentUserAdmin: boolean;
   onCancelEdit: () => void;
-  onSavedEdit: (updated: ForumTopicDetail) => void;
+  onSavedEdit: (updated: CommunityPostDetail) => void;
   onStartEdit: () => Promise<void>;
   onTopicLike: () => Promise<void>;
   onTopicFavorite: () => Promise<void>;

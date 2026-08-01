@@ -24,8 +24,8 @@ import type {
   FeedTag,
 } from '@/modules/community/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
-import type { ForumCategory } from '@/modules/community/types';
-import type { ForumTopic } from '@/modules/community/types';
+import type { CommunityCategory } from '@/modules/community/types';
+import type { CommunityPost } from '@/modules/community/types';
 import type { MemberItem } from '@/modules/community/types';
 
 interface FeedStats {
@@ -139,10 +139,10 @@ function CommunityPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   // 三栏布局数据
-  const [categories, setCategories] = useState<ForumCategory[]>([]);
-  const [hotTopics, setHotTopics] = useState<ForumTopic[]>([]);
+  const [categories, setCategories] = useState<CommunityCategory[]>([]);
+  const [hotTopics, setHotTopics] = useState<CommunityPost[]>([]);
   const [activeMembers, setActiveMembers] = useState<MemberItem[]>([]);
-  const [featuredTopics, setFeaturedTopics] = useState<ForumTopic[]>([]);
+  const [featuredTopics, setFeaturedTopics] = useState<CommunityPost[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -189,7 +189,7 @@ function CommunityPageContent() {
     fetch('/api/community/forum/categories')
       .then(async (res) => {
         if (!res.ok) return;
-        const data = (await res.json()) as { items: ForumCategory[] };
+        const data = (await res.json()) as { items: CommunityCategory[] };
         setCategories(data.items ?? []);
       })
       .catch(() => {});
@@ -201,7 +201,7 @@ function CommunityPageContent() {
     fetch(`/api/community/forum/topics?${hotParams.toString()}`)
       .then(async (res) => {
         if (!res.ok) return;
-        const data = (await res.json()) as { items: ForumTopic[] };
+        const data = (await res.json()) as { items: CommunityPost[] };
         setHotTopics((data.items ?? []).slice(0, 6));
       })
       .catch(() => {});
@@ -222,7 +222,7 @@ function CommunityPageContent() {
     fetch(`/api/community/forum/topics?${featParams.toString()}`)
       .then(async (res) => {
         if (!res.ok) return;
-        const data = (await res.json()) as { items: ForumTopic[] };
+        const data = (await res.json()) as { items: CommunityPost[] };
         const items = data.items ?? [];
         setFeaturedTopics(items.filter((t) => t.isPinned || t.isFeatured).slice(0, 6));
       })

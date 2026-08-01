@@ -8,9 +8,17 @@ import { Button, SectionLoading } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { EventStatusBadge } from '@/modules/events/ui/event-status-badge';
+
+/** 容量为 0 表示不限名额（数据库无 NULL 容量，以 0 代表不限制） */
+const UNLIMITED_CAPACITY = 0;
+
+/** 复选框勾选在 formData 中以字符串 'true' 存储（表单字段统一为字符串） */
+const CHECKBOX_CHECKED_VALUE = 'true';
 
 interface RegistrationField {
   key: string;
@@ -180,7 +188,7 @@ export default function EventDetailPage() {
     }
   }, [eventId]);
 
-  const isFull = event ? event.capacity > 0 && registeredCount >= event.capacity : false;
+  const isFull = event ? event.capacity !== UNLIMITED_CAPACITY && registeredCount >= event.capacity : false;
   const isEnded = event?.status === 'ended';
 
   if (loading) {
@@ -252,19 +260,7 @@ export default function EventDetailPage() {
           <RevealItem>
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 meta-mono text-[var(--muted-foreground)]">
               {event.date && <span>{event.date}</span>}
-              {event.status && (
-                <span
-                  className={
-                    event.status === 'upcoming' || event.status === 'ongoing'
-                      ? 'text-[var(--primary)]'
-                      : ''
-                  }
-                >
-                  {event.status === 'upcoming' && '○ Upcoming'}
-                  {event.status === 'ongoing' && '● Ongoing'}
-                  {event.status === 'ended' && '— Ended'}
-                </span>
-              )}
+              <EventStatusBadge status={event.status} />
               {event.createdBy && <span>发布人：{event.createdBy}</span>}
             </div>
           </RevealItem>
@@ -293,23 +289,14 @@ export default function EventDetailPage() {
                     {registeredCount}
                     <span className="text-[var(--muted-foreground)] text-base">
                       {' / '}
-                      {event.capacity === 0 ? '不限' : event.capacity}
+                      {event.capacity === UNLIMITED_CAPACITY ? '不限' : event.capacity}
                     </span>
                   </div>
                 </div>
                 <div className="p-6 sm:p-8">
                   <div className="meta-mono mb-3">Status</div>
-                  <div
-                    className={`display-serif text-xl ${
-                      event.status === 'upcoming' || event.status === 'ongoing'
-                        ? 'text-[var(--primary)]'
-                        : 'text-[var(--foreground)]'
-                    }`}
-                  >
-                    {event.status === 'upcoming' && '即将开始'}
-                    {event.status === 'ongoing' && '进行中'}
-                    {event.status === 'ended' && '已结束'}
-                    {!event.status && '—'}
+                  <div className="display-serif text-xl">
+                    <EventStatusBadge status={event.status} withDot={false} className="!px-3 !py-1.5 !text-xs" />
                   </div>
                 </div>
               </section>
@@ -393,7 +380,7 @@ export default function EventDetailPage() {
                                   }
                                   placeholder={field.required ? `${field.label} *` : field.label}
                                   rows={3}
-                                  className="w-full px-3 py-2 border border-[var(--border)] bg-transparent text-[14px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                                 />
                               ) : field.type === 'select' ? (
                                 <select
@@ -401,7 +388,7 @@ export default function EventDetailPage() {
                                   onChange={(e) =>
                                     setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
                                   }
-                                  className="w-full px-3 py-2 border border-[var(--border)] bg-transparent text-[14px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                                 >
                                   <option value="" disabled>
                                     {field.required ? `${field.label} *` : field.label}
@@ -416,14 +403,14 @@ export default function EventDetailPage() {
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
-                                    checked={formData[field.key] === 'true'}
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        [field.key]: e.target.checked ? 'true' : '',
-                                      }))
-                                    }
-                                    className="w-4 h-4 border border-[var(--border)] bg-transparent accent-[var(--primary)]"
+                                  checked={formData[field.key] === CHECKBOX_CHECKED_VALUE}
+                                  onChange={(e) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      [field.key]: e.target.checked ? CHECKBOX_CHECKED_VALUE : '',
+                                    }))
+                                  }
+                                    className="w-4 h-4 border border-[var(--border)] bg-transparent accent-[var(--primary)] focus-amber"
                                   />
                                   <span className="text-[14px] font-mono text-[var(--muted-foreground)]">
                                     {field.label}
@@ -438,7 +425,7 @@ export default function EventDetailPage() {
                                     setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
                                   }
                                   placeholder={field.required ? `${field.label} *` : field.label}
-                                  className="w-full px-3 py-2 border border-[var(--border)] bg-transparent text-[14px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                                 />
                               )}
                               {formErrors[field.key] && (
@@ -496,155 +483,6 @@ export default function EventDetailPage() {
         </div>
       </article>
 
-      <style jsx global>{`
-        .prose-ark h1,
-        .prose-ark h2,
-        .prose-ark h3,
-        .prose-ark h4,
-        .prose-ark h5,
-        .prose-ark h6 {
-          font-family: var(--font-serif);
-          font-weight: 350;
-          color: var(--foreground);
-          margin-top: 2em;
-          margin-bottom: 0.8em;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
-        }
-        .prose-ark h1 {
-          font-size: clamp(24px, 4vw, 36px);
-          margin-top: 0;
-        }
-        .prose-ark h2 {
-          font-size: clamp(20px, 3vw, 28px);
-          position: relative;
-          padding-left: 1rem;
-        }
-        .prose-ark h2::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0.4em;
-          bottom: 0.4em;
-          width: 2px;
-          background: var(--primary);
-        }
-        .prose-ark h3 {
-          font-size: clamp(18px, 2.5vw, 22px);
-        }
-        .prose-ark p {
-          color: var(--foreground);
-          line-height: 1.8;
-          margin: 1em 0;
-          font-size: 15px;
-        }
-        .prose-ark a {
-          color: var(--primary);
-          position: relative;
-          transition: color 0.3s ease;
-        }
-        .prose-ark a::after {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: -2px;
-          height: 1px;
-          background: var(--primary);
-          transform: scaleX(0);
-          transform-origin: right;
-          transition: transform 0.5s var(--ease-ark);
-        }
-        .prose-ark a:hover::after {
-          transform: scaleX(1);
-          transform-origin: left;
-        }
-        .prose-ark strong {
-          font-weight: 600;
-          color: var(--foreground);
-        }
-        .prose-ark em {
-          font-family: var(--font-serif);
-          font-style: italic;
-        }
-        .prose-ark ul,
-        .prose-ark ol {
-          margin: 1em 0;
-          padding-left: 1.5em;
-          color: var(--foreground);
-        }
-        .prose-ark li {
-          margin: 0.5em 0;
-          line-height: 1.7;
-        }
-        .prose-ark ul li::marker {
-          color: var(--primary);
-        }
-        .prose-ark ol li::marker {
-          font-family: var(--font-mono);
-          color: var(--primary);
-        }
-        .prose-ark blockquote {
-          margin: 1.5em 0;
-          padding: 1em 1.5em;
-          border-left: 2px solid var(--primary);
-          background: var(--muted);
-          color: var(--foreground);
-          font-family: var(--font-serif);
-          font-style: italic;
-        }
-        .prose-ark code {
-          font-family: var(--font-mono);
-          font-size: 0.85em;
-          background: var(--muted);
-          padding: 0.2em 0.4em;
-          color: var(--primary);
-        }
-        .prose-ark pre {
-          margin: 1.5em 0;
-          padding: 1.5em;
-          background: var(--muted);
-          border: 1px solid var(--border);
-          overflow-x: auto;
-        }
-        .prose-ark pre code {
-          background: transparent;
-          padding: 0;
-          color: var(--foreground);
-          font-size: 13px;
-          line-height: 1.6;
-        }
-        .prose-ark table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 1.5em 0;
-          font-size: 14px;
-        }
-        .prose-ark th,
-        .prose-ark td {
-          border: 1px solid var(--border);
-          padding: 0.75em 1em;
-          text-align: left;
-        }
-        .prose-ark th {
-          background: var(--muted);
-          font-family: var(--font-mono);
-          font-weight: 500;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .prose-ark hr {
-          border: none;
-          border-top: 1px solid var(--border);
-          margin: 2em 0;
-        }
-        .prose-ark img {
-          max-width: 100%;
-          height: auto;
-          margin: 1.5em 0;
-        }
-      `}</style>
     </main>
   );
 }

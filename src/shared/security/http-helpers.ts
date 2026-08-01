@@ -175,3 +175,13 @@ export function errorResponse(
     { status: 500 },
   );
 }
+
+/**
+ * 构建统一成功响应信封
+ *
+ * 社区模块所有列表/详情接口统一返回 `{ data }` 结构，便于前端一致消费；
+ * 翻页类数据将 `items/page/total/totalPages` 平铺于 `data` 内。
+ */
+export function jsonSuccess<T>(data: T, status: number = 200) {
+  return NextResponse.json({ data }, { status });
+}

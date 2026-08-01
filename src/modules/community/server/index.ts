@@ -46,7 +46,7 @@ export {
 export { getFeed, getFeedTags, getFeedStats } from './feed';
 
 // ============= 类型 re-export =============
-export type { PaginatedReplies } from '../types';
+export type { PaginatedComments } from '../types';
 export type {
   BlogPostStatus,
   BlogPostInput,

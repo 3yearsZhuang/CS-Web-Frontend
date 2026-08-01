@@ -15,7 +15,7 @@ import { useAuth } from '@/shared/hooks/use-auth';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
 
 const NAV_LINKS = [
-  { href: '/about', label: '关于', en: 'About & Join' },
+  { href: '/about', label: '关于', en: 'About' },
   { href: '/events', label: '活动', en: 'Events' },
   // 社区聚合入口 — 合并论坛 / 博客 / 成员三页为统一 Feed
   { href: '/community', label: '社区', en: 'Community' },

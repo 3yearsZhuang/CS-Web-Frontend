@@ -51,7 +51,7 @@ import {
   LEVEL_THRESHOLDS,
 } from '@/modules/tools/server';
 
-/** 初始化测试数据库 schema */
+/** 初始化测试数据库 schema（统一社区表） */
 function initTestSchema() {
   inMemoryDb.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -62,26 +62,92 @@ function initTestSchema() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS blog_posts (
+    CREATE TABLE IF NOT EXISTS community_categories (
       id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
       slug TEXT UNIQUE NOT NULL,
-      excerpt TEXT,
-      content_markdown TEXT NOT NULL,
-      cover_image TEXT,
-      category TEXT NOT NULL DEFAULT 'general',
-      tags TEXT DEFAULT '[]',
-      status TEXT NOT NULL DEFAULT 'draft',
-      author_id TEXT NOT NULL,
-      series_id TEXT,
-      series_order INTEGER DEFAULT 0,
-      view_count INTEGER NOT NULL DEFAULT 0,
-      like_count INTEGER NOT NULL DEFAULT 0,
-      published_at TEXT,
+      name TEXT NOT NULL,
+      description TEXT,
+      icon TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      post_count INTEGER NOT NULL DEFAULT 0,
+      created_by TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS community_posts (
+      id TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      category_id TEXT,
+      author_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content_markdown TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'published',
+      is_pinned INTEGER NOT NULL DEFAULT 0,
+      is_featured INTEGER NOT NULL DEFAULT 0,
+      reply_count INTEGER NOT NULL DEFAULT 0,
+      favorite_count INTEGER NOT NULL DEFAULT 0,
+      last_reply_at TEXT,
+      last_reply_id TEXT,
+      hidden_by TEXT,
+      hidden_at TEXT,
+      hidden_reason TEXT,
+      slug TEXT UNIQUE,
+      excerpt TEXT,
+      cover_image TEXT,
+      tags TEXT DEFAULT '[]',
+      series_id TEXT,
+      series_order INTEGER DEFAULT 0,
+      published_at TEXT,
+      view_count INTEGER NOT NULL DEFAULT 0,
+      like_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (category_id) REFERENCES community_categories(id) ON DELETE CASCADE,
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
-      FOREIGN KEY (series_id) REFERENCES blog_series(id) ON DELETE SET NULL
+      FOREIGN KEY (series_id) REFERENCES blog_series(id) ON DELETE SET NULL,
+      FOREIGN KEY (hidden_by) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS community_comments (
+      id TEXT PRIMARY KEY,
+      post_id TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      parent_comment_id TEXT,
+      content_markdown TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'published',
+      like_count INTEGER NOT NULL DEFAULT 0,
+      reply_count INTEGER NOT NULL DEFAULT 0,
+      hidden_by TEXT,
+      hidden_at TEXT,
+      hidden_reason TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (parent_comment_id) REFERENCES community_comments(id) ON DELETE CASCADE,
+      FOREIGN KEY (hidden_by) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS community_reactions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, target_type, target_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS community_favorites (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, target_type, target_id)
     );
 
     CREATE TABLE IF NOT EXISTS blog_series (
@@ -89,19 +155,10 @@ function initTestSchema() {
       title TEXT NOT NULL,
       description TEXT,
       slug TEXT UNIQUE NOT NULL,
-      created_by TEXT NOT NULL,
+      created_by TEXT,
       created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS blog_likes (
-      id TEXT PRIMARY KEY,
-      post_id TEXT NOT NULL,
-      user_id TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE(post_id, user_id)
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS points_transactions (
@@ -132,8 +189,11 @@ function initTestSchema() {
 describe('博客系统', () => {
   beforeEach(() => {
     initTestSchema();
-    inMemoryDb.exec('DELETE FROM blog_likes');
-    inMemoryDb.exec('DELETE FROM blog_posts');
+    inMemoryDb.exec('DELETE FROM community_reactions');
+    inMemoryDb.exec('DELETE FROM community_favorites');
+    inMemoryDb.exec('DELETE FROM community_comments');
+    inMemoryDb.exec('DELETE FROM community_posts');
+    inMemoryDb.exec('DELETE FROM community_categories');
     inMemoryDb.exec('DELETE FROM blog_series');
     inMemoryDb.exec('DELETE FROM points_transactions');
   });
@@ -141,10 +201,11 @@ describe('博客系统', () => {
   it('创建 → 发布 → 浏览 → 点赞 完整流程', () => {
     // 1. 创建草稿
     const post = createPost('author-1', {
+      kind: 'post',
       title: '测试文章',
       excerpt: '这是一篇测试文章',
       contentMarkdown: '# Hello\n\n世界',
-      category: 'frontend',
+      categoryId: 'frontend',
       tags: ['React', 'TypeScript'],
     });
     expect(post.status).toBe('draft');
@@ -157,7 +218,7 @@ describe('博客系统', () => {
     expect(published.publishedAt).toBeTruthy();
 
     // 3. 按 slug 查询
-    const found = getPostBySlug(post.slug);
+    const found = getPostBySlug(post.slug ?? '');
     expect(found).toBeTruthy();
     expect(found!.title).toBe('测试文章');
 
@@ -179,6 +240,7 @@ describe('博客系统', () => {
 
   it('作者只能编辑自己的文章', () => {
     const post = createPost('author-1', {
+      kind: 'post',
       title: '原创文章',
       contentMarkdown: '内容',
     });

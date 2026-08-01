@@ -37,7 +37,7 @@ interface UserStats {
   examPassedCount: number;
 }
 
-interface ForumTopic {
+interface CommunityPost {
   id: string;
   categoryId: string;
   title: string;
@@ -79,7 +79,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
 
   const [user, setUser] = useState<PublicUser | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [topics, setTopics] = useState<ForumTopic[]>([]);
+  const [topics, setTopics] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

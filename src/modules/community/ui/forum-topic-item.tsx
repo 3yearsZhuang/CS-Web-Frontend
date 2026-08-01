@@ -8,11 +8,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
 import { formatDateTime } from '@/shared/utils/utils';
-import type { ForumTopic } from '@/modules/community/types';
+import type { CommunityPost } from '@/modules/community/types';
 
 interface ForumTopicItemProps {
   /** 主题数据 */
-  topic: ForumTopic;
+  topic: CommunityPost;
   /** 是否显示版块名（首页最近主题流用，版块详情页隐藏） */
   showCategory?: boolean;
   /** 序号（用于编号显示，可选） */

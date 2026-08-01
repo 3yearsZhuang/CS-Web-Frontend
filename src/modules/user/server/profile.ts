@@ -368,7 +368,7 @@ export function getPublicUserProfile(userId: string): PublicUserProfile | null {
   const topicCount = (
     db
       .prepare(
-        "SELECT COUNT(*) as cnt FROM forum_topics WHERE author_id = ? AND status = 'published'",
+        "SELECT COUNT(*) as cnt FROM community_posts WHERE author_id = ? AND kind = 'topic' AND status = 'published'",
       )
       .get(userId) as { cnt: number }
   ).cnt;
@@ -376,7 +376,7 @@ export function getPublicUserProfile(userId: string): PublicUserProfile | null {
   const replyCount = (
     db
       .prepare(
-        "SELECT COUNT(*) as cnt FROM forum_replies WHERE author_id = ? AND status = 'published'",
+        "SELECT COUNT(*) as cnt FROM community_comments WHERE author_id = ? AND status = 'published'",
       )
       .get(userId) as { cnt: number }
   ).cnt;

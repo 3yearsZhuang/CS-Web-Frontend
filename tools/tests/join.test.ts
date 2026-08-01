@@ -45,12 +45,14 @@ function initTestSchema() {
       reason TEXT NOT NULL,
       contact_qq TEXT,
       contact_phone TEXT,
+      user_id TEXT,
       status TEXT NOT NULL DEFAULT 'pending',
       reviewed_by TEXT,
       review_note TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+      FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS users (

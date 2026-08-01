@@ -18,7 +18,13 @@
     "validate": "pnpm run --parallel '/^(ts-check|lint:build)$/'",
     "seed": "tsx tools/scripts/seed-exam-data.mjs",
     "e2e": "playwright test",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:setup-litestream": "bash ./tools/scripts/setup-litestream.sh",
+    "db:restore-drill": "bash ./tools/scripts/restore-drill.sh",
+    "deploy:build": "docker compose -f tools/deploy/docker-compose.yml build",
+    "deploy:up": "docker compose -f tools/deploy/docker-compose.yml up -d",
+    "deploy:down": "docker compose -f tools/deploy/docker-compose.yml down",
+    "deploy:logs": "docker compose -f tools/deploy/docker-compose.yml logs -f"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",
