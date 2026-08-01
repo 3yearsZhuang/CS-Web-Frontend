@@ -120,7 +120,7 @@ appBus.on('topic.created', (payload) => {
 
 ### 2. ADR 格式
 
-所有 ADR 记录在 [Devdocs-roadmap.md](Devdocs-roadmap.md) 的「五、架构决策记录」章节，格式：
+所有 ADR 记录在 [Devdocs-roadmap.md](Devdocs-evolution.md) 的「五、架构决策记录」章节，格式：
 
 ```markdown
 ### ADR-XXX: <决策标题>
@@ -140,7 +140,7 @@ appBus.on('topic.created', (payload) => {
 当某个文档需要引用 ADR 时，使用锚点链接：
 
 ```markdown
-对应 [ADR-013](Devdocs-roadmap.md#adr-013-事件监听器显式初始化)
+对应 [ADR-013](Devdocs-evolution.md#adr-013-事件监听器显式初始化)
 ```
 
 锚点规则：GitHub 风格锚点 = 标题转小写 + 空格转连字符 + 移除标点。中文保留。
@@ -167,7 +167,7 @@ appBus.on('topic.created', (payload) => {
 | 文档 | Diátaxis 象限 | 职责 | 更新触发 | Stale 信号 |
 |------|------|------|---------|---------|
 | `Devdocs-architecture.md` | reference | 项目结构、模块化分析、代码质量、依赖矩阵、API 端点/鉴权/速率限制/状态码（Part B） | 目录结构调整、新增模块、依赖矩阵变更、新增/修改 API、安全措施变更 | 矩阵与实际 import 不一致；端点签名与路由 handler 不一致 |
-| `Devdocs-roadmap.md` | explanation + operational | 路线图、ADR、风险登记、健壮函数、里程碑 | 架构决策、风险识别、里程碑推进 | ADR 状态与实施记录不一致；R 项等级未随修复更新 |
+| `Devdocs-evolution.md` | explanation + operational | 路线图、ADR、风险登记、健壮函数、里程碑 | 架构决策、风险识别、里程碑推进 | ADR 状态与实施记录不一致；R 项等级未随修复更新 |
 | `Devdocs-security.md` | reference | 安全审计、角色权限、事件驱动安全、运行时监测 | 安全发现、2FA/权限变更、ADR-013/014 推进 | 发现项状态与代码现状不一致 |
 | `Devdocs-project-rules.md` | reference + explanation | 项目规则、模块协作规范、ADR 引用规则、防再犯清单 | 新增禁止事项、协作流程变更、新增 ADR | ADR 编号与 roadmap 最新不一致；禁止事项与实际依赖冲突 |
 | `Devdocs-design-spec.md` | reference | 设计规范、视觉交互 | 新增页面/组件、视觉变更 | 组件清单与实际文件不一致 |
@@ -182,8 +182,8 @@ appBus.on('topic.created', (payload) => {
 | 维度 | 权威位置 |
 |------|---------|
 | 禁止事项/工程契约 | `Devdocs-project-rules.md`（本文件） |
-| 架构决策记录 | `Devdocs-roadmap.md` ADR 章节 |
-| 风险登记 | `Devdocs-roadmap.md` R 表 |
+| 架构决策记录 | `Devdocs-evolution.md` ADR 章节 |
+| 风险登记 | `Devdocs-evolution.md` R 表 |
 | 模块依赖矩阵 | `Devdocs-architecture.md` 2.3 节 |
 | 安全发现 | `Devdocs-security.md` |
 | API 契约 | `Devdocs-architecture.md` Part B（原 Devdocs-api-reference.md 已合并） |
@@ -199,11 +199,11 @@ appBus.on('topic.created', (payload) => {
 - [ ] 如调整目录结构 -> 更新 `Devdocs-architecture.md` Part A
 - [ ] 如新增/修改 API -> 更新 `Devdocs-architecture.md` Part B
 - [ ] 如新增/修改管理员权限 -> 更新 `Devdocs-security.md` Part 2
-- [ ] 如做出架构决策 -> 在 `Devdocs-roadmap.md` 新增 ADR
+- [ ] 如做出架构决策 -> 在 `Devdocs-evolution.md` 新增 ADR
 - [ ] 如新增禁止事项 -> 更新本文档
 - [ ] 如新增页面/组件 -> 更新 `Devdocs-design-spec.md`
 - [ ] 如新增环境变量 -> 更新 `Devdocs-ops.md` Part A 与 `README.md` 环境变量表
-- [ ] 如完成路线图项 -> 在 `Devdocs-roadmap.md` 标注 `✅` + 完成日期
+- [ ] 如完成路线图项 -> 在 `Devdocs-evolution.md` 标注 `✅` + 完成日期
 - [ ] 如修改 2FA/OAuth/密码重置/限流 -> 更新 `Devdocs-security.md` 对应发现项 + roadmap ADR
 - [ ] 如修改 events.date 格式或归档逻辑 -> 同步前后端解析（SQL REPLACE + regex），补充回归测试
 - [ ] 如修改 `expires_at` / `created_at` 等日期字段的比较逻辑 -> 用 `datetime(col)` 归一化两侧格式（ISO 与 SQLite datetime 混用时 `T` > 空格致字典序错乱），补充 ISO 格式回归测试（参见 ADR-017）

@@ -4,7 +4,7 @@
 > 文档定位：运维权威文档（reference + how-to）
 > 受众：oncall / 站点 owner / 运维人员 / 发布决策者
 > Source of truth：运维操作、SLO 阈值、回滚流程的唯一权威位置
-> 关联：架构与 API 见 [Devdocs-architecture.md](Devdocs-architecture.md)；安全见 [Devdocs-security.md](Devdocs-security.md)；演进与 ADR 见 [Devdocs-roadmap.md](Devdocs-roadmap.md)；工程规则见 [Devdocs-project-rules.md](Devdocs-project-rules.md)
+> 关联：架构与 API 见 [Devdocs-architecture.md](Devdocs-architecture.md)；安全见 [Devdocs-security.md](Devdocs-security.md)；演进与 ADR 见 [Devdocs-roadmap.md](Devdocs-evolution.md)；工程规则见 [Devdocs-project-rules.md](Devdocs-project-rules.md)
 
 ## 文档结构
 
@@ -374,7 +374,7 @@ GET  /api/notifications           — 通知（轮询高频）
 
 - 冻结条件：月可用性预算超支（> 7.2 小时宕机）或考试期 SLO 违约
 - 冻结范围：所有非 hotfix 发布暂停；hotfix 须经 oncall 批准
-- 解冻条件：下一测量窗口开始 + 根因分析文档完成（写入 [Devdocs-roadmap.md](Devdocs-roadmap.md) ADR）
+- 解冻条件：下一测量窗口开始 + 根因分析文档完成（写入 [Devdocs-roadmap.md](Devdocs-evolution.md) ADR）
 
 ---
 
@@ -419,7 +419,7 @@ GET  /api/notifications           — 通知（轮询高频）
 
 ## 五、相关文档与 ADR
 
-- [Devdocs-roadmap.md](Devdocs-roadmap.md) — ADR-018（0.9.1 SLO 定义与单实例风险接受）、R18（SLO 未接入外部探针前的降级风险）
+- [Devdocs-roadmap.md](Devdocs-evolution.md) — ADR-018（0.9.1 SLO 定义与单实例风险接受）、R18（SLO 未接入外部探针前的降级风险）
 - 本文档 Part C: 运维 Runbook — SLO 违约时的运维处置流程
 - 本文档 Part A: 部署指南 — 部署与回滚（影响可用性）
 
@@ -494,7 +494,7 @@ curl -f http://localhost:2333/api/health
 # - 查看论坛/活动/考试列表
 
 # 8. 记录回滚事件
-# 在 Devdocs-roadmap.md ADR 中记录回滚原因、时间、影响范围
+# 在 Devdocs-evolution.md（Part A 五章 ADR）中记录回滚原因、时间、影响范围
 ```
 
 回滚时间目标（RTO）：≤ 10 分钟（从决策到服务恢复）。
@@ -521,7 +521,7 @@ docker compose build app && docker compose up -d app
 
 ### 5. 数据库迁移兼容性矩阵
 
-> 详见 [ADR-009](Devdocs-roadmap.md) 与 [Devdocs-project-rules.md 防再犯 #5](Devdocs-project-rules.md)
+> 详见 [ADR-009](Devdocs-evolution.md) 与 [Devdocs-project-rules.md 防再犯 #5](Devdocs-project-rules.md)
 
 | 迁移类型 | 可逆性 | 回滚策略 |
 |---------|--------|---------|
@@ -538,7 +538,7 @@ docker compose build app && docker compose up -d app
 - [ ] 登录功能正常（session 表结构兼容）
 - [ ] 核心读路径正常（论坛/活动/考试列表）
 - [ ] pino 日志无 ERROR 级别条目（连续 5 分钟）
-- [ ] 在 [Devdocs-roadmap.md](Devdocs-roadmap.md) 新增 ADR 记录回滚事件
+- [ ] 在 [Devdocs-roadmap.md](Devdocs-evolution.md) 新增 ADR 记录回滚事件
 
 ---
 
@@ -862,7 +862,7 @@ bash tools/scripts/restore-drill.sh
 
 - 本文档 Part B: SLO 与错误预算 — SLO 阈值与 error budget 消耗规则
 - 本文档 Part A: 部署指南 — 部署配置与环境变量
-- [Devdocs-roadmap.md](Devdocs-roadmap.md) - ADR 记录（回滚事件需新增 ADR）
+- [Devdocs-roadmap.md](Devdocs-evolution.md) - ADR 记录（回滚事件需新增 ADR）
 - [Devdocs-project-rules.md](Devdocs-project-rules.md) - 防再犯清单（迁移幂等性与事务安全）
 
 ---

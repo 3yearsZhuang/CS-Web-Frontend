@@ -2,7 +2,7 @@
 
 > 文档定位：安全与权限设计权威文档（reference）
 > 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
-> 关联：权限矩阵见 [Devdocs-architecture.md](Devdocs-architecture.md)；部署模型单进程假设见同文档 §部署模型；演进路线 ADR-015 见 [Devdocs-roadmap.md](Devdocs-roadmap.md)
+> 关联：权限矩阵见 [Devdocs-architecture.md](Devdocs-architecture.md)；部署模型单进程假设见同文档 §部署模型；演进路线 ADR-015 见 [Devdocs-roadmap.md](Devdocs-evolution.md)
 
 ## 文档结构
 
@@ -459,7 +459,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_root_unique
 
 # Part 3: 事件驱动安全与运行时监测
 
-> 承接 [Devdocs-roadmap.md](Devdocs-roadmap.md) 中 ADR-013 / ADR-014 / R7 / R8 的决策，描述事件总线、2FA 流程加固与运行时安全监测的实施规范。
+> 承接 [Devdocs-roadmap.md](Devdocs-evolution.md) 中 ADR-013 / ADR-014 / R7 / R8 的决策，描述事件总线、2FA 流程加固与运行时安全监测的实施规范。
 > 状态：已实施（ADR-013 落地，2FA 流程加固与运行时监测已实施）| 最后更新：2026-07-30
 
 ---
@@ -470,7 +470,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_root_unique
 
 背景：`notification/server/index.ts` 原通过模块加载副作用 `_initEvents()` 注册监听器，依赖"该模块被任意路径间接 import"的隐式假设。Next.js 按需加载可能导致某些启动路径未触发该 import，通知静默失效（R7）。
 
-实施（[ADR-013](Devdocs-roadmap.md#adr-013-事件监听器显式初始化)，2026-07-29 落地）：
+实施（[ADR-013](Devdocs-evolution.md#adr-013-事件监听器显式初始化)，2026-07-29 落地）：
 
 1. 显式初始化入口 ✅：`src/instrumentation.ts`（Next.js 启动钩子）显式调用 `initNotificationEvents()`
 2. 幂等保护 ✅：`initNotificationEvents()` 内部维护 `let initialized = false` 标志，重复调用安全
@@ -503,7 +503,7 @@ export async function register() {
 
 背景：`appBus.emit` 同步执行所有监听器。`createNotificationForAll` 大用户量广播与 `reply.created` 大量 @提及会同步阻塞请求，延长 P95（R8）。
 
-决策（[ADR-014](Devdocs-roadmap.md#adr-014-事件总线异步化时机)）：
+决策（[ADR-014](Devdocs-evolution.md#adr-014-事件总线异步化时机)）：
 
 - 当前阶段（活跃用户 ≤ 500）：维持同步 emit，保证事务内一致性语义
 - 触发异步化条件：活跃用户 > 500 或某事件监听器 P95 > 500ms
@@ -680,7 +680,7 @@ function recordLoginHistory(
 
 ## 13. 安全不变量（可测属性）
 
-> 以下不变量需保持可测，防止安全属性退化。对应 [Devdocs-roadmap.md](Devdocs-roadmap.md) 健壮函数 FF5。
+> 以下不变量需保持可测，防止安全属性退化。对应 [Devdocs-roadmap.md](Devdocs-evolution.md) 健壮函数 FF5。
 
 | ID | 不变属性 | 度量 | 阈值 | 检查方式 |
 |----|---------|------|------|---------|
@@ -701,7 +701,7 @@ function recordLoginHistory(
 
 > 文档定位：跨表面工程控制记录包，收敛代码/审计/架构/CI 中的安全加固改动为可审计变更记录
 > 范围：2026-07-31 两轮加固（4 高 + 7 中 + 5 低 = 16 项 + ADR-015 新增 4 项 = 20 项已落地）| 状态：✅ 全部通过验证（tsc 0 errors / 441 tests passed）| 创建：2026-07-31
-> 关联文档：本文档 Part 1–3 安全审计与权限设计 | [Devdocs-architecture.md](Devdocs-architecture.md) 部署模型 | [Devdocs-roadmap.md](Devdocs-roadmap.md) ADR-015 / R7 / R8
+> 关联文档：本文档 Part 1–3 安全审计与权限设计 | [Devdocs-architecture.md](Devdocs-architecture.md) 部署模型 | [Devdocs-roadmap.md](Devdocs-evolution.md) ADR-015 / R7 / R8
 
 ---
 

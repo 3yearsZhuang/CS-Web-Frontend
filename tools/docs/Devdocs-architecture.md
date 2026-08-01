@@ -3,7 +3,7 @@
 > 最后更新：2026-08-01（同步 shared/security 与 community/server 子目录拆分；合并 API 接口参考）
 > 文档定位：架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
-> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-roadmap.md](Devdocs-roadmap.md)
+> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-roadmap.md](Devdocs-evolution.md)
 
 ## 文档结构
 
@@ -911,7 +911,7 @@ community/
 
 > 事件总线为进程内通信，非 HTTP 接口。此处记录事件契约，供模块开发参考。
 >
-> 对应 [Devdocs-project-rules.md](Devdocs-project-rules.md) 模块协作规范、[Devdocs-roadmap.md](Devdocs-roadmap.md) ADR-013/014。
+> 对应 [Devdocs-project-rules.md](Devdocs-project-rules.md) 模块协作规范、[Devdocs-roadmap.md](Devdocs-evolution.md) ADR-013/014。
 
 ### 15.1 事件总线 API
 
@@ -958,7 +958,7 @@ appBus.off('reply.created', handler);
 
 ### 15.4 事件监听器初始化
 
-> 对应 [ADR-013](Devdocs-roadmap.md#adr-013-事件监听器显式初始化)（已实施 2026-07-29）。
+> 对应 [ADR-013](Devdocs-evolution.md#adr-013-事件监听器显式初始化)（已实施 2026-07-29）。
 
 通知模块事件监听器迁移至 `src/instrumentation.ts` 显式初始化（逻辑委托给 `src/instrumentation-node.ts`，server-only，使用 pino logger），不再依赖模块加载副作用：
 
@@ -995,7 +995,7 @@ export async function register() {
 
 当必须引入破坏性变更时：
 
-1. 评估必要性：能否通过新增字段避免？对应 [Devdocs-roadmap.md](Devdocs-roadmap.md) FF2（公开契约兼容）
+1. 评估必要性：能否通过新增字段避免？对应 [Devdocs-roadmap.md](Devdocs-evolution.md) FF2（公开契约兼容）
 2. 记录 ADR：在 roadmap 新增 ADR 说明变更原因和影响
 3. 双写过渡：新旧字段同时返回，旧字段标记 `@deprecated`
 4. 客户端迁移：通告所有已知客户端，提供迁移窗口

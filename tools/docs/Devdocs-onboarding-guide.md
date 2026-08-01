@@ -208,6 +208,6 @@ pnpm e2e              # Playwright E2E 测试
 | [ops](./Devdocs-ops.md) | 部署（Part A）、SLO（Part B）、Runbook（Part C）：Docker 部署、Caddy 配置、Litestream 备份、回滚与故障处置 |
 | [design-spec](./Devdocs-design-spec.md) | 设计规范：颜色、字体、动画、组件风格 |
 | [security](./Devdocs-security.md) | 安全审计 + 角色体系与权限矩阵 |
-| [roadmap](./Devdocs-roadmap.md) | 迭代计划与已完成功能清单 |
+| [evolution](./Devdocs-evolution.md) | 迭代路线图（Part A）、PostgreSQL 迁移（Part B）、多语言微服务迁移（Part C）、ADR 与风险登记 |
 | [markdown-editor](./Devdocs-markdown-editor.md) | Markdown 编辑器组件说明 |
 | [project-rules](./Devdocs-project-rules.md) | 项目编码规范 |
