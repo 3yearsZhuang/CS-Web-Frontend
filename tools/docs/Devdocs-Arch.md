@@ -1,16 +1,18 @@
-# 项目架构与 API 参考文档
+# FZTBUCS-Arch-架构和API文档
 
 > 最后更新：2026-08-01（同步 shared/security 与 community/server 子目录拆分；合并 API 接口参考）
 > 文档定位：架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
-> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-roadmap.md](Devdocs-evolution.md)
+> 关联：安全与权限设计见 [Devdocs-security.md](Devdocs-security.md)；部署/SLO/Runbook 见 [Devdocs-ops.md](Devdocs-ops.md)；演进路线 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)
 
 ## 文档结构
 
-- **Part A: 项目架构** — 目录结构、模块化分析、代码质量（原 Devdocs-architecture.md）
-  - 一、项目结构 / 二、模块化分析 / 三、代码质量
-- **Part B: API 接口参考** — 端点契约、鉴权、速率限制、错误码、事件总线（原 Devdocs-api-reference.md）
-  - 一、通用约定 … 十七、健康检查端点
+- **[Part A: 项目架构](#part-a-项目架构)**（原 Devdocs-architecture.md）
+  - [一、项目结构](#一项目结构) — 目录树、路由表、模块清单、API 前缀映射、测试/脚本、部署模型
+  - [二、模块化分析](#二模块化分析) — 层级关系、community 内部结构、依赖矩阵
+  - [三、代码质量](#三代码质量) — 历史问题收敛、已完成优化、待处理项
+- **[Part B: API 接口参考](#part-b-api-接口参考)**（原 Devdocs-api-reference.md）
+  - [一、通用约定](#一通用约定) · [二、认证](#二认证模块api-auth) · [三、个人资料](#三个人资料模块api-profile) · [四、活动](#四活动模块api-events) · [五、论坛](#五论坛模块api-communityforum) · [六、通知](#六通知模块api-notifications) · [七、管理后台](#七管理后台api-admin) · [八、博客](#八博客模块api-communityblog) · [九、工具集](#九工具集模块api-tools) · [十、成员与入社](#十成员与入社模块) · [十一、会话](#十一会话管理模块api-sessions) · [十二、速率限制](#十二速率限制参考) · [十三、状态码](#十三状态码约定) · [十四、错误响应](#十四错误响应扩展) · [十五、事件总线](#十五事件总线接口) · [十六、版本化策略](#十六版本化与兼容性策略) · [十七、健康检查](#十七健康检查端点)
 
 ---
 
@@ -191,33 +193,7 @@ src/shared/
 | `tools/` | 工具集（考试/资源/任务/组件注册表/Auxilio） | 11 | exams, exam_questions, exam_question_options, exam_attempts, tasks, task_claims, resources, points_transactions |
 | `user/` | 用户资料 | 2 | users, activity_participations |
 
-社区模块（community）是 forum、blog、members 三个原独立模块的扁平合并产物，内部结构：
-
-```
-community/
-├── server/
-│   ├── forum/               # 论坛逻辑（子目录拆分）
-│   │   ├── categories.ts    # 版块 CRUD
-│   │   ├── topics.ts        # 主题 CRUD
-│   │   ├── replies.ts       # 回复 CRUD
-│   │   ├── reactions.ts     # 点赞 + 收藏
-│   │   ├── moderation.ts    # 管理员审核
-│   │   ├── mentions.ts      # @ 提及
-│   │   ├── user-data.ts     # 用户主页论坛数据
-│   │   ├── uploads.ts       # 图片上传
-│   │   └── shared.ts        # 内部共享类型与工具
-│   ├── blog/                # 博客逻辑（子目录拆分）
-│   │   ├── posts.ts         # 文章 CRUD
-│   │   ├── series.ts        # 系列管理
-│   │   ├── likes.ts         # 点赞 + 浏览计数
-│   │   └── utils.ts         # slug / tags / TOC
-│   ├── members/             # 成员名录
-│   ├── feed.ts              # Feed 聚合查询
-│   └── index.ts             # 统一 barrel
-├── types/
-│   └── index.ts             # 统一类型（Forum/Blog/Members/Feed）
-└── ui/                      # 社区 UI 组件
-```
+社区模块（community）是 forum、blog、members 三个原独立模块的扁平合并产物，其内部 `server/` 按 `forum/`、`blog/`、`members/` 子目录拆分（详见 [二、模块化分析 §2.2](#22-community-模块内部结构)）。
 
 API 路由路径对应关系（完整端点契约见本文档 **Part B: API 接口参考**）：
 
@@ -839,9 +815,9 @@ community/
 | 201 | 创建成功 |
 | 302 | 重定向（OAuth） |
 | 400 | 请求参数错误 |
-| 403 | 401 |
+| 403 | 权限不足（未登录 / Session 过期由 401 表示）|
 | 401 | 未登录 / Session 过期 |
-| 404 | 403 |
+| 404 | 资源不存在 |
 | 409 | 冲突（如重复注册、重复报名） |
 | 413 | 上传文件过大 |
 | 429 | 速率限制 |
@@ -911,7 +887,7 @@ community/
 
 > 事件总线为进程内通信，非 HTTP 接口。此处记录事件契约，供模块开发参考。
 >
-> 对应 [Devdocs-project-rules.md](Devdocs-project-rules.md) 模块协作规范、[Devdocs-roadmap.md](Devdocs-evolution.md) ADR-013/014。
+> 对应 [Devdocs-project-rules.md](Devdocs-project-rules.md) 模块协作规范、[Devdocs-evolution.md](Devdocs-evolution.md) ADR-013/014。
 
 ### 15.1 事件总线 API
 
@@ -995,7 +971,7 @@ export async function register() {
 
 当必须引入破坏性变更时：
 
-1. 评估必要性：能否通过新增字段避免？对应 [Devdocs-roadmap.md](Devdocs-evolution.md) FF2（公开契约兼容）
+1. 评估必要性：能否通过新增字段避免？对应 [Devdocs-evolution.md](Devdocs-evolution.md) FF2（公开契约兼容）
 2. 记录 ADR：在 roadmap 新增 ADR 说明变更原因和影响
 3. 双写过渡：新旧字段同时返回，旧字段标记 `@deprecated`
 4. 客户端迁移：通告所有已知客户端，提供迁移窗口

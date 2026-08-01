@@ -36,6 +36,10 @@
 - 统一输入验证框架（zod）
 - Markdown 渲染白名单净化（rehype-sanitize）
 - 对象级权限（IDOR 防护）
+- 登录历史与异常告警（login_history 表）
+- 会话管理增强（设备列表、远程登出）
+- 高危操作二次确认（密码二次确认守卫）
+- 依赖漏洞扫描命令可用（`pnpm audit` 可执行，CI 集成见 Q4）
 - 安全审计日志增强
 
 #### 架构与工程质量
@@ -54,6 +58,13 @@
 - CI 集成 build 验证 + 依赖审计（pnpm audit --prod）
 - 业务模块单元测试 308 条（events/exam/resource/task/join/announcement）
 - E2E 业务流程断言 25 条（Playwright）
+- API 集成测试（安全/权限/积分核心链路）
+- 数据库迁移工具（自定义 migration 系统，双 dialect 兼容）
+- Repository 抽象层（ADR-009：服务层经 Repository 访问数据，为 PostgreSQL 双引擎切换铺路）
+- 用户等级/积分系统（联动任务 + 考试 + 活动）
+- 共享审核工作流提取（`shared/workflow` 状态机：pending/approved/rejected/archived）
+- 组件扁平化与子目录拆分（primitives/layout/effects/feedback）+ `shared` 子目录 barrel 统一导出
+- Git hooks + CI 流水线（build 验证 + 依赖审计 + 密钥缺失即退出）
 - 441+ 单元测试全绿
 
 ### Changed
@@ -63,6 +74,16 @@
 - 安全头迁移至 proxy.ts 统一入口（F3）
 - server-only 边界澄清：19 个模块加标记 + 本地空实现兼容自定义 dev server（ADR-010）
 - `AuditContext` 类型下沉至 shared/types，斩断 server-only 依赖链
+- 论坛/博客/成员模块合并为 community（flat 结构，server/types/ui 三层自洽）
+- App 路由重组：`/forum/*`→`/community/forum/*`、`/blog/*`→`/community/blog/*`、`/members`→`/community/members`
+- API 路由重组：`/api/forum/*`→`/api/community/forum/*` 等
+- 类型统一定义：ForumTopic/BlogPost/MemberItem/FeedItem 收敛至 `community/types/index.ts`
+- 文件结构精简：`tests/scripts/deploy/dev-docs`→`tools/`；`shared/ui/`→`components/ui/`
+- Sentry 依赖移除：`@sentry/nextjs` 未安装，`monitoring.ts` 基于 pino，可选接入
+- `template.tsx` 删除（无实际逻辑的直通透传）
+- `security.test.ts` 迁移：`shared/`→`tools/tests/`
+- 未使用 import 清理：`resource/index.ts` 移除冗余 `TECH_TAGS`
+- Q1 TopicDetail 拆分：主组件 < 200 行，拆出 `TopicHero`/`TopicContent`/`TopicReplySection` + `useTopicActions`/`useReplyActions`
 
 ### Fixed
 - events.date 自由格式与 ISO 时间戳字典序比较缺陷（ADR-016）
@@ -84,8 +105,10 @@
 - Devdocs-slo.md（0.9.1 SLO 定义与 error budget 管理）
 - Devdocs-runbook.md（运维操作手册 + 回滚流程 + 5 个故障场景）
 - Devdocs-project-rules.md 新增「反复出现的错误与防再犯清单」（7 类根因）
-- ADR 记录 18 条（ADR-001 ~ ADR-018）
+- ADR 记录 19 条（ADR-001 ~ ADR-019），全部已实施
+  - ADR-019：内容审核工作流抽象（pending/approved/rejected/archived，2026-07-31）
 - 风险登记表 R1-R20
+- Devdocs-Arch.md：整合架构文档与 API 接口参考（合并 Devdocs-architecture.md + Devdocs-api-reference.md）
 
 ### Known Limitations
 - 单实例部署（EX-1 风险接受：用户量 < 200 活跃时接受单点故障）
