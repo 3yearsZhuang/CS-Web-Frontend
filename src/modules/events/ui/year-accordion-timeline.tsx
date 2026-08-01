@@ -1,0 +1,173 @@
+/**
+ * @file 年份手风琴时间轴 — 按年份分组的活动展示（桌面端铁路线居中，移动端单列左侧）
+ */
+'use client';
+
+import { motion, AnimatePresence } from 'motion/react';
+import { EASE } from '@/shared/utils/ui-constants';
+import { SectionLoading } from '@/components';
+import { EventCard } from './event-card';
+import type { EventItem } from '@/modules/events/types';
+
+/** 年份分组，包含年份标签和对应活动列表 */
+export interface YearGroup {
+  year: string;
+  events: EventItem[];
+}
+
+interface YearAccordionTimelineProps {
+  uncategorized: EventItem[];
+  yearGroups: YearGroup[];
+  expandedYears: Set<string>;
+  loading: boolean;
+  onToggleYear: (year: string) => void;
+}
+
+/** 年份手风琴时间轴组件 — 按年份分组展示活动，支持展开/折叠 */
+export function YearAccordionTimeline({
+  uncategorized,
+  yearGroups,
+  expandedYears,
+  loading,
+  onToggleYear,
+}: YearAccordionTimelineProps) {
+  return (
+    <div className="relative">
+      {/* 垂直铁路线 — 桌面端居中，移动端左侧 */}
+      <div className="absolute left-[19px] md:left-1/2 top-0 bottom-0 w-px bg-[var(--border)] md:-translate-x-px" aria-hidden="true" />
+
+      {loading ? (
+        <SectionLoading label="Loading..." />
+      ) : uncategorized.length === 0 && yearGroups.length === 0 ? (
+        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">
+          暂无活动
+        </div>
+      ) : (
+        <>
+          {/* 未分类活动 — 直接平铺在最上方，不包裹年份手风琴 */}
+          {uncategorized.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              {uncategorized.map((event, idx) => (
+                <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} />
+              ))}
+              {/* 未分类与年份组之间的分隔 */}
+              {yearGroups.length > 0 && (
+                <div className="relative py-4">
+                  <div className="absolute left-[19px] md:left-1/2 md:-translate-x-px w-px h-full bg-[var(--border)]/30" aria-hidden="true" />
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* 年份手风琴分组 */}
+          {yearGroups.map((group) => {
+            const isExpanded = expandedYears.has(group.year);
+            const pastCount = group.events.filter((e) => e.status === 'ended' || isPastDate(e.date)).length;
+            const activeCount = group.events.length - pastCount;
+
+            return (
+              <div key={group.year}>
+                {/* 年份分割线 — 点击展开/折叠 */}
+                <button
+                  type="button"
+                  onClick={() => onToggleYear(group.year)}
+                  className="relative z-10 w-full flex items-center gap-4 py-6 group cursor-pointer focus-amber"
+                >
+                  {/* 铁路线上的菱形节点 */}
+                  <div className={`absolute left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 ${
+                    isExpanded
+                      ? 'bg-[var(--primary)] border-[var(--primary)] shadow-[0_0_12px_var(--primary)]/30'
+                      : 'bg-[var(--background)] border-[var(--border)] group-hover:border-[var(--primary)]/50'
+                  }`} aria-hidden="true" />
+
+                  {/* 年份标题 */}
+                  <div className="w-full md:w-[calc(50%-32px)] md:text-right md:pr-8 pl-12 md:pl-0">
+                    <span className={`display-serif text-[clamp(24px,4vw,40px)] transition-colors duration-300 ${
+                      isExpanded ? 'text-[var(--primary)]' : 'text-[var(--foreground)] group-hover:text-[var(--primary)]/70'
+                    }`}>
+                      {group.year}
+                    </span>
+                  </div>
+                  {/* 统计信息 — 桌面端右侧 */}
+                  <div className="hidden md:flex md:w-[calc(50%-32px)] md:pl-8 items-center gap-4">
+                    <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
+                      {group.events.length} 个活动
+                    </span>
+                    {activeCount > 0 && (
+                      <span className="meta-mono text-[10px] text-[var(--primary)] px-2 py-0.5 border border-[var(--primary)]/30">
+                        {activeCount} active
+                      </span>
+                    )}
+                    {pastCount > 0 && (
+                      <span className="meta-mono text-[10px] text-[var(--muted-foreground)] px-2 py-0.5 border border-[var(--border)]">
+                        {pastCount} archived
+                      </span>
+                    )}
+                    <span className={`meta-mono text-[10px] transition-transform duration-300 ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}>
+                      ▼
+                    </span>
+                  </div>
+                  {/* 移动端统计 */}
+                  <div className="md:hidden flex items-center gap-2 pl-12">
+                    <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
+                      {group.events.length} 活动
+                    </span>
+                    <span className={`meta-mono text-[10px] transition-transform duration-300 ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}>
+                      ▼
+                    </span>
+                  </div>
+                </button>
+
+                {/* 年份内活动列表 — 手风琴展开 */}
+                <AnimatePresence initial={false}>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.35, ease: EASE }}
+                      className="overflow-hidden"
+                    >
+                      {group.events.map((event, idx) => (
+                        <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** 判断活动日期是否已过
+ *
+ * 兼容 admin 表单的多种日期格式：YYYY.MM.DD / YYYY-MM-DD / YYYY/MM/DD
+ * （new Date('2026.09.15') 在多数 JS 引擎返回 Invalid Date，需手动解析）
+ */
+function isPastDate(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  const match = dateStr.trim().match(/^(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+  if (!match) return false;
+  const year = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1;
+  const day = parseInt(match[3], 10);
+  if (month < 0 || month > 11 || day < 1 || day > 31) return false;
+  const d = new Date(year, month, day);
+  if (isNaN(d.getTime())) return false;
+  // 同日比较：活动当日不算"已过"（与后端 autoArchive 的 < 语义一致，当日仍可见）
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d < today;
+}

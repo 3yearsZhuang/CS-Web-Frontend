@@ -1,0 +1,51 @@
+services:
+  # ============ 应用容器 ============
+  cs-website:
+    build:
+      context: ../..
+      dockerfile: tools/deploy/Dockerfile
+    container_name: cs-website
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=2333
+      - AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+      - SQLITE_DB_PATH=/app/data/app.db
+      - TRUST_PROXY=true
+    volumes:
+      # 持久化 SQLite 数据库 + 用户上传头像
+      - ../data:/app/data
+      # Litestream 备份目录（本地磁盘备份）
+      - ../backups:/app/backups
+    networks:
+      - cs-net
+    # 不直接暴露端口，由 Caddy 反向代理
+    expose:
+      - "2333"
+
+  # ============ Caddy 反向代理（自动 HTTPS） ============
+  caddy:
+    image: caddy:2-alpine
+    container_name: cs-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - cs-net
+    depends_on:
+      - cs-website
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  cs-net:
+    driver: bridge

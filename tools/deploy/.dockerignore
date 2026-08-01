@@ -1,0 +1,16 @@
+node_modules
+.next
+dist
+data
+.git
+.env
+.env.*
+!.env.example
+.DS_Store
+*.swp
+*.log
+coverage
+.tailtest
+.codegraph
+.vscode
+.idea

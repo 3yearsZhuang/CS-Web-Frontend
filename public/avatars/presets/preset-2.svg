@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <pattern id="scan2" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#f5f5f5" opacity="0.05"/>
+    </pattern>
+    <pattern id="hexgrid2" x="0" y="0" width="72" height="41.57" patternUnits="userSpaceOnUse">
+      <polygon points="24,20.78 12,41.57 -12,41.57 -24,20.78 -12,0 12,0" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.35"/>
+      <polygon points="60,0 48,20.78 24,20.78 12,0 24,-20.78 48,-20.78" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.35"/>
+      <polygon points="60,41.57 48,62.35 24,62.35 12,41.57 24,20.78 48,20.78" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.35"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="#0a0a0a"/>
+  <rect width="256" height="256" fill="url(#hexgrid2)"/>
+  <rect width="256" height="256" fill="url(#scan2)"/>
+  <!-- highlighted hex cluster (center + 6 neighbors) -->
+  <!-- center hex filled -->
+  <polygon points="132,124.71 120,145.49 96,145.49 84,124.71 96,103.92 120,103.92" fill="#e0b585" fill-opacity="0.28" stroke="#e0b585" stroke-width="2.5"/>
+  <!-- 6 neighbor hexes outlined -->
+  <polygon points="132,83.14 120,103.92 96,103.92 84,83.14 96,62.35 120,62.35" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <polygon points="132,166.28 120,187.06 96,187.06 84,166.28 96,145.49 120,145.49" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <polygon points="96,103.92 84,124.71 60,124.71 48,103.92 60,83.14 84,83.14" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <polygon points="168,103.92 156,124.71 132,124.71 120,103.92 132,83.14 156,83.14" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <polygon points="96,145.49 84,166.28 60,166.28 48,145.49 60,124.71 84,124.71" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <polygon points="168,145.49 156,166.28 132,166.28 120,145.49 132,124.71 156,124.71" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.85"/>
+  <!-- center node -->
+  <polygon points="128,118 134,124.71 128,131.42 122,124.71" fill="#f5f5f5"/>
+  <!-- corner brackets -->
+  <path d="M 12 12 L 36 12 M 12 12 L 12 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 12 L 220 12 M 244 12 L 244 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 12 244 L 36 244 M 12 244 L 12 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 244 L 220 244 M 244 244 L 244 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+</svg>

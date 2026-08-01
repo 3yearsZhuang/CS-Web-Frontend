@@ -1,0 +1,39 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  # 每周一 UTC 00:00 定期扫描
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: pnpm audit (high+)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: pnpm audit
+        run: pnpm audit --audit-level=high

@@ -1,0 +1,305 @@
+/**
+ * @file 工具集入口页（/tools）— 胶囊侧边栏按状态分类（可用/即将上线/规划中）+ 卡片网格
+ */
+
+'use client';
+
+import Link from 'next/link';
+import { GraduationCap, BookOpen, Bot, ClipboardList, MessageCircle, Code2 } from 'lucide-react';
+import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
+import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
+import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
+import { AdminToolsPanel } from '@/modules/tools/ui/admin-tools-panel';
+import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import type { SafeUser } from '@/modules/admin/ui/types';
+import { useEffect, useMemo, useState } from 'react';
+
+type ToolTab = 'available' | 'coming-soon' | 'planned' | 'admin';
+
+interface ToolCard {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  en: string;
+  description: string;
+  status: ToolTab;
+  tag?: string;
+}
+
+const TOOLS: ToolCard[] = [
+  {
+    href: '/tools/exam',
+    icon: <GraduationCap className="w-5 h-5" />,
+    title: '内网考试',
+    en: 'Exam System',
+    description: '选择题在线评测，自动判分与排名。支持算法周赛和项目组考核。',
+    status: 'available',
+    tag: 'P0',
+  },
+  {
+    href: '/tools/resource',
+    icon: <BookOpen className="w-5 h-5" />,
+    title: '学习资源站',
+    en: 'Resource Hub',
+    description: '按技术领域分类浏览，用户提交资源链接，管理员审核后公开。',
+    status: 'available',
+    tag: 'P0',
+  },
+  {
+    href: '/tools/auxilio',
+    icon: <Bot className="w-5 h-5" />,
+    title: 'Auxilio 学习助手',
+    en: 'Auxilio Agent',
+    description: '基于考试数据的薄弱点分析，规则引擎推荐个性化学习路径。',
+    status: 'available',
+    tag: 'P1',
+  },
+  {
+    href: '/tools/task',
+    icon: <ClipboardList className="w-5 h-5" />,
+    title: '任务发布板',
+    en: 'Quest Board',
+    description: '管理员发布任务，成员领取并完成，获得积分与徽章奖励。',
+    status: 'available',
+    tag: 'P2',
+  },
+  {
+    href: '/tools/dev-center',
+    icon: <Code2 className="w-5 h-5" />,
+    title: '开发者中心',
+    en: 'Dev Center',
+    description: '开发文档浏览与编辑，组件注册表盘点与迁移进度看板。管理员可访问。',
+    status: 'available',
+    tag: 'P2',
+  },
+  {
+    href: '',
+    icon: <MessageCircle className="w-5 h-5" />,
+    title: '聊天交流',
+    en: 'Chat',
+    description: '站内实时消息，支持群组和一对一。待用户量增长后启动。',
+    status: 'planned',
+    tag: 'P3',
+  },
+];
+
+function statusLabel(status: ToolTab): string {
+  switch (status) {
+    case 'available':
+      return '可用';
+    case 'coming-soon':
+      return '即将上线';
+    case 'planned':
+      return '规划中';
+    default:
+      return '';
+  }
+}
+
+export default function ToolsPage() {
+  const {
+    collapsed: heroCollapsed,
+    capsuleVisible,
+    onRevealComplete,
+    onTitleClick,
+  } = useCollapsingHero();
+
+  const hero: HeroState = {
+    collapsed: heroCollapsed,
+    capsuleVisible,
+    onRevealComplete,
+    onTitleClick,
+  };
+
+  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => {
+        if (res.status === 401) return null;
+        if (!res.ok) return null;
+        return res.json() as Promise<{ user: SafeUser }>;
+      })
+      .then((data) => {
+        if (cancelled || !data) return;
+        const user = data.user;
+        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
+          setCurrentUser(user);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const isAdmin = currentUser !== null;
+
+  const [activeTab, setActiveTab] = useState('available' as ToolTab);
+
+  const toolsTabs: CapsuleTab[] = useMemo(
+    () => [
+      { key: 'available', num: '01', label: '可用' },
+      { key: 'coming-soon', num: '02', label: '即将上线' },
+      { key: 'planned', num: '03', label: '规划中' },
+      ...(isAdmin ? [{ key: 'admin', num: '99', label: '管理 / Admin' }] : []),
+    ],
+    [isAdmin],
+  );
+
+  const filteredTools = useMemo(
+    () => TOOLS.filter((t) => t.status === activeTab),
+    [activeTab],
+  );
+
+  return (
+    <main className="relative pt-16">
+      {/* ============ [ 00 ] Hero ============ */}
+      <CollapsingHero
+        index="00"
+        label="工具集"
+        hero={hero}
+        pageKey="tools"
+        minHeight="50vh"
+        capsule={{
+          tabs: toolsTabs,
+          activeKey: activeTab,
+          onTabChange: (key) => setActiveTab(key as ToolTab),
+        }}
+      >
+        <RevealTitle>
+          <h1
+            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
+              hero.collapsed
+                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
+                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
+            }`}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          >
+            工具集
+            <span
+              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
+                hero.collapsed
+                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
+                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
+              }`}
+            >
+              / Tools
+            </span>
+          </h1>
+        </RevealTitle>
+        <RevealItem>
+          <div
+            className={`overflow-hidden transition-all hero-reveal ${
+              hero.collapsed
+                ? 'max-h-[14px] opacity-30 mt-1'
+                : 'max-h-[200px] opacity-100 mt-8 sm:mt-12'
+            }`}
+          >
+            <p
+              className={`max-w-2xl text-[var(--muted-foreground)] leading-[1.8] line-clamp-1 transition-all hero-reveal ${
+                hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
+              }`}
+            >
+              考试评测 · 资源分享 · 任务协作
+              <span className="serif-italic text-[var(--foreground)]">
+                。每一个工具，都让社团更近一步
+              </span>
+              。
+            </p>
+          </div>
+        </RevealItem>
+      </CollapsingHero>
+
+      {/* ============ [ 01 ] 工具列表 ============ */}
+      <section data-section-nav="01|工具列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+        <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
+          <div>
+            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+              {activeTab === 'available' && '可用工具'}
+              {activeTab === 'coming-soon' && '即将上线'}
+              {activeTab === 'planned' && '规划中'}
+            </h2>
+            <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
+              {activeTab === 'available' && '// 当前可用的工具，点击卡片进入'}
+              {activeTab === 'coming-soon' && '// 正在开发中，敬请期待'}
+              {activeTab === 'planned' && '// 未来规划的功能，优先级由高到低'}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredTools.map((tool) => {
+                const isAvailable = tool.status === 'available';
+
+                const CardContent = (
+                  <div
+                    className={`relative p-6 border border-[var(--border)] transition-colors ${
+                      isAvailable
+                        ? 'card-minimal cursor-pointer hover:bg-[var(--primary)]/[0.03]'
+                        : 'opacity-40 cursor-default'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="text-[var(--primary)]">{tool.icon}</div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {tool.tag && (
+                          <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
+                            {tool.tag}
+                          </span>
+                        )}
+                        <span
+                          className={`meta-mono text-[10px] px-2 py-0.5 border ${
+                            tool.status === 'available'
+                              ? 'border-emerald-500/40 text-emerald-500'
+                              : tool.status === 'coming-soon'
+                                ? 'border-amber-500/40 text-amber-500'
+                                : 'border-[var(--border)] text-[var(--muted-foreground)]'
+                          }`}
+                        >
+                          {statusLabel(tool.status)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="display-serif text-[18px] sm:text-[20px] text-[var(--foreground)] mb-1">
+                      {tool.title}
+                    </h3>
+                    <p className="meta-mono text-[10px] sm:text-[11px] text-[var(--muted-foreground)] mb-3 uppercase tracking-wider">
+                      {tool.en}
+                    </p>
+
+                    <p className="text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                      {tool.description}
+                    </p>
+
+                    {isAvailable && (
+                      <div className="mt-5 text-[var(--primary)] meta-mono text-[12px] group-hover:translate-x-1 transition-transform">
+                        进入 →
+                      </div>
+                    )}
+                  </div>
+                );
+
+                if (isAvailable) {
+                  return (
+                    <Link key={tool.en} href={tool.href}>
+                      {CardContent}
+                    </Link>
+                  );
+                }
+                return <div key={tool.en}>{CardContent}</div>;
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tab 99 — 工具管理（仅管理员） */}
+      {activeTab === 'admin' && currentUser && (
+        <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+          <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
+            <AdminToolsPanel />
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}

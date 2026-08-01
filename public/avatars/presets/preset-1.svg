@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <pattern id="scan1" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#f5f5f5" opacity="0.05"/>
+    </pattern>
+    <linearGradient id="sweep1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0b585" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#e0b585" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="#0a0a0a"/>
+  <rect width="256" height="256" fill="url(#scan1)"/>
+  <!-- corner brackets -->
+  <path d="M 12 12 L 36 12 M 12 12 L 12 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 12 L 220 12 M 244 12 L 244 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 12 244 L 36 244 M 12 244 L 12 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 244 L 220 244 M 244 244 L 244 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <!-- radar sweep area -->
+  <path d="M 128 128 L 128 28 A 100 100 0 0 1 228 128 Z" fill="url(#sweep1)"/>
+  <!-- concentric circles -->
+  <circle cx="128" cy="128" r="100" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.25"/>
+  <circle cx="128" cy="128" r="75" fill="none" stroke="#e0b585" stroke-width="1.5" opacity="0.45"/>
+  <circle cx="128" cy="128" r="50" fill="none" stroke="#e0b585" stroke-width="2" opacity="0.7"/>
+  <circle cx="128" cy="128" r="25" fill="none" stroke="#e0b585" stroke-width="2.5"/>
+  <!-- crosshair lines (gaps around center) -->
+  <line x1="0" y1="128" x2="103" y2="128" stroke="#f5f5f5" stroke-width="1" opacity="0.4"/>
+  <line x1="153" y1="128" x2="256" y2="128" stroke="#f5f5f5" stroke-width="1" opacity="0.4"/>
+  <line x1="128" y1="0" x2="128" y2="103" stroke="#f5f5f5" stroke-width="1" opacity="0.4"/>
+  <line x1="128" y1="153" x2="128" y2="256" stroke="#f5f5f5" stroke-width="1" opacity="0.4"/>
+  <!-- sweep leading edge -->
+  <line x1="128" y1="128" x2="228" y2="128" stroke="#e0b585" stroke-width="2"/>
+  <!-- tick marks on outer ring -->
+  <g stroke="#e0b585" stroke-width="1.5" opacity="0.6">
+    <line x1="128" y1="20" x2="128" y2="32"/>
+    <line x1="128" y1="224" x2="128" y2="236"/>
+    <line x1="20" y1="128" x2="32" y2="128"/>
+    <line x1="224" y1="128" x2="236" y2="128"/>
+  </g>
+  <!-- center node -->
+  <rect x="124" y="124" width="8" height="8" fill="#e0b585"/>
+</svg>

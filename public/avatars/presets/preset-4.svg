@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <pattern id="scan4" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#f5f5f5" opacity="0.05"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="#0a0a0a"/>
+  <rect width="256" height="256" fill="url(#scan4)"/>
+  <!-- outer diamond -->
+  <polygon points="128,16 240,128 128,240 16,128" fill="#e0b585" fill-opacity="0.06" stroke="#e0b585" stroke-width="2.5"/>
+  <!-- inner diamond -->
+  <polygon points="128,48 208,128 128,208 48,128" fill="none" stroke="#e0b585" stroke-width="1.5" opacity="0.7"/>
+  <!-- facet lines: outer vertices to inner vertices -->
+  <line x1="128" y1="16" x2="128" y2="48" stroke="#e0b585" stroke-width="1" opacity="0.6"/>
+  <line x1="240" y1="128" x2="208" y2="128" stroke="#e0b585" stroke-width="1" opacity="0.6"/>
+  <line x1="128" y1="240" x2="128" y2="208" stroke="#e0b585" stroke-width="1" opacity="0.6"/>
+  <line x1="16" y1="128" x2="48" y2="128" stroke="#e0b585" stroke-width="1" opacity="0.6"/>
+  <!-- facet lines: center to inner vertices (white) -->
+  <line x1="128" y1="128" x2="128" y2="48" stroke="#f5f5f5" stroke-width="1" opacity="0.5"/>
+  <line x1="128" y1="128" x2="208" y2="128" stroke="#f5f5f5" stroke-width="1" opacity="0.5"/>
+  <line x1="128" y1="128" x2="128" y2="208" stroke="#f5f5f5" stroke-width="1" opacity="0.5"/>
+  <line x1="128" y1="128" x2="48" y2="128" stroke="#f5f5f5" stroke-width="1" opacity="0.5"/>
+  <!-- top crown facet (filled) -->
+  <polygon points="128,48 168,88 128,128 88,88" fill="#e0b585" fill-opacity="0.22" stroke="#e0b585" stroke-width="1.5"/>
+  <!-- diagonal facet lines -->
+  <line x1="88" y1="88" x2="168" y2="168" stroke="#e0b585" stroke-width="1" opacity="0.4"/>
+  <line x1="168" y1="88" x2="88" y2="168" stroke="#e0b585" stroke-width="1" opacity="0.4"/>
+  <!-- side accent facets -->
+  <polygon points="88,88 128,128 88,168 48,128" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.5"/>
+  <polygon points="168,88 208,128 168,168 128,128" fill="none" stroke="#e0b585" stroke-width="1" opacity="0.5"/>
+  <!-- center diamond node -->
+  <polygon points="128,112 144,128 128,144 112,128" fill="#e0b585"/>
+  <!-- corner brackets -->
+  <path d="M 12 12 L 36 12 M 12 12 L 12 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 12 L 220 12 M 244 12 L 244 36" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 12 244 L 36 244 M 12 244 L 12 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+  <path d="M 244 244 L 220 244 M 244 244 L 244 220" stroke="#e0b585" stroke-width="2" fill="none"/>
+</svg>

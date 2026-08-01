@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Type Check + Lint + Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type Check
+        run: pnpm run ts-check
+
+      - name: Lint
+        run: pnpm run lint:build
+
+      - name: Test
+        run: pnpm test -- --run
+
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+        env:
+          # 构建所需最小环境变量（占位值，不用于运行）
+          AUTH_SESSION_SECRET: ci-build-placeholder-secret-32bytes-minimum
+          NEXT_PUBLIC_SITE_URL: http://localhost:2333
+          ALLOWED_ORIGINS: http://localhost:2333
+          PASSWORD_RESET_DEFAULT: CI_BUILD_PLACEHOLDER
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: build-output
+          path: .next/
+          retention-days: 3
+
+  security-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Audit (production deps only)
+        run: pnpm audit --prod
+        continue-on-error: true
+        # 1.0 阶段：audit 失败不阻塞 CI（仅警告）。
+        # 后续可改为阻塞：移除 continue-on-error。
+        # 详见 Devdocs-roadmap.md R19。
+
+      - name: Audit summary
+        if: always()
+        run: |
+          echo "## Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo "审计结果仅作参考，0.9.1 阶段不阻塞 CI。" >> $GITHUB_STEP_SUMMARY
+          echo "高危漏洞应记录至 Devdocs-roadmap.md R 表并尽快修复。" >> $GITHUB_STEP_SUMMARY

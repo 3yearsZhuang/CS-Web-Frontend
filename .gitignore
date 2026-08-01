@@ -1,0 +1,61 @@
+# 依赖
+node_modules/
+
+# 构建产物（统一输出到 .build/）
+.build/
+.rsbuild/
+coverage/
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 数据库
+data/
+
+# Litestream 备份
+backups/
+
+# IDE / 编辑器
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+._*
+
+# 缓存
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.turbo/
+.tailwindcss/
+
+# 插件会话状态（tailtest 自动生成）
+.tailtest/
+
+# E2E 测试产物
+test-results/
+playwright-report/
+blob-report/
+tools/tests/e2e/.storage-state.json
+
