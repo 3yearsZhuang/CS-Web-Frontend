@@ -15,10 +15,10 @@ export async function POST(req: Request) {
 
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
 
-  if (!is2FAEnabled(session.user.id)) {
+  if (!await is2FAEnabled(session.user.id)) {
     return NextResponse.json({ error: '未启用 2FA', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '请输入验证码', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const result = regenerateBackupCodes(session.user.id, code);
+  const result = await regenerateBackupCodes(session.user.id, code);
   if (!result.ok) {
     return NextResponse.json({ error: result.error, code: '2FA_FAILED' }, { status: 400 });
   }

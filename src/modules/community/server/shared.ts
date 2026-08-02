@@ -1,23 +1,433 @@
 /**
- * @file 社区服务层 — 共享基础（内部类型与工具函数）
+ * @file 社区模块共享工具（含批量加载/摘要格式化，统一经 Repository 访问 DB）
  */
-import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
-import { logger } from '@/shared/logger';
-import { computePagination, computeTotalPages } from '@/shared/utils/pagination';
-import { maskEmail } from '@/shared/utils/mask';
-import {
-  POST_LIMITS,
-  type AuthorSummary,
-  type CategorySummary,
-  type CommunityCategory,
-  type CommunityPost,
-  type CommunityComment,
-  type PostStatus,
-  type PostKind,
-} from '../types';
+import type { DbEngine } from '@/shared/db/drivers';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import type { CommunityPostRow } from '@/shared/db/repositories/community.repo';
+import type { CommunityCommentRow } from '@/shared/db/repositories/community.repo';
 
-// 兼容旧 forum/* 实现引用 FORUM_LIMITS（旧字段名 → 新 POST_LIMITS 字段）
+// ============ 类型 ============
+
+export interface AuthorSummary {
+  id: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  avatarType: string;
+}
+
+export interface CategorySummary {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface FormattedCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  postCount: number;
+}
+
+export interface FormattedPost {
+  id: string;
+  kind: string;
+  categoryId: string | null;
+  category: CategorySummary | null;
+  authorId: string;
+  author: AuthorSummary | null;
+  authorName: string | null;
+  title: string;
+  contentMarkdown: string;
+  excerpt: string | null;
+  coverImage: string | null;
+  status: string;
+  isPinned: boolean;
+  isFeatured: boolean;
+  replyCount: number;
+  favoriteCount: number;
+  likeCount: number;
+  lastReplyAt: string | null;
+  lastReplyId: string | null;
+  hiddenBy: string | null;
+  hiddenAt: string | null;
+  hiddenReason: string | null;
+  slug: string | null;
+  tags: string[];
+  seriesId: string | null;
+  seriesOrder: number;
+  publishedAt: string | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FormattedComment {
+  id: string;
+  topicId: string;
+  parentReplyId: string | null;
+  authorId: string;
+  author: AuthorSummary | null;
+  contentMarkdown: string;
+  status: string;
+  likeCount: number;
+  replyCount: number;
+  isLiked: boolean;
+  hiddenBy: string | null;
+  hiddenAt: string | null;
+  hiddenReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  replies?: FormattedComment[];
+}
+
+export interface FormattedBlogPost {
+  id: string;
+  kind: string;
+  categoryId: string | null;
+  category: CategorySummary | null;
+  authorId: string;
+  author: AuthorSummary | null;
+  authorName: string | null;
+  title: string;
+  contentMarkdown: string;
+  excerpt: string | null;
+  coverImage: string | null;
+  status: string;
+  isPinned: boolean;
+  isFeatured: boolean;
+  replyCount: number;
+  favoriteCount: number;
+  likeCount: number;
+  lastReplyAt: string | null;
+  lastReplyId: string | null;
+  hiddenBy: string | null;
+  hiddenAt: string | null;
+  hiddenReason: string | null;
+  slug: string;
+  tags: string[];
+  seriesId: string | null;
+  seriesOrder: number;
+  publishedAt: string | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============ 纯工具函数（无 DB 访问） ============
+
+export function toAuthorSummary(row: {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  avatar_type: string;
+}): AuthorSummary {
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    avatarType: row.avatar_type,
+  };
+}
+
+export function toCategorySummary(row: {
+  id: string;
+  slug: string;
+  name: string;
+}): CategorySummary {
+  return { id: row.id, slug: row.slug, name: row.name };
+}
+
+export function computePagination(page: number, pageSize: number, total: number): PaginationInfo {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    page,
+    pageSize,
+    total,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrev: page > 1,
+  };
+}
+
+/** 解析 tags JSON 字符串为字符串数组 */
+export function parseTagsJson(tagsStr: string | null | undefined): string[] {
+  if (!tagsStr) return [];
+  try {
+    const parsed = JSON.parse(tagsStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function toFormattedCategory(row: {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  post_count: number;
+}): FormattedCategory {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    description: row.description,
+    icon: row.icon,
+    postCount: row.post_count,
+  };
+}
+
+export function toFormattedCategoryList(
+  rows: Array<{
+    id: string;
+    slug: string;
+    name: string;
+    description: string | null;
+    icon: string | null;
+    post_count: number;
+  }>,
+): FormattedCategory[] {
+  return rows.map(toFormattedCategory);
+}
+
+function toFormattedPostBase(row: CommunityPostRow, category: CategorySummary | null, author: AuthorSummary | null): FormattedPost {
+  return {
+    id: row.id,
+    kind: row.kind,
+    categoryId: row.category_id,
+    category,
+    authorId: row.author_id,
+    author,
+    authorName: author?.displayName ?? null,
+    title: row.title,
+    contentMarkdown: row.content_markdown,
+    excerpt: row.excerpt,
+    coverImage: row.cover_image,
+    status: row.status,
+    isPinned: row.is_pinned === 1,
+    isFeatured: row.is_featured === 1,
+    replyCount: row.reply_count,
+    favoriteCount: row.favorite_count,
+    likeCount: row.like_count,
+    lastReplyAt: row.last_reply_at,
+    lastReplyId: row.last_reply_id,
+    hiddenBy: row.hidden_by,
+    hiddenAt: row.hidden_at,
+    hiddenReason: row.hidden_reason,
+    slug: row.slug,
+    tags: parseTagsJson(row.tags),
+    seriesId: row.series_id,
+    seriesOrder: row.series_order,
+    publishedAt: row.published_at,
+    viewCount: row.view_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/** 批量格式化帖子（统一加载作者/分类摘要，避免 N+1） */
+export async function formatPosts(
+  rows: CommunityPostRow[],
+  options?: { currentUserId?: string },
+  eng?: DbEngine,
+): Promise<FormattedPost[]> {
+  const repo = getCommunityRepository();
+  const [authorMap, categoryMap] = await Promise.all([
+    repo.loadAuthorSummaries(rows.map((r) => r.author_id), eng),
+    repo.loadCategorySummaries(rows.filter((r) => r.category_id).map((r) => r.category_id as string), eng),
+  ]);
+
+  const likedSet = new Set<string>();
+  if (options?.currentUserId) {
+    const targets = await repo.getUserReactionTargets(
+      options.currentUserId,
+      'like',
+      rows.map((r) => r.id),
+      eng,
+    );
+    for (const t of targets) likedSet.add(t);
+  }
+
+  return rows.map((r) => {
+    const base = toFormattedPostBase(
+      r,
+      r.category_id ? categoryMap.get(r.category_id) ?? null : null,
+      authorMap.get(r.author_id) ?? null,
+    );
+    return { ...base, isLiked: likedSet.has(r.id) } as FormattedPost;
+  });
+}
+
+/** 批量格式化博客文章（同 formatPosts，但类型为 BlogPost 兼容） */
+export async function formatBlogPosts(
+  rows: CommunityPostRow[],
+  options?: { currentUserId?: string },
+  eng?: DbEngine,
+): Promise<FormattedBlogPost[]> {
+  const formatted = await formatPosts(rows, options, eng);
+  return formatted.map((p) => ({
+    id: p.id,
+    kind: p.kind,
+    categoryId: p.categoryId,
+    category: p.category,
+    authorId: p.authorId,
+    author: p.author,
+    authorName: p.authorName,
+    title: p.title,
+    contentMarkdown: p.contentMarkdown,
+    excerpt: p.excerpt,
+    coverImage: p.coverImage,
+    status: p.status,
+    isPinned: p.isPinned,
+    isFeatured: p.isFeatured,
+    replyCount: p.replyCount,
+    favoriteCount: p.favoriteCount,
+    likeCount: p.likeCount,
+    lastReplyAt: p.lastReplyAt,
+    lastReplyId: p.lastReplyId,
+    hiddenBy: p.hiddenBy,
+    hiddenAt: p.hiddenAt,
+    hiddenReason: p.hiddenReason,
+    slug: p.slug ?? '',
+    tags: p.tags,
+    seriesId: p.seriesId,
+    seriesOrder: p.seriesOrder,
+    publishedAt: p.publishedAt,
+    viewCount: p.viewCount,
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+  }));
+}
+
+function toFormattedCommentBase(
+  row: CommunityCommentRow,
+  author: AuthorSummary | null,
+  isLiked: boolean,
+): FormattedComment {
+  return {
+    id: row.id,
+    topicId: row.post_id,
+    parentReplyId: row.parent_comment_id,
+    authorId: row.author_id,
+    author,
+    contentMarkdown: row.content_markdown,
+    status: row.status,
+    likeCount: row.like_count,
+    replyCount: row.reply_count,
+    isLiked,
+    hiddenBy: row.hidden_by,
+    hiddenAt: row.hidden_at,
+    hiddenReason: row.hidden_reason,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+/** 批量格式化评论（统一加载作者摘要，避免 N+1） */
+export async function formatComments(
+  rows: CommunityCommentRow[],
+  options?: { currentUserId?: string; withReplies?: boolean },
+  eng?: DbEngine,
+): Promise<FormattedComment[]> {
+  const repo = getCommunityRepository();
+  const authorMap = await repo.loadAuthorSummaries(rows.map((r) => r.author_id), eng);
+
+  const likedSet = new Set<string>();
+  if (options?.currentUserId) {
+    const targets = await repo.getUserReactionTargets(
+      options.currentUserId,
+      'like',
+      rows.map((r) => r.id),
+      eng,
+    );
+    for (const t of targets) likedSet.add(t);
+  }
+
+  const formatted = rows.map((r) =>
+    toFormattedCommentBase(r, authorMap.get(r.author_id) ?? null, likedSet.has(r.id)),
+  );
+
+  if (options?.withReplies) {
+    const byParent = new Map<string | null, FormattedComment[]>();
+    for (const c of formatted) {
+      const key = c.parentReplyId;
+      if (!byParent.has(key)) byParent.set(key, []);
+      byParent.get(key)!.push(c);
+    }
+    const root = byParent.get(null) ?? [];
+    const attach = (list: FormattedComment[]): FormattedComment[] =>
+      list.map((c) => {
+        const children = byParent.get(c.id) ?? [];
+        return children.length ? { ...c, replies: attach(children) } : c;
+      });
+    return attach(root);
+  }
+
+  return formatted;
+}
+
+/** 批量加载作者摘要（经 Repository，供 service 层复用） */
+export async function loadAuthorSummaries(
+  ids: string[],
+  eng?: DbEngine,
+): Promise<Map<string, AuthorSummary>> {
+  return getCommunityRepository().loadAuthorSummaries(ids, eng);
+}
+
+/** 批量加载分类摘要（经 Repository，供 service 层复用） */
+export async function loadCategorySummaries(
+  ids: string[],
+  eng?: DbEngine,
+): Promise<Map<string, CategorySummary>> {
+  return getCommunityRepository().loadCategorySummaries(ids, eng);
+}
+
+/** 批量获取作者显示名（替代原始 getDb 查询，供通知等模块复用） */
+export async function getDisplayNamesByIds(
+  ids: string[],
+  eng?: DbEngine,
+): Promise<Map<string, string | null>> {
+  return getCommunityRepository().getDisplayNamesByIds(ids, eng);
+}
+
+/** 批量获取话题摘要（id/title/categoryId，供通知等模块复用） */
+export async function getTopicSummariesByIds(
+  ids: string[],
+  eng?: DbEngine,
+): Promise<Map<string, { id: string; title: string; categoryId: string }>> {
+  const map = await getCommunityRepository().getTopicSummariesByIds(ids, eng);
+  const out = new Map<string, { id: string; title: string; categoryId: string }>();
+  for (const [k, v] of map) out.set(k, { id: v.id, title: v.title, categoryId: v.category_id });
+  return out;
+}
+
+// ============ 兼容性导出（供 forum/shared.ts 与旧 forum/* 实现复用，无 DB 访问） ============
+
+import { POST_LIMITS, SLUG_PATTERN, MENTION_PATTERN, VIEW_DEDUP_WINDOW_HOURS } from '@/modules/community/types';
+import { computeTotalPages } from '@/shared/utils/pagination';
+import crypto from 'node:crypto';
+
+export {
+  POST_LIMITS,
+  SLUG_PATTERN,
+  MENTION_PATTERN,
+  VIEW_DEDUP_WINDOW_HOURS,
+  computeTotalPages,
+};
+
+// FORUM_LIMITS 兼容旧字段名
 export const FORUM_LIMITS = {
   ...POST_LIMITS,
   TOPICS_PAGE_SIZE: POST_LIMITS.POSTS_PAGE_SIZE,
@@ -30,19 +440,6 @@ export const FORUM_LIMITS = {
   MENTIONS_MAX: POST_LIMITS.MENTIONS_MAX,
   TITLE_MAX: POST_LIMITS.TITLE_MAX,
 };
-export { computePagination, computeTotalPages };
-export { POST_LIMITS, SLUG_PATTERN, MENTION_PATTERN, VIEW_DEDUP_WINDOW_HOURS, TAG_PATTERN } from '../types';
-export type {
-  AuthorSummary,
-  CategorySummary,
-  CommunityCategory,
-  CommunityPost,
-  CommunityPostDetail,
-  CommunityComment,
-  CommunityCommentDetail,
-  PostStatus,
-  PostKind,
-} from '../types';
 
 const IP_HASH_SECRET =
   process.env.COMMUNITY_IP_HASH_SECRET ||
@@ -55,16 +452,11 @@ const IP_HASH_SECRET =
     return secret;
   })();
 
-if (!process.env.COMMUNITY_IP_HASH_SECRET && process.env.NODE_ENV === 'production') {
-  logger.warn('COMMUNITY_IP_HASH_SECRET 未设置，生产环境将使用进程级随机密钥，重启后匿名浏览去重失效。');
-}
-
 export function hashIpForView(ip: string): string {
   return crypto.createHmac('sha256', IP_HASH_SECRET).update(ip).digest('hex');
 }
 
-// ============= 数据库行类型 =============
-
+// ---- DB 行类型（供旧 forum/* 使用） ----
 export interface CategoryRow {
   id: string;
   slug: string;
@@ -75,7 +467,7 @@ export interface CategoryRow {
   post_count: number;
   created_by: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
 }
 
 export interface PostRow {
@@ -111,8 +503,8 @@ export interface PostRow {
 export interface CommentRow {
   id: string;
   post_id: string;
-  author_id: string;
   parent_comment_id: string | null;
+  author_id: string;
   content_markdown: string;
   status: string;
   like_count: number;
@@ -126,105 +518,37 @@ export interface CommentRow {
 
 export interface UserSummaryRow {
   id: string;
-  email: string;
   display_name: string | null;
   avatar_url: string | null;
-  avatar_type: string | null;
+  avatar_type: string;
 }
 
-// ============= 转换函数 =============
-
-export function toCategory(row: CategoryRow): CommunityCategory {
-  return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
-    description: row.description ?? null,
-    icon: row.icon ?? null,
-    sortOrder: row.sort_order,
-    postCount: row.post_count,
-    topicCount: row.post_count,
-    createdBy: row.created_by ?? null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-export function toAuthorSummary(row: UserSummaryRow | null | undefined): AuthorSummary | null {
-  if (!row) return null;
-  return {
-    id: row.id,
-    email: maskEmail(row.email) ?? '',
-    displayName: row.display_name ?? null,
-    avatarUrl: row.avatar_url ?? null,
-    avatarType: row.avatar_type ?? 'initial',
-  };
-}
+// ---- 行转换工具（无 DB） ----
+export type PostStatus = 'published' | 'draft' | 'hidden' | 'deleted' | 'archived';
+export type PostKind = 'topic' | 'post';
 
 export function toStatus(s: string): PostStatus {
-  return (['published', 'draft', 'hidden', 'deleted', 'archived'].includes(s) ? s : 'published') as PostStatus;
+  return (['published', 'draft', 'hidden', 'deleted', 'archived'].includes(s) ? s : 'draft') as PostStatus;
 }
 
-export function parseTagsJson(tagsStr: string | null | undefined): string[] {
-  if (!tagsStr) return [];
-  try {
-    const parsed = JSON.parse(tagsStr);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+export function toCategory(
+  row: CategoryRow | { id: string; slug: string; name: string; description?: string | null; icon?: string | null; post_count?: number; created_by?: string | null; created_at?: string; updated_at?: string | null },
+): { id: string; slug: string; name: string; description: string | null; icon: string | null; postCount: number } {
+  const r = row as CategoryRow;
+  return {
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    description: r.description ?? null,
+    icon: r.icon ?? null,
+    postCount: r.post_count ?? 0,
+  };
 }
 
-export function generateSlug(title: string): string {
-  const base = title
-    .toLowerCase()
-    .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 80);
-  const suffix = crypto.randomUUID().slice(0, 8);
-  return `${base || 'post'}-${suffix}`;
-}
-
-// ============= 批量加载（避免 N+1） =============
-
-export function loadAuthorSummaries(userIds: Array<string | null>): Map<string, AuthorSummary> {
-  const map = new Map<string, AuthorSummary>();
-  if (userIds.length === 0) return map;
-  const db = getDb();
-  const unique = [...new Set(userIds)].filter(Boolean);
-  if (unique.length === 0) return map;
-  const placeholders = unique.map(() => '?').join(',');
-  const rows = db
-    .prepare(`SELECT id, email, display_name, avatar_url, avatar_type FROM users WHERE id IN (${placeholders})`)
-    .all(...unique) as UserSummaryRow[];
-  for (const row of rows) map.set(row.id, toAuthorSummary(row)!);
-  return map;
-}
-
-export function loadCategorySummaries(
-  categoryIds: Array<string | null>,
-): Map<string, CategorySummary> {
-  const map = new Map<string, CategorySummary>();
-  if (categoryIds.length === 0) return map;
-  const db = getDb();
-  const unique = [...new Set(categoryIds)].filter(Boolean);
-  if (unique.length === 0) return map;
-  const placeholders = unique.map(() => '?').join(',');
-  const rows = db
-    .prepare(`SELECT id, slug, name FROM community_categories WHERE id IN (${placeholders})`)
-    .all(...unique) as Array<{ id: string; slug: string; name: string }>;
-  for (const row of rows) map.set(row.id, { id: row.id, slug: row.slug, name: row.name });
-  return map;
-}
-
-// ============= 帖子行转换 =============
-
-export function postRowToBase(row: PostRow): CommunityPost {
+export function postRowToBase(row: PostRow): Record<string, unknown> {
   return {
     id: row.id,
-    kind: (row.kind === 'post' ? 'post' : 'topic') as PostKind,
+    kind: row.kind === 'post' ? 'post' : 'topic',
     categoryId: row.category_id ?? null,
     authorId: row.author_id,
     title: row.title,
@@ -248,15 +572,12 @@ export function postRowToBase(row: PostRow): CommunityPost {
     publishedAt: row.published_at ?? null,
     viewCount: row.view_count,
     likeCount: row.like_count,
-    author: null,
-    authorName: null,
-    category: null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-export function commentRowToBase(row: CommentRow): CommunityComment {
+export function commentRowToBase(row: CommentRow): Record<string, unknown> {
   return {
     id: row.id,
     postId: row.post_id,
@@ -271,8 +592,17 @@ export function commentRowToBase(row: CommentRow): CommunityComment {
     hiddenBy: row.hidden_by ?? null,
     hiddenAt: row.hidden_at ?? null,
     hiddenReason: row.hidden_reason ?? null,
-    author: null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
+
+export type {
+  CommunityCategory,
+  CommunityPost,
+  CommunityPostDetail,
+  CommunityComment,
+  CommunityCommentDetail,
+} from '@/modules/community/types';
+
+export { generateSlug } from './blog/utils';

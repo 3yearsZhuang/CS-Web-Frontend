@@ -51,6 +51,7 @@ export {
   createReply,
   updateReply,
   deleteReply,
+  getReply,
   type ListRepliesFilters,
   type NestedCommentsResult,
   type ReplyInput,

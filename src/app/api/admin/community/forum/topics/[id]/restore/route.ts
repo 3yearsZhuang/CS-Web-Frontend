@@ -19,7 +19,7 @@ export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -32,7 +32,7 @@ export async function POST(
 
   const { id } = await context.params;
   try {
-    restoreTopic(admin.user.id, id);
+    await restoreTopic(admin.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

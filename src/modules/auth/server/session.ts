@@ -6,9 +6,9 @@
 
 import crypto from 'node:crypto';
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
 import { type SafeUser, type UserRow, toSafeUser } from '@/shared/types';
 import { recordLoginHistory } from './login-history';
+import { getAuthRepository } from '@/shared/db/repositories/auth.repo';
 
 /** Session 有效期（毫秒）— 7 天 */
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -54,12 +54,10 @@ interface SessionRow {
 }
 
 /** 创建 session，返回原始 token（写入 Cookie）— DB 存 HMAC 非原始 token；统一校验 is_active 兜底拦截禁用账号；抛 USER_NOT_FOUND / ACCOUNT_DISABLED */
-export function createSession(userId: string, ip?: string, userAgent?: string): string {
-  const db = getDb();
+export async function createSession(userId: string, ip?: string, userAgent?: string): Promise<string> {
+  const repo = await getAuthRepository();
 
-  const userRow = db.prepare('SELECT is_active FROM users WHERE id = ?').get(userId) as
-    | { is_active: number }
-    | undefined;
+  const userRow = await repo.getUserActiveFlagById(userId);
   if (!userRow) {
     throw new AppError('用户不存在', 'USER_NOT_FOUND');
   }
@@ -70,11 +68,9 @@ export function createSession(userId: string, ip?: string, userAgent?: string): 
   const rawToken = crypto.randomBytes(32).toString('hex');
   const sessionId = hashSessionToken(rawToken);
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
-  db.prepare(
-    'INSERT INTO sessions (id, user_id, expires_at, ip, user_agent) VALUES (?, ?, ?, ?, ?)',
-  ).run(sessionId, userId, expiresAt, ip ?? null, userAgent ?? null);
+  await repo.insertSession(sessionId, userId, expiresAt, ip ?? null, userAgent ?? null);
 
-  recordLoginHistory(userId, ip, userAgent, true);
+  await recordLoginHistory(userId, ip, userAgent, true);
 
   return rawToken;
 }
@@ -138,26 +134,22 @@ export function verify2FAToken(token: string): string | null {
 }
 
 /** 获取 session — 对 token 求 HMAC 查库，原始 token 不落库；过期或禁用账号的 session 自动失效返回 null */
-export function getSession(token: string): { session: { id: string; userId: string; expiresAt: string; ip: string | null; userAgent: string | null; createdAt: string; }; user: SafeUser; } | null {
-  const db = getDb();
+export async function getSession(token: string): Promise<{ session: { id: string; userId: string; expiresAt: string; ip: string | null; userAgent: string | null; createdAt: string; }; user: SafeUser; } | null> {
+  const repo = await getAuthRepository();
   const sessionId = hashSessionToken(token);
-  const session = db.prepare('SELECT * FROM sessions WHERE id = ?').get(sessionId) as
-    | SessionRow
-    | undefined;
+  const session = await repo.findSessionById(sessionId);
   if (!session) return null;
 
   if (new Date(session.expires_at).getTime() < Date.now()) {
-    db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+    await repo.deleteSessionById(sessionId);
     return null;
   }
 
-  const userRow = db.prepare('SELECT * FROM users WHERE id = ?').get(session.user_id) as
-    | UserRow
-    | undefined;
+  const userRow = await repo.findUserById(session.user_id);
   if (!userRow) return null;
 
   if (userRow.is_active === 0) {
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userRow.id);
+    await repo.deleteSessionsByUser(userRow.id);
     return null;
   }
 
@@ -175,26 +167,18 @@ export function getSession(token: string): { session: { id: string; userId: stri
 }
 
 /** 获取用户所有活跃 session — 用于会话管理页面展示登录设备 */
-export function listUserSessions(userId: string): Array<{
+export async function listUserSessions(userId: string): Promise<Array<{
   id: string;
   ip: string | null;
   userAgent: string | null;
   createdAt: string;
   expiresAt: string;
-}> {
-  const db = getDb();
+}>> {
+  const repo = await getAuthRepository();
   // R17 / ADR-016 同类修复：expires_at 以 ISO 8601（T 分隔符）存储，
   // 与 datetime('now')（空格分隔符）直接字符串比较时 T(0x54) > 空格(0x20)，
   // 过期当天的 session 仍会显示。用 datetime(expires_at) 归一化。
-  const rows = db.prepare(
-    'SELECT id, ip, user_agent, created_at, expires_at FROM sessions WHERE user_id = ? AND datetime(expires_at) > datetime(\'now\') ORDER BY created_at DESC',
-  ).all(userId) as Array<{
-    id: string;
-    ip: string | null;
-    user_agent: string | null;
-    created_at: string;
-    expires_at: string;
-  }>;
+  const rows = await repo.listActiveSessions(userId);
   return rows.map((r) => ({
     id: r.id,
     ip: r.ip,
@@ -205,14 +189,14 @@ export function listUserSessions(userId: string): Array<{
 }
 
 /** 删除 session（登出）— 对 token 求 HMAC 后删除对应 DB 行 */
-export function deleteSession(token: string): void {
-  const db = getDb();
+export async function deleteSession(token: string): Promise<void> {
+  const repo = await getAuthRepository();
   const sessionId = hashSessionToken(token);
-  db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+  await repo.deleteSessionById(sessionId);
 }
 
 /** 删除指定 session（远程登出）— 必须先验证 session 属于该用户 */
-export function deleteSessionById(userId: string, sessionId: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM sessions WHERE id = ? AND user_id = ?').run(sessionId, userId);
+export async function deleteSessionById(userId: string, sessionId: string): Promise<void> {
+  const repo = await getAuthRepository();
+  await repo.deleteSessionByIdAndUser(sessionId, userId);
 }

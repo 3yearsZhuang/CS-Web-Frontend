@@ -30,7 +30,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -68,7 +68,7 @@ export async function PUT(
   if (data.registrationFields !== undefined) input.registrationFields = data.registrationFields as EventInput['registrationFields'];
 
   try {
-    const event = updateEvent(admin.user.id, id, input);
+    const event = await updateEvent(id, input, admin.user.id);
     return NextResponse.json({ event });
   } catch (err) {
     return errorResponse(err);
@@ -79,7 +79,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -92,7 +92,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    deleteEvent(admin.user.id, id);
+    await deleteEvent(admin.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

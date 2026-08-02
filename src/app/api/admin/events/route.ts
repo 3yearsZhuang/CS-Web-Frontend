@@ -27,7 +27,7 @@ import { createEventSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
   };
 
   try {
-    const event = createEvent(admin.user.id, input);
+    const event = await createEvent(input, admin.user.id);
     return NextResponse.json({ event }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

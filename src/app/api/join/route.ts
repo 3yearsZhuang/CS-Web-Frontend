@@ -25,7 +25,7 @@ const submitSchema = z.object({
 export async function POST(req: Request) {
   // 可选登录：有 session 则关联 userId，无 session 则游客提交（userId = null）
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  const session = token ? getSession(token) : null;
+  const session = token ? await getSession(token) : null;
   const userId = session?.user.id ?? null;
 
   const ip = getClientIp(req);

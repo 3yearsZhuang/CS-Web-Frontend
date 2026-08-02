@@ -18,7 +18,7 @@ import { createCategorySchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -29,12 +29,12 @@ export async function GET(req: Request) {
     return jsonError('操作过于频繁，请稍后再试', 429);
   }
 
-  const categories = listCategories();
+  const categories = await listCategories();
   return NextResponse.json({ items: categories });
 }
 
 export async function POST(req: Request) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -59,13 +59,12 @@ export async function POST(req: Request) {
   const input: CategoryInput = {
     slug: result.data.slug,
     name: result.data.name,
-    description: result.data.description ?? null,
-    icon: result.data.icon ?? null,
-    sortOrder: result.data.sortOrder ?? 0,
+    description: result.data.description ?? undefined,
+    icon: result.data.icon ?? undefined,
   };
 
   try {
-    const category = createCategory(admin.user.id, input);
+    const category = await createCategory(input, admin.user.id);
     return NextResponse.json({ category }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

@@ -4,27 +4,26 @@
  * 重置后 session 全失效；普通管理员不可重置其他管理员/root 密码；审计不记密码本身。
  */
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
 import { hashPassword } from '@/shared/security';
 import { isAdminRole } from '@/shared/types';
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/modules/auth/types/constants';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getAdminRepository } from '@/shared/db/repositories';
 import { logAdminAction } from './audit';
 import type { AuditContext } from '../types';
 
 /** 重置用户密码为默认密码 — admin/root 均可；普通管理员不可重置其他管理员密码；重置后 session 失效；抛 NOT_FOUND/FORBIDDEN */
-export function resetUserPasswordDefault(adminId: string, targetUserId: string, auditCtx?: AuditContext): void {
-  const db = getDb();
-  const admin = db.prepare('SELECT role FROM users WHERE id = ?').get(adminId) as
-    | { role: string }
-    | undefined;
+export async function resetUserPasswordDefault(adminId: string, targetUserId: string, auditCtx?: AuditContext): Promise<void> {
+  const repo = getAdminRepository();
+  const engine = await getDbEngine();
+
+  const admin = await repo.getUserRole(adminId);
   if (!admin) {
     throw new AppError('操作者不存在', 'NOT_FOUND');
   }
   const isAdminOperator = admin.role !== 'root';
 
-  const target = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(targetUserId) as
-    | { id: string; email: string; role: string }
-    | undefined;
+  const target = await repo.getUserById(targetUserId);
   if (!target) {
     throw new AppError('用户不存在', 'NOT_FOUND');
   }
@@ -43,23 +42,21 @@ export function resetUserPasswordDefault(adminId: string, targetUserId: string, 
   }
   const passwordHash = hashPassword(defaultPassword);
   // 事务包裹：密码更新 + session 失效必须原子，避免进程崩溃致旧 session 残留
-  db.transaction(() => {
-    db.prepare(
-      "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
-    ).run(passwordHash, targetUserId);
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(targetUserId);
-  })();
+  await engine.transaction(async (tx) => {
+    await repo.updateUser(targetUserId, { password_hash: passwordHash });
+    await repo.deleteSessionsByUserId(targetUserId);
+  });
 
-  logAdminAction(adminId, 'reset_password_default', targetUserId, { email: target.email }, auditCtx?.ip, auditCtx?.userAgent);
+  await logAdminAction(adminId, 'reset_password_default', targetUserId, { email: target.email }, auditCtx?.ip, auditCtx?.userAgent);
 }
 
 /** 重置用户密码为自定义密码 — 仅 root；root 账号不可被重置；密码长度 6-1024；重置后 session 失效；抛 VALIDATION_ERROR/NOT_FOUND/ROOT_PROTECTED */
-export function resetUserPasswordCustom(
+export async function resetUserPasswordCustom(
   adminId: string,
   targetUserId: string,
   newPassword: string,
   auditCtx?: AuditContext,
-): void {
+): Promise<void> {
   if (
     typeof newPassword !== 'string' ||
     newPassword.length < PASSWORD_MIN_LENGTH ||
@@ -71,10 +68,10 @@ export function resetUserPasswordCustom(
     );
   }
 
-  const db = getDb();
-  const target = db.prepare('SELECT id, email, role FROM users WHERE id = ?').get(targetUserId) as
-    | { id: string; email: string; role: string }
-    | undefined;
+  const repo = getAdminRepository();
+  const engine = await getDbEngine();
+
+  const target = await repo.getUserById(targetUserId);
   if (!target) {
     throw new AppError('用户不存在', 'NOT_FOUND');
   }
@@ -85,12 +82,10 @@ export function resetUserPasswordCustom(
 
   const passwordHash = hashPassword(newPassword);
   // 事务包裹：密码更新 + session 失效必须原子（与 resetUserPasswordDefault 一致）
-  db.transaction(() => {
-    db.prepare(
-      "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
-    ).run(passwordHash, targetUserId);
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(targetUserId);
-  })();
+  await engine.transaction(async (tx) => {
+    await repo.updateUser(targetUserId, { password_hash: passwordHash });
+    await repo.deleteSessionsByUserId(targetUserId);
+  });
 
-  logAdminAction(adminId, 'reset_password_custom', targetUserId, { email: target.email }, auditCtx?.ip, auditCtx?.userAgent);
+  await logAdminAction(adminId, 'reset_password_custom', targetUserId, { email: target.email }, auditCtx?.ip, auditCtx?.userAgent);
 }

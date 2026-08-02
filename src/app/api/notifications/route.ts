@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   const page = Number(url.searchParams.get('page')) || 1;
   const pageSize = Number(url.searchParams.get('page_size')) || 20;
 
-  const result = listNotifications(userId, { isRead, type, page, pageSize });
+  const result = await listNotifications(userId, { isRead, type, page, pageSize });
   const unreadCount = getUnreadCount(userId);
 
   return NextResponse.json({

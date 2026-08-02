@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
   }
 
-  const data = getSession(token);
+  const data = await getSession(token);
   if (!data) {
     return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
   }

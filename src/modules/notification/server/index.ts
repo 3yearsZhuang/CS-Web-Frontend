@@ -2,9 +2,10 @@
  * @file 站内通知服务 — 创建、查询、标记已读（核心写入函数在 notification-core.ts）
  */
 import 'server-only';
-import { getDb } from '@/shared/db';
 import { AppError } from '@/shared/app-error';
 import { computePagination, computeTotalPages } from '@/shared/utils/pagination';
+import { getNotificationRepository } from '@/shared/db/repositories';
+import type { QueryParams } from '@/shared/db/drivers';
 import type {
   BroadcastRecord,
   Notification,
@@ -31,14 +32,14 @@ interface ListNotificationsOptions {
 }
 
 /** 列出用户的通知，支持分页和筛选 */
-export function listNotifications(
+export async function listNotifications(
   userId: string,
   options?: ListNotificationsOptions,
-): PaginatedNotifications {
-  const db = getDb();
+): Promise<PaginatedNotifications> {
+  const repo = getNotificationRepository();
 
   const whereClauses: string[] = ['user_id = ?'];
-  const params: unknown[] = [userId];
+  const params: QueryParams = [userId];
 
   if (options?.isRead !== undefined) {
     whereClauses.push('is_read = ?');
@@ -59,20 +60,13 @@ export function listNotifications(
     maxPageSize: 100,
   });
 
-  const totalRow = db
-    .prepare(`SELECT COUNT(*) as count FROM notifications ${whereSql}`)
-    .get(...params) as { count: number };
-  const total = totalRow.count;
+  const total = await repo.countNotifications(whereSql, params);
   const totalPages = computeTotalPages(total, pageSize);
 
-  const rows = db
-    .prepare(
-      `SELECT * FROM notifications ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-    )
-    .all(...params, pageSize, offset) as NotificationRow[];
+  const rows = await repo.listNotificationsFiltered(whereSql, [...params, pageSize, offset] as QueryParams);
 
   return {
-    notifications: rows.map(toNotification),
+    notifications: rows.map((r) => toNotification(r as NotificationRow)),
     total,
     page,
     pageSize,
@@ -81,41 +75,31 @@ export function listNotifications(
 }
 
 /** 标记单条通知为已读 */
-export function markAsRead(userId: string, notificationId: string): void {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM notifications WHERE id = ?').get(notificationId) as
-    | NotificationRow
-    | undefined;
-
+export async function markAsRead(userId: string, notificationId: string): Promise<void> {
+  const repo = getNotificationRepository();
+  const row = await repo.getNotificationById(notificationId);
   if (!row) throw new AppError('通知不存在', 'NOT_FOUND');
   if (row.user_id !== userId) throw new AppError('无权操作此通知', 'FORBIDDEN');
 
-  db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').run(notificationId);
+  await repo.markRead(notificationId);
 }
 
 /** 标记所有通知为已读 */
-export function markAllAsRead(userId: string): number {
-  const db = getDb();
-
-  const result = db
-    .prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0')
-    .run(userId);
-
-  return result.changes;
+export async function markAllAsRead(userId: string): Promise<number> {
+  const repo = getNotificationRepository();
+  await repo.markAllRead(userId);
+  return 0;
 }
 
 /** 获取未读通知数量 */
-export function getUnreadCount(userId: string): number {
-  const db = getDb();
-  const row = db
-    .prepare('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0')
-    .get(userId) as { count: number };
-  return row.count;
+export async function getUnreadCount(userId: string): Promise<number> {
+  const repo = getNotificationRepository();
+  return repo.getUnreadCount(userId);
 }
 
 /** 发送欢迎通知 */
-export function notifyWelcome(userId: string): void {
-  createNotification(
+export async function notifyWelcome(userId: string): Promise<void> {
+  await createNotification(
     userId,
     'system',
     '欢迎加入',
@@ -124,8 +108,8 @@ export function notifyWelcome(userId: string): void {
 }
 
 /** 发送活动报名成功通知 */
-export function notifyEventRegistered(userId: string, eventTitle: string): void {
-  createNotification(
+export async function notifyEventRegistered(userId: string, eventTitle: string): Promise<void> {
+  await createNotification(
     userId,
     'activity',
     '活动报名成功',
@@ -134,8 +118,8 @@ export function notifyEventRegistered(userId: string, eventTitle: string): void 
 }
 
 /** 发送活动取消报名通知 */
-export function notifyEventCancelled(userId: string, eventTitle: string): void {
-  createNotification(
+export async function notifyEventCancelled(userId: string, eventTitle: string): Promise<void> {
+  await createNotification(
     userId,
     'activity',
     '活动取消报名',
@@ -144,11 +128,11 @@ export function notifyEventCancelled(userId: string, eventTitle: string): void {
 }
 
 /** 向所有用户广播新活动通知 */
-export function notifyNewEventForAll(
+export async function notifyNewEventForAll(
   eventTitle: string,
   eventDescription?: string | null,
   senderId?: string | null,
-): number {
+): Promise<number> {
   const content = eventDescription
     ? `${eventDescription}\n\n点击通知或前往「活动」页面查看详情。`
     : '点击通知或前往「活动」页面查看详情。';
@@ -161,28 +145,9 @@ export function notifyNewEventForAll(
 }
 
 /** 列出最近的广播通知 */
-export function listRecentBroadcasts(limit = 20): BroadcastRecord[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT title,
-              content,
-              type,
-              MAX(created_at) AS created_at,
-              COUNT(*) AS cnt
-         FROM notifications
-        WHERE sender_id IS NOT NULL
-        GROUP BY title, content, type
-        ORDER BY MAX(created_at) DESC
-        LIMIT ?`,
-    )
-    .all(Math.min(100, Math.max(1, limit))) as Array<{
-    title: string;
-    content: string | null;
-    type: string;
-    created_at: string;
-    cnt: number;
-  }>;
+export async function listRecentBroadcasts(limit = 20): Promise<BroadcastRecord[]> {
+  const repo = getNotificationRepository();
+  const rows = await repo.listRecentBroadcasts(Math.min(100, Math.max(1, limit)));
 
   return rows.map((r) => ({
     title: r.title,

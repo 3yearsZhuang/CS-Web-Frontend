@@ -15,7 +15,7 @@ import { PERMISSION_MODULES } from '@/shared/security/permissions';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

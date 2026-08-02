@@ -20,10 +20,10 @@ import { createRequestLogger } from '@/shared/logger';
 
 export const runtime = 'nodejs';
 
-function optionalUserId(req: Request): string | undefined {
+async function optionalUserId(req: Request): Promise<string | undefined> {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return undefined;
-  const session = getSession(token);
+  const session = await getSession(token);
   return session?.user.id;
 }
 
@@ -39,9 +39,9 @@ export async function GET(
     const pageSize = url.searchParams.get('page_size')
       ? Number(url.searchParams.get('page_size'))
       : undefined;
-    const currentUserId = optionalUserId(req);
+    const currentUserId = await optionalUserId(req);
 
-    const result = listReplies({
+    const result = await listReplies({
       topicId: id,
       page,
       pageSize,
@@ -65,7 +65,7 @@ export async function POST(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -95,7 +95,9 @@ export async function POST(
   const { id } = await context.params;
 
   try {
-    const reply = createReply(session.user.id, id, {
+    const reply = await createReply({
+      topicId: id,
+      authorId: session.user.id,
       contentMarkdown,
       parentReplyId: parentReplyId ?? null,
     });

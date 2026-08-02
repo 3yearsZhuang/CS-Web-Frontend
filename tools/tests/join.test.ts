@@ -97,8 +97,8 @@ describe('join 模块 — 提交申请', () => {
     vi.mocked(logAdminAction).mockClear();
   });
 
-  it('提交成功并返回完整申请，初始状态为 pending', () => {
-    const app = submitJoinApplication(makeValidInput());
+  it('提交成功并返回完整申请，初始状态为 pending', async () => {
+    const app = await submitJoinApplication(makeValidInput());
     expect(app.id).toBeDefined();
     expect(app.applicantName).toBe('张三');
     expect(app.studentId).toBe('20240101');
@@ -111,93 +111,89 @@ describe('join 模块 — 提交申请', () => {
     expect(app.reviewNote).toBeNull();
   });
 
-  it('姓名为空抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ applicantName: '' }))).toThrow();
+  it('姓名为空抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ applicantName: '' }))).rejects.toThrow();
   });
 
-  it('姓名仅空白抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ applicantName: '   ' }))).toThrow();
+  it('姓名仅空白抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ applicantName: '   ' }))).rejects.toThrow();
   });
 
-  it('学号为空抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ studentId: '' }))).toThrow();
+  it('学号为空抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ studentId: '' }))).rejects.toThrow();
   });
 
-  it('专业为空抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ major: '' }))).toThrow();
+  it('专业为空抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ major: '' }))).rejects.toThrow();
   });
 
-  it('申请理由为空抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ reason: '' }))).toThrow();
+  it('申请理由为空抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ reason: '' }))).rejects.toThrow();
   });
 
-  it('姓名超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ applicantName: 'a'.repeat(21) }))).toThrow();
+  it('姓名超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ applicantName: 'a'.repeat(21) }))).rejects.toThrow();
   });
 
-  it('学号超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ studentId: 'a'.repeat(21) }))).toThrow();
+  it('学号超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ studentId: 'a'.repeat(21) }))).rejects.toThrow();
   });
 
-  it('专业超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ major: 'a'.repeat(41) }))).toThrow();
+  it('专业超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ major: 'a'.repeat(41) }))).rejects.toThrow();
   });
 
-  it('申请理由超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ reason: 'a'.repeat(501) }))).toThrow();
+  it('申请理由超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ reason: 'a'.repeat(501) }))).rejects.toThrow();
   });
 
-  it('QQ 超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ contactQq: 'a'.repeat(21) }))).toThrow();
+  it('QQ 超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ contactQq: 'a'.repeat(21) }))).rejects.toThrow();
   });
 
-  it('手机号超长抛 VALIDATION_ERROR', () => {
-    expect(() => submitJoinApplication(makeValidInput({ contactPhone: 'a'.repeat(21) }))).toThrow();
+  it('手机号超长抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ contactPhone: 'a'.repeat(21) }))).rejects.toThrow();
   });
 
-  it('技术标签超过 10 个抛 VALIDATION_ERROR', () => {
-    expect(() =>
-      submitJoinApplication(makeValidInput({ techTags: Array(11).fill('tag') })),
-    ).toThrow();
+  it('技术标签超过 10 个抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ techTags: Array(11).fill('tag') }))).rejects.toThrow();
   });
 
-  it('单个标签超过 20 字符抛 VALIDATION_ERROR', () => {
-    expect(() =>
-      submitJoinApplication(makeValidInput({ techTags: ['a'.repeat(21)] })),
-    ).toThrow();
+  it('单个标签超过 20 字符抛 VALIDATION_ERROR', async () => {
+    await expect(submitJoinApplication(makeValidInput({ techTags: ['a'.repeat(21)] }))).rejects.toThrow();
   });
 
-  it('无技术标签时 techTags 返回空数组', () => {
-    const app = submitJoinApplication(makeValidInput({ techTags: undefined }));
+  it('无技术标签时 techTags 返回空数组', async () => {
+    const app = await submitJoinApplication(makeValidInput({ techTags: undefined }));
     expect(app.techTags).toEqual([]);
   });
 
-  it('无联系方式时 contactQq/contactPhone 为 null', () => {
-    const app = submitJoinApplication(
+  it('无联系方式时 contactQq/contactPhone 为 null', async () => {
+    const app = await submitJoinApplication(
       makeValidInput({ contactQq: undefined, contactPhone: undefined }),
     );
     expect(app.contactQq).toBeNull();
     expect(app.contactPhone).toBeNull();
   });
 
-  it('空白联系方式存储为 null', () => {
-    const app = submitJoinApplication(
+  it('空白联系方式存储为 null', async () => {
+    const app = await submitJoinApplication(
       makeValidInput({ contactQq: '   ', contactPhone: '   ' }),
     );
     expect(app.contactQq).toBeNull();
     expect(app.contactPhone).toBeNull();
   });
 
-  it('techTags 序列化为 JSON 存储', () => {
-    const app = submitJoinApplication(makeValidInput({ techTags: ['A', 'B'] }));
+  it('techTags 序列化为 JSON 存储', async () => {
+    const app = await submitJoinApplication(makeValidInput({ techTags: ['A', 'B'] }));
     const row = inMemoryDb
       .prepare('SELECT tech_tags FROM join_applications WHERE id = ?')
       .get(app.id) as { tech_tags: string | null };
-    expect(JSON.parse(row.tech_tags!)).toEqual(['A', 'B']);
+    expect(await JSON.parse(row.tech_tags!)).toEqual(['A', 'B']);
   });
 
-  it('字段自动 trim', () => {
-    const app = submitJoinApplication(
+  it('字段自动 trim', async () => {
+    const app = await submitJoinApplication(
       makeValidInput({
         applicantName: '  张三  ',
         studentId: '  20240101  ',
@@ -220,33 +216,33 @@ describe('join 模块 — 查询申请', () => {
     vi.mocked(logAdminAction).mockClear();
   });
 
-  it('返回全部申请按创建时间倒序', () => {
-    submitJoinApplication(makeValidInput({ applicantName: 'A' }));
-    submitJoinApplication(makeValidInput({ applicantName: 'B' }));
-    const list = listJoinApplications();
+  it('返回全部申请按创建时间倒序', async () => {
+    await submitJoinApplication(makeValidInput({ applicantName: 'A' }));
+    await submitJoinApplication(makeValidInput({ applicantName: 'B' }));
+    const list = await listJoinApplications();
     expect(list).toHaveLength(2);
   });
 
-  it('按状态筛选 pending', () => {
-    const app1 = submitJoinApplication(makeValidInput({ applicantName: 'A' }));
-    const app2 = submitJoinApplication(makeValidInput({ applicantName: 'B' }));
-    reviewJoinApplication(ADMIN_ID, app1.id, 'approved');
-    const pending = listJoinApplications('pending');
+  it('按状态筛选 pending', async () => {
+    const app1 = await submitJoinApplication(makeValidInput({ applicantName: 'A' }));
+    const app2 = await submitJoinApplication(makeValidInput({ applicantName: 'B' }));
+    await reviewJoinApplication(ADMIN_ID, app1.id, 'approved');
+    const pending = await listJoinApplications('pending');
     expect(pending).toHaveLength(1);
     expect(pending[0].applicantName).toBe('B');
   });
 
-  it('按状态筛选 approved', () => {
-    const app1 = submitJoinApplication(makeValidInput({ applicantName: 'A' }));
-    submitJoinApplication(makeValidInput({ applicantName: 'B' }));
-    reviewJoinApplication(ADMIN_ID, app1.id, 'approved');
-    const approved = listJoinApplications('approved');
+  it('按状态筛选 approved', async () => {
+    const app1 = await submitJoinApplication(makeValidInput({ applicantName: 'A' }));
+    await submitJoinApplication(makeValidInput({ applicantName: 'B' }));
+    await reviewJoinApplication(ADMIN_ID, app1.id, 'approved');
+    const approved = await listJoinApplications('approved');
     expect(approved).toHaveLength(1);
     expect(approved[0].applicantName).toBe('A');
   });
 
-  it('无申请时返回空数组', () => {
-    expect(listJoinApplications()).toHaveLength(0);
+  it('无申请时返回空数组', async () => {
+    expect(await listJoinApplications()).toHaveLength(0);
   });
 });
 
@@ -259,61 +255,61 @@ describe('join 模块 — 审批状态机', () => {
   });
 
   describe('reviewJoinApplication — pending → approved/rejected', () => {
-    it('审核通过置 approved 并记录 reviewed_by', () => {
-      const app = submitJoinApplication(makeValidInput());
-      const reviewed = reviewJoinApplication(ADMIN_ID, app.id, 'approved', '欢迎加入');
+    it('审核通过置 approved 并记录 reviewed_by', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      const reviewed = await reviewJoinApplication(ADMIN_ID, app.id, 'approved', '欢迎加入');
       expect(reviewed.status).toBe('approved');
       expect(reviewed.reviewedBy).toBe(ADMIN_ID);
       expect(reviewed.reviewNote).toBe('欢迎加入');
     });
 
-    it('审核拒绝置 rejected', () => {
-      const app = submitJoinApplication(makeValidInput());
-      const reviewed = reviewJoinApplication(ADMIN_ID, app.id, 'rejected', '名额已满');
+    it('审核拒绝置 rejected', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      const reviewed = await reviewJoinApplication(ADMIN_ID, app.id, 'rejected', '名额已满');
       expect(reviewed.status).toBe('rejected');
       expect(reviewed.reviewedBy).toBe(ADMIN_ID);
       expect(reviewed.reviewNote).toBe('名额已满');
     });
 
-    it('未提供 reviewNote 时存储为 null', () => {
-      const app = submitJoinApplication(makeValidInput());
-      const reviewed = reviewJoinApplication(ADMIN_ID, app.id, 'approved');
+    it('未提供 reviewNote 时存储为 null', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      const reviewed = await reviewJoinApplication(ADMIN_ID, app.id, 'approved');
       expect(reviewed.reviewNote).toBeNull();
     });
 
-    it('显式传 undefined reviewNote 存储 null', () => {
-      const app = submitJoinApplication(makeValidInput());
-      const reviewed = reviewJoinApplication(ADMIN_ID, app.id, 'approved', undefined);
+    it('显式传 undefined reviewNote 存储 null', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      const reviewed = await reviewJoinApplication(ADMIN_ID, app.id, 'approved', undefined);
       expect(reviewed.reviewNote).toBeNull();
     });
 
-    it('申请不存在抛 NOT_FOUND', () => {
-      expect(() => reviewJoinApplication(ADMIN_ID, 'non-existent', 'approved')).toThrow();
+    it('申请不存在抛 NOT_FOUND', async () => {
+      await expect(reviewJoinApplication(ADMIN_ID, 'non-existent', 'approved')).rejects.toThrow();
     });
 
-    it('已通过申请再审批抛 ALREADY_REVIEWED', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'approved');
-      expect(() => reviewJoinApplication(ADMIN_ID, app.id, 'rejected')).toThrow();
+    it('已通过申请再审批抛 ALREADY_REVIEWED', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'approved');
+      await expect(reviewJoinApplication(ADMIN_ID, app.id, 'rejected')).rejects.toThrow();
     });
 
-    it('已拒绝申请再审批抛 ALREADY_REVIEWED', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'rejected');
-      expect(() => reviewJoinApplication(ADMIN_ID, app.id, 'approved')).toThrow();
+    it('已拒绝申请再审批抛 ALREADY_REVIEWED', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'rejected');
+      await expect(reviewJoinApplication(ADMIN_ID, app.id, 'approved')).rejects.toThrow();
     });
 
-    it('同状态重复审批也抛 ALREADY_REVIEWED', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'approved');
-      expect(() => reviewJoinApplication(ADMIN_ID, app.id, 'approved')).toThrow();
+    it('同状态重复审批也抛 ALREADY_REVIEWED', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'approved');
+      await expect(reviewJoinApplication(ADMIN_ID, app.id, 'approved')).rejects.toThrow();
     });
   });
 
   describe('reviewJoinApplication — 审计日志', () => {
-    it('通过时记录 approve_join_application', () => {
-      const app = submitJoinApplication(makeValidInput({ applicantName: '李四' }));
-      reviewJoinApplication(ADMIN_ID, app.id, 'approved', '通过');
+    it('通过时记录 approve_join_application', async () => {
+      const app = await submitJoinApplication(makeValidInput({ applicantName: '李四' }));
+      await reviewJoinApplication(ADMIN_ID, app.id, 'approved', '通过');
       expect(logAdminAction).toHaveBeenCalledTimes(1);
       const [actorId, action, targetUserId, details] = vi.mocked(logAdminAction).mock.calls[0];
       expect(actorId).toBe(ADMIN_ID);
@@ -323,15 +319,15 @@ describe('join 模块 — 审批状态机', () => {
       expect((details as { reviewNote: string }).reviewNote).toBe('通过');
     });
 
-    it('拒绝时记录 reject_join_application', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'rejected', '拒绝');
+    it('拒绝时记录 reject_join_application', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'rejected', '拒绝');
       expect(vi.mocked(logAdminAction).mock.calls[0][1]).toBe('reject_join_application');
     });
 
-    it('审计日志记录申请 ID 与学号', () => {
-      const app = submitJoinApplication(makeValidInput({ studentId: '20240999' }));
-      reviewJoinApplication(ADMIN_ID, app.id, 'approved');
+    it('审计日志记录申请 ID 与学号', async () => {
+      const app = await submitJoinApplication(makeValidInput({ studentId: '20240999' }));
+      await reviewJoinApplication(ADMIN_ID, app.id, 'approved');
       const details = vi.mocked(logAdminAction).mock.calls[0][3] as {
         applicationId: string;
         studentId: string;
@@ -342,16 +338,16 @@ describe('join 模块 — 审批状态机', () => {
   });
 
   describe('状态不可逆', () => {
-    it('approved 不可回退到 rejected', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'approved');
-      expect(() => reviewJoinApplication(ADMIN_ID, app.id, 'rejected')).toThrow();
+    it('approved 不可回退到 rejected', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'approved');
+      await expect(reviewJoinApplication(ADMIN_ID, app.id, 'rejected')).rejects.toThrow();
     });
 
-    it('rejected 不可回退到 approved', () => {
-      const app = submitJoinApplication(makeValidInput());
-      reviewJoinApplication(ADMIN_ID, app.id, 'rejected');
-      expect(() => reviewJoinApplication(ADMIN_ID, app.id, 'approved')).toThrow();
+    it('rejected 不可回退到 approved', async () => {
+      const app = await submitJoinApplication(makeValidInput());
+      await reviewJoinApplication(ADMIN_ID, app.id, 'rejected');
+      await expect(reviewJoinApplication(ADMIN_ID, app.id, 'approved')).rejects.toThrow();
     });
   });
 });
@@ -364,19 +360,19 @@ describe('join 模块 — toJoinApplication 容错', () => {
     vi.mocked(logAdminAction).mockClear();
   });
 
-  it('tech_tags 为非法 JSON 时返回空数组', () => {
-    const app = submitJoinApplication(makeValidInput());
+  it('tech_tags 为非法 JSON 时返回空数组', async () => {
+    const app = await submitJoinApplication(makeValidInput());
     inMemoryDb
       .prepare('UPDATE join_applications SET tech_tags = ? WHERE id = ?')
       .run('not-json', app.id);
-    const list = listJoinApplications();
+    const list = await listJoinApplications();
     const fetched = list.find((a) => a.id === app.id);
     expect(fetched!.techTags).toEqual([]);
   });
 
-  it('tech_tags 为 null 时返回空数组', () => {
-    const app = submitJoinApplication(makeValidInput({ techTags: undefined }));
-    const list = listJoinApplications();
+  it('tech_tags 为 null 时返回空数组', async () => {
+    const app = await submitJoinApplication(makeValidInput({ techTags: undefined }));
+    const list = await listJoinApplications();
     const fetched = list.find((a) => a.id === app.id);
     expect(fetched!.techTags).toEqual([]);
   });

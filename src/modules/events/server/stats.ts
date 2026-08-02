@@ -1,10 +1,9 @@
 /**
- * @file 活动统计服务
+ * @file 活动统计服务（已迁移至 Repository 抽象层，ADR-009）
  *
  * 返回所有活动的报名统计汇总（注册人数、取消人数、候补人数等）。
  */
-
-import { getDb } from '@/shared/db';
+import { getEventsRepository } from '@/shared/db/repositories/events.repo';
 
 /** 单个活动的报名统计 */
 export interface EventStat {
@@ -18,33 +17,9 @@ export interface EventStat {
 }
 
 /** 获取所有活动的报名统计汇总（按活动日期倒序） */
-export function getEventStats(): EventStat[] {
-  const db = getDb();
-
-  const rows = db
-    .prepare(
-      `SELECT
-        e.id,
-        e.title,
-        e.capacity,
-        COUNT(er.id) as total_registrations,
-        SUM(CASE WHEN er.status = 'registered' THEN 1 ELSE 0 END) as registered_count,
-        SUM(CASE WHEN er.status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count,
-        SUM(CASE WHEN er.status = 'waitlisted' THEN 1 ELSE 0 END) as waitlisted_count
-      FROM events e
-      LEFT JOIN event_registrations er ON e.id = er.event_id
-      GROUP BY e.id
-      ORDER BY e.date DESC`,
-    )
-    .all() as Array<{
-      id: string;
-      title: string;
-      capacity: number;
-      total_registrations: number;
-      registered_count: number;
-      cancelled_count: number;
-      waitlisted_count: number;
-    }>;
+export async function getEventStats(): Promise<EventStat[]> {
+  const repo = getEventsRepository();
+  const rows = await repo.getEventStats();
 
   return rows.map((row) => ({
     eventId: row.id,

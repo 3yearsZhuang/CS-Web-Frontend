@@ -27,7 +27,7 @@ export function initNotificationEvents(): void {
       const content = data.description
         ? `${data.description}\n\n点击通知或前往「活动」页面查看详情。`
         : '点击通知或前往「活动」页面查看详情。';
-      createNotificationForAll('activity', `新活动发布：${data.title}`, content, data.adminId);
+      void createNotificationForAll('activity', `新活动发布：${data.title}`, content, data.adminId);
     } catch (err) {
       logger.error({ err }, 'event.created 通知发送失败');
     }
@@ -35,7 +35,7 @@ export function initNotificationEvents(): void {
 
   appBus.on('event.registered', (data) => {
     try {
-      createNotification(
+      void createNotification(
         data.userId,
         'activity',
         '活动报名成功',
@@ -48,7 +48,7 @@ export function initNotificationEvents(): void {
 
   appBus.on('event.cancelled', (data) => {
     try {
-      createNotification(
+      void createNotification(
         data.userId,
         'activity',
         '活动取消报名',
@@ -63,7 +63,7 @@ export function initNotificationEvents(): void {
 
   appBus.on('user.registered', (data) => {
     try {
-      createNotification(
+      void createNotification(
         data.userId,
         'system',
         '欢迎加入',
@@ -80,7 +80,7 @@ export function initNotificationEvents(): void {
     try {
       for (const mentionedUserId of data.mentionedUserIds) {
         if (mentionedUserId === data.authorId) continue;
-        createNotification(
+        void createNotification(
           mentionedUserId,
           'system',
           '你在论坛回复中被提及',

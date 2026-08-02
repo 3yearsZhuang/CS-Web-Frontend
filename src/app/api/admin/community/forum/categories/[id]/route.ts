@@ -21,7 +21,7 @@ export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -47,7 +47,7 @@ export async function PUT(
 
   const { id } = await context.params;
   try {
-    const category = updateCategory(admin.user.id, id, input);
+    const category = await updateCategory(id, input, admin.user.id);
     return NextResponse.json({ category });
   } catch (err) {
     return errorResponse(err);
@@ -58,7 +58,7 @@ export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -71,7 +71,7 @@ export async function DELETE(
 
   const { id } = await context.params;
   try {
-    deleteCategory(admin.user.id, id);
+    await deleteCategory(admin.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

@@ -29,7 +29,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string; qid: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -66,7 +66,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string; qid: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

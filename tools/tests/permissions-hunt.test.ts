@@ -16,6 +16,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import type { DB } from '@/shared/db';
+import { _setDbEngineForTest } from '@/shared/db/drivers';
+import { createSqliteTestEngine } from './dbEngine';
+import { _setAuthRepositoryForTest } from '@/shared/db/repositories/auth.repo';
+import { _setAuditRepositoryForTest } from '@/shared/db/repositories/audit.repo';
 
 // 设置测试用默认重置密码（服务层已移除硬编码回退，需环境变量）
 process.env.PASSWORD_RESET_DEFAULT = 'TEST_RESET_PWD';
@@ -23,7 +27,10 @@ process.env.PASSWORD_RESET_DEFAULT = 'TEST_RESET_PWD';
 // 测试用内存 DB（每个 beforeEach 重建）
 let testDb: DB;
 
-// mock @/shared/db：保留真实 cleanupExpiredData，覆盖 getDb 返回测试 DB
+// 双重覆盖：
+// 1) 已迁移到 getDbEngine() 单例的服务（createUser 等）通过 _setDbEngineForTest 注入同一内存库；
+// 2) 尚未迁移、仍直接调用 getDb() 的 auth 子模块（verification-code / password-reset）通过 mock 返回 testDb。
+// 两者指向同一个 in-memory testDb，保证读写一致。
 vi.mock('@/shared/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/shared/db')>();
   return {
@@ -125,31 +132,36 @@ beforeEach(() => {
   testDb = new Database(':memory:');
   testDb.pragma('foreign_keys = ON');
   initTestSchema(testDb);
+  // 注入引擎单例，使走 getDbEngine() 的服务读写同一 in-memory testDb
+  _setDbEngineForTest(createSqliteTestEngine(testDb));
+  // Repository 单例在创建时把 engine 捕获进闭包，需重置以便在下一个测试重新绑定新引擎
+  _setAuthRepositoryForTest(null);
+  _setAuditRepositoryForTest(null);
 });
 
 // ========== V1: 审计日志完整性 ==========
 describe('V1: 审计日志 admin_actions FK ON DELETE SET NULL', () => {
-  it('删除管理员后审计记录保留（admin_id 置 NULL）', () => {
+  it('删除管理员后审计记录保留（admin_id 置 NULL）', async () => {
     // 创建管理员 A 和普通用户 B
-    const adminA = createUser('admin-a@test.com', 'password123');
-    const userB = createUser('user-b@test.com', 'password456');
+    const adminA = await createUser('admin-a@test.com', 'password123');
+    const userB = await createUser('user-b@test.com', 'password456');
 
     // A 执行管理员操作，生成审计记录
-    logAdminAction(adminA.id, 'update_user', userB.id, { field: 'role' });
-    logAdminAction(adminA.id, 'reset_password', userB.id, { email: userB.email });
+    await logAdminAction(adminA.id, 'update_user', userB.id, { field: 'role' });
+    await logAdminAction(adminA.id, 'reset_password', userB.id, { email: userB.email });
 
-    const actionsBefore = listAdminActions(adminA.id);
+    const actionsBefore = await listAdminActions(adminA.id);
     expect(actionsBefore).toHaveLength(2);
 
     // 需要另一个管理员才能删除 A
-    const adminC = createUser('admin-c@test.com', 'password789');
+    const adminC = await createUser('admin-c@test.com', 'password789');
     // 手动将 C 提升为管理员（绕过服务层，因为 updateUserByAdmin 需要 adminId）
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(adminC.id);
     // 手动将 A 提升为管理员（createUser 默认 role='user'）
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(adminA.id);
 
     // C 删除 A（deleteUserByAdmin 会额外记录一条 delete_user 审计日志）
-    deleteUserByAdmin(adminC.id, adminA.id);
+    await deleteUserByAdmin(adminC.id, adminA.id);
 
     // 审计记录仍存在：A 的 2 条记录 admin_id 置 NULL，C 的 delete_user 记录保留
     const allActions = testDb
@@ -159,7 +171,7 @@ describe('V1: 审计日志 admin_actions FK ON DELETE SET NULL', () => {
     // A 的两条审计记录 admin_id 应为 NULL（被 SET NULL 保留）
     const aActions = allActions.filter((a) => a.action !== 'delete_user');
     expect(aActions).toHaveLength(2);
-    expect(aActions.every((a) => a.admin_id === null)).toBe(true);
+    expect(await aActions.every((a) => a.admin_id === null)).toBe(true);
     // C 的 delete_user 审计记录 admin_id 仍指向 C
     const deleteAction = allActions.find((a) => a.action === 'delete_user');
     expect(deleteAction).toBeDefined();
@@ -169,86 +181,83 @@ describe('V1: 审计日志 admin_actions FK ON DELETE SET NULL', () => {
 
 // ========== V2: approveResetRequest 自我保护 ==========
 describe('V2: approveResetRequest 自我保护', () => {
-  it('管理员不能批准自己的密码重置申请（抛 SELF_APPROVE）', () => {
-    const admin = createUser('admin@test.com', 'password123');
+  it('管理员不能批准自己的密码重置申请（抛 SELF_APPROVE）', async () => {
+    const admin = await createUser('admin@test.com', 'password123');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
     // 管理员提交忘记密码申请
-    const { id: requestId } = createResetRequest(admin.email);
+    const { id: requestId } = await createResetRequest(admin.email);
 
     // 管理员尝试批准自己的申请
+    // approveResetRequest 为同步函数，直接抛错（非 Promise），用同步断言
     expect(() => approveResetRequest(admin.id, requestId)).toThrow(
       '不能批准自己的密码重置申请',
     );
 
     // 验证申请仍为 pending（未被处理）
-    const reqs = listResetRequests('pending');
+    const reqs = await listResetRequests('pending');
     expect(reqs).toHaveLength(1);
     expect(reqs[0].status).toBe('pending');
   });
 
-  it('管理员可以批准其他用户的重置申请', () => {
-    const admin = createUser('admin@test.com', 'password123');
-    const user = createUser('user@test.com', 'password456');
+  it('管理员可以批准其他用户的重置申请', async () => {
+    const admin = await createUser('admin@test.com', 'password123');
+    const user = await createUser('user@test.com', 'password456');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
-    const { id: requestId } = createResetRequest(user.email);
-    const result = approveResetRequest(admin.id, requestId);
+    const { id: requestId } = await createResetRequest(user.email);
+    const result = await approveResetRequest(admin.id, requestId);
 
     expect(result.id).toBe(user.id);
     // 验证密码已重置为默认密码（由 PASSWORD_RESET_DEFAULT 环境变量指定）
-    const authed = authenticateUser(user.email, 'TEST_RESET_PWD');
+    const authed = await authenticateUser(user.email, 'TEST_RESET_PWD');
     expect(authed).not.toBeNull();
   });
 });
 
 // ========== V3: 最后管理员保护 ==========
 describe('V3: 最后管理员保护', () => {
-  it('不能降级最后一个管理员（抛 LAST_ADMIN）', () => {
-    const admin = createUser('only-admin@test.com', 'password123');
+  it('不能降级最后一个管理员（抛 LAST_ADMIN）', async () => {
+    const admin = await createUser('only-admin@test.com', 'password123');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
     // 只有一个 admin，降级应失败
-    expect(() =>
-      updateUserByAdmin('any-admin-id', admin.id, { role: 'user' }),
-    ).toThrow('不能降级最后一个管理员');
+    await expect(updateUserByAdmin('any-admin-id', admin.id, { role: 'user' })).rejects.toThrow('不能降级最后一个管理员');
   });
 
-  it('不能禁用最后一个管理员（抛 LAST_ADMIN）', () => {
-    const admin = createUser('only-admin@test.com', 'password123');
+  it('不能禁用最后一个管理员（抛 LAST_ADMIN）', async () => {
+    const admin = await createUser('only-admin@test.com', 'password123');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
-    expect(() =>
-      updateUserByAdmin('any-admin-id', admin.id, { isActive: false }),
-    ).toThrow('不能禁用最后一个管理员');
+    await expect(updateUserByAdmin('any-admin-id', admin.id, { isActive: false })).rejects.toThrow('不能禁用最后一个管理员');
   });
 
-  it('不能删除最后一个管理员（抛 LAST_ADMIN）', () => {
-    const admin = createUser('only-admin@test.com', 'password123');
+  it('不能删除最后一个管理员（抛 LAST_ADMIN）', async () => {
+    const admin = await createUser('only-admin@test.com', 'password123');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
-    expect(() => deleteUserByAdmin('any-admin-id', admin.id)).toThrow(
+    await expect(deleteUserByAdmin('any-admin-id', admin.id)).rejects.toThrow(
       '不能删除最后一个管理员',
     );
   });
 
-  it('多管理员时可以正常降级/禁用/删除', () => {
-    const adminA = createUser('admin-a@test.com', 'password123');
-    const adminB = createUser('admin-b@test.com', 'password456');
-    const adminC = createUser('admin-c@test.com', 'password789');
+  it('多管理员时可以正常降级/禁用/删除', async () => {
+    const adminA = await createUser('admin-a@test.com', 'password123');
+    const adminB = await createUser('admin-b@test.com', 'password456');
+    const adminC = await createUser('admin-c@test.com', 'password789');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(adminA.id);
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(adminB.id);
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(adminC.id);
 
     // 三个管理员，可以降级一个
-    expect(() => updateUserByAdmin(adminA.id, adminB.id, { role: 'user' })).not.toThrow();
+    await expect(updateUserByAdmin(adminA.id, adminB.id, { role: 'user' })).resolves.toBeDefined();
     // 还剩两个 active admin，可以禁用一个（B 已是 user，降级 adminC 不行因为只剩 2 admin）
     // 重新提升 B 测试禁用
     testDb.prepare("UPDATE users SET role = 'admin', is_active = 1 WHERE id = ?").run(adminB.id);
     // 三个 admin，禁用 B
-    expect(() => updateUserByAdmin(adminA.id, adminB.id, { isActive: false })).not.toThrow();
+    await expect(updateUserByAdmin(adminA.id, adminB.id, { isActive: false })).resolves.toBeDefined();
     // 还剩两个 active（A 和 C），可以删除 C
-    expect(() => deleteUserByAdmin(adminA.id, adminC.id)).not.toThrow();
+    await expect(deleteUserByAdmin(adminA.id, adminC.id)).resolves.toBeUndefined();
   });
 });
 
@@ -258,21 +267,21 @@ describe('V5: 验证码 HMAC-SHA256 哈希', () => {
     const email = 'new-user@test.com';
     const code = await generateCode(email);
     expect(code).toMatch(/^\d{6}$/);
-    expect(verifyCode(email, code)).toBe(true);
+    expect(await verifyCode(email, code)).toBe(true);
   });
 
   it('验证码使用后不可重用（防重放）', async () => {
     const email = 'new-user@test.com';
     const code = await generateCode(email);
-    expect(verifyCode(email, code)).toBe(true);
+    expect(await verifyCode(email, code)).toBe(true);
     // 第二次使用同一验证码应失败
-    expect(verifyCode(email, code)).toBe(false);
+    expect(await verifyCode(email, code)).toBe(false);
   });
 
   it('错误验证码校验失败', async () => {
     const email = 'new-user@test.com';
     await generateCode(email);
-    expect(verifyCode(email, '000000')).toBe(false);
+    expect(await verifyCode(email, '000000')).toBe(false);
   });
 
   it('发送新验证码后旧验证码失效', async () => {
@@ -281,9 +290,9 @@ describe('V5: 验证码 HMAC-SHA256 哈希', () => {
     const newCode = await generateCode(email);
     expect(oldCode).not.toBe(newCode);
     // 旧验证码应失效
-    expect(verifyCode(email, oldCode)).toBe(false);
+    expect(await verifyCode(email, oldCode)).toBe(false);
     // 新验证码可用
-    expect(verifyCode(email, newCode)).toBe(true);
+    expect(await verifyCode(email, newCode)).toBe(true);
   });
 
   it('HMAC 哈希值不是 scrypt 格式（无 salt:hash 分隔符）', async () => {
@@ -300,9 +309,9 @@ describe('V5: 验证码 HMAC-SHA256 哈希', () => {
 
 // ========== V6: 过期重置申请自动标记 ==========
 describe('V6: cleanupExpiredData 过期重置申请', () => {
-  it('超过 24 小时的 pending 申请自动标记为 rejected', () => {
+  it('超过 24 小时的 pending 申请自动标记为 rejected', async () => {
     const email = 'forgot@test.com';
-    createResetRequest(email);
+    await createResetRequest(email);
 
     // 手动将 created_at 设为 25 小时前
     testDb
@@ -312,22 +321,22 @@ describe('V6: cleanupExpiredData 过期重置申请', () => {
       .run(email);
 
     // 执行清理
-    cleanupExpiredData(testDb);
+    await cleanupExpiredData(testDb);
 
-    const reqs = listResetRequests();
+    const reqs = await listResetRequests();
     expect(reqs).toHaveLength(1);
     expect(reqs[0].status).toBe('rejected');
     expect(reqs[0].adminNote).toContain('系统自动过期');
     expect(reqs[0].resolvedAt).not.toBeNull();
   });
 
-  it('24 小时内的 pending 申请不受影响', () => {
+  it('24 小时内的 pending 申请不受影响', async () => {
     const email = 'forgot@test.com';
-    createResetRequest(email);
+    await createResetRequest(email);
 
-    cleanupExpiredData(testDb);
+    await cleanupExpiredData(testDb);
 
-    const reqs = listResetRequests('pending');
+    const reqs = await listResetRequests('pending');
     expect(reqs).toHaveLength(1);
     expect(reqs[0].status).toBe('pending');
   });
@@ -335,9 +344,9 @@ describe('V6: cleanupExpiredData 过期重置申请', () => {
 
 // ========== V7: approveResetRequest 返回刷新数据 ==========
 describe('V7: approveResetRequest 返回刷新后的 user', () => {
-  it('返回的 user.updatedAt 已更新', () => {
-    const admin = createUser('admin@test.com', 'password123');
-    const user = createUser('user@test.com', 'password456');
+  it('返回的 user.updatedAt 已更新', async () => {
+    const admin = await createUser('admin@test.com', 'password123');
+    const user = await createUser('user@test.com', 'password456');
     testDb.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(admin.id);
 
     // 记录原始 updatedAt
@@ -345,8 +354,8 @@ describe('V7: approveResetRequest 返回刷新后的 user', () => {
       updated_at: string;
     };
 
-    const { id: requestId } = createResetRequest(user.email);
-    const result = approveResetRequest(admin.id, requestId);
+    const { id: requestId } = await createResetRequest(user.email);
+    const result = await approveResetRequest(admin.id, requestId);
 
     // 返回的 updatedAt 应已更新（不等于原始值）
     // 注意：datetime('now') 精度为秒，若同一秒内执行可能相等，

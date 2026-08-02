@@ -43,7 +43,7 @@ function resolveDocPath(slug: string): string | null {
 
 /** GET — 读取文档内容（admin+） */
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -75,7 +75,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
 /** PUT — 写入文档内容（root 专属） */
 export async function PUT(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const root = requireRoot(req);
+  const root = await requireRoot(req);
   if (!root.ok) return root.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -107,7 +107,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
 
   try {
     fs.writeFileSync(filePath, body.content, 'utf-8');
-    logAdminAction(root.user.id, 'dev-docs.update', null, { slug, size: body.content.length }, ip, req.headers.get('user-agent'));
+    await logAdminAction(root.user.id, 'dev-docs.update', null, { slug, size: body.content.length }, ip, req.headers.get('user-agent'));
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('写入文档失败', 500);
@@ -116,7 +116,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
 
 /** DELETE — 删除文档（root 专属） */
 export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const root = requireRoot(req);
+  const root = await requireRoot(req);
   if (!root.ok) return root.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -135,7 +135,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug:
   try {
     fs.unlinkSync(filePath);
     const ip = getClientIp(req);
-    logAdminAction(root.user.id, 'dev-docs.delete', null, { slug }, ip, req.headers.get('user-agent'));
+    await logAdminAction(root.user.id, 'dev-docs.delete', null, { slug }, ip, req.headers.get('user-agent'));
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('删除文档失败', 500);

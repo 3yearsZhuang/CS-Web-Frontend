@@ -19,7 +19,7 @@ export async function GET(
 
   const log = createRequestLogger(req);
   try {
-    const exam = getExamById(id);
+    const exam = await getExamById(id);
     if (!exam) {
       return NextResponse.json({ error: '考试不存在' }, { status: 404 });
     }
@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: '考试未发布' }, { status: 404 });
     }
 
-    const questions = listQuestionsByExam(id);
+    const questions = await listQuestionsByExam(id);
 
     const sanitizedQuestions: ExamQuestion[] = questions.map((q) => {
       if (exam.status === 'ended') {

@@ -121,48 +121,48 @@ describe('isPasswordInHistory — 历史密码复用检测', () => {
     initTestSchema();
   });
 
-  it('无历史记录时返回 false', () => {
-    expect(isPasswordInHistory(USER_ID, 'New-Pass-2026!')).toBe(false);
+  it('无历史记录时返回 false', async () => {
+    expect(await isPasswordInHistory(USER_ID, 'New-Pass-2026!')).toBe(false);
   });
 
-  it('新密码与历史密码相同返回 true', () => {
+  it('新密码与历史密码相同返回 true', async () => {
     const oldHash = hashPassword('Old-History-Pass-2026!');
-    recordPasswordHistory(USER_ID, oldHash);
+    await recordPasswordHistory(USER_ID, oldHash);
 
-    expect(isPasswordInHistory(USER_ID, 'Old-History-Pass-2026!')).toBe(true);
+    expect(await isPasswordInHistory(USER_ID, 'Old-History-Pass-2026!')).toBe(true);
   });
 
-  it('新密码与历史密码不同返回 false', () => {
+  it('新密码与历史密码不同返回 false', async () => {
     const oldHash = hashPassword('Old-History-Pass-2026!');
-    recordPasswordHistory(USER_ID, oldHash);
+    await recordPasswordHistory(USER_ID, oldHash);
 
-    expect(isPasswordInHistory(USER_ID, 'Different-New-Pass-2026!')).toBe(false);
+    expect(await isPasswordInHistory(USER_ID, 'Different-New-Pass-2026!')).toBe(false);
   });
 
-  it('最近 N 条历史密码均可被检测到', () => {
+  it('最近 N 条历史密码均可被检测到', async () => {
     const N = 5;
     // 插入 N 条历史记录
     for (let i = 0; i < N; i++) {
-      recordPasswordHistory(USER_ID, hashPassword(`Hist-${i}-Pass-2026!`));
+      await recordPasswordHistory(USER_ID, hashPassword(`Hist-${i}-Pass-2026!`));
     }
 
     // 所有 N 条密码都应被检测到
     for (let i = 0; i < N; i++) {
-      expect(isPasswordInHistory(USER_ID, `Hist-${i}-Pass-2026!`)).toBe(true);
+      expect(await isPasswordInHistory(USER_ID, `Hist-${i}-Pass-2026!`)).toBe(true);
     }
     // 无关的新密码不应匹配
-    expect(isPasswordInHistory(USER_ID, 'Unrelated-New-Pass-2026!')).toBe(false);
+    expect(await isPasswordInHistory(USER_ID, 'Unrelated-New-Pass-2026!')).toBe(false);
   });
 
-  it('不同用户的密码历史互不影响', () => {
+  it('不同用户的密码历史互不影响', async () => {
     const user2Id = 'user-pw-002';
     inMemoryDb.prepare(
       'INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)',
     ).run(user2Id, 'user2@example.com', hashPassword('User2-Pass-2026!'));
 
-    recordPasswordHistory(user2Id, hashPassword('User2-Old-Pass-2026!'));
+    await recordPasswordHistory(user2Id, hashPassword('User2-Old-Pass-2026!'));
 
-    expect(isPasswordInHistory(USER_ID, 'User2-Old-Pass-2026!')).toBe(false);
+    expect(await isPasswordInHistory(USER_ID, 'User2-Old-Pass-2026!')).toBe(false);
   });
 });
 
@@ -171,9 +171,9 @@ describe('recordPasswordHistory — 历史记录自动清理', () => {
     initTestSchema();
   });
 
-  it('写入历史记录后可被查询到', () => {
+  it('写入历史记录后可被查询到', async () => {
     const oldHash = hashPassword('Test-Old-Pass-2026!');
-    recordPasswordHistory(USER_ID, oldHash);
+    await recordPasswordHistory(USER_ID, oldHash);
 
     const count = inMemoryDb
       .prepare('SELECT COUNT(*) as c FROM password_history WHERE user_id = ?')
@@ -181,12 +181,12 @@ describe('recordPasswordHistory — 历史记录自动清理', () => {
     expect(count.c).toBe(1);
   });
 
-  it('超过保留上限 2 倍的旧记录被自动清理', () => {
+  it('超过保留上限 2 倍的旧记录被自动清理', async () => {
     const limit = 5;
     const total = limit * 3;
 
     for (let i = 0; i < total; i++) {
-      recordPasswordHistory(USER_ID, hashPassword(`Hist-${i}-Pass-2026!`));
+      await recordPasswordHistory(USER_ID, hashPassword(`Hist-${i}-Pass-2026!`));
     }
 
     const count = inMemoryDb

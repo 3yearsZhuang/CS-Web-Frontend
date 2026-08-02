@@ -10,14 +10,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const categories = listCategories();
+    const categories = await listCategories();
 
-    const hotTopics = listTopics({ sort: 'hot', pageSize: 8 }).items;
+    const hotTopics = (await listTopics({ sort: 'hot', pageSize: 8 })).items;
 
-    const categoryPreviews = categories.map((cat) => {
-      const latest = listTopics({ categoryId: cat.id, sort: 'latest', pageSize: 3 }).items;
-      return { ...cat, latestTopics: latest };
-    });
+    const categoryPreviews = await Promise.all(
+      categories.map(async (cat) => ({
+        ...cat,
+        latestTopics: (await listTopics({ category: cat.id, sort: 'latest', pageSize: 3 })).items,
+      })),
+    );
 
     return NextResponse.json({ categories: categoryPreviews, hotTopics });
   } catch {

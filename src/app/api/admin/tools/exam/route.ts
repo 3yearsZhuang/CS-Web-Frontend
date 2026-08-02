@@ -26,7 +26,7 @@ import { createExamSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
   };
 
   try {
-    const exam = createExam(admin.user.id, input);
+    const exam = await createExam(admin.user.id, input);
     return NextResponse.json({ exam }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

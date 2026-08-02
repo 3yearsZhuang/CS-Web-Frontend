@@ -21,7 +21,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -44,7 +44,7 @@ export async function POST(
 
   const { id } = await params;
   try {
-    const user = approveResetRequest(admin.user.id, id, note);
+    const user = await approveResetRequest(admin.user.id, id, note);
     return NextResponse.json({
       user,
       message: '密码已重置为默认密码',

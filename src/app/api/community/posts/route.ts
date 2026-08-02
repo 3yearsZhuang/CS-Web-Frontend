@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const categorySlug = params.get('category') ?? undefined;
   let categoryId: string | undefined;
   if (categorySlug) {
-    const cat = getCategoryBySlug(categorySlug);
+    const cat = await getCategoryBySlug(categorySlug);
     if (!cat) {
       return jsonError('分类不存在', 404, 'CATEGORY_NOT_FOUND');
     }
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
         page,
         pageSize,
       };
-      const result = listTopics(filters);
+      const result = await listTopics(filters);
       return jsonSuccess(result);
     }
 
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         page,
         pageSize,
       };
-      const result = listPosts(options);
+      const result = await listPosts(options);
       return jsonSuccess(result);
     }
 
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
       page,
       pageSize,
     };
-    const topics = listTopics(topicFilters);
+    const topics = await listTopics(topicFilters);
     const postOptions: BlogListOptions = {
       status: 'published',
       category: categorySlug,
@@ -106,12 +106,12 @@ export async function GET(req: NextRequest) {
       page,
       pageSize,
     };
-    const posts = listPosts(postOptions);
+    const posts = await listPosts(postOptions);
 
     return jsonSuccess({
       topics,
       posts,
-      total: (topics.total ?? 0) + (posts.total ?? 0),
+      total: (topics.pagination.total ?? 0) + (posts.total ?? 0),
       page,
       pageSize,
     });
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return jsonError('未登录', 401, 'UNAUTHENTICATED');
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return jsonError('未登录', 401, 'UNAUTHENTICATED');
 
   const ip = getClientIp(req);
@@ -153,15 +153,15 @@ export async function POST(req: NextRequest) {
         );
       }
       const { categoryId, title, contentMarkdown } = parsed.data;
-      const topic = createTopic(session.user.id, { categoryId, title, contentMarkdown });
+      const topic = await createTopic({ categoryId, title, contentMarkdown, authorId: session.user.id });
       return jsonSuccess({ topic }, 201);
     }
 
     // kind === 'post'
-    const post = createPost(session.user.id, {
+    const post = await createPost({
       ...body,
       kind: 'post',
-    });
+    }, session.user.id);
     return jsonSuccess({ post }, 201);
   } catch (err) {
     log.error({ err }, '创建帖子失败');

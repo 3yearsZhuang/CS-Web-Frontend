@@ -2,7 +2,9 @@
  * @file 积分服务
  */
 
-import { getDb } from '@/shared/db';
+import crypto from 'node:crypto';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getToolsRepository } from '@/shared/db/repositories';
 import { AppError } from '@/shared/app-error';
 import {
   type PointsTransaction,
@@ -38,51 +40,48 @@ function toTransaction(row: PointsTransactionRow): PointsTransaction {
 export { LEVEL_THRESHOLDS };
 
 /** 获取用户积分余额 */
-export function getUserPointsBalance(userId: string): number {
-  const db = getDb();
-  const lastTx = db.prepare(
-    'SELECT balance_after FROM points_transactions WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1',
-  ).get(userId) as { balance_after: number } | undefined;
-
-  return lastTx?.balance_after ?? 0;
+export async function getUserPointsBalance(userId: string): Promise<number> {
+  const repo = getToolsRepository();
+  return repo.getPointsBalanceAfter(userId);
 }
 
 /** 增加积分 */
-export function addPoints(
+export async function addPoints(
   userId: string,
   amount: number,
   sourceType: string,
   sourceId: string | null,
   reason: string,
-): PointsTransaction {
+): Promise<PointsTransaction> {
   if (amount <= 0) throw new AppError('积分数量必须大于 0', 'VALIDATION_ERROR');
 
-  const db = getDb();
-  const currentBalance = getUserPointsBalance(userId);
+  const repo = getToolsRepository();
+  const engine = await getDbEngine();
+  const currentBalance = await repo.getPointsBalanceAfter(userId);
   const newBalance = currentBalance + amount;
   const id = crypto.randomUUID();
 
-  db.prepare(
-    `INSERT INTO points_transactions (id, user_id, amount, reason, source_type, source_id, balance_after)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(id, userId, amount, reason, sourceType, sourceId, newBalance);
+  await engine.transaction(async (tx) => {
+    await repo.insertPointTransaction(tx, id, userId, amount, reason, sourceType, sourceId, newBalance);
+  });
 
-  const row = db.prepare('SELECT * FROM points_transactions WHERE id = ?').get(id) as PointsTransactionRow;
-  return toTransaction(row);
+  const row = await repo.getPointTransactions(userId, { limit: 1, offset: 0 });
+  return toTransaction(row[0] as PointsTransactionRow);
 }
 
 /** 扣除积分 */
-export function deductPoints(
+export async function deductPoints(
   userId: string,
   amount: number,
   sourceType: string,
   sourceId: string | null,
   reason: string,
-): PointsTransaction {
+): Promise<PointsTransaction> {
   if (amount <= 0) throw new AppError('扣除数量必须大于 0', 'VALIDATION_ERROR');
 
-  const db = getDb();
-  const currentBalance = getUserPointsBalance(userId);
+  const repo = getToolsRepository();
+  const engine = await getDbEngine();
+  const currentBalance = await repo.getPointsBalanceAfter(userId);
 
   if (currentBalance < amount) {
     throw new AppError(`积分不足（当前 ${currentBalance}，需要 ${amount}）`, 'INSUFFICIENT_POINTS');
@@ -91,61 +90,50 @@ export function deductPoints(
   const newBalance = currentBalance - amount;
   const id = crypto.randomUUID();
 
-  db.prepare(
-    `INSERT INTO points_transactions (id, user_id, amount, reason, source_type, source_id, balance_after)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(id, userId, -amount, reason, sourceType, sourceId, newBalance);
+  await engine.transaction(async (tx) => {
+    await repo.insertPointTransaction(tx, id, userId, -amount, reason, sourceType, sourceId, newBalance);
+  });
 
-  const row = db.prepare('SELECT * FROM points_transactions WHERE id = ?').get(id) as PointsTransactionRow;
-  return toTransaction(row);
+  const row = await repo.getPointTransactions(userId, { limit: 1, offset: 0 });
+  return toTransaction(row[0] as PointsTransactionRow);
 }
 
 /** 获取用户积分档案 */
-export function getUserPointsProfile(userId: string): {
+export async function getUserPointsProfile(userId: string): Promise<{
   balance: number;
   level: number;
   levelTitle: string;
   transactions: PointsTransaction[];
-} {
-  const balance = getUserPointsBalance(userId);
+}> {
+  const repo = getToolsRepository();
+  const balance = await repo.getPointsBalanceAfter(userId);
   const { level, title } = calculateLevel(balance);
 
-  const db = getDb();
-  const rows = db.prepare(
-    'SELECT * FROM points_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 50',
-  ).all(userId) as PointsTransactionRow[];
+  const rows = await repo.getPointTransactions(userId, { limit: 50, offset: 0 });
 
   return {
     balance,
     level,
     levelTitle: title,
-    transactions: rows.map(toTransaction),
+    transactions: rows.map((r) => toTransaction(r as PointsTransactionRow)),
   };
 }
 
-export function getLeaderboard(topN = 20): Array<{
+export async function getLeaderboard(topN = 20): Promise<Array<{
   userId: string;
   displayName: string | null;
   balance: number;
   level: number;
   levelTitle: string;
-}> {
-  const db = getDb();
-
-  const rows = db.prepare(
-    `SELECT user_id, MAX(balance_after) AS balance
-     FROM points_transactions
-     GROUP BY user_id
-     ORDER BY balance DESC
-     LIMIT ?`,
-  ).all(topN) as Array<{ user_id: string; balance: number }>;
+}>> {
+  const repo = getToolsRepository();
+  const rows = await repo.listLeaderboard(topN);
 
   return rows.map((r) => {
     const { level, title } = calculateLevel(r.balance);
-    const user = db.prepare('SELECT display_name FROM users WHERE id = ?').get(r.user_id) as { display_name: string | null } | undefined;
     return {
       userId: r.user_id,
-      displayName: user?.display_name ?? null,
+      displayName: r.display_name,
       balance: r.balance,
       level,
       levelTitle: title,

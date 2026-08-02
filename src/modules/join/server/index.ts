@@ -3,7 +3,8 @@
  */
 import crypto from 'node:crypto';
 import 'server-only';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getJoinRepository } from '@/shared/db/repositories';
 import { AppError } from '@/shared/app-error';
 import { logAdminAction } from '@/shared/security/audit';
 import { createNotification } from '@/modules/notification/server/notification-core';
@@ -82,68 +83,55 @@ function validateInput(input: JoinApplicationInput): string | null {
 }
 
 /** 提交入社申请（需登录，关联 userId） */
-export function submitJoinApplication(input: JoinApplicationInput): JoinApplication {
+export async function submitJoinApplication(input: JoinApplicationInput): Promise<JoinApplication> {
   const validationErr = validateInput(input);
   if (validationErr) throw new AppError(validationErr, 'VALIDATION_ERROR');
 
-  const db = getDb();
+  const repo = getJoinRepository();
+  const engine = await getDbEngine();
   const id = crypto.randomUUID();
   const techTagsStr = input.techTags?.length ? JSON.stringify(input.techTags) : null;
 
-  db.prepare(
-    `INSERT INTO join_applications (id, applicant_name, student_id, major, tech_tags, reason, contact_qq, contact_phone, user_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    input.applicantName.trim(),
-    input.studentId.trim(),
-    input.major.trim(),
-    techTagsStr,
-    input.reason.trim(),
-    input.contactQq?.trim() || null,
-    input.contactPhone?.trim() || null,
-    input.userId ?? null,
-  );
+  await engine.transaction(async (tx) => {
+    await repo.insertApplication(tx, id, {
+      applicantName: input.applicantName.trim(),
+      studentId: input.studentId.trim(),
+      major: input.major.trim(),
+      techTags: techTagsStr,
+      reason: input.reason.trim(),
+      contactQq: input.contactQq?.trim() || null,
+      contactPhone: input.contactPhone?.trim() || null,
+      userId: input.userId ?? null,
+    });
+  });
 
-  const row = db.prepare('SELECT * FROM join_applications WHERE id = ?').get(id) as JoinApplicationRow;
-  return toJoinApplication(row);
+  const row = await repo.getApplicationById(id);
+  return toJoinApplication(row as JoinApplicationRow);
 }
 
 /** 查询当前用户的入社申请列表 */
-export function listMyJoinApplications(userId: string): JoinApplication[] {
-  const db = getDb();
-  const rows = db
-    .prepare('SELECT * FROM join_applications WHERE user_id = ? ORDER BY created_at DESC')
-    .all(userId) as JoinApplicationRow[];
+export async function listMyJoinApplications(userId: string): Promise<JoinApplication[]> {
+  const repo = getJoinRepository();
+  const rows = await repo.listMyApplications(userId);
   return rows.map(toJoinApplication);
 }
 
 /** 查询入社申请列表（管理员，支持按状态筛选） */
-export function listJoinApplications(status?: JoinApplicationStatus): JoinApplication[] {
-  const db = getDb();
-  if (status) {
-    const rows = db
-      .prepare('SELECT * FROM join_applications WHERE status = ? ORDER BY created_at DESC')
-      .all(status) as JoinApplicationRow[];
-    return rows.map(toJoinApplication);
-  }
-  const rows = db
-    .prepare('SELECT * FROM join_applications ORDER BY created_at DESC')
-    .all() as JoinApplicationRow[];
+export async function listJoinApplications(status?: JoinApplicationStatus): Promise<JoinApplication[]> {
+  const repo = getJoinRepository();
+  const rows = await repo.listApplications(status ?? null);
   return rows.map(toJoinApplication);
 }
 
 /** 审批入社申请（管理员） */
-export function reviewJoinApplication(
+export async function reviewJoinApplication(
   adminId: string,
   applicationId: string,
   status: 'approved' | 'rejected',
   reviewNote?: string,
-): JoinApplication {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM join_applications WHERE id = ?').get(applicationId) as
-    | JoinApplicationRow
-    | undefined;
+): Promise<JoinApplication> {
+  const repo = getJoinRepository();
+  const existing = await repo.getApplicationById(applicationId);
   if (!existing) {
     throw new AppError('申请不存在', 'NOT_FOUND');
   }
@@ -151,12 +139,9 @@ export function reviewJoinApplication(
     throw new AppError('该申请已处理', 'ALREADY_REVIEWED');
   }
 
-  db.prepare(
-    `UPDATE join_applications SET status = ?, reviewed_by = ?, review_note = ?, updated_at = datetime('now')
-     WHERE id = ?`,
-  ).run(status, adminId, reviewNote ?? null, applicationId);
+  await repo.updateApplicationStatus(applicationId, status, adminId, reviewNote ?? null);
 
-  logAdminAction(adminId, status === 'approved' ? 'approve_join_application' : 'reject_join_application', null, {
+  await logAdminAction(adminId, status === 'approved' ? 'approve_join_application' : 'reject_join_application', null, {
     applicationId,
     applicantName: existing.applicant_name,
     studentId: existing.student_id,
@@ -171,9 +156,9 @@ export function reviewJoinApplication(
       : status === 'approved'
         ? '恭喜！你的入社申请已通过。'
         : '你的入社申请未通过。';
-    createNotification(existing.user_id, 'admin', title, content, adminId);
+    await createNotification(existing.user_id, 'admin', title, content, adminId);
   }
 
-  const row = db.prepare('SELECT * FROM join_applications WHERE id = ?').get(applicationId) as JoinApplicationRow;
-  return toJoinApplication(row);
+  const row = await repo.getApplicationById(applicationId);
+  return toJoinApplication(row as JoinApplicationRow);
 }

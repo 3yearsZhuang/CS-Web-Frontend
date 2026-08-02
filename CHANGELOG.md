@@ -4,6 +4,26 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### Changed
+
+#### 架构与工程质量
+- **ADR-009 Repository 迁移收官**：服务层彻底去除 `getDb()` 直接调用，统一经 Repository（`getDbEngine()` 引擎单例）访问数据；覆盖 auth/user/community/events/tools/notification/admin/announcement 全部模块及 16 个 API 路由。
+- 服务层 sync → async 全面迁移，跨模块调用补 `await`，`logAdminAction` 改为 async 并全量 await。
+- 新增 `tools/tests/dbEngine.ts`：将 better-sqlite3 内存库包装为 `DbEngine`，经 `_setDbEngineForTest` 注入，使 service 集成测试读写同一内存库（替换已失效的 `vi.mock('@/shared/db')`）。
+- 测试 DB 适配：补 `admin_actions` 表、users 生产列；`coerce()` 处理 SQLite 布尔绑定（boolean→0/1）；Repository 闭包单例在 `beforeEach` 重置（`_setAuthRepositoryForTest(null)` 等）以隔离用例。
+
+### Fixed
+- `countResources` 缺表别名 `r` 导致 `listResources` 的 `r.status` 等 WHERE 报错（真实回归）。
+- `getResourceById` 调用 `listResourcesWithAuthor` 漏传 LIMIT/OFFSET 参数（"too few params"）。
+- `task/crud.ts` publishTask/closeTask 补写 `publishedAt`/`closedAt` 时间戳。
+- `announcement` updateAnnouncement/toggleAnnouncementActive 修正为 `rowToAnnouncement` 映射（原为错误的 `as unknown as Announcement` 强转）。
+
+### 测试
+- 16 个测试文件 / **451 用例全绿**（原 308 条业务单测 + 扩展覆盖）；`npx tsc --noEmit` 全项目 0 错误。
+- 同步/异步断言对齐：`.rejects.toThrow`、补 `await` 裸 async 调用、sync 函数（如 `approveResetRequest`）保留 `expect(() => fn()).toThrow`。
+
 ## [0.9.1] — 2026-07-31
 
 首个预发布版本（1.0 候选）。面向 FZTBU CS 学生的全栈社区平台，功能完整，运维与发布准备进行中。

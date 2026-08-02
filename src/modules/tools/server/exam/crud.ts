@@ -4,7 +4,8 @@
 
 import crypto from 'node:crypto';
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getToolsRepository } from '@/shared/db/repositories';
 import { validateTechTags } from '@/shared/utils/tech-tags';
 import { computePagination, computeTotalPages } from '@/shared/utils/pagination';
 import {
@@ -13,6 +14,7 @@ import {
   type Exam,
   type ExamRow,
 } from '../../types';
+import type { QueryParams } from '@/shared/db/drivers';
 
 /** 将考试数据库行转换为 Exam 对象 */
 export function examRowToExam(row: ExamRow): Exam {
@@ -36,8 +38,9 @@ export function examRowToExam(row: ExamRow): Exam {
 }
 
 /** 创建考试 */
-export function createExam(createdBy: string, input: ExamInput): Exam {
-  const db = getDb();
+export async function createExam(createdBy: string, input: ExamInput): Promise<Exam> {
+  const repo = getToolsRepository();
+  const engine = await getDbEngine();
 
   if (!input.title || typeof input.title !== 'string' || input.title.trim().length === 0) {
     throw new AppError('考试标题不能为空', 'VALIDATION_ERROR');
@@ -55,19 +58,27 @@ export function createExam(createdBy: string, input: ExamInput): Exam {
   const id = crypto.randomUUID();
   const duration = typeof input.durationMinutes === 'number' && input.durationMinutes > 0 ? input.durationMinutes : 0;
 
-  db.prepare(
-    `INSERT INTO exams (id, title, description, status, start_time, end_time, duration_minutes, tech_tags, created_by)
-     VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?)`,
-  ).run(id, input.title.trim(), input.description ?? null, input.startTime ?? null, input.endTime ?? null, duration, tagsJson, createdBy);
+  await engine.transaction(async (tx) => {
+    await repo.insertExam(tx, id, {
+      title: input.title.trim(),
+      description: input.description ?? null,
+      status: 'draft',
+      startTime: input.startTime ?? null,
+      endTime: input.endTime ?? null,
+      durationMinutes: duration,
+      techTags: tagsJson,
+      createdBy,
+    });
+  });
 
-  const row = db.prepare('SELECT * FROM exams WHERE id = ?').get(id) as ExamRow;
-  return examRowToExam(row);
+  const row = await repo.getExamById(id);
+  return examRowToExam(row as ExamRow);
 }
 
 /** 更新考试信息 */
-export function updateExam(examId: string, input: Partial<ExamInput>): Exam {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow | undefined;
+export async function updateExam(examId: string, input: Partial<ExamInput>): Promise<Exam> {
+  const repo = getToolsRepository();
+  const existing = await repo.getExamById(examId);
   if (!existing) {
     throw new AppError('考试不存在', 'NOT_FOUND');
   }
@@ -75,55 +86,44 @@ export function updateExam(examId: string, input: Partial<ExamInput>): Exam {
     throw new AppError('仅草稿状态的考试可编辑', 'STATE_INVALID');
   }
 
-  const sets: string[] = [];
-  const values: unknown[] = [];
+  const fields: Record<string, unknown> = {};
 
   if (input.title !== undefined) {
     if (!input.title || typeof input.title !== 'string' || input.title.trim().length === 0) {
       throw new AppError('考试标题不能为空', 'VALIDATION_ERROR');
     }
-    sets.push('title = ?');
-    values.push(input.title.trim());
+    fields.title = input.title.trim();
   }
   if (input.description !== undefined) {
-    sets.push('description = ?');
-    values.push(input.description ?? null);
+    fields.description = input.description ?? null;
   }
   if (input.startTime !== undefined) {
-    sets.push('start_time = ?');
-    values.push(input.startTime ?? null);
+    fields.startTime = input.startTime ?? null;
   }
   if (input.endTime !== undefined) {
-    sets.push('end_time = ?');
-    values.push(input.endTime ?? null);
+    fields.endTime = input.endTime ?? null;
   }
   if (input.durationMinutes !== undefined) {
-    sets.push('duration_minutes = ?');
-    values.push(typeof input.durationMinutes === 'number' && input.durationMinutes > 0 ? input.durationMinutes : 0);
+    fields.durationMinutes = typeof input.durationMinutes === 'number' && input.durationMinutes > 0 ? input.durationMinutes : 0;
   }
   if (input.techTags !== undefined) {
     const validation = validateTechTags(input.techTags);
     if (!validation.ok) {
       throw new AppError(validation.error, 'VALIDATION_ERROR');
     }
-    sets.push('tech_tags = ?');
-    values.push(JSON.stringify(validation.tags));
+    fields.techTags = JSON.stringify(validation.tags);
   }
 
-  if (sets.length > 0) {
-    sets.push("updated_at = datetime('now')");
-    values.push(examId);
-    db.prepare(`UPDATE exams SET ${sets.join(', ')} WHERE id = ?`).run(...values);
-  }
+  await repo.updateExam(examId, fields as Partial<ExamRow>);
 
-  const row = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow;
-  return examRowToExam(row);
+  const row = await repo.getExamById(examId);
+  return examRowToExam(row as ExamRow);
 }
 
 /** 发布考试 */
-export function publishExam(examId: string): Exam {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow | undefined;
+export async function publishExam(examId: string): Promise<Exam> {
+  const repo = getToolsRepository();
+  const existing = await repo.getExamById(examId);
   if (!existing) {
     throw new AppError('考试不存在', 'NOT_FOUND');
   }
@@ -131,15 +131,15 @@ export function publishExam(examId: string): Exam {
     throw new AppError('仅草稿状态的考试可发布', 'STATE_INVALID');
   }
 
-  db.prepare("UPDATE exams SET status = 'published', updated_at = datetime('now') WHERE id = ?").run(examId);
-  const row = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow;
-  return examRowToExam(row);
+  await repo.setExamStatus(examId, 'published');
+  const row = await repo.getExamById(examId);
+  return examRowToExam(row as ExamRow);
 }
 
 /** 结束考试 */
-export function endExam(examId: string): Exam {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow | undefined;
+export async function endExam(examId: string): Promise<Exam> {
+  const repo = getToolsRepository();
+  const existing = await repo.getExamById(examId);
   if (!existing) {
     throw new AppError('考试不存在', 'NOT_FOUND');
   }
@@ -147,50 +147,50 @@ export function endExam(examId: string): Exam {
     throw new AppError('仅已发布的考试可结束', 'STATE_INVALID');
   }
 
-  db.prepare("UPDATE exams SET status = 'ended', updated_at = datetime('now') WHERE id = ?").run(examId);
-  const row = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow;
-  return examRowToExam(row);
+  await repo.setExamStatus(examId, 'ended');
+  const row = await repo.getExamById(examId);
+  return examRowToExam(row as ExamRow);
 }
 
 /** 删除考试 */
-export function deleteExam(examId: string): void {
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM exams WHERE id = ?').get(examId) as { id: string } | undefined;
+export async function deleteExam(examId: string): Promise<void> {
+  const repo = getToolsRepository();
+  const existing = await repo.getExamById(examId);
   if (!existing) {
     throw new AppError('考试不存在', 'NOT_FOUND');
   }
-  db.prepare('DELETE FROM exams WHERE id = ?').run(examId);
+  await repo.deleteExam(examId);
 }
 
 /** 根据 ID 获取考试 */
-export function getExamById(examId: string): Exam | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM exams WHERE id = ?').get(examId) as ExamRow | undefined;
+export async function getExamById(examId: string): Promise<Exam | null> {
+  const repo = getToolsRepository();
+  const row = await repo.getExamById(examId);
   return row ? examRowToExam(row) : null;
 }
 
 /** 分页列出考试 */
-export function listExams(params: {
+export async function listExams(params: {
   status?: ExamStatus;
   page?: number;
   pageSize?: number;
-} = {}): { exams: Exam[]; total: number; page: number; pageSize: number; totalPages: number } {
-  const db = getDb();
+} = {}): Promise<{ exams: Exam[]; total: number; page: number; pageSize: number; totalPages: number }> {
+  const repo = getToolsRepository();
   const { status, page = 1, pageSize = 20 } = params;
 
   const conditions: string[] = [];
-  const args: unknown[] = [];
+  const args: QueryParams = [];
   if (status) {
     conditions.push('status = ?');
     args.push(status);
   }
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const total = (db.prepare(`SELECT COUNT(*) as cnt FROM exams ${where}`).get(...args) as { cnt: number }).cnt;
+  const total = await repo.countExams(where, args);
 
   const { page: safePage, pageSize: safePageSize, offset } = computePagination({ page, pageSize, defaultPageSize: 20, maxPageSize: 100 });
 
-  const rows = db.prepare(`SELECT * FROM exams ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...args, safePageSize, offset) as ExamRow[];
+  const rows = await repo.listExams(where, [...args, safePageSize, offset] as QueryParams);
 
   return {
     exams: rows.map(examRowToExam),

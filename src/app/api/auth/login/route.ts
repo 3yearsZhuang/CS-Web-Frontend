@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const user = authenticateUser(email, password);
+  const user = await authenticateUser(email, password);
   const userAgent = req.headers.get('user-agent') || undefined;
   if (!user) {
     // 安全：记录失败登录（user_id 为 null，仅记录邮箱用于暴力破解检测）
@@ -52,8 +52,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
   }
 
-  if (is2FAEnabled(user.id)) {
-    const twoFactorToken = create2FAToken(user.id);
+  if (await is2FAEnabled(user.id)) {
+    const twoFactorToken = await create2FAToken(user.id);
     return NextResponse.json({ requires2FA: true, twoFactorToken });
   }
 
@@ -62,11 +62,11 @@ export async function POST(req: Request) {
   // 为防邮箱枚举，禁用账号返回与密码错误一致的 401
   let token: string;
   try {
-    token = createSession(user.id, ip, userAgent);
+    token = await createSession(user.id, ip, userAgent);
   } catch (err) {
     if (err instanceof Error && (err.name === 'ACCOUNT_DISABLED' || err.name === 'USER_NOT_FOUND')) {
       // 安全：记录禁用账号的失败登录
-      recordLoginHistory(user.id, ip, userAgent, false, email.toLowerCase());
+      await recordLoginHistory(user.id, ip, userAgent, false, email.toLowerCase());
       return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
     }
     throw err;

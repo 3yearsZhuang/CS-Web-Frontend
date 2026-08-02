@@ -16,7 +16,7 @@ import { createRequestLogger } from '@/shared/logger';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireModuleAdmin(req, 'forum');
+  const admin = await requireModuleAdmin(req, 'forum');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

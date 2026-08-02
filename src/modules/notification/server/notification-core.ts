@@ -3,7 +3,8 @@
  */
 import crypto from 'node:crypto';
 import 'server-only';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getNotificationRepository } from '@/shared/db/repositories';
 import type { Notification, NotificationType } from '../types';
 
 /** 通知行映射接口（DB 行结构） */
@@ -35,64 +36,43 @@ export function toNotification(row: NotificationRow): Notification {
 }
 
 /** 创建单条通知 */
-export function createNotification(
+export async function createNotification(
   userId: string,
   type: NotificationType,
   title: string,
   content?: string | null,
   senderId?: string | null,
-): Notification {
-  const db = getDb();
+): Promise<Notification> {
+  const repo = getNotificationRepository();
+  const engine = await getDbEngine();
   const id = crypto.randomUUID();
 
-  db.prepare(
-    `INSERT INTO notifications (id, user_id, type, title, content, sender_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    userId,
-    type,
-    title,
-    content ?? null,
-    senderId ?? null,
-  );
+  await repo.insertNotification(engine, id, userId, type, title, content ?? null, senderId ?? null);
 
-  const row = db.prepare('SELECT * FROM notifications WHERE id = ?').get(id) as NotificationRow;
-  return toNotification(row);
+  const row = await repo.getNotificationById(id);
+  return toNotification(row as NotificationRow);
 }
 
 /** 向所有活跃用户广播通知 */
-export function createNotificationForAll(
+export async function createNotificationForAll(
   type: NotificationType,
   title: string,
   content?: string | null,
   senderId?: string | null,
-): number {
-  const db = getDb();
+): Promise<number> {
+  const repo = getNotificationRepository();
+  const engine = await getDbEngine();
 
-  const users = db.prepare('SELECT id FROM users WHERE is_active = 1').all() as Array<{ id: string }>;
-
-  const insert = db.prepare(
-    `INSERT INTO notifications (id, user_id, type, title, content, sender_id)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-  );
+  const users = await repo.listActiveUserIds();
 
   let count = 0;
-  const tx = db.transaction(() => {
+  await engine.transaction(async (tx) => {
     for (const user of users) {
       const id = crypto.randomUUID();
-      insert.run(
-        id,
-        user.id,
-        type,
-        title,
-        content ?? null,
-        senderId ?? null,
-      );
+      await repo.insertNotification(tx, id, user.id, type, title, content ?? null, senderId ?? null);
       count++;
     }
   });
 
-  tx();
   return count;
 }

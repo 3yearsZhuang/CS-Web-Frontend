@@ -32,7 +32,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -69,10 +69,10 @@ export async function PUT(
   }
   const body = result.data;
 
-  const confirm = requirePasswordConfirmation(req, body.password_confirmation ?? '');
+  const confirm = await requirePasswordConfirmation(req, body.password_confirmation ?? '');
   if (!confirm.ok) return confirm.response;
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -89,7 +89,7 @@ export async function PUT(
 
   const { id } = await params;
   try {
-    const user = updateUserByAdmin(admin.user.id, id, {
+    const user = await updateUserByAdmin(admin.user.id, id, {
       role: body.role,
       isActive: body.isActive,
       techTags: body.techTags,
@@ -108,10 +108,10 @@ export async function DELETE(
   if (!parsed.ok) return parsed.response;
   const passwordConfirmation = parsed.body.password_confirmation ?? '';
 
-  const confirm = requirePasswordConfirmation(req, passwordConfirmation);
+  const confirm = await requirePasswordConfirmation(req, passwordConfirmation);
   if (!confirm.ok) return confirm.response;
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -128,7 +128,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    deleteUserByAdmin(admin.user.id, id);
+    await deleteUserByAdmin(admin.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

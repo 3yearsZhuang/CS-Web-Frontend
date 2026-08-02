@@ -35,7 +35,7 @@ export async function GET(
 
   const log = createRequestLogger(req);
   try {
-    const result = listUserTopics(id, page, pageSize);
+    const result = await listUserTopics(id, { page, pageSize });
     return NextResponse.json(result);
   } catch (err) {
     log.error({ err }, '获取用户主题列表失败');

@@ -1,11 +1,12 @@
 /**
- * @file TOTP 双因素认证服务层 — 基于 RFC 6238 自实现，secret 加密存储
+ * @file TOTP 双因素认证服务层 — 基于 RFC 6238 自实现，secret 加密存储（ADR-009 async）
  */
 
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
 import { logger } from '@/shared/logger';
 import { hashPassword, verifyPassword } from '@/shared/security/password';
+import { getDbEngine, type DbEngine } from '@/shared/db/drivers';
+import { getAuthRepository } from '@/shared/db/repositories/auth.repo';
 
 // ============ TOTP 核心算法 ============
 
@@ -193,10 +194,10 @@ interface TwoFactorRow {
   updated_at: string;
 }
 
-/** 确保表存在 */
-function ensureTable(): void {
-  const db = getDb();
-  db.exec(`
+/** 确保表存在（DDL，幂等） */
+async function ensureTable(): Promise<void> {
+  const engine: DbEngine = await getDbEngine();
+  await engine.execute(`
     CREATE TABLE IF NOT EXISTS two_factor_auth (
       user_id TEXT PRIMARY KEY,
       secret_encrypted TEXT NOT NULL,
@@ -211,21 +212,21 @@ function ensureTable(): void {
 }
 
 /** 检查用户是否启用了 2FA */
-export function is2FAEnabled(userId: string): boolean {
-  ensureTable();
-  const db = getDb();
-  const row = db.prepare('SELECT enabled FROM two_factor_auth WHERE user_id = ?').get(userId) as { enabled: number } | undefined;
+export async function is2FAEnabled(userId: string): Promise<boolean> {
+  await ensureTable();
+  const repo = await getAuthRepository();
+  const row = await repo.findTwoFactor(userId);
   return row?.enabled === 1;
 }
 
 /** 初始化 2FA 设置（生成 secret + backup codes，但未启用） */
-export function setup2FA(userId: string, email: string): {
+export async function setup2FA(userId: string, email: string): Promise<{
   secret: string;
   otpauthURI: string;
   backupCodes: string[];
-} {
-  ensureTable();
-  const db = getDb();
+}> {
+  await ensureTable();
+  const repo = await getAuthRepository();
 
   const secret = generateTOTPSecret();
   const otpauthURI = generateOTPAuthURI(email, secret);
@@ -233,26 +234,21 @@ export function setup2FA(userId: string, email: string): {
   const hashedBackupCodes = backupCodes.map(hashBackupCode);
   const encryptedSecret = encryptSecret(secret);
 
-  db.prepare(`
-    INSERT INTO two_factor_auth (user_id, secret_encrypted, backup_codes, enabled)
-    VALUES (?, ?, ?, 0)
-    ON CONFLICT(user_id) DO UPDATE SET
-      secret_encrypted = excluded.secret_encrypted,
-      backup_codes = excluded.backup_codes,
-      enabled = 0,
-      enabled_at = NULL,
-      updated_at = datetime('now')
-  `).run(userId, encryptedSecret, JSON.stringify(hashedBackupCodes));
+  await repo.upsertTwoFactor({
+    userId,
+    secretEncrypted: encryptedSecret,
+    backupCodes: JSON.stringify(hashedBackupCodes),
+  });
 
   return { secret, otpauthURI, backupCodes };
 }
 
 /** 确认启用 2FA（验证 TOTP 码后激活） */
-export function confirm2FA(userId: string, code: string): { ok: boolean; error?: string } {
-  ensureTable();
-  const db = getDb();
+export async function confirm2FA(userId: string, code: string): Promise<{ ok: boolean; error?: string }> {
+  await ensureTable();
+  const repo = await getAuthRepository();
 
-  const row = db.prepare('SELECT * FROM two_factor_auth WHERE user_id = ?').get(userId) as TwoFactorRow | undefined;
+  const row = await repo.findTwoFactor(userId);
   if (!row) {
     return { ok: false, error: '请先初始化 2FA 设置' };
   }
@@ -265,19 +261,17 @@ export function confirm2FA(userId: string, code: string): { ok: boolean; error?:
     return { ok: false, error: '验证码错误' };
   }
 
-  db.prepare(
-    "UPDATE two_factor_auth SET enabled = 1, enabled_at = datetime('now'), updated_at = datetime('now') WHERE user_id = ?",
-  ).run(userId);
+  await repo.enableTwoFactor(userId);
 
   return { ok: true };
 }
 
 /** 验证 TOTP 码或备用码（登录时调用） */
-export function verify2FA(userId: string, code: string): boolean {
-  ensureTable();
-  const db = getDb();
+export async function verify2FA(userId: string, code: string): Promise<boolean> {
+  await ensureTable();
+  const repo = await getAuthRepository();
 
-  const row = db.prepare('SELECT * FROM two_factor_auth WHERE user_id = ? AND enabled = 1').get(userId) as TwoFactorRow | undefined;
+  const row = await repo.findTwoFactor(userId);
   if (!row) return true; // 未启用 2FA，直接放行
 
   const secret = decryptSecret(row.secret_encrypted);
@@ -294,10 +288,7 @@ export function verify2FA(userId: string, code: string): boolean {
     if (verifyBackupCode(code, backupCodes[i])) {
       // 使用后删除该备用码
       backupCodes.splice(i, 1);
-      db.prepare('UPDATE two_factor_auth SET backup_codes = ?, updated_at = datetime(\'now\') WHERE user_id = ?').run(
-        JSON.stringify(backupCodes),
-        userId,
-      );
+      await repo.updateTwoFactorBackupCodes(userId, JSON.stringify(backupCodes));
       return true;
     }
   }
@@ -306,34 +297,31 @@ export function verify2FA(userId: string, code: string): boolean {
 }
 
 /** 禁用 2FA（需要验证码） */
-export function disable2FA(userId: string, code: string): { ok: boolean; error?: string } {
-  ensureTable();
-  const db = getDb();
+export async function disable2FA(userId: string, code: string): Promise<{ ok: boolean; error?: string }> {
+  await ensureTable();
+  const repo = await getAuthRepository();
 
-  if (!verify2FA(userId, code)) {
+  if (!(await verify2FA(userId, code))) {
     return { ok: false, error: '验证码错误' };
   }
 
-  db.prepare('DELETE FROM two_factor_auth WHERE user_id = ?').run(userId);
+  await repo.deleteTwoFactor(userId);
   return { ok: true };
 }
 
 /** 重新生成备用码（需要验证当前 TOTP） */
-export function regenerateBackupCodes(userId: string, code: string): { ok: boolean; codes?: string[]; error?: string } {
-  ensureTable();
-  const db = getDb();
+export async function regenerateBackupCodes(userId: string, code: string): Promise<{ ok: boolean; codes?: string[]; error?: string }> {
+  await ensureTable();
+  const repo = await getAuthRepository();
 
-  if (!verify2FA(userId, code)) {
+  if (!(await verify2FA(userId, code))) {
     return { ok: false, error: '验证码错误' };
   }
 
   const newCodes = generateBackupCodes();
   const hashed = newCodes.map(hashBackupCode);
 
-  db.prepare('UPDATE two_factor_auth SET backup_codes = ?, updated_at = datetime(\'now\') WHERE user_id = ?').run(
-    JSON.stringify(hashed),
-    userId,
-  );
+  await repo.updateTwoFactorBackupCodes(userId, JSON.stringify(hashed));
 
   return { ok: true, codes: newCodes };
 }

@@ -20,7 +20,7 @@ import { reviewResourceSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -83,7 +83,7 @@ export async function PATCH(req: Request) {
   };
 
   try {
-    const reviewResult = reviewResource(resourceId, admin.user.id, input, ip, undefined);
+    const reviewResult = await reviewResource(resourceId, admin.user.id, input, ip, undefined);
     if (!reviewResult.ok) {
       return NextResponse.json({ error: reviewResult.error }, { status: 400 });
     }

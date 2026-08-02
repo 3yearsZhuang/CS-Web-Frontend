@@ -21,7 +21,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -44,7 +44,7 @@ export async function POST(
 
   const { id } = await params;
   try {
-    rejectResetRequest(admin.user.id, id, note);
+    await rejectResetRequest(admin.user.id, id, note);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

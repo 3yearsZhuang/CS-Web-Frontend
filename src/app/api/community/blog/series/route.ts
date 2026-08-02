@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
   if (originErr) return originErr;
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   try {
     const body = await req.json();
-    const series = createSeries(session.user.id, body);
+    const series = await createSeries(session.user.id, body);
     return NextResponse.json({ series }, { status: 201 });
   } catch (e: unknown) {
     if (e instanceof Error && e.name === 'VALIDATION_ERROR') {

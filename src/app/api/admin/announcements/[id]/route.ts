@@ -28,7 +28,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -52,7 +52,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -77,7 +77,7 @@ export async function PATCH(
     return jsonError('公告不存在', 404);
   }
 
-  logAdminAction(admin.user.id, 'update_announcement', null, {
+  await logAdminAction(admin.user.id, 'update_announcement', null, {
     announcementId: id,
     changes: result.data,
   });
@@ -89,7 +89,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -106,7 +106,7 @@ export async function DELETE(
     return jsonError('公告不存在', 404);
   }
 
-  logAdminAction(admin.user.id, 'delete_announcement', null, {
+  await logAdminAction(admin.user.id, 'delete_announcement', null, {
     announcementId: id,
   });
 

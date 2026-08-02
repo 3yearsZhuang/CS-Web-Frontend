@@ -37,7 +37,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const { id: eventId } = await params;
@@ -55,7 +55,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -75,7 +75,7 @@ export async function POST(
 
   if (body.action === 'generate') {
     try {
-      const result = generateCheckinCodes(admin.user.id, eventId);
+      const result = await generateCheckinCodes(admin.user.id, eventId);
       return NextResponse.json(result);
     } catch (err) {
       return errorResponse(err);
@@ -92,7 +92,7 @@ export async function POST(
     }
 
     try {
-      const checkinResult = checkinByCode(admin.user.id, eventId, result.data.code);
+      const checkinResult = await checkinByCode(admin.user.id, eventId, result.data.code);
       if (!checkinResult.ok) {
         return NextResponse.json({ error: checkinResult.error }, { status: 400 });
       }

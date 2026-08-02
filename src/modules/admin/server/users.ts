@@ -5,7 +5,8 @@
  * 删除用户级联清理 sessions 等；列表不返回 password_hash。
  */
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
+import { getAdminRepository } from '@/shared/db/repositories';
+import type { QueryParams } from '@/shared/db/drivers';
 import { toSafeUser, isAdminRole, type SafeUser, type UserRow } from '@/shared/types';
 import { validateProfileFields, type ProfileFields } from '@/modules/user/types';
 import { computePagination, computeTotalPages } from '@/shared/utils/pagination';
@@ -17,17 +18,14 @@ import type { AdminUserUpdate, ListUsersParams, UserListResult } from '../types'
 export type { AdminUserUpdate, ListUsersParams, UserListResult };
 
 /** 统计当前启用管理员数量 — 用于"最后管理员保护"，禁止降级/删除最后一个 active admin */
-function countActiveAdmins(): number {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT COUNT(*) as cnt FROM users WHERE role IN ('admin', 'content_moderator', 'exam_admin', 'task_publisher') AND is_active = 1")
-    .get() as { cnt: number };
-  return row.cnt;
+async function countActiveAdmins(): Promise<number> {
+  const repo = getAdminRepository();
+  return repo.countActiveAdmins();
 }
 
 /** 列出所有用户（分页 + 搜索 + 筛选）— 不返回 password_hash */
-export function listUsers(params: ListUsersParams = {}): UserListResult {
-  const db = getDb();
+export async function listUsers(params: ListUsersParams = {}): Promise<UserListResult> {
+  const repo = getAdminRepository();
   const {
     search,
     role = 'all',
@@ -37,7 +35,7 @@ export function listUsers(params: ListUsersParams = {}): UserListResult {
   } = params;
 
   const conditions: string[] = [];
-  const args: unknown[] = [];
+  const args: QueryParams = [];
 
   if (search) {
     conditions.push('(email LIKE ? OR display_name LIKE ?)');
@@ -58,9 +56,7 @@ export function listUsers(params: ListUsersParams = {}): UserListResult {
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const total = (db.prepare(`SELECT COUNT(*) as cnt FROM users ${where}`).get(...args) as {
-    cnt: number;
-  }).cnt;
+  const total = await repo.countUsers(where, args);
 
   const { page: safePage, pageSize: safePageSize, offset } = computePagination({
     page,
@@ -69,16 +65,12 @@ export function listUsers(params: ListUsersParams = {}): UserListResult {
     maxPageSize: 200,
   });
 
-  const rows = db
-    .prepare(
-      `SELECT * FROM users ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-    )
-    .all(...args, safePageSize, offset) as UserRow[];
+  const rows = await repo.listUsers(where, [...args, safePageSize, offset] as QueryParams);
 
   const totalPages = computeTotalPages(total, safePageSize);
 
   return {
-    users: rows.map(toSafeUser),
+    users: rows.map((r) => toSafeUser(r as UserRow)),
     total,
     page: safePage,
     pageSize: safePageSize,
@@ -87,25 +79,21 @@ export function listUsers(params: ListUsersParams = {}): UserListResult {
 }
 
 /** 获取单个用户（管理员查看） */
-export function getUserById(userId: string): SafeUser | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as
-    | UserRow
-    | undefined;
+export async function getUserById(userId: string): Promise<SafeUser | null> {
+  const repo = getAdminRepository();
+  const row = await repo.getUserById(userId);
   return row ? toSafeUser(row) : null;
 }
 
 /** 管理员更新用户 — 仅 root；root 不可被改、不可降级/禁用自己、不可动最后一个 admin；角色变更仅 user↔admin（不可提升为 root）；抛 VALIDATION_ERROR/NOT_FOUND/SELF_DEMOTE/SELF_DISABLE/LAST_ADMIN/ROOT_PROTECTED */
-export function updateUserByAdmin(
+export async function updateUserByAdmin(
   adminId: string,
   targetUserId: string,
   update: AdminUserUpdate,
   auditCtx?: AuditContext,
-): SafeUser {
-  const db = getDb();
-  const target = db.prepare('SELECT * FROM users WHERE id = ?').get(targetUserId) as
-    | UserRow
-    | undefined;
+): Promise<SafeUser> {
+  const repo = getAdminRepository();
+  const target = await repo.getUserById(targetUserId);
   if (!target) {
     throw new AppError('用户不存在', 'NOT_FOUND');
   }
@@ -114,8 +102,7 @@ export function updateUserByAdmin(
     throw new AppError('超级管理员账号不可被修改', 'ROOT_PROTECTED');
   }
 
-  const sets: string[] = [];
-  const values: unknown[] = [];
+  const sets: Record<string, string | number | null> = {};
   const auditDetails: Record<string, unknown> = {};
 
   const fieldsValidation = validateProfileFields(update);
@@ -124,23 +111,19 @@ export function updateUserByAdmin(
   }
   const clean = fieldsValidation.clean;
   if (clean.displayName !== undefined) {
-    sets.push('display_name = ?');
-    values.push(clean.displayName);
+    sets['display_name'] = clean.displayName;
     auditDetails.displayName = clean.displayName;
   }
   if (clean.bio !== undefined) {
-    sets.push('bio = ?');
-    values.push(clean.bio);
+    sets['bio'] = clean.bio;
     auditDetails.bio = clean.bio;
   }
   if (clean.githubUrl !== undefined) {
-    sets.push('github_url = ?');
-    values.push(clean.githubUrl);
+    sets['github_url'] = clean.githubUrl;
     auditDetails.githubUrl = clean.githubUrl;
   }
   if (clean.websiteUrl !== undefined) {
-    sets.push('website_url = ?');
-    values.push(clean.websiteUrl);
+    sets['website_url'] = clean.websiteUrl;
     auditDetails.websiteUrl = clean.websiteUrl;
   }
 
@@ -149,9 +132,7 @@ export function updateUserByAdmin(
     if (!tagsValidation.ok) {
       throw new AppError(tagsValidation.error, 'VALIDATION_ERROR');
     }
-    sets.push('tech_tags = ?');
-    const tagsJson = JSON.stringify(tagsValidation.tags);
-    values.push(tagsJson);
+    sets['tech_tags'] = JSON.stringify(tagsValidation.tags);
     auditDetails.techTags = tagsValidation.tags;
   }
 
@@ -167,13 +148,12 @@ export function updateUserByAdmin(
       update.role === 'user' &&
       isAdminRole(target.role) &&
       target.is_active === 1 &&
-      countActiveAdmins() <= 1
+      (await countActiveAdmins()) <= 1
     ) {
       throw new AppError('不能降级最后一个管理员，请先提升其他用户为管理员', 'LAST_ADMIN');
     }
     if (target.role !== update.role) {
-      sets.push('role = ?');
-      values.push(update.role);
+      sets['role'] = update.role;
       auditDetails.role = { from: target.role, to: update.role };
     }
   }
@@ -187,56 +167,48 @@ export function updateUserByAdmin(
       newActive === 0 &&
       target.is_active === 1 &&
       isAdminRole(target.role) &&
-      countActiveAdmins() <= 1
+      (await countActiveAdmins()) <= 1
     ) {
       throw new AppError('不能禁用最后一个管理员，请先提升其他用户为管理员', 'LAST_ADMIN');
     }
     if (target.is_active !== newActive) {
-      sets.push('is_active = ?');
-      values.push(newActive);
+      sets['is_active'] = newActive;
       auditDetails.isActive = { from: target.is_active === 1, to: update.isActive };
     }
   }
 
-  if (sets.length === 0) {
+  if (Object.keys(sets).length === 0) {
     return toSafeUser(target);
   }
 
-  sets.push("updated_at = datetime('now')");
-  values.push(targetUserId);
+  await repo.updateUser(targetUserId, sets);
 
-  db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...values);
+  const updated = await repo.getUserById(targetUserId);
 
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(targetUserId) as UserRow;
-
-  logAdminAction(adminId, 'update_user', targetUserId, auditDetails, auditCtx?.ip, auditCtx?.userAgent);
+  await logAdminAction(adminId, 'update_user', targetUserId, auditDetails, auditCtx?.ip, auditCtx?.userAgent);
 
   if (update.isActive === false && target.is_active === 1) {
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(targetUserId);
+    await repo.deleteSessionsByUserId(targetUserId);
   }
 
-  return toSafeUser(updated);
+  return toSafeUser(updated as UserRow);
 }
 
 /** 管理员禁用/启用用户 — admin/root 均可；普通管理员不可操作其他管理员；抛 NOT_FOUND/ROOT_PROTECTED/FORBIDDEN/SELF_DISABLE/LAST_ADMIN/NO_CHANGE */
-export function setUserActiveByAdmin(
+export async function setUserActiveByAdmin(
   adminId: string,
   targetUserId: string,
   active: boolean,
   auditCtx?: AuditContext,
-): SafeUser {
-  const db = getDb();
-  const admin = db.prepare('SELECT role FROM users WHERE id = ?').get(adminId) as
-    | { role: string }
-    | undefined;
+): Promise<SafeUser> {
+  const repo = getAdminRepository();
+  const admin = await repo.getUserRole(adminId);
   if (!admin) {
     throw new AppError('操作者不存在', 'NOT_FOUND');
   }
   const isAdminOperator = admin.role !== 'root';
 
-  const target = db.prepare('SELECT id, role, is_active FROM users WHERE id = ?').get(targetUserId) as
-    | { id: string; role: string; is_active: number }
-    | undefined;
+  const target = await repo.getUserActiveState(targetUserId);
   if (!target) {
     throw new AppError('用户不存在', 'NOT_FOUND');
   }
@@ -257,7 +229,7 @@ export function setUserActiveByAdmin(
     !active &&
     target.is_active === 1 &&
     isAdminRole(target.role) &&
-    countActiveAdmins() <= 1
+    (await countActiveAdmins()) <= 1
   ) {
     throw new AppError('不能禁用最后一个管理员，请先提升其他用户为管理员', 'LAST_ADMIN');
   }
@@ -267,34 +239,29 @@ export function setUserActiveByAdmin(
     throw new AppError('状态无变化', 'NO_CHANGE');
   }
 
-  db.prepare("UPDATE users SET is_active = ?, updated_at = datetime('now') WHERE id = ?").run(
-    newActive,
-    targetUserId,
-  );
+  await repo.setUserActive(targetUserId, newActive);
 
-  logAdminAction(adminId, active ? 'enable_user' : 'disable_user', targetUserId, {
+  await logAdminAction(adminId, active ? 'enable_user' : 'disable_user', targetUserId, {
     from: target.is_active === 1,
     to: active,
   }, auditCtx?.ip, auditCtx?.userAgent);
 
   if (!active && target.is_active === 1) {
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(targetUserId);
+    await repo.deleteSessionsByUserId(targetUserId);
   }
 
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(targetUserId) as UserRow;
-  return toSafeUser(updated);
+  const updated = await repo.getUserById(targetUserId);
+  return toSafeUser(updated as UserRow);
 }
 
 /** 管理员删除用户（硬删除）— 仅 root；root 不可删、不可删自己、不可删最后一个 admin；审计保留（admin_id 置 NULL 防销毁证据）；抛 NOT_FOUND/SELF_DELETE/LAST_ADMIN/ROOT_PROTECTED */
-export function deleteUserByAdmin(adminId: string, targetUserId: string, auditCtx?: AuditContext): void {
+export async function deleteUserByAdmin(adminId: string, targetUserId: string, auditCtx?: AuditContext): Promise<void> {
   if (adminId === targetUserId) {
     throw new AppError('不能删除自己的账号', 'SELF_DELETE');
   }
 
-  const db = getDb();
-  const target = db.prepare('SELECT id, email, role, is_active FROM users WHERE id = ?').get(targetUserId) as
-    | { id: string; email: string; role: string; is_active: number }
-    | undefined;
+  const repo = getAdminRepository();
+  const target = await repo.getUserActiveState(targetUserId);
   if (!target) {
     throw new AppError('用户不存在', 'NOT_FOUND');
   }
@@ -303,18 +270,19 @@ export function deleteUserByAdmin(adminId: string, targetUserId: string, auditCt
     throw new AppError('超级管理员账号不可被删除', 'ROOT_PROTECTED');
   }
 
-  if (isAdminRole(target.role) && target.is_active === 1 && countActiveAdmins() <= 1) {
+  if (isAdminRole(target.role) && target.is_active === 1 && (await countActiveAdmins()) <= 1) {
     throw new AppError('不能删除最后一个管理员，请先提升其他用户为管理员', 'LAST_ADMIN');
   }
 
-  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(targetUserId);
-  db.prepare('DELETE FROM activity_participations WHERE user_id = ?').run(targetUserId);
+  const fullTarget = await repo.getUserById(targetUserId);
 
-  db.prepare('DELETE FROM users WHERE id = ?').run(targetUserId);
+  await repo.deleteSessionsByUserId(targetUserId);
+  await repo.deleteParticipationsByUserId(targetUserId);
+  await repo.deleteUser(targetUserId);
 
-  logAdminAction(adminId, 'delete_user', null, {
+  await logAdminAction(adminId, 'delete_user', null, {
     deletedUserId: targetUserId,
-    email: target.email,
+    email: fullTarget?.email,
     role: target.role,
   }, auditCtx?.ip, auditCtx?.userAgent);
 }

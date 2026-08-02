@@ -32,7 +32,7 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   // 1. 管理员身份校验
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   // 2. Origin 白名单校验
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   // 1. 管理员身份校验
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   // 2. Origin 白名单校验
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   const { title, content, type } = result.data;
 
   // 5. 群发
-  const count = createNotificationForAll(
+  const count = await createNotificationForAll(
     type,
     title.trim(),
     content.trim() || null,
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
   );
 
   // 6. 审计日志
-  logAdminAction(admin.user.id, 'broadcast_notification', null, {
+  await logAdminAction(admin.user.id, 'broadcast_notification', null, {
     title,
     contentPreview: content ? content.slice(0, 80) : null,
     type,

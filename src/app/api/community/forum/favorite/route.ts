@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   const { topicId } = result.data;
 
   try {
-    const result = toggleFavorite(session.user.id, topicId);
+    const result = await toggleFavorite(session.user.id, topicId);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     return errorResponse(err);

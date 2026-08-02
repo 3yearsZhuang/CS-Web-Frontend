@@ -31,7 +31,7 @@ import {
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -97,7 +97,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

@@ -24,7 +24,7 @@ import { assertAllowedOrigin, errorResponse } from '@/shared/security/security';
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
-  const admin = requireModuleAdmin(req, 'task');
+  const admin = await requireModuleAdmin(req, 'task');
   if (!admin.ok) return admin.response;
 
   const params = req.nextUrl.searchParams;
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const admin = requireModuleAdmin(req, 'task');
+  const admin = await requireModuleAdmin(req, 'task');
   if (!admin.ok) return admin.response;
 
   const params = req.nextUrl.searchParams;
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少认领 ID' }, { status: 400 });
     }
     try {
-      const result = reviewClaim(admin.user.id, claimId, approved === true, note);
+      const result = await reviewClaim(admin.user.id, claimId, approved === true, note);
       return NextResponse.json({ claim: result });
     } catch (e: unknown) {
       return errorResponse(e);
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少任务 ID' }, { status: 400 });
     }
     try {
-      const task = publishTask(admin.user.id, taskId);
+      const task = await publishTask(admin.user.id, taskId);
       return NextResponse.json({ task });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少任务 ID' }, { status: 400 });
     }
     try {
-      const task = closeTask(admin.user.id, taskId);
+      const task = await closeTask(admin.user.id, taskId);
       return NextResponse.json({ task });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   try {
-    const task = createTask(admin.user.id, body);
+    const task = await createTask(admin.user.id, body);
     return NextResponse.json({ task }, { status: 201 });
   } catch (e: unknown) {
     if (e instanceof Error && e.name === 'VALIDATION_ERROR') {
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const admin = requireModuleAdmin(req, 'task');
+  const admin = await requireModuleAdmin(req, 'task');
   if (!admin.ok) return admin.response;
 
   const body = await req.json();
@@ -137,7 +137,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const task = updateTask(admin.user.id, taskId, input);
+    const task = await updateTask(admin.user.id, taskId, input);
     return NextResponse.json({ task });
   } catch (e: unknown) {
     if (e instanceof Error && e.name === 'NOT_FOUND') {
@@ -153,11 +153,11 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const admin = requireModuleAdmin(req, 'task');
+  const admin = await requireModuleAdmin(req, 'task');
   if (!admin.ok) return admin.response;
 
   const body = await req.json();
-  const passwordResult = requirePasswordConfirmation(req, body.password || '');
+  const passwordResult = await requirePasswordConfirmation(req, body.password || '');
   if (!passwordResult.ok) return passwordResult.response;
 
   const params = req.nextUrl.searchParams;
@@ -168,7 +168,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    deleteTask(admin.user.id, taskId);
+    await deleteTask(admin.user.id, taskId);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     if (e instanceof Error && e.name === 'NOT_FOUND') {

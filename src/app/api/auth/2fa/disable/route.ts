@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const result = disable2FA(session.user.id, code);
+  const result = await disable2FA(session.user.id, code);
   if (!result.ok) {
     return NextResponse.json({ error: result.error, code: '2FA_FAILED' }, { status: 400 });
   }

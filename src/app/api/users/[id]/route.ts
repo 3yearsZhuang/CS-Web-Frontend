@@ -22,11 +22,11 @@ export async function GET(
   const { id } = await params;
 
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  const session = token ? getSession(token) : null;
+  const session = token ? await getSession(token) : null;
   const isLoggedIn = session !== null;
 
   // DB 查询下沉至 user/server 层，返回不含敏感字段的公开资料 + 统计。
-  const profile = getPublicUserProfile(id);
+  const profile = await getPublicUserProfile(id);
   if (!profile) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }
@@ -35,7 +35,7 @@ export async function GET(
   return NextResponse.json({
     user: {
       id: profile.user.id,
-      email: isLoggedIn ? maskEmail(profile.user.email) ?? undefined : undefined,
+      email: isLoggedIn ? await maskEmail(profile.user.email) ?? undefined : undefined,
       displayName: profile.user.displayName,
       bio: profile.user.bio,
       avatarUrl: profile.user.avatarUrl,

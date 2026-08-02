@@ -29,10 +29,10 @@ export async function POST(
   }
   const { password, password_confirmation } = result.data;
 
-  const confirm = requirePasswordConfirmation(req, password_confirmation ?? '');
+  const confirm = await requirePasswordConfirmation(req, password_confirmation ?? '');
   if (!confirm.ok) return confirm.response;
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -49,7 +49,7 @@ export async function POST(
 
   const { id } = await params;
   try {
-    resetUserPasswordCustom(admin.user.id, id, password);
+    await resetUserPasswordCustom(admin.user.id, id, password);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

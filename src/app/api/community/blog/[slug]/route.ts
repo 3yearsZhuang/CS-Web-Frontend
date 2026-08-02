@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
@@ -24,13 +24,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   if (post.status !== 'published') {
     const token = getCookieValue(req, AUTH_COOKIE_NAME);
-    const session = token ? getSession(token) : null;
-    if (!session || (session.user.id !== post.authorId && !isAdminRole(session.user.role))) {
+    const session = token ? await getSession(token) : null;
+    if (!session || (session.user.id !== post.authorId && !await isAdminRole(session.user.role))) {
       return NextResponse.json({ error: '无权查看' }, { status: 403 });
     }
   }
 
-  incrementViewCount(post.id);
+  await incrementViewCount(post.id);
 
   return NextResponse.json({ post });
 }
@@ -40,19 +40,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
   if (originErr) return originErr;
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
-  const isAdmin = isAdminRole(session.user.role);
+  const isAdmin = await isAdminRole(session.user.role);
   try {
     const body = await req.json();
-    const updated = updatePost(session.user.id, post.id, body, isAdmin);
+    const updated = await updatePost(post.id, body, session.user.id);
     return NextResponse.json({ post: updated });
   } catch (e: unknown) {
     const statusMap: Record<string, number> = {
@@ -71,18 +71,18 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug:
   if (originErr) return originErr;
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
-  const isAdmin = isAdminRole(session.user.role);
+  const isAdmin = await isAdminRole(session.user.role);
   try {
-    deletePost(session.user.id, post.id, isAdmin);
+    await deletePost(post.id, session.user.id);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const statusMap: Record<string, number> = { NOT_FOUND: 404, FORBIDDEN: 403 };

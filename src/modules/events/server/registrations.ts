@@ -1,10 +1,9 @@
 /**
- * @file 活动报名列表服务（管理员视角）
+ * @file 活动报名列表服务（管理员视角，已迁移至 Repository 抽象层，ADR-009）
  *
  * 提供带用户信息的报名列表查询，供管理员后台使用。
  */
-
-import { getDb } from '@/shared/db';
+import { getEventsRepository } from '@/shared/db/repositories/events.repo';
 
 /** 管理员视角的报名记录（含用户邮箱与昵称） */
 export interface AdminEventRegistration {
@@ -20,29 +19,9 @@ export interface AdminEventRegistration {
 }
 
 /** 列出某活动的所有报名记录（含用户信息，按报名时间升序） */
-export function listRegistrations(eventId: string): AdminEventRegistration[] {
-  const db = getDb();
-
-  const rows = db
-    .prepare(
-      `SELECT r.id, r.user_id, r.event_id, r.status, r.form_data, r.registered_at, r.cancelled_at,
-              u.email, u.display_name
-       FROM event_registrations r
-       LEFT JOIN users u ON r.user_id = u.id
-       WHERE r.event_id = ?
-       ORDER BY r.registered_at ASC`,
-    )
-    .all(eventId) as Array<{
-      id: string;
-      user_id: string;
-      event_id: string;
-      status: string;
-      form_data: string | null;
-      registered_at: string;
-      cancelled_at: string | null;
-      email: string | null;
-      display_name: string | null;
-    }>;
+export async function listRegistrations(eventId: string): Promise<AdminEventRegistration[]> {
+  const repo = getEventsRepository();
+  const rows = await repo.listRegistrations(eventId);
 
   return rows.map((r) => {
     let formData: Record<string, string> | null = null;

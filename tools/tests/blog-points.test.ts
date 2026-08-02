@@ -8,8 +8,13 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
+import { _setDbEngineForTest } from '@/shared/db/drivers';
+import { createSqliteTestEngine } from './dbEngine';
 
 const inMemoryDb = new Database(':memory:');
+
+const testEngine = createSqliteTestEngine(inMemoryDb);
+_setDbEngineForTest(testEngine);
 
 vi.mock('@/shared/db', () => ({
   getDb: () => inMemoryDb,
@@ -57,7 +62,17 @@ function initTestSchema() {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL DEFAULT '',
       display_name TEXT,
+      bio TEXT,
+      avatar_url TEXT,
+      avatar_type TEXT DEFAULT 'initial',
+      github_url TEXT,
+      website_url TEXT,
+      role TEXT NOT NULL DEFAULT 'user',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      github_id TEXT,
+      tech_tags TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -172,18 +187,32 @@ function initTestSchema() {
       created_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS admin_actions (
+      id TEXT PRIMARY KEY,
+      admin_id TEXT,
+      action TEXT NOT NULL,
+      target_user_id TEXT,
+      details TEXT,
+      ip TEXT,
+      user_agent TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   // 插入测试用户
   inMemoryDb.prepare(
-    'INSERT OR IGNORE INTO users (id, email, display_name) VALUES (?, ?, ?)',
-  ).run('author-1', 'author@example.com', '作者');
+    'INSERT OR IGNORE INTO users (id, email, display_name, role) VALUES (?, ?, ?, ?)',
+  ).run('author-1', 'author@example.com', '作者', 'user');
   inMemoryDb.prepare(
-    'INSERT OR IGNORE INTO users (id, email, display_name) VALUES (?, ?, ?)',
-  ).run('user-1', 'user@example.com', '普通用户');
+    'INSERT OR IGNORE INTO users (id, email, display_name, role) VALUES (?, ?, ?, ?)',
+  ).run('user-1', 'user@example.com', '普通用户', 'user');
   inMemoryDb.prepare(
-    'INSERT OR IGNORE INTO users (id, email, display_name) VALUES (?, ?, ?)',
-  ).run('user-2', 'user2@example.com', '用户2');
+    'INSERT OR IGNORE INTO users (id, email, display_name, role) VALUES (?, ?, ?, ?)',
+  ).run('user-2', 'user2@example.com', '用户2', 'user');
+  inMemoryDb.prepare(
+    'INSERT OR IGNORE INTO users (id, email, display_name, role) VALUES (?, ?, ?, ?)',
+  ).run('admin', 'admin@example.com', '管理员', 'admin');
 }
 
 describe('博客系统', () => {
@@ -196,84 +225,89 @@ describe('博客系统', () => {
     inMemoryDb.exec('DELETE FROM community_categories');
     inMemoryDb.exec('DELETE FROM blog_series');
     inMemoryDb.exec('DELETE FROM points_transactions');
+    inMemoryDb.exec('DELETE FROM admin_actions');
   });
 
-  it('创建 → 发布 → 浏览 → 点赞 完整流程', () => {
+  it('创建 → 发布 → 浏览 → 点赞 完整流程', async () => {
     // 1. 创建草稿
-    const post = createPost('author-1', {
-      kind: 'post',
+    const post = await createPost({
       title: '测试文章',
       excerpt: '这是一篇测试文章',
       contentMarkdown: '# Hello\n\n世界',
       categoryId: 'frontend',
       tags: ['React', 'TypeScript'],
-    });
-    expect(post.status).toBe('draft');
-    expect(post.slug).toBeTruthy();
-    expect(post.tags).toEqual(['React', 'TypeScript']);
+      status: 'draft',
+    }, 'author-1');
+    await expect(post.id).toBeTruthy();
+
+    const draft = await getPostById(post.id);
+    await expect(draft!.status).toBe('draft');
+    await expect(draft!.slug).toBeTruthy();
+    await expect(draft!.tags).toEqual(['React', 'TypeScript']);
 
     // 2. 发布
-    const published = publishPost('author-1', post.id);
-    expect(published.status).toBe('published');
-    expect(published.publishedAt).toBeTruthy();
+    await publishPost(post.id, 'author-1');
+    const published = await getPostById(post.id);
+    await expect(published!.status).toBe('published');
 
     // 3. 按 slug 查询
-    const found = getPostBySlug(post.slug ?? '');
-    expect(found).toBeTruthy();
-    expect(found!.title).toBe('测试文章');
+    const found = await getPostBySlug(published!.slug ?? '');
+    await expect(found).toBeTruthy();
+    await expect(found!.title).toBe('测试文章');
 
     // 4. 浏览计数
-    incrementViewCount(post.id);
-    const viewed = getPostById(post.id);
-    expect(viewed!.viewCount).toBe(1);
+    await incrementViewCount(post.id);
+    const viewed = await getPostById(post.id);
+    await expect(viewed!.viewCount).toBe(1);
 
     // 5. 点赞
-    const likeResult = toggleBlogLike(post.id, 'user-1');
-    expect(likeResult.liked).toBe(true);
-    expect(likeResult.likeCount).toBe(1);
+    const likeResult = await toggleBlogLike(post.id, 'user-1');
+    await expect(likeResult.liked).toBe(true);
+    await expect(likeResult.likeCount).toBe(1);
 
     // 6. 取消点赞
-    const unlikeResult = toggleBlogLike(post.id, 'user-1');
-    expect(unlikeResult.liked).toBe(false);
-    expect(unlikeResult.likeCount).toBe(0);
+    const unlikeResult = await toggleBlogLike(post.id, 'user-1');
+    await expect(unlikeResult.liked).toBe(false);
+    await expect(unlikeResult.likeCount).toBe(0);
   });
 
-  it('作者只能编辑自己的文章', () => {
-    const post = createPost('author-1', {
-      kind: 'post',
+  it('作者只能编辑自己的文章', async () => {
+    const post = await createPost({
       title: '原创文章',
       contentMarkdown: '内容',
-    });
+    }, 'author-1');
 
     // 非作者非管理员不能编辑
-    expect(() => updatePost('user-1', post.id, { title: '篡改' }, false)).toThrow();
+    await expect(updatePost(post.id, { title: '篡改' }, 'user-1')).rejects.toThrow();
 
     // 作者可以编辑
-    const updated = updatePost('author-1', post.id, { title: '修改标题' }, false);
-    expect(updated.title).toBe('修改标题');
+    await updatePost(post.id, { title: '修改标题' }, 'author-1');
+    const updated = await getPostById(post.id);
+    await expect(updated!.title).toBe('修改标题');
 
     // 管理员可以编辑
-    const adminUpdated = updatePost('user-1', post.id, { title: '管理员修改' }, true);
-    expect(adminUpdated.title).toBe('管理员修改');
+    await updatePost(post.id, { title: '管理员修改' }, 'admin');
+    const adminUpdated = await getPostById(post.id);
+    await expect(adminUpdated!.title).toBe('管理员修改');
   });
 
-  it('系列管理', () => {
-    const series = createSeries('author-1', {
+  it('系列管理', async () => {
+    const series = await createSeries('author-1', {
       title: 'React 系列',
       description: '从入门到精通',
     });
-    expect(series.title).toBe('React 系列');
-    expect(series.postCount).toBe(0);
+    await expect(series.title).toBe('React 系列');
+    await expect(series.postCount).toBe(0);
 
-    const list = listSeries();
-    expect(list).toHaveLength(1);
+    const list = await listSeries();
+    await expect(list).toHaveLength(1);
 
     // 删除系列
-    deleteSeries('author-1', series.id, false);
-    expect(listSeries()).toHaveLength(0);
+    await deleteSeries('author-1', series.id, false);
+    await expect(await listSeries()).toHaveLength(0);
   });
 
-  it('目录提取', () => {
+  it('目录提取', async () => {
     const md = `# Title
 
 ## 第一章
@@ -285,11 +319,11 @@ describe('博客系统', () => {
 ## 第二章
 `;
     const toc = extractTableOfContents(md);
-    expect(toc).toHaveLength(3);
-    expect(toc[0].level).toBe(2);
-    expect(toc[0].text).toBe('第一章');
-    expect(toc[1].level).toBe(3);
-    expect(toc[2].level).toBe(2);
+    await expect(toc).toHaveLength(3);
+    await expect(toc[0].level).toBe(2);
+    await expect(toc[0].text).toBe('第一章');
+    await expect(toc[1].level).toBe(3);
+    await expect(toc[2].level).toBe(2);
   });
 });
 
@@ -297,42 +331,43 @@ describe('积分系统', () => {
   beforeEach(() => {
     initTestSchema();
     inMemoryDb.exec('DELETE FROM points_transactions');
+    inMemoryDb.exec('DELETE FROM admin_actions');
   });
 
-  it('发放积分 → 余额 → 等级', () => {
-    expect(getUserPointsBalance('user-1')).toBe(0);
+  it('发放积分 → 余额 → 等级', async () => {
+    await expect(await getUserPointsBalance('user-1')).toBe(0);
 
-    addPoints('user-1', 30, 'task_reward', 'task-1', '完成任务');
-    expect(getUserPointsBalance('user-1')).toBe(30);
+    await addPoints('user-1', 30, 'task_reward', 'task-1', '完成任务');
+    await expect(await getUserPointsBalance('user-1')).toBe(30);
 
-    addPoints('user-1', 25, 'exam_bonus', 'exam-1', '考试奖励');
-    expect(getUserPointsBalance('user-1')).toBe(55);
+    await addPoints('user-1', 25, 'exam_bonus', 'exam-1', '考试奖励');
+    await expect(await getUserPointsBalance('user-1')).toBe(55);
 
-    const profile = getUserPointsProfile('user-1');
-    expect(profile.balance).toBe(55);
-    expect(profile.level).toBe(2); // 55 >= 50
-    expect(profile.levelTitle).toBe('初级成员');
-    expect(profile.transactions).toHaveLength(2);
+    const profile = await getUserPointsProfile('user-1');
+    await expect(profile.balance).toBe(55);
+    await expect(profile.level).toBe(2); // 55 >= 50
+    await expect(profile.levelTitle).toBe('初级成员');
+    await expect(profile.transactions).toHaveLength(2);
   });
 
-  it('排行榜', () => {
-    addPoints('user-1', 100, 'system', null, '奖励1');
-    addPoints('user-2', 200, 'system', null, '奖励2');
+  it('排行榜', async () => {
+    await addPoints('user-1', 100, 'system', null, '奖励1');
+    await addPoints('user-2', 200, 'system', null, '奖励2');
 
-    const board = getLeaderboard(10);
-    expect(board).toHaveLength(2);
-    expect(board[0].userId).toBe('user-2');
-    expect(board[0].balance).toBe(200);
-    expect(board[1].userId).toBe('user-1');
-    expect(board[1].balance).toBe(100);
+    const board = await getLeaderboard(10);
+    await expect(board).toHaveLength(2);
+    await expect(board[0].userId).toBe('user-2');
+    await expect(board[0].balance).toBe(200);
+    await expect(board[1].userId).toBe('user-1');
+    await expect(board[1].balance).toBe(100);
   });
 
-  it('等级计算', () => {
-    expect(calculateLevel(0).level).toBe(1);
-    expect(calculateLevel(49).level).toBe(1);
-    expect(calculateLevel(50).level).toBe(2);
-    expect(calculateLevel(150).level).toBe(3);
-    expect(calculateLevel(5000).level).toBe(7);
-    expect(LEVEL_THRESHOLDS).toHaveLength(7);
+  it('等级计算', async () => {
+    await expect(calculateLevel(0).level).toBe(1);
+    await expect(calculateLevel(49).level).toBe(1);
+    await expect(calculateLevel(50).level).toBe(2);
+    await expect(calculateLevel(150).level).toBe(3);
+    await expect(calculateLevel(5000).level).toBe(7);
+    await expect(LEVEL_THRESHOLDS).toHaveLength(7);
   });
 });

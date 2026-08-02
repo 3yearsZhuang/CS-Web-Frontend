@@ -4,7 +4,7 @@
 > 受众：架构师 / 技术负责人 / 后端迁移实施者 / oncall / 发布决策者
 > Source of truth：功能规划、架构决策（ADR）、迁移路径的唯一权威位置
 > 关联：架构与 API 见 [Devdocs-Arch.md](Devdocs-Arch.md)；安全见 [Devdocs-Sec.md](Devdocs-Sec.md)；运维/SLO/Runbook 见 [Devdocs-Ops.md](Devdocs-Ops.md)；工程规则见 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md#八项目规则)
-> 最后更新：2026-08-01（合并原 Devdocs-roadmap.md + Devdocs-pg-migration.md + Devdocs-migration-guide.md）
+> 最后更新：2026-08-02（合并原 Devdocs-roadmap.md + Devdocs-pg-migration.md + Devdocs-migration-guide.md；内联 ADR-009-impl.md 实施手册，同步 ADR-009 全量迁移收官状态）
 
 ## 文档结构
 
@@ -152,14 +152,93 @@
 
 ### ADR-009：Repository 抽象层
 
-- **状态**：部分实施（模板已落地，2026-07-30）
+- **状态**：已实施（模板 2026-07-30；全量迁移收官 2026-08-02）
 - **背景**：服务层直接持 `better-sqlite3` 实例，换库成本高、单测难 mock
 - **决策**：在 `db.ts` 上抽象 `Repository` 接口，服务层通过 Repository 访问数据，不感知底层 DB
 - **后果**：换库只需替换 Repository 实现；为 [Part B](#part-b-postgresql-迁移) Phase 4 双引擎切换铺路；单测可 mock Repository
 - **实施**：
   - `DbEngine` 抽象（`src/shared/db/drivers/`，sqlite/pg 双驱动）已落地，`audit.repo.ts` 是首个迁移到该抽象的模板（经 `getDbEngine()` 访问）
-  - **当前仅 `audit` 模块使用 Repository 抽象**；其余 ~50 个 server 文件仍直连 `getDb()`（legacy SQLite 路径），未迁移
-  - ⚠️ 文档早期表述的 `src/shared/db/repository.ts` 导出 `getRepositories()` 工厂 **尚未实现**——该文件不存在，仅 `src/shared/db/repositories/audit.repo.ts` 落地。请勿在代码中引用 `getRepositories()`
+  - **全量迁移收官（2026-08-02）**：auth / user / community / events / tools / notification / admin / announcement 全部模块及 16 个 API 路由移除 `getDb()` 直接调用，统一经 Repository（`getDbEngine()` 引擎单例）访问；服务层 sync→async 全量完成；`logAdminAction` 改为 async 并全量 `await`
+  - 测试打通：新增 `tools/tests/dbEngine.ts`（`createSqliteTestEngine` 经 `_setDbEngineForTest` 注入），service 级集成测试 16 文件 / 451 用例全绿；`npx tsc --noEmit` 全项目 0 错误
+  - 早期文档表述的 `src/shared/db/repository.ts` 导出 `getRepositories()` 工厂仍**未实现**（请勿在代码中引用）；各模块走各自 `get<Module>Repository()` 单例，事务边界留在调用方 Service
+  - ⚠️ 部分 auth 子模块（`verification-code.ts` / `password-reset.ts`）因同步 API 尚未迁移，仍直连 `getDb()`，测试中以 `vi.mock` 双轨共存；属已知遗留，Phase 3 事务异步化时一并收口
+- **实施手册**（迁移执行规范，内联如下，原独立文件 `ADR-009-impl.md` 已合并至本节）：
+
+  #### ADR-009 实施手册
+
+  > 本手册为 ADR-009 代码改造执行规范。所有参与迁移的模块 MUST 遵循。
+  > 目标：服务层不再直接 `import { getDb } from '@/shared/db'`，一律经 Repository 访问数据。
+
+  ##### 1. Repository 层规范
+
+  - 路径：`src/shared/db/repositories/<module>.repo.ts`（首个为 audit，已落地）。
+  - 导出：
+    - `interface <Module>Repository { ... }`（方法签名，便于测试 mock）
+    - `function create<Module>Repository(engine: DbEngine): <Module>Repository`
+    - `async function get<Module>Repository(): Promise<<Module>Repository>`（单例缓存）
+    - `function _set<Module>RepositoryForTest(repo): void`（测试注入）
+  - 方法签名约定：`async method(args, engine?: DbEngine)`，内部 `const e = await resolveEngine(engine);` 后调用 `e.query/queryOne/execute/transaction`。
+  - 行映射：Repository 内做 `Row -> Domain` 映射（参考 audit.repo.ts 的 `rowToAdminAction`）。
+  - 占位符：SQL 一律 `?`。SQLite 专属函数（`datetime('now')`、`strftime`、`INSERT OR IGNORE`、FTS5 `MATCH`、`NULLS LAST`）本阶段保留（sqlite 原生支持），PG 阶段再统一替换。
+  - 导入：`import { getDbEngine, type DbEngine, type QueryRow } from '@/shared/db/drivers';` 与 `import { resolveEngine } from './base';`
+
+  ##### 2. Service 层规范（sync -> async）
+
+  - 所有 `export function foo(...)` 改为 `export async function foo(...)`。
+  - 函数体首行 `const db = getDb();` 删除，改为通过 Repository：
+    - 单表操作：`const repo = await get<Module>Repository(); await repo.xxx(...);`
+    - 跨表事务：`const engine = await getDbEngine(); await engine.transaction(async (tx) => { await repoA.x(tx); await repoB.y(tx); });`
+  - `db.prepare(sql).get(...)` -> `await engine.queryOne(sql, params)`（注意：**queryOne 空结果返回 null，不是 undefined**；原 `as X | undefined` 改为 `as X | null`，判空用 `if (!row)`）。
+  - `db.prepare(sql).all(...)` -> `await engine.query(sql, params)`。
+  - `db.prepare(sql).run(...)` -> `await engine.execute(sql, params)`（返回受影响行数）。
+  - 批量：`db.prepare(sql).all(...params, a, b)` 拆分为 `await engine.query(sql, [...params, a, b])`。
+  - 事务改写：`const tx = db.transaction(() => { ...; })();` -> `await engine.transaction(async (tx) => { ...; })`；事务内调用的 repo 方法必须传入 `tx`。
+  - `db.exec(...)`（建表 DDL，仅 totp.ts / 迁移）保留为 `await engine.execute(...)` 或保持原地——若仅是一次性确保表存在，可包在 `await engine.execute(DDL)`（注意占位符不适用，直接字符串）。
+
+  ##### 3. 跨模块调用
+
+  - Service A 调用 Service B（同/异模块）时，B 已 async，A 必须 `await B.xxx()`。
+  - `logAdminAction(adminId, action, target, details)` 已改为 async（见 shared/security/audit.ts），所有调用处加 `await`。
+  - 不要跨模块共享 Repository 实例；各模块用各自 Repository，事务边界留在调用方 Service。
+
+  ##### 4. 禁止
+
+  - 禁止 Service 层 `import { getDb } from '@/shared/db'`（改完的模块）。
+  - 禁止保留 `db.transaction(() => ...)` 同步写法。
+  - 禁止 `any` 绕过行映射；用明确的 Row 接口。
+
+  ##### 5. 验收
+
+  - `pnpm lint` 通过（无 `getDb` 残留于已迁移模块）。
+  - 该模块单测仍绿（mock Repository 或直接对 sqlite engine 跑）。
+  - `pnpm typecheck` / `pnpm build` 通过。
+
+  ##### 6. 测试适配（service 级集成测试打通方式）
+
+  迁移后 service 走 `getDbEngine()` 单例而非 `getDb()`，原 `vi.mock('@/shared/db')` 覆盖 `getDb` 对**已迁移模块失效**。测试按以下方式接入同一 in-memory 库：
+
+  - **6.1 DbEngine 注入（已迁移模块）**：新增 `tools/tests/dbEngine.ts` 的 `createSqliteTestEngine(db)` 把 better-sqlite3 实例包成 `DbEngine`；测试 `beforeEach` 内 `_setDbEngineForTest(createSqliteTestEngine(testDb))`；`server-only` 在 vitest 经 `vitest.config.ts` alias 到本地 stub。
+  - **6.2 Repository 单例重置（关键坑）**：`getAuthRepository()` / `getAdminRepository()` 等在首次调用时把 engine 捕获进闭包单例，之后 `engineInstance` 变化也不会重建。每个 `beforeEach` 必须重置：
+    ```ts
+    import { _setAuthRepositoryForTest } from '@/shared/db/repositories/auth.repo';
+    import { _setAuditRepositoryForTest } from '@/shared/db/repositories/audit.repo';
+    beforeEach(() => {
+      _setDbEngineForTest(createSqliteTestEngine(testDb));
+      _setAuthRepositoryForTest(null);   // 下次调用重新绑定新引擎
+      _setAuditRepositoryForTest(null);
+    });
+    ```
+  - **6.3 布尔值转换**：better-sqlite3 不能绑定 `boolean`。`createSqliteTestEngine` 内 `coerce()` 把 `boolean` → `0/1` 后绑定（镜像生产 driver 行为），无需在 Repository 层处理。
+  - **6.4 双轨共存（遗留 getDb 模块）**：`verification-code.ts`、`password-reset.ts` 等尚未迁移、仍直接 `getDb()` 的 auth 子模块，需保留 mock：
+    ```ts
+    vi.mock('@/shared/db', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@/shared/db')>();
+      return { ...actual, getDb: () => testDb };
+    });
+    ```
+    此时引擎单例与 `getDb` mock 指向同一个 `testDb`，读写一致。
+  - **6.5 同步/异步断言对齐**：`expect(asyncFn()).toThrow(...)` → `await expect(asyncFn()).rejects.toThrow(...)`；`expect(asyncFn()).toBeNull()` → `await expect(asyncFn()).resolves.toBeNull()`；裸 `asyncFn()` 调用（含 `const x = asyncFn()` 赋值）须补 `await`；注意 `approveResetRequest` 等仍是 **sync** 签名，其抛错须用 `expect(() => fn()).toThrow(...)`，不能用 `.rejects`。
+  - **6.6 测试 schema 补全**：in-memory 库需建齐生产表——`admin_actions`（`createPost` 经真实 `logAdminAction` 写入）、users 表须含生产列（`password_hash/bio/avatar_url/avatar_type/github_url/website_url/role/is_active/github_id/tech_tags`）、`beforeEach` 中按需清理审计行。
 
 ### ADR-010：客户端/服务端边界澄清
 
@@ -295,7 +374,7 @@
                  └──────────────────────┬──────────────┘
                                         │ DbEngine / getDb()
                                  ┌──────┴──────┐
-                                 │   SQLite    │ (→ PostgreSQL, see Part B；仅 audit 经 Repository 抽象)
+                                 │   SQLite    │ (→ PostgreSQL, see Part B；ADR-009 收官多数模块经 Repository 抽象)
                                  └─────────────┘
 ```
 
@@ -307,7 +386,7 @@
 |---------|--------|---------|------|
 | 通知 | community/events/tools | notification | 发布 `*.created` 事件 |
 | 权限 | 所有模块 | auth | 调用 `requirePermission` |
-| 数据 | 所有 server | db（`getDb()` / `DbEngine`） | 当前仅 `audit` 经 Repository 抽象；其余直连 `getDb()`（见 ADR-009） |
+| 数据 | 所有 server | db（`getDb()` / `DbEngine`） | ADR-009 收官：auth/user/community/events/tools/notification/admin/announcement 经 Repository 抽象；仅少量 auth 子模块（verification-code/password-reset）仍直连 `getDb()`（见 ADR-009） |
 | 审核 | resource/blog/task | shared/workflow | 状态机复用 |
 | 配置 | 所有 | shared/config | 读取 env 常量 |
 
@@ -330,7 +409,7 @@
   → Next.js Route Handler
   → requireAuth/requirePermission
   → Service（业务规则）
-  → DbEngine / getDb()（仅 audit 经 Repository，ADR-009）
+  → DbEngine / getDb()（ADR-009 收官：多数模块经 Repository，少量 auth 子模块仍直连 getDb()）
   → SQLite（WAL）
   → 响应（结构化日志 + requestId）
 事件分支：
@@ -359,7 +438,7 @@
 
 # Part B: PostgreSQL 迁移
 
-> 最后更新：2026-07-31（Phase 0 + Phase 1 完成；dialect 切换、db 单例、迁移系统改造均落地；**Repository 工厂未落地，仅 audit 模块经 DbEngine 抽象**，详见 ADR-009；CI 集成 pending）
+> 最后更新：2026-08-02（Phase 0 + Phase 1 完成；dialect 切换、db 单例、迁移系统改造均落地；**ADR-009 全量迁移收官：auth/user/community/events/tools/notification/admin/announcement 已移除 getDb() 直连、统一经 Repository**，详见 ADR-009；CI 集成 pending）
 > 验证 cadence：每个 Phase 完成时 | Stale 信号：Phase 清单与代码目录不一致 / 待办项状态未更新
 > 关联：[Part A](#part-a-迭代路线图) ADR-002/005/009（数据库演进决策）；[Part C](#part-c-多语言微服务迁移) 共享 PG 通信契约；[Devdocs-Sec.md](Devdocs-Sec.md) 密钥管理
 
@@ -469,7 +548,7 @@
 |------|------|
 | `src/shared/db/db.ts` | db 单例，按 dialect 初始化 |
 | `src/shared/db/drizzle.ts` | 双 dialect Drizzle 实例 |
-| `src/shared/db/repositories/audit.repo.ts` | 首个 DbEngine 抽象 Repository 模板（ADR-009；`getRepositories()` 工厂尚未实现）|
+| `src/shared/db/repositories/*.repo.ts` | 各模块 DbEngine 抽象 Repository（ADR-009；audit 为首个模板，已扩展至 auth/user/community/events/tools/notification/admin/announcement；`getRepositories()` 工厂尚未实现）|
 | `src/shared/db/migrations.ts` | 双 dialect 迁移执行 |
 | `drizzle.config.ts` | Drizzle 配置（dialect 切换）|
 | `src/shared/db/drizzle/` | 各模块 Drizzle/PG schema 定义（getXxxSchema 工厂） |
@@ -725,7 +804,7 @@
 | 项 | 状态 | 说明 |
 |----|------|------|
 | db 单例（`db.ts`）按 dialect 返回 | ✅ | `src/shared/db/db.ts` 启动时初始化，根据 `DATABASE_DIALECT` 选择连接 |
-| Repository 工厂（`getRepositories()`） | ⬜ | **未落地**：`repository.ts` 不存在，仅 `repositories/audit.repo.ts` 经 `DbEngine` 抽象实现；其余模块仍直连 `getDb()`（详见 ADR-009） |
+| Repository 工厂（`getRepositories()`） | ⬜ | **未落地**：`repository.ts` 不存在，各模块走各自 `get<Module>Repository()` 单例（已覆盖 auth/user/community/events/tools/notification/admin/announcement + audit）；少量 auth 子模块仍直连 `getDb()`，Phase 3 事务异步化时收口（详见 ADR-009） |
 | 迁移系统改造（双 dialect 迁移） | ✅ | `src/shared/db/migrations.ts` 支持按 dialect 执行对应迁移文件 |
 | schema 定义双 dialect 兼容 | ✅ | Drizzle schema 用通用类型，避免 SQLite 专属语法 |
 

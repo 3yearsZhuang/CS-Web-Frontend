@@ -5,7 +5,8 @@
 import crypto from 'node:crypto';
 import https from 'node:https';
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getUserRepository } from '@/shared/db/repositories';
 import { hashPassword } from '@/shared/security/password';
 import { toSafeUser, type UserRow } from '@/shared/types';
 
@@ -244,12 +245,11 @@ export async function verifyGitHubCallback(
   const githubUser = await fetchGitHubUser(accessToken);
   const email = await fetchPrimaryEmail(accessToken);
 
-  const db = getDb();
+  const repo = await getUserRepository();
+  const engine = await getDbEngine();
   const githubId = String(githubUser.id);
 
-  const existingByGithubId = db
-    .prepare('SELECT * FROM users WHERE github_id = ?')
-    .get(githubId) as UserRow | undefined;
+  const existingByGithubId = await repo.findByGithubId(githubId);
 
   if (existingByGithubId) {
     return {
@@ -260,9 +260,7 @@ export async function verifyGitHubCallback(
     };
   }
 
-  const existingByEmail = db
-    .prepare('SELECT * FROM users WHERE email = ?')
-    .get(email.toLowerCase()) as UserRow | undefined;
+  const existingByEmail = await repo.findByEmail(email.toLowerCase());
 
   if (existingByEmail) {
     // 安全：不再自动绑定 — GitHub verified 邮箱只证明邮箱在 GitHub 侧受控，
@@ -275,20 +273,21 @@ export async function verifyGitHubCallback(
   const id = crypto.randomUUID();
   const passwordHash = hashPassword(randomPassword);
 
-  db.prepare(
-    'INSERT INTO users (id, email, password_hash, github_id, display_name, avatar_url, github_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
-  ).run(
-    id,
-    email.toLowerCase(),
-    passwordHash,
-    githubId,
-    githubUser.name || githubUser.login,
-    githubUser.avatar_url,
-    githubUser.html_url,
-  );
+  await engine.transaction(async (tx) => {
+    await repo.insertOAuthUser(
+      tx,
+      id,
+      email.toLowerCase(),
+      passwordHash,
+      githubId,
+      githubUser.name || githubUser.login,
+      githubUser.avatar_url,
+      githubUser.html_url,
+    );
+  });
 
-  const newUser = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow;
-  toSafeUser(newUser);
+  const newUser = await repo.findById(id);
+  toSafeUser(newUser as UserRow);
 
   return {
     userId: id,
@@ -299,18 +298,13 @@ export async function verifyGitHubCallback(
 }
 
 /** 解除用户 GitHub 绑定 — 用户不存在抛 NOT_FOUND */
-export function unlinkGitHub(userId: string): void {
-  const db = getDb();
+export async function unlinkGitHub(userId: string): Promise<void> {
+  const repo = await getUserRepository();
 
-  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(userId) as
-    | { id: string }
-    | undefined;
-
+  const existing = await repo.findById(userId);
   if (!existing) {
     throw new AppError('NOT_FOUND', 'NOT_FOUND');
   }
 
-  db.prepare('UPDATE users SET github_id = NULL, updated_at = datetime(\'now\') WHERE id = ?').run(
-    userId,
-  );
+  await repo.unlinkGitHub(userId);
 }

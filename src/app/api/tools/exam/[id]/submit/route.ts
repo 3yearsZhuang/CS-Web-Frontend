@@ -37,7 +37,7 @@ export async function POST(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -71,7 +71,7 @@ export async function POST(
       );
     }
     try {
-      const attempt = submitAnswer(session.user.id, id, result.data.questionId, result.data.answer);
+      const attempt = await submitAnswer(session.user.id, id, result.data.questionId, result.data.answer);
       results.push({
         questionId: result.data.questionId,
         isCorrect: attempt.isCorrect,

@@ -1,256 +1,142 @@
 /**
- * @file 活动报名服务
+ * @file 活动报名服务（已迁移至 Repository 抽象层，ADR-009）
  */
-
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getEventsRepository } from '@/shared/db/repositories/events.repo';
 import { AppError } from '@/shared/app-error';
 import { logAdminAction } from '@/shared/security/audit';
-import { autoArchivePastEvents } from './archive';
-import {
-  toEventItem,
-  toEventRegistration,
-  getRegisteredCount,
-} from './crud';
-import {
-  type EventItem,
-  type EventRegistration,
-  type EventRegistrationRow,
-  type EventRow,
-} from '../types';
 
-/** 获取用户的单个活动报名记录 */
-export function getUserRegistration(
+/** 报名活动 */
+export async function registerForEvent(
   userId: string,
   eventId: string,
-): EventRegistration | null {
-  const db = getDb();
-  const row = db
-    .prepare(
-      'SELECT * FROM event_registrations WHERE user_id = ? AND event_id = ?',
-    )
-    .get(userId, eventId) as EventRegistrationRow | undefined;
-  if (!row) return null;
-  return toEventRegistration(row);
-}
-
-/** 获取活动的所有报名记录 */
-export function getEventRegistrations(eventId: string): EventRegistration[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      'SELECT * FROM event_registrations WHERE event_id = ? ORDER BY registered_at ASC',
-    )
-    .all(eventId) as EventRegistrationRow[];
-  return rows.map(toEventRegistration);
-}
-
-/** 用户报名活动 */
-export function registerEvent(
-  userId: string,
-  eventId: string,
-  formData?: Record<string, string>,
-): { ok: boolean; registration?: EventRegistration; error?: string } {
-  const db = getDb();
-
-  const eventRow = db.prepare('SELECT capacity FROM events WHERE id = ?').get(eventId) as
-    | { capacity: number }
-    | undefined;
-  if (!eventRow) {
-    throw new AppError('活动不存在', 'NOT_FOUND');
+  formData?: Record<string, string> | null,
+): Promise<{ id: string; status: string }> {
+  const repo = getEventsRepository();
+  const event = await repo.getEventById(eventId);
+  if (!event) throw new AppError('活动不存在', 'NOT_FOUND');
+  if (event.status !== 'upcoming' && event.status !== 'ongoing') {
+    throw new AppError('当前活动不可报名', 'INVALID_STATUS');
   }
 
-  const formDataStr = formData && Object.keys(formData).length > 0 ? JSON.stringify(formData) : null;
-
-  const existing = db
-    .prepare(
-      'SELECT * FROM event_registrations WHERE user_id = ? AND event_id = ?',
-    )
-    .get(userId, eventId) as EventRegistrationRow | undefined;
-
+  const existing = await repo.getRegistration(userId, eventId);
   if (existing) {
     if (existing.status === 'registered') {
-      throw new AppError('已报名该活动', 'ALREADY_REGISTERED');
+      throw new AppError('您已报名该活动', 'ALREADY_REGISTERED');
     }
-    if (existing.status === 'cancelled') {
-      if (eventRow.capacity > 0) {
-        const registered = getRegisteredCount(eventId);
-        if (registered >= eventRow.capacity) {
-          throw new AppError('活动名额已满', 'FULL');
-        }
-      }
-      db.prepare(
-        "UPDATE event_registrations SET status = 'registered', form_data = ?, cancelled_at = NULL WHERE id = ?",
-      ).run(formDataStr, existing.id);
-      const updated = db
-        .prepare('SELECT * FROM event_registrations WHERE id = ?')
-        .get(existing.id) as EventRegistrationRow;
-      return { ok: true, registration: toEventRegistration(updated) };
-    }
+    await repo.updateRegistrationStatus(existing.id, 'registered', null);
+    await logAdminAction(userId, 'events.register', eventId, { targetType: 'event', reregister: true });
+    return { id: existing.id, status: 'registered' };
   }
 
-  if (eventRow.capacity > 0) {
-    const registered = getRegisteredCount(eventId);
-    if (registered >= eventRow.capacity) {
-      throw new AppError('活动名额已满', 'FULL');
-    }
-  }
+  const used = await repo.checkCapacityUsed(eventId);
+  const capacity = event.capacity || 0;
+  const status = capacity > 0 && used >= capacity ? 'waitlisted' : 'registered';
 
   const id = crypto.randomUUID();
-  db.prepare(
-    `INSERT INTO event_registrations (id, user_id, event_id, status, form_data)
-     VALUES (?, ?, ?, 'registered', ?)`,
-  ).run(id, userId, eventId, formDataStr);
-
-  const row = db
-    .prepare('SELECT * FROM event_registrations WHERE id = ?')
-    .get(id) as EventRegistrationRow;
-  return { ok: true, registration: toEventRegistration(row) };
+  const formDataStr = formData ? JSON.stringify(formData) : null;
+  await repo.insertRegistration({ id, userId, eventId, status, formData: formDataStr });
+  await logAdminAction(userId, 'events.register', eventId, { targetType: 'event', status });
+  return { id, status };
 }
 
-/** 用户取消活动报名 */
-export function cancelEventRegistration(userId: string, eventId: string): void {
-  const db = getDb();
-  const existing = db
-    .prepare(
-      'SELECT * FROM event_registrations WHERE user_id = ? AND event_id = ?',
-    )
-    .get(userId, eventId) as EventRegistrationRow | undefined;
-
-  if (!existing) {
-    throw new AppError('报名记录不存在', 'NOT_FOUND');
+/** 取消报名 */
+export async function cancelRegistration(userId: string, eventId: string): Promise<void> {
+  const repo = getEventsRepository();
+  const registration = await repo.getRegistration(userId, eventId);
+  if (!registration) {
+    throw new AppError('未报名该活动', 'NOT_REGISTERED');
   }
-  if (existing.status === 'cancelled') {
-    throw new AppError('报名已取消', 'ALREADY_CANCELLED');
-  }
-
-  db.prepare(
-    "UPDATE event_registrations SET status = 'cancelled', cancelled_at = datetime('now') WHERE id = ?",
-  ).run(existing.id);
+  if (registration.status === 'cancelled') return;
+  await repo.updateRegistrationStatus(registration.id, 'cancelled', new Date().toISOString());
+  await logAdminAction(userId, 'events.cancel', eventId, { targetType: 'event' });
 }
 
-/** 获取用户已报名的所有活动 */
-export function getUserRegisteredEvents(userId: string): EventItem[] {
-  const db = getDb();
-
-  autoArchivePastEvents(db);
-
-  const rows = db
-    .prepare(
-      `SELECT e.* FROM events e
-       INNER JOIN event_registrations r ON e.id = r.event_id
-       WHERE r.user_id = ? AND r.status = 'registered'
-       ORDER BY r.registered_at DESC`,
-    )
-    .all(userId) as EventRow[];
-  return rows.map(toEventItem);
+/** 获取用户的报名记录 */
+export async function getRegistration(userId: string, eventId: string) {
+  const repo = getEventsRepository();
+  return repo.getRegistration(userId, eventId);
 }
 
-/** 管理员手动为用户报名 */
-export function adminAddRegistration(
+/** 获取用户已报名的活动列表（供「我的活动」页使用） */
+export async function getUserRegisteredEvents(userId: string) {
+  const repo = getEventsRepository();
+  return repo.listUserRegisteredEvents(userId);
+}
+
+/** 管理员代用户报名 */
+export async function adminAddRegistration(
   adminId: string,
   userId: string,
   eventId: string,
-  formData?: Record<string, string>,
-): { ok: boolean; registration?: EventRegistration; error?: string } {
-  const db = getDb();
+  formData?: Record<string, string> | null,
+): Promise<{ registration: { id: string; status: string } }> {
+  const repo = getEventsRepository();
+  const event = await repo.getEventById(eventId);
+  if (!event) throw new AppError('活动不存在', 'NOT_FOUND');
 
-  const eventRow = db.prepare('SELECT capacity, title FROM events WHERE id = ?').get(eventId) as
-    | { capacity: number; title: string }
-    | undefined;
-  if (!eventRow) {
-    throw new AppError('活动不存在', 'NOT_FOUND');
-  }
-
-  const existing = db
-    .prepare('SELECT * FROM event_registrations WHERE user_id = ? AND event_id = ?')
-    .get(userId, eventId) as EventRegistrationRow | undefined;
-
-  if (existing?.status === 'registered') {
+  const existing = await repo.getRegistration(userId, eventId);
+  if (existing) {
     throw new AppError('该用户已报名此活动', 'ALREADY_REGISTERED');
   }
 
-  if (eventRow.capacity > 0) {
-    const registered = getRegisteredCount(eventId);
-    if (registered >= eventRow.capacity) {
-      throw new AppError('活动名额已满', 'FULL');
-    }
-  }
+  const used = await repo.checkCapacityUsed(eventId);
+  const capacity = event.capacity || 0;
+  const status = capacity > 0 && used >= capacity ? 'waitlisted' : 'registered';
 
-  const formDataStr = formData && Object.keys(formData).length > 0 ? JSON.stringify(formData) : null;
   const id = crypto.randomUUID();
-
-  if (existing) {
-    db.prepare(
-      "UPDATE event_registrations SET status = 'registered', form_data = ?, cancelled_at = NULL WHERE id = ?",
-    ).run(formDataStr, existing.id);
-    const updated = db
-      .prepare('SELECT * FROM event_registrations WHERE id = ?')
-      .get(existing.id) as EventRegistrationRow;
-
-    logAdminAction(adminId, 'admin_add_registration', userId, { eventId, eventTitle: eventRow.title });
-    return { ok: true, registration: toEventRegistration(updated) };
-  }
-
-  db.prepare(
-    `INSERT INTO event_registrations (id, user_id, event_id, status, form_data)
-     VALUES (?, ?, ?, 'registered', ?)`,
-  ).run(id, userId, eventId, formDataStr);
-
-  const row = db
-    .prepare('SELECT * FROM event_registrations WHERE id = ?')
-    .get(id) as EventRegistrationRow;
-
-  logAdminAction(adminId, 'admin_add_registration', userId, { eventId, eventTitle: eventRow.title });
-  return { ok: true, registration: toEventRegistration(row) };
+  const formDataStr = formData ? JSON.stringify(formData) : null;
+  await repo.insertRegistration({ id, userId, eventId, status, formData: formDataStr });
+  await logAdminAction(adminId, 'events.register', eventId, { targetType: 'event', byAdmin: true, userId });
+  return { registration: { id, status } };
 }
 
 /** 管理员更新报名状态 */
-export function adminUpdateRegistrationStatus(
+export async function adminUpdateRegistrationStatus(
   adminId: string,
   registrationId: string,
-  status: 'cancelled' | 'waitlisted' | 'registered',
-): void {
-  const db = getDb();
-  const existing = db
-    .prepare('SELECT * FROM event_registrations WHERE id = ?')
-    .get(registrationId) as EventRegistrationRow | undefined;
-
-  if (!existing) {
-    throw new AppError('报名记录不存在', 'NOT_FOUND');
-  }
-
-  db.prepare(
-    `UPDATE event_registrations SET status = ?, cancelled_at = CASE WHEN ? = 'cancelled' THEN datetime('now') ELSE NULL END WHERE id = ?`,
-  ).run(status, status, registrationId);
-
-  logAdminAction(adminId, 'admin_update_registration', existing.user_id, {
-    registrationId,
-    eventId: existing.event_id,
-    newStatus: status,
-  });
+  status: 'registered' | 'cancelled' | 'waitlisted',
+): Promise<void> {
+  const repo = getEventsRepository();
+  const cancelledAt = status === 'cancelled' ? new Date().toISOString() : null;
+  await repo.updateRegistrationStatus(registrationId, status, cancelledAt);
+  await logAdminAction(adminId, 'events.registration.update', registrationId, { targetType: 'registration', status });
 }
 
-/** 获取活动报名统计数据 */
-export function getEventRegistrationStats(eventId: string): {
+/** 获取某活动的报名统计 */
+export async function getEventRegistrationStats(eventId: string): Promise<{
   total: number;
   registered: number;
-  cancelled: number;
   waitlisted: number;
-} {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      'SELECT status, COUNT(*) as count FROM event_registrations WHERE event_id = ? GROUP BY status',
-    )
-    .all(eventId) as Array<{ status: string; count: number }>;
+  cancelled: number;
+}> {
+  const repo = getEventsRepository();
+  const [total, registered, waitlisted, cancelled] = await Promise.all([
+    repo.countRegistrations(['event_id = ?'], [eventId]),
+    repo.countRegistrations(['event_id = ?', "status = 'registered'"], [eventId]),
+    repo.countRegistrations(['event_id = ?', "status = 'waitlisted'"], [eventId]),
+    repo.countRegistrations(['event_id = ?', "status = 'cancelled'"], [eventId]),
+  ]);
+  return { total, registered, waitlisted, cancelled };
+}
 
-  const stats = { total: 0, registered: 0, cancelled: 0, waitlisted: 0 };
-  for (const row of rows) {
-    stats.total += row.count;
-    if (row.status === 'registered') stats.registered = row.count;
-    else if (row.status === 'cancelled') stats.cancelled = row.count;
-    else if (row.status === 'waitlisted') stats.waitlisted = row.count;
-  }
-  return stats;
+/** 获取某用户的报名状态摘要 */
+export async function getStats(userId: string, eventId: string): Promise<{
+  registered: boolean;
+  total: number;
+  isFull: boolean;
+}> {
+  const repo = getEventsRepository();
+  const event = await repo.getEventById(eventId);
+  if (!event) throw new AppError('活动不存在', 'NOT_FOUND');
+  const [reg, used] = await Promise.all([
+    repo.getRegistration(userId, eventId),
+    repo.checkCapacityUsed(eventId),
+  ]);
+  const capacity = event.capacity || 0;
+  return {
+    registered: !!reg && reg.status === 'registered',
+    total: used,
+    isFull: capacity > 0 && used >= capacity,
+  };
 }

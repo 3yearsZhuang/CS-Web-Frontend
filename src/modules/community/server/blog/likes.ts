@@ -1,50 +1,24 @@
 /**
- * @file 博客点赞服务（统一重构：blog_likes → community_reactions）
+ * @file 博客点赞服务（已迁移至 Repository 抽象层，ADR-009）
+ * 统一使用 community_reactions，target_type = 'post'。
  */
-import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import { toggleLike as toggleReaction } from '../forum/reactions';
 import { AppError } from '@/shared/app-error';
 
 /** 切换博客文章点赞（登录用户） */
-export function toggleLike(postId: string, userId: string): { liked: boolean; likeCount: number } {
-  const db = getDb();
-  const post = db
-    .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'post' AND status = 'published'")
-    .get(postId);
-  if (!post) throw new AppError('文章不存在或已删除', 'NOT_FOUND');
-
-  const existing = db
-    .prepare("SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
-    .get(userId, postId) as { id: string } | undefined;
-
-  let liked: boolean;
-  let likeCount: number;
-  const tx = db.transaction(() => {
-    if (existing) {
-      db.prepare('DELETE FROM community_reactions WHERE id = ?').run(existing.id);
-      db.prepare("UPDATE community_posts SET like_count = MAX(like_count - 1, 0) WHERE id = ?").run(postId);
-      liked = false;
-    } else {
-      const id = crypto.randomUUID();
-      db.prepare(
-        "INSERT INTO community_reactions (id, user_id, target_type, target_id) VALUES (?, ?, 'post', ?)",
-      ).run(id, userId, postId);
-      db.prepare("UPDATE community_posts SET like_count = like_count + 1 WHERE id = ?").run(postId);
-      liked = true;
-    }
-    const row = db.prepare('SELECT like_count FROM community_posts WHERE id = ?').get(postId) as { like_count: number } | undefined;
-    likeCount = row?.like_count ?? 0;
-  });
-  tx();
-
-  return { liked: liked!, likeCount: likeCount! };
+export async function toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+  const repo = getCommunityRepository();
+  const post = await repo.getPostById(postId);
+  if (!post || post.kind !== 'post' || post.status !== 'published') {
+    throw new AppError('文章不存在或已删除', 'NOT_FOUND');
+  }
+  return toggleReaction(postId, 'post', userId);
 }
 
 /** 查询用户是否已点赞 */
-export function hasLiked(postId: string, userId: string): boolean {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
-    .get(userId, postId);
+export async function hasLiked(postId: string, userId: string): Promise<boolean> {
+  const repo = getCommunityRepository();
+  const row = await repo.getReaction(userId, 'like', postId);
   return !!row;
 }

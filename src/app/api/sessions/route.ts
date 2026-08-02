@@ -21,21 +21,21 @@ const deleteSessionSchema = z.object({
   sessionId: z.string().min(1, 'sessionId 不能为空'),
 });
 
-function getUserIdFromRequest(req: Request): string | null {
+async function getUserIdFromRequest(req: Request): Promise<string | null> {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return session.user.id;
 }
 
 export async function GET(req: Request) {
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const sessions = listUserSessions(userId);
+  const sessions = await listUserSessions(userId);
   return NextResponse.json({ sessions });
 }
 
@@ -43,7 +43,7 @@ export async function DELETE(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -69,7 +69,7 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    deleteSessionById(userId, result.data.sessionId);
+    await deleteSessionById(userId, result.data.sessionId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

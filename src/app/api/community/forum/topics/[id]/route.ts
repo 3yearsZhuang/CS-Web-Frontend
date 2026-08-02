@@ -25,10 +25,10 @@ import { createRequestLogger } from '@/shared/logger';
 
 export const runtime = 'nodejs';
 
-function optionalUser(req: Request): { id: string; role: UserRole } | null {
+async function optionalUser(req: Request): Promise<{ id: string; role: UserRole } | null> {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return { id: session.user.id, role: session.user.role };
 }
@@ -40,16 +40,16 @@ export async function GET(
   const log = createRequestLogger(req);
   try {
     const { id } = await context.params;
-    const currentUser = optionalUser(req);
+    const currentUser = await optionalUser(req);
 
     const ipHash = currentUser ? undefined : hashIpForView(getClientIp(req));
     try {
-      recordTopicView(id, currentUser?.id, ipHash);
+      recordTopicView(id);
     } catch (err) {
       log.error({ err }, '记录浏览失败');
     }
 
-    const topic = getTopicById(id, currentUser?.id);
+    const topic = await getTopicById(id, { currentUserId: currentUser?.id });
     if (!topic) {
       return NextResponse.json({ error: '主题不存在' }, { status: 404 });
     }
@@ -78,7 +78,7 @@ export async function PUT(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -98,7 +98,7 @@ export async function PUT(
   const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
 
   try {
-    const topic = updateTopic(session.user.id, isAdmin, id, result.data);
+    const topic = await updateTopic(id, result.data, session.user.id);
     return NextResponse.json({ ok: true, topic });
   } catch (err) {
     return errorResponse(err);
@@ -116,7 +116,7 @@ export async function DELETE(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -125,7 +125,7 @@ export async function DELETE(
   const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
 
   try {
-    deleteTopic(session.user.id, isAdmin, id);
+    await deleteTopic(id, session.user.id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

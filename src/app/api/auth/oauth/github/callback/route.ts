@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     // 安全：2FA 预认证 token 通过 HttpOnly cookie 传递，不放入 URL query，
     // 避免经 Referer 头、浏览器历史、服务端日志泄漏。
     // URL 中仅保留 oauth_2fa=1 作为前端展示 2FA UI 的标识（无敏感信息）。
-    if (!result.isNewUser && is2FAEnabled(result.userId)) {
+    if (!result.isNewUser && (await is2FAEnabled(result.userId))) {
       const twoFactorToken = create2FAToken(result.userId);
       const loginUrl = new URL('/login', req.url);
       loginUrl.searchParams.set('oauth_2fa', '1');
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       return res;
     }
 
-    const token = createSession(result.userId, req.headers.get('x-forwarded-for') || undefined, req.headers.get('user-agent') || undefined);
+    const token = await createSession(result.userId, req.headers.get('x-forwarded-for') || undefined, req.headers.get('user-agent') || undefined);
 
     if (result.isNewUser) {
       appBus.emit('user.registered', { userId: result.userId });
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     }
 
     const res = NextResponse.redirect(profileUrl, { status: 302 });
-    res.cookies.set(AUTH_COOKIE_NAME, token, {
+    await res.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: 'lax',
       path: '/',

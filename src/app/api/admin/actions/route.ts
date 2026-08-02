@@ -17,7 +17,7 @@ import { deleteActionLogSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -46,7 +46,7 @@ export async function GET(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -72,7 +72,7 @@ export async function DELETE(req: Request) {
   const { before } = result.data;
 
   try {
-    const count = deleteAdminActionsBefore(admin.user.id, before);
+    const count = await deleteAdminActionsBefore(admin.user.id, before);
     return NextResponse.json({ ok: true, count });
   } catch (err) {
     return errorResponse(err);

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   // 邮箱已注册检查下沉至 auth/server 层（避免路由直接 getDb）。
   // 验证码生成与 DB 写入由 generateCode 封装。
-  if (isEmailRegistered(email)) {
+  if (await isEmailRegistered(email)) {
     return NextResponse.json(
       { error: '该邮箱已注册，请直接登录或使用忘记密码功能' },
       { status: 409 },

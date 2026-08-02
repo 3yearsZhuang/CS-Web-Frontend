@@ -26,7 +26,7 @@ const reviewSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -72,7 +72,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const application = reviewJoinApplication(
+    const application = await reviewJoinApplication(
       admin.user.id,
       result.data.applicationId,
       result.data.status,

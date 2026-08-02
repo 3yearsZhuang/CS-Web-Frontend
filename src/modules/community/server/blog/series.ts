@@ -1,9 +1,8 @@
 /**
- * @file 博客系列服务
+ * @file 博客系列服务（已迁移至 Repository 抽象层，ADR-009）
  */
-
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
 import { AppError, assertOwnership } from '@/shared/app-error';
 import type { BlogSeries, BlogSeriesInput } from '../../types';
 import { generateSlug } from './utils';
@@ -17,29 +16,7 @@ interface BlogSeriesRow {
   created_at: string;
 }
 
-/** 创建博客系列 */
-export function createSeries(userId: string, input: BlogSeriesInput): BlogSeries {
-  if (!input.title?.trim()) throw new AppError('系列标题不能为空', 'VALIDATION_ERROR');
-
-  const db = getDb();
-  const id = crypto.randomUUID();
-  const slug = generateSlug(input.title);
-
-  db.prepare(
-    'INSERT INTO blog_series (id, title, description, slug, created_by) VALUES (?, ?, ?, ?, ?)',
-  ).run(id, input.title.trim(), input.description?.trim() || null, slug, userId);
-
-  return getSeriesById(id)!;
-}
-
-/** 根据 ID 获取系列 */
-export function getSeriesById(seriesId: string): BlogSeries | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM blog_series WHERE id = ?').get(seriesId) as BlogSeriesRow | undefined;
-  if (!row) return null;
-
-  const postCount = (db.prepare('SELECT COUNT(*) AS c FROM community_posts WHERE series_id = ?').get(seriesId) as { c: number }).c;
-
+function toBlogSeries(row: BlogSeriesRow, postCount: number): BlogSeries {
   return {
     id: row.id,
     title: row.title,
@@ -51,33 +28,43 @@ export function getSeriesById(seriesId: string): BlogSeries | null {
   };
 }
 
-/** 列出所有系列 */
-export function listSeries(): BlogSeries[] {
-  const db = getDb();
-  const rows = db.prepare('SELECT * FROM blog_series ORDER BY created_at DESC').all() as BlogSeriesRow[];
+/** 创建博客系列 */
+export async function createSeries(userId: string, input: BlogSeriesInput): Promise<BlogSeries> {
+  if (!input.title?.trim()) throw new AppError('系列标题不能为空', 'VALIDATION_ERROR');
+  const repo = getCommunityRepository();
+  const id = crypto.randomUUID();
+  const slug = generateSlug(input.title);
+  await repo.insertSeries({ id, title: input.title.trim(), description: input.description?.trim() || null, slug, createdBy: userId });
+  return (await getSeriesById(id))!;
+}
 
-  return rows.map((row) => {
-    const postCount = (db.prepare('SELECT COUNT(*) AS c FROM community_posts WHERE series_id = ?').get(row.id) as { c: number }).c;
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      slug: row.slug,
-      createdBy: row.created_by,
-      createdAt: row.created_at,
-      postCount,
-    };
-  });
+/** 根据 ID 获取系列 */
+export async function getSeriesById(seriesId: string): Promise<BlogSeries | null> {
+  const repo = getCommunityRepository();
+  const row = await repo.getSeriesById(seriesId);
+  if (!row) return null;
+  const postCount = await repo.countPostsBySeries(seriesId);
+  return toBlogSeries(row, postCount);
+}
+
+/** 列出所有系列 */
+export async function listSeries(): Promise<BlogSeries[]> {
+  const repo = getCommunityRepository();
+  const rows = await repo.listSeries();
+  return Promise.all(
+    rows.map(async (row) => {
+      const postCount = await repo.countPostsBySeries(row.id);
+      return toBlogSeries(row, postCount);
+    }),
+  );
 }
 
 /** 删除系列 */
-export function deleteSeries(userId: string, seriesId: string, isAdmin: boolean): void {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM blog_series WHERE id = ?').get(seriesId) as BlogSeriesRow | undefined;
+export async function deleteSeries(userId: string, seriesId: string, isAdmin: boolean): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getSeriesById(seriesId);
   if (!existing) throw new AppError('系列不存在', 'NOT_FOUND');
-
   assertOwnership(userId, existing.created_by, isAdmin, '系列', '删除');
-
-  db.prepare('UPDATE community_posts SET series_id = NULL WHERE series_id = ?').run(seriesId);
-  db.prepare('DELETE FROM blog_series WHERE id = ?').run(seriesId);
+  await repo.clearSeriesOnPosts(seriesId);
+  await repo.deleteSeriesById(seriesId);
 }

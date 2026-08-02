@@ -15,11 +15,11 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
 
-  const enabled = is2FAEnabled(session.user.id);
-  const required = require2FAForAdmin(session.user.role);
+  const enabled = await is2FAEnabled(session.user.id);
+  const required = await require2FAForAdmin(session.user.role);
 
   return NextResponse.json({ enabled, required });
 }

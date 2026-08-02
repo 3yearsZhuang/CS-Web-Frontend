@@ -23,7 +23,7 @@ import { createAnnouncementSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -58,9 +58,9 @@ export async function POST(req: Request) {
     return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
   }
 
-  const announcement = createAnnouncement(admin.user.id, result.data);
+  const announcement = await createAnnouncement(admin.user.id, result.data);
 
-  logAdminAction(admin.user.id, 'create_announcement', null, {
+  await logAdminAction(admin.user.id, 'create_announcement', null, {
     announcementId: announcement.id,
     title: announcement.title,
     level: announcement.level,

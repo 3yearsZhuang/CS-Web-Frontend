@@ -31,7 +31,7 @@ export async function PUT(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -53,7 +53,7 @@ export async function PUT(
   const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
 
   try {
-    const reply = updateReply(session.user.id, isAdmin, id, contentMarkdown);
+    const reply = await updateReply(id, { contentMarkdown }, session.user.id);
     return NextResponse.json({ ok: true, reply });
   } catch (err) {
     return errorResponse(err);
@@ -71,7 +71,7 @@ export async function DELETE(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -80,7 +80,7 @@ export async function DELETE(
   const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
 
   try {
-    deleteReply(session.user.id, isAdmin, id);
+    await deleteReply(id, session.user.id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

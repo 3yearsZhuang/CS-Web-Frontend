@@ -18,7 +18,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -35,7 +35,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    deleteAdminAction(admin.user.id, id);
+    await deleteAdminAction(admin.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

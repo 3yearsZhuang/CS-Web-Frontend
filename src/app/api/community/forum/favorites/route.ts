@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
   const log = createRequestLogger(req);
   try {
-    const result = listUserFavorites(session.user.id, page, pageSize);
+    const result = await listUserFavorites(session.user.id, { page, pageSize });
     return NextResponse.json(result);
   } catch (err) {
     log.error({ err }, '获取收藏列表失败');

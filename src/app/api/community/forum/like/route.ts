@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -52,13 +52,10 @@ export async function POST(req: Request) {
     );
   }
   const { targetType, targetId } = result.data;
+  const mappedType: 'post' | 'comment' = targetType === 'topic' ? 'post' : 'comment';
 
   try {
-    const result = toggleLike(
-      session.user.id,
-      targetType as LikeTargetType,
-      targetId,
-    );
+    const result = await toggleLike(targetId, mappedType, session.user.id);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     return errorResponse(err);

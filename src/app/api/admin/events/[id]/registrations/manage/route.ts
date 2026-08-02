@@ -21,7 +21,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -43,7 +43,7 @@ export async function POST(
 
   const body = parsed.body as { formData?: Record<string, string> };
   try {
-    const res = adminAddRegistration(admin.user.id, result.data.userId, eventId, body.formData);
+    const res = await adminAddRegistration(admin.user.id, result.data.userId, eventId, body.formData);
     return NextResponse.json({ ok: true, registration: res.registration }, { status: 201 });
   } catch (err) {
     return errorResponse(err, {
@@ -58,7 +58,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -78,7 +78,7 @@ export async function PUT(
   }
 
   try {
-    adminUpdateRegistrationStatus(admin.user.id, result.data.registrationId, result.data.status);
+    await adminUpdateRegistrationStatus(admin.user.id, result.data.registrationId, result.data.status);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err, {

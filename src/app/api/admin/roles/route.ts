@@ -29,7 +29,7 @@ const createRoleSchema = z.object({
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
   }
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const role = createRole(
+    const role = await createRole(
       admin.user.id,
       result.data,
       { ip, userAgent: req.headers.get('user-agent') },

@@ -1,7 +1,8 @@
 /**
- * @file 成员名录服务层 — 公开查询，仅返回活跃用户，敏感信息脱敏
+ * @file 成员名录服务层（已迁移至 Repository 抽象层，ADR-009）
+ * 公开查询，仅返回活跃用户，敏感信息脱敏。
  */
-import { getDb } from '@/shared/db';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
 import type { MemberItem } from '../../types';
 
 export type { MemberItem };
@@ -44,35 +45,23 @@ function toMemberItem(row: UserRow): MemberItem {
 }
 
 /** 获取所有活跃成员列表 */
-export function listMembers(tag?: string): MemberItem[] {
-  const db = getDb();
-
+export async function listMembers(tag?: string): Promise<MemberItem[]> {
+  const repo = getCommunityRepository();
+  // 复用 users 摘要查询（community repo 提供 findUsersByDisplayNames 仅按 display_name），
+  // 成员列表需全量扫描 users，新增一个专用方法。
+  const rows = await repo.listActiveMembers();
+  const mapped = rows.map(toMemberItem);
   if (tag && tag.trim()) {
-    const rows = db
-      .prepare(
-        `SELECT * FROM users WHERE is_active = 1 AND tech_tags LIKE ? ORDER BY display_name COLLATE NOCASE ASC`,
-      )
-      .all(`%"${tag.trim()}"%`) as UserRow[];
-    return rows.map(toMemberItem);
+    const t = `"${tag.trim()}"`;
+    return mapped.filter((m) => m.techTags.some((x) => x.includes(tag.trim())) || JSON.stringify(m.techTags).includes(t));
   }
-
-  const rows = db
-    .prepare(
-      `SELECT * FROM users WHERE is_active = 1 ORDER BY display_name COLLATE NOCASE ASC`,
-    )
-    .all() as UserRow[];
-  return rows.map(toMemberItem);
+  return mapped;
 }
 
 /** 获取所有唯一技术标签（用于筛选器） */
-export function listAllTechTags(): string[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT DISTINCT tech_tags FROM users WHERE is_active = 1 AND tech_tags IS NOT NULL AND tech_tags != '[]'`,
-    )
-    .all() as Array<{ tech_tags: string }>;
-
+export async function listAllTechTags(): Promise<string[]> {
+  const repo = getCommunityRepository();
+  const rows = await repo.listActiveMemberTechTags();
   const tagSet = new Set<string>();
   for (const row of rows) {
     try {

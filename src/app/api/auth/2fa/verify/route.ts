@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   if (mode === 'setup') {
     const token = getCookieValue(req, AUTH_COOKIE_NAME);
     if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-    const session = getSession(token);
+    const session = await getSession(token);
     if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
 
     // 限流：setup 模式验证 TOTP 激活 2FA，需与 login 模式一致防暴力破解
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const result = confirm2FA(session.user.id, code);
+    const result = await confirm2FA(session.user.id, code);
     if (!result.ok) {
       return NextResponse.json({ error: result.error, code: '2FA_FAILED' }, { status: 400 });
     }
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
   // createSession 内部会校验 is_active — 2FA token 签发后 5 分钟内用户可能被管理员禁用
   let sessionToken: string;
   try {
-    sessionToken = createSession(userId, ip, req.headers.get('user-agent') || undefined);
+    sessionToken = await createSession(userId, ip, req.headers.get('user-agent') || undefined);
   } catch (err) {
     if (err instanceof Error && err.name === 'ACCOUNT_DISABLED') {
       return NextResponse.json({ error: '账号已被禁用', code: 'ACCOUNT_DISABLED' }, { status: 403 });

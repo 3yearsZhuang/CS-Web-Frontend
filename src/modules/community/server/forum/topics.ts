@@ -1,396 +1,442 @@
 /**
- * @file 论坛服务层 — 主题（CRUD + 浏览计数去重）
+ * @file 话题服务（已迁移至 Repository 抽象层，ADR-009）
  */
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
-import { logger } from '@/shared/logger';
-import { AppError, assertOwnership } from '@/shared/app-error';
-import {
-  FORUM_LIMITS,
-  VIEW_DEDUP_WINDOW_HOURS,
-  computePagination,
-  computeTotalPages,
-  loadAuthorSummaries,
-  loadCategorySummaries,
-  toAuthorSummary,
-  topicRowToBase,
-  type PostStatus,
-  type CommunityPost,
-  type CommunityPostDetail,
-  type PostRow,
-  type UserSummaryRow,
-} from './shared';
-import { notifyMentionsForContent } from './mentions';
-import type { PostKind } from '../../types';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import type { CommunityPostRow, CommunityCategoryRow } from '@/shared/db/repositories/community.repo';
+import { computePagination, formatBlogPosts, formatPosts, type FormattedBlogPost, type FormattedPost, type PaginationInfo } from '../shared';
+import { resolveMentionedUsers, notifyMentionedUsers } from './mentions';
+import { processCommentMentions } from './replies';
+import { generateSlug } from '@/modules/community/server/blog/utils';
+import { parseTagsJson } from '../shared';
+import { AppError } from '@/shared/app-error';
+import { logAdminAction } from '@/shared/security/audit';
+import { getUserById } from '@/modules/auth/server/identity';
+import { canManageCategory } from './categories';
+import type { DbEngine } from '@/shared/db/drivers';
 
-/** 主题列表筛选 */
-export interface ListTopicsFilters {
-  categoryId?: string;
+export interface TopicListResult {
+  items: FormattedPost[];
+  pagination: PaginationInfo;
+}
+
+export async function listTopics(params: {
+  category?: string;
+  author?: string;
+  status?: string;
+  pinned?: boolean;
+  featured?: boolean;
   search?: string;
-  status?: PostStatus;
-  authorId?: string;
-  sort?: 'latest' | 'hot' | 'top';
+  sort?: string;
   page?: number;
   pageSize?: number;
-  /** 管理员视角：包含 hidden/deleted 状态；默认仅 published */
-  includeHidden?: boolean;
-}
+  currentUserId?: string;
+}): Promise<TopicListResult> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
 
-/** 主题分页结果 */
-export interface PaginatedPosts {
-  items: CommunityPost[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-/** 列出主题（公开） */
-export function listTopics(filters: ListTopicsFilters = {}): PaginatedPosts {
-  const db = getDb();
   const where: string[] = ["kind = 'topic'"];
-  const params: unknown[] = [];
-
-  // 默认仅展示 published；管理员视角可包含 hidden（仍排除 deleted）
-  if (filters.includeHidden) {
-    where.push("status IN ('published', 'hidden')");
-  } else if (filters.status) {
-    where.push('status = ?');
-    params.push(filters.status);
-  } else {
-    where.push("status = 'published'");
-  }
-
-  if (filters.categoryId) {
+  const queryParams: unknown[] = [];
+  if (params.category) {
     where.push('category_id = ?');
-    params.push(filters.categoryId);
+    queryParams.push(params.category);
   }
-  if (filters.authorId) {
+  if (params.author) {
     where.push('author_id = ?');
-    params.push(filters.authorId);
+    queryParams.push(params.author);
   }
-  if (filters.search && filters.search.trim()) {
-    // 使用 FTS5 全文搜索，支持布尔操作符和相关性排序
-    const keyword = filters.search.trim();
-    where.push('t.rowid IN (SELECT rowid FROM community_posts_fts WHERE community_posts_fts MATCH ?)');
-    params.push(keyword);
+  if (params.status) {
+    where.push('status = ?');
+    queryParams.push(params.status);
+  }
+  if (params.pinned !== undefined) {
+    where.push('is_pinned = ?');
+    queryParams.push(params.pinned ? 1 : 0);
+  }
+  if (params.featured !== undefined) {
+    where.push('is_featured = ?');
+    queryParams.push(params.featured ? 1 : 0);
+  }
+  if (params.search) {
+    where.push('(title LIKE ? OR content_markdown LIKE ?)');
+    const like = `%${params.search}%`;
+    queryParams.push(like, like);
   }
 
-  const whereSql = `WHERE ${where.join(' AND ')}`;
+  const total = await repo.countPosts(`WHERE ${where.join(' AND ')}`, queryParams);
+  const rows = await repo.listPosts(where, queryParams, pageSize, offset);
+  const items = await formatPosts(rows, { currentUserId: params.currentUserId });
 
-  // 排序：置顶永远在前，其次按指定字段
-  const sortField = (() => {
-    switch (filters.sort) {
-      case 'hot':
-        return 'reply_count DESC, like_count DESC';
-      case 'top':
-        return 'like_count DESC, view_count DESC';
-      case 'latest':
-      default:
-        return 'last_reply_at IS NULL, last_reply_at DESC, created_at DESC';
-    }
-  })();
-  const orderBy = `is_pinned DESC, ${sortField}`;
-
-  const { page, pageSize, offset } = computePagination({
-    page: filters.page,
-    pageSize: filters.pageSize,
-    defaultPageSize: FORUM_LIMITS.TOPICS_PAGE_SIZE,
-    maxPageSize: 100,
-  });
-
-  const totalRow = db
-    .prepare(`SELECT COUNT(*) as count FROM community_posts t ${whereSql}`)
-    .get(...params) as { count: number };
-  const total = totalRow.count;
-  const totalPages = computeTotalPages(total, pageSize);
-
-  const rows = db
-    .prepare(
-      `SELECT t.* FROM community_posts t ${whereSql} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
-    )
-    .all(...params, pageSize, offset) as PostRow[];
-
-  // 批量加载作者与版块摘要
-  const authorMap = loadAuthorSummaries(rows.map((r) => r.author_id));
-  const categoryMap = loadCategorySummaries(rows.map((r) => r.category_id));
-
-  const items: CommunityPost[] = rows.map((row) => ({
-    ...topicRowToBase(row),
-    author: authorMap.get(row.author_id) ?? null,
-    category: categoryMap.get(row.category_id ?? '') ?? null,
-  }));
-
-  return { items, total, page, pageSize, totalPages };
+  return { items, pagination: computePagination(page, pageSize, total) };
 }
 
-/**
- * 查询主题详情（公开）
- *
- * currentUserId 用于回填 isLikedByMe / isFavoritedByMe；未登录时为 false。
- */
-export function getTopicById(
-  topicId: string,
-  currentUserId?: string,
-): CommunityPostDetail | null {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as
-    | PostRow
-    | undefined;
-  if (!row) return null;
-
-  const author = toAuthorSummary(
-    db
-      .prepare('SELECT id, display_name, avatar_url, avatar_type FROM users WHERE id = ?')
-      .get(row.author_id) as UserSummaryRow | undefined,
-  );
-  const categoryRow = db
-    .prepare('SELECT id, slug, name FROM community_categories WHERE id = ?')
-    .get(row.category_id) as { id: string; slug: string; name: string } | undefined;
-
-  let isLikedByMe = false;
-  let isFavoritedByMe = false;
-  if (currentUserId) {
-    const liked = db
-      .prepare(
-        "SELECT id FROM community_reactions WHERE user_id = ? AND target_type = 'post' AND target_id = ?",
-      )
-      .get(currentUserId, topicId);
-    isLikedByMe = !!liked;
-    const favorited = db
-      .prepare("SELECT id FROM community_favorites WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
-      .get(currentUserId, topicId);
-    isFavoritedByMe = !!favorited;
-  }
-
-  return {
-    ...topicRowToBase(row),
-    author,
-    category: categoryRow ?? null,
-    isLikedByMe,
-    isFavoritedByMe,
-  };
+export async function getTopic(id: string, options?: { currentUserId?: string }): Promise<FormattedPost> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostById(id);
+  if (!row || row.kind !== 'topic') throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
+  const [formatted] = await formatPosts([row], { currentUserId: options?.currentUserId });
+  return formatted;
 }
 
-/** 创建主题的输入（兼容统一 PostInput） */
-export interface PostInput {
-  kind?: PostKind;
-  categoryId?: string | null;
+export async function getTopicBySlug(slug: string, options?: { currentUserId?: string }): Promise<FormattedPost> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostBySlug(slug);
+  if (!row || row.kind !== 'topic') throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
+  const [formatted] = await formatPosts([row], { currentUserId: options?.currentUserId });
+  return formatted;
+}
+
+export async function createTopic(input: {
+  categoryId: string;
   title: string;
   contentMarkdown: string;
+  authorId: string;
+  status?: string;
   isPinned?: boolean;
   isFeatured?: boolean;
-}
+  tags?: string[];
+}): Promise<{ id: string }> {
+  const repo = getCommunityRepository();
+  const category = await repo.getCategoryById(input.categoryId);
+  if (!category) throw new AppError('分类不存在', 'CATEGORY_NOT_FOUND');
 
-/** 校验主题输入 */
-function validateTopicInput(input: PostInput): void {
-  if (!input.categoryId) {
-    throw new AppError('请选择版块', 'VALIDATION_ERROR');
+  const user = await getUserById(input.authorId);
+  if (!user || user.role !== 'admin' || input.status !== 'draft') {
+    // 普通作者发布需审核或默认 published（按现有逻辑默认 published）
   }
-  if (!input.title || !input.title.trim()) {
-    throw new AppError('标题不能为空', 'VALIDATION_ERROR');
-  }
-  if (input.title.length > FORUM_LIMITS.TITLE_MAX) {
-    throw new AppError(`标题不能超过 ${FORUM_LIMITS.TITLE_MAX} 字符`, 'VALIDATION_ERROR');
-  }
-  if (!input.contentMarkdown || !input.contentMarkdown.trim()) {
-    throw new AppError('内容不能为空', 'VALIDATION_ERROR');
-  }
-  if (input.contentMarkdown.length > FORUM_LIMITS.TOPIC_CONTENT_MAX) {
-    throw new AppError(`内容不能超过 ${FORUM_LIMITS.TOPIC_CONTENT_MAX} 字符`, 'VALIDATION_ERROR');
-  }
-}
-
-/** 创建主题（登录用户）— 版块不存在抛 'NOT_FOUND' */
-export function createTopic(authorId: string, input: PostInput): CommunityPost {
-  validateTopicInput(input);
-  const db = getDb();
-
-  const category = db
-    .prepare('SELECT id FROM community_categories WHERE id = ?')
-    .get(input.categoryId);
-  if (!category) {
-    throw new AppError('版块不存在', 'NOT_FOUND');
-  }
+  const status = input.status ?? (user && user.role !== 'admin' ? 'pending_review' : 'published');
 
   const id = crypto.randomUUID();
-  const tx = db.transaction(() => {
-    db.prepare(
-      `INSERT INTO community_posts (id, kind, category_id, author_id, title, content_markdown)
-       VALUES (?, 'topic', ?, ?, ?, ?)`,
-    ).run(id, input.categoryId, authorId, input.title.trim(), input.contentMarkdown);
-    // 反范式计数：版块 post_count + 1
-    db.prepare(
-      'UPDATE community_categories SET post_count = post_count + 1, updated_at = datetime(\'now\') WHERE id = ?',
-    ).run(input.categoryId);
+  const slug = generateSlug(input.title);
+  await repo.insertPost({
+    id,
+    kind: 'topic',
+    authorId: input.authorId,
+    title: input.title,
+    contentMarkdown: input.contentMarkdown,
+    slug,
+    excerpt: null,
+    coverImage: null,
+    tags: JSON.stringify(input.tags ?? []),
+    seriesId: null,
+    seriesOrder: 0,
+    status,
   });
-  tx();
 
-  // @ 提及扫描与通知（失败不影响发帖）
-  try {
-    notifyMentionsForContent(
-      input.contentMarkdown,
-      'post',
-      id,
-      authorId,
-    );
-  } catch (err) {
-    logger.error({ err }, '主题 @ 提及通知失败');
+  await processCommentMentions(id, input.contentMarkdown, input.authorId);
+
+  if (status === 'published') {
+    const mentioned = await resolveMentionedUsers(input.contentMarkdown);
+    await notifyMentionedUsers(mentioned, 'topic', id, input.authorId);
+    await repo.incrementCategoryPostCountByTopic(id);
   }
 
-  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(id) as PostRow;
-  return topicRowToBase(row);
+  return { id };
 }
 
-/** 更新主题（作者或管理员）— 仅 title + content 可编辑 */
-export function updateTopic(
-  userId: string,
-  isAdmin: boolean,
-  topicId: string,
-  input: Partial<Pick<PostInput, 'title' | 'contentMarkdown'>>,
-): CommunityPost {
-  const db = getDb();
-  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as
-    | PostRow
-    | undefined;
-  if (!existing) throw new AppError('主题不存在', 'NOT_FOUND');
+export async function updateTopic(
+  id: string,
+  updates: {
+    categoryId?: string;
+    title?: string;
+    contentMarkdown?: string;
+    status?: string;
+    isPinned?: boolean;
+    isFeatured?: boolean;
+    tags?: string[];
+  },
+  editorId: string,
+): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getPostById(id);
+  if (!existing) throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
 
-  assertOwnership(userId, existing.author_id, isAdmin, '主题', '编辑');
-
-  // 已删除的主题不允许编辑
-  if (existing.status === 'deleted') throw new AppError('主题已删除', 'STATUS_CONFLICT');
-
-  const merged: PostInput = {
-    categoryId: existing.category_id ?? null,
-    title: input.title !== undefined ? input.title : existing.title,
-    contentMarkdown:
-      input.contentMarkdown !== undefined ? input.contentMarkdown : existing.content_markdown,
-  };
-  validateTopicInput(merged);
-
-  db.prepare(
-    `UPDATE community_posts
-     SET title = ?, content_markdown = ?, updated_at = datetime('now')
-     WHERE id = ?`,
-  ).run(merged.title.trim(), merged.contentMarkdown, topicId);
-
-  // 编辑后重新扫描 @ 提及
-  try {
-    notifyMentionsForContent(
-      merged.contentMarkdown,
-      'post',
-      topicId,
-      existing.author_id,
-    );
-  } catch (err) {
-    logger.error({ err }, '主题编辑 @ 提及通知失败');
+  const editor = await getUserById(editorId);
+  const isAdmin = editor?.role === 'admin';
+  if (existing.author_id !== editorId && !isAdmin) {
+    throw new AppError('无权修改该话题', 'FORBIDDEN');
   }
 
-  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'topic'").get(topicId) as PostRow;
-  return topicRowToBase(row);
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  if (updates.categoryId !== undefined) {
+    sets.push('category_id = ?');
+    values.push(updates.categoryId);
+  }
+  if (updates.title !== undefined) {
+    sets.push('title = ?');
+    values.push(updates.title);
+  }
+  if (updates.contentMarkdown !== undefined) {
+    sets.push('content_markdown = ?');
+    values.push(updates.contentMarkdown);
+  }
+  if (updates.isPinned !== undefined) {
+    sets.push('is_pinned = ?');
+    values.push(updates.isPinned ? 1 : 0);
+  }
+  if (updates.isFeatured !== undefined) {
+    sets.push('is_featured = ?');
+    values.push(updates.isFeatured ? 1 : 0);
+  }
+  if (updates.tags !== undefined) {
+    sets.push('tags = ?');
+    values.push(JSON.stringify(updates.tags));
+  }
+  if (updates.status !== undefined) {
+    sets.push('status = ?');
+    values.push(updates.status);
+  }
+  sets.push("updated_at = datetime('now')");
+  await repo.updatePost(sets, values, id);
+
+  if (updates.contentMarkdown !== undefined) {
+    const mentioned = await resolveMentionedUsers(updates.contentMarkdown);
+    await notifyMentionedUsers(mentioned, 'topic', id, editorId);
+  }
 }
 
-/**
- * 作者软删除自己的主题（status → 'deleted'，终态）
- *
- * 管理员请使用 hardDeleteTopic 硬删除（审计保留）。
- */
-export function deleteTopic(userId: string, isAdmin: boolean, topicId: string): void {
-  const db = getDb();
-  const existing = db
-    .prepare("SELECT id, author_id, status, category_id FROM community_posts WHERE id = ? AND kind = 'topic'")
-    .get(topicId) as
-    | { id: string; author_id: string; status: string; category_id: string }
-    | undefined;
-  if (!existing) throw new AppError('主题不存在', 'NOT_FOUND');
+export async function deleteTopic(id: string, deleterId: string, reason?: string): Promise<void> {
+  const repo = getCommunityRepository();
+  const topic = await repo.getTopicStatusCategory(id);
+  if (!topic) throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
+  await repo.updatePost(["status = 'deleted'", "updated_at = datetime('now')"], [], id);
+  await logAdminAction(deleterId, 'community.topic.delete', id, { targetType: 'topic', reason });
+}
 
-  assertOwnership(userId, existing.author_id, isAdmin, '主题', '删除');
+export async function pinTopic(id: string, pinned: boolean, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  if (!(await repo.getTopicStatusCategory(id))) throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
+  await repo.updatePost(['is_pinned = ?', "updated_at = datetime('now')"], [pinned ? 1 : 0], id);
+  await logAdminAction(operatorId, 'community.topic.pin', id, { targetType: 'topic', pinned });
+}
 
-  if (existing.status === 'deleted') return; // 幂等
+export async function featureTopic(id: string, featured: boolean, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  if (!(await repo.getTopicStatusCategory(id))) throw new AppError('话题不存在', 'TOPIC_NOT_FOUND');
+  await repo.updatePost(['is_featured = ?', "updated_at = datetime('now')"], [featured ? 1 : 0], id);
+  await logAdminAction(operatorId, 'community.topic.feature', id, { targetType: 'topic', featured });
+}
 
-  const tx = db.transaction(() => {
-    db.prepare(
-      "UPDATE community_posts SET status = 'deleted', updated_at = datetime('now') WHERE id = ?",
-    ).run(topicId);
-    // 反范式计数：版块 post_count - 1（仅当原状态为 published/hidden）
-    if (existing.status === 'published' || existing.status === 'hidden') {
-      db.prepare(
-        'UPDATE community_categories SET post_count = MAX(post_count - 1, 0), updated_at = datetime(\'now\') WHERE id = ?',
-      ).run(existing.category_id);
-    }
+export async function incrementViewCount(topicId: string): Promise<void> {
+  await getCommunityRepository().incrementViewCount(topicId);
+}
+
+export async function listBlogPosts(params: {
+  category?: string;
+  author?: string;
+  status?: string;
+  search?: string;
+  sort?: string;
+  page?: number;
+  pageSize?: number;
+  currentUserId?: string;
+}): Promise<{ items: FormattedBlogPost[]; pagination: PaginationInfo }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+
+  const where: string[] = ["kind = 'post'"];
+  const queryParams: unknown[] = [];
+  if (params.category) {
+    where.push('category_id = ?');
+    queryParams.push(params.category);
+  }
+  if (params.author) {
+    where.push('author_id = ?');
+    queryParams.push(params.author);
+  }
+  if (params.status) {
+    where.push('status = ?');
+    queryParams.push(params.status);
+  }
+  if (params.search) {
+    where.push('(title LIKE ? OR content_markdown LIKE ?)');
+    const like = `%${params.search}%`;
+    queryParams.push(like, like);
+  }
+
+  const total = await repo.countPosts(`WHERE ${where.join(' AND ')}`, queryParams);
+  const rows = await repo.listPosts(where, queryParams, pageSize, offset);
+  const items = await formatBlogPosts(rows, { currentUserId: params.currentUserId });
+
+  return { items, pagination: computePagination(page, pageSize, total) };
+}
+
+export async function getBlogPost(id: string, options?: { currentUserId?: string }): Promise<FormattedBlogPost> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostById(id);
+  if (!row || row.kind !== 'post') throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  const [formatted] = await formatBlogPosts([row], { currentUserId: options?.currentUserId });
+  return formatted;
+}
+
+export async function getBlogPostBySlug(slug: string, options?: { currentUserId?: string }): Promise<FormattedBlogPost> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostBySlug(slug);
+  if (!row || row.kind !== 'post') throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  const [formatted] = await formatBlogPosts([row], { currentUserId: options?.currentUserId });
+  return formatted;
+}
+
+export async function createBlogPost(input: {
+  categoryId?: string;
+  title: string;
+  contentMarkdown: string;
+  authorId: string;
+  status?: string;
+  excerpt?: string;
+  coverImage?: string;
+  tags?: string[];
+  seriesId?: string;
+  seriesOrder?: number;
+  publish?: boolean;
+}): Promise<{ id: string }> {
+  const repo = getCommunityRepository();
+  const id = crypto.randomUUID();
+  const slug = generateSlug(input.title);
+  const status = input.status ?? (input.publish ? 'published' : 'draft');
+  await repo.insertPost({
+    id,
+    kind: 'post',
+    authorId: input.authorId,
+    title: input.title,
+    contentMarkdown: input.contentMarkdown,
+    slug,
+    excerpt: input.excerpt ?? null,
+    coverImage: input.coverImage ?? null,
+    tags: JSON.stringify(input.tags ?? []),
+    seriesId: input.seriesId ?? null,
+    seriesOrder: input.seriesOrder ?? 0,
+    status,
   });
-  tx();
+  await processCommentMentions(id, input.contentMarkdown, input.authorId);
+  if (status === 'published') {
+    const mentioned = await resolveMentionedUsers(input.contentMarkdown);
+    await notifyMentionedUsers(mentioned, 'post', id, input.authorId);
+  }
+  return { id };
 }
 
-// ============= 浏览计数 =============
-
-/**
- * 记录主题浏览（去重）
- *
- * 登录用户按 user_id 去重，匿名访客按 ip_hash 去重。
- * 24 小时窗口内同一 user_id / ip_hash 对同一主题仅计一次。
- *
- * 返回是否为新增浏览（true 表示 view_count 已 +1）。
- */
-export function recordTopicView(
-  topicId: string,
-  currentUserId?: string,
-  ipHash?: string,
-): boolean {
-  const db = getDb();
-
-  // 主题必须存在且为 published
-  const topic = db
-    .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'topic' AND status = 'published'")
-    .get(topicId) as { id: string } | undefined;
-  if (!topic) return false;
-
-  const since = `datetime('now', '-${VIEW_DEDUP_WINDOW_HOURS} hours')`;
-
-  if (currentUserId) {
-    // 登录用户：检查 24h 内是否已记录
-    const existing = db
-      .prepare(
-        `SELECT id FROM community_post_views
-         WHERE post_id = ? AND user_id = ? AND viewed_at >= ${since}`,
-      )
-      .get(topicId, currentUserId);
-    if (existing) return false;
-
-    const id = crypto.randomUUID();
-    const tx = db.transaction(() => {
-      db.prepare(
-        'INSERT OR IGNORE INTO community_post_views (id, post_id, user_id) VALUES (?, ?, ?)',
-      ).run(id, topicId, currentUserId);
-      db.prepare(
-        "UPDATE community_posts SET view_count = view_count + 1 WHERE id = ?",
-      ).run(topicId);
-    });
-    tx();
-    return true;
+export async function updateBlogPost(
+  id: string,
+  updates: {
+    categoryId?: string;
+    title?: string;
+    contentMarkdown?: string;
+    status?: string;
+    excerpt?: string;
+    coverImage?: string;
+    tags?: string[];
+    seriesId?: string;
+    seriesOrder?: number;
+  },
+  editorId: string,
+): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getPostById(id);
+  if (!existing) throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  const editor = await getUserById(editorId);
+  const isAdmin = editor?.role === 'admin';
+  if (existing.author_id !== editorId && !isAdmin) {
+    throw new AppError('无权修改该文章', 'FORBIDDEN');
   }
 
-  if (ipHash) {
-    const existing = db
-      .prepare(
-        `SELECT id FROM community_post_views
-         WHERE post_id = ? AND ip_hash = ? AND viewed_at >= ${since}`,
-      )
-      .get(topicId, ipHash);
-    if (existing) return false;
-
-    const id = crypto.randomUUID();
-    const tx = db.transaction(() => {
-      db.prepare(
-        'INSERT OR IGNORE INTO community_post_views (id, post_id, ip_hash) VALUES (?, ?, ?)',
-      ).run(id, topicId, ipHash);
-      db.prepare(
-        "UPDATE community_posts SET view_count = view_count + 1 WHERE id = ?",
-      ).run(topicId);
-    });
-    tx();
-    return true;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  if (updates.categoryId !== undefined) {
+    sets.push('category_id = ?');
+    values.push(updates.categoryId);
   }
+  if (updates.title !== undefined) {
+    sets.push('title = ?');
+    values.push(updates.title);
+  }
+  if (updates.contentMarkdown !== undefined) {
+    sets.push('content_markdown = ?');
+    values.push(updates.contentMarkdown);
+  }
+  if (updates.excerpt !== undefined) {
+    sets.push('excerpt = ?');
+    values.push(updates.excerpt);
+  }
+  if (updates.coverImage !== undefined) {
+    sets.push('cover_image = ?');
+    values.push(updates.coverImage);
+  }
+  if (updates.tags !== undefined) {
+    sets.push('tags = ?');
+    values.push(JSON.stringify(updates.tags));
+  }
+  if (updates.seriesId !== undefined) {
+    sets.push('series_id = ?');
+    values.push(updates.seriesId);
+  }
+  if (updates.seriesOrder !== undefined) {
+    sets.push('series_order = ?');
+    values.push(updates.seriesOrder);
+  }
+  if (updates.status !== undefined) {
+    sets.push('status = ?');
+    values.push(updates.status);
+  }
+  sets.push("updated_at = datetime('now')");
+  await repo.updatePost(sets, values, id);
 
-  return false;
+  if (updates.contentMarkdown !== undefined) {
+    const mentioned = await resolveMentionedUsers(updates.contentMarkdown);
+    await notifyMentionedUsers(mentioned, 'post', id, editorId);
+  }
 }
+
+export async function deleteBlogPost(id: string, deleterId: string, reason?: string): Promise<void> {
+  const repo = getCommunityRepository();
+  const post = await repo.getPostStatus(id);
+  if (!post) throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  await repo.updatePost(["status = 'deleted'", "updated_at = datetime('now')"], [], id);
+  await logAdminAction(deleterId, 'community.post.delete', id, { targetType: 'post', reason });
+}
+
+export async function publishBlogPost(id: string, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  if (!(await repo.getPostStatus(id))) throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  await repo.updatePost(["status = 'published'", "published_at = datetime('now')", "updated_at = datetime('now')"], [], id);
+  await logAdminAction(operatorId, 'community.post.publish', id, { targetType: 'post' });
+}
+
+export async function getPostForEdit(id: string): Promise<CommunityPostRow> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostById(id);
+  if (!row) throw new AppError('文章不存在', 'POST_NOT_FOUND');
+  return row;
+}
+
+export async function searchTopics(params: {
+  q: string;
+  category?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<TopicListResult> {
+  return listTopics({
+    search: params.q,
+    category: params.category,
+    page: params.page,
+    pageSize: params.pageSize,
+    status: 'published',
+  });
+}
+
+export { canManageCategory };
+
+/** 兼容别名 */
+export async function getTopicById(id: string, options?: { currentUserId?: string }): Promise<FormattedPost> {
+  return getTopic(id, options);
+}
+export async function recordTopicView(topicId: string): Promise<void> {
+  return incrementViewCount(topicId);
+}
+export type { ListTopicsFilters, PaginatedPosts, PostInput } from '@/modules/community/types';
+export type { TopicListResult as PaginatedPostsResult } from './topics';

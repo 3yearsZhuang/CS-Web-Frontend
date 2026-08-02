@@ -3,7 +3,8 @@
  */
 import crypto from 'node:crypto';
 import 'server-only';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getAnnouncementRepository } from '@/shared/db/repositories';
 import type {
   Announcement,
   AnnouncementInput,
@@ -54,16 +55,9 @@ function rowToAnnouncement(row: AnnouncementRow): Announcement {
  * `T`(0x54) > 空格(0x20)，导致 ISO 格式的过期公告在过期当天被判为未过期。
  * 用 datetime(expires_at) 归一化为 SQLite 格式后再比较。
  */
-export function getActiveAnnouncements(userRole?: string): Announcement[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT * FROM announcements
-       WHERE is_active = 1
-         AND (expires_at IS NULL OR datetime(expires_at) > datetime('now'))
-       ORDER BY priority DESC, created_at DESC`,
-    )
-    .all() as AnnouncementRow[];
+export async function getActiveAnnouncements(userRole?: string): Promise<Announcement[]> {
+  const repo = getAnnouncementRepository();
+  const rows = await repo.listActive();
 
   return rows
     .map(rowToAnnouncement)
@@ -75,11 +69,9 @@ export function getActiveAnnouncements(userRole?: string): Announcement[] {
 }
 
 /** 管理员：列出所有公告 */
-export function listAllAnnouncements(): PaginatedAnnouncements {
-  const db = getDb();
-  const rows = db
-    .prepare('SELECT * FROM announcements ORDER BY created_at DESC')
-    .all() as AnnouncementRow[];
+export async function listAllAnnouncements(): Promise<PaginatedAnnouncements> {
+  const repo = getAnnouncementRepository();
+  const rows = await repo.listAll();
 
   return {
     items: rows.map(rowToAnnouncement),
@@ -88,90 +80,90 @@ export function listAllAnnouncements(): PaginatedAnnouncements {
 }
 
 /** 管理员：获取单个公告 */
-export function getAnnouncementById(id: string): Announcement | null {
-  const db = getDb();
-  const row = db
-    .prepare('SELECT * FROM announcements WHERE id = ?')
-    .get(id) as AnnouncementRow | undefined;
+export async function getAnnouncementById(id: string): Promise<Announcement | null> {
+  const repo = getAnnouncementRepository();
+  const row = await repo.getAnnouncementById(id);
   return row ? rowToAnnouncement(row) : null;
 }
 
 /** 管理员：创建公告 */
-export function createAnnouncement(
+export async function createAnnouncement(
   createdBy: string,
   input: AnnouncementInput,
-): Announcement {
-  const db = getDb();
+): Promise<Announcement> {
+  const repo = getAnnouncementRepository();
+  const engine = await getDbEngine();
   const id = crypto.randomUUID();
 
-  db.prepare(
-    `INSERT INTO announcements (id, title, content, level, is_dismissible, priority, expires_at, target_roles, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    input.title.trim(),
-    input.content?.trim() ?? null,
-    input.level ?? 'info',
-    input.isDismissible !== false ? 1 : 0,
-    input.priority ?? 0,
-    // R17: 空字符串归一化为 null（UI 空输入应表示"永不过期"，而非写入 ''）
-    input.expiresAt || null,
-    input.targetRoles ? JSON.stringify(input.targetRoles) : null,
-    createdBy,
-  );
+  await engine.transaction(async (tx) => {
+    await repo.insertAnnouncement(tx, id, {
+      title: input.title.trim(),
+      content: input.content?.trim() ?? null,
+      level: input.level ?? 'info',
+      isDismissible: input.isDismissible !== false ? 1 : 0,
+      priority: input.priority ?? 0,
+      expiresAt: input.expiresAt || null,
+      targetRoles: input.targetRoles ? JSON.stringify(input.targetRoles) : null,
+      createdBy,
+    });
+  });
 
-  return getAnnouncementById(id)!;
+  const row = await repo.getAnnouncementById(id);
+  return rowToAnnouncement(row as AnnouncementRow);
 }
 
 /** 管理员：更新公告 */
-export function updateAnnouncement(
+export async function updateAnnouncement(
   id: string,
   input: Partial<AnnouncementInput & { isActive: boolean }>,
-): Announcement | null {
-  const db = getDb();
-  const existing = getAnnouncementById(id);
+): Promise<Announcement | null> {
+  const repo = getAnnouncementRepository();
+  const existing = await repo.getAnnouncementById(id);
   if (!existing) return null;
 
   const title = input.title !== undefined ? input.title.trim() : existing.title;
   const content = input.content !== undefined ? (input.content?.trim() ?? null) : existing.content;
   const level = input.level ?? existing.level;
-  const isDismissible = input.isDismissible !== undefined ? (input.isDismissible ? 1 : 0) : (existing.isDismissible ? 1 : 0);
+  const isDismissible = input.isDismissible !== undefined ? (input.isDismissible ? 1 : 0) : (existing.is_dismissible ? 1 : 0);
   const priority = input.priority ?? existing.priority;
-  // R17: 显式传入空字符串时归一化为 null（UI 清空过期时间应表示"永不过期"）
   const expiresAt = input.expiresAt !== undefined
     ? (input.expiresAt || null)
-    : existing.expiresAt;
+    : existing.expires_at;
   const targetRoles = input.targetRoles !== undefined
     ? (input.targetRoles ? JSON.stringify(input.targetRoles) : null)
-    : (existing.targetRoles ? JSON.stringify(existing.targetRoles) : null);
-  const isActive = input.isActive !== undefined ? (input.isActive ? 1 : 0) : (existing.isActive ? 1 : 0);
+    : (existing.target_roles ? existing.target_roles : null);
+  const isActive = input.isActive !== undefined ? (input.isActive ? 1 : 0) : (existing.is_active ? 1 : 0);
 
-  db.prepare(
-    `UPDATE announcements
-     SET title = ?, content = ?, level = ?, is_active = ?, is_dismissible = ?,
-         priority = ?, expires_at = ?, target_roles = ?, updated_at = datetime('now')
-     WHERE id = ?`,
-  ).run(title, content, level, isActive, isDismissible, priority, expiresAt, targetRoles, id);
+  await repo.updateAnnouncement(id, {
+    title,
+    content,
+    level,
+    isActive,
+    isDismissible,
+    priority,
+    expiresAt,
+    targetRoles,
+  });
 
-  return getAnnouncementById(id);
+  const updatedRow = await repo.getAnnouncementById(id);
+  return updatedRow ? rowToAnnouncement(updatedRow) : null;
 }
 
 /** 管理员：删除公告 */
-export function deleteAnnouncement(id: string): boolean {
-  const db = getDb();
-  const result = db.prepare('DELETE FROM announcements WHERE id = ?').run(id);
-  return result.changes > 0;
+export async function deleteAnnouncement(id: string): Promise<boolean> {
+  const repo = getAnnouncementRepository();
+  const result = await repo.deleteAnnouncement(id);
+  return result > 0;
 }
 
 /** 管理员：切换公告激活状态 */
-export function toggleAnnouncementActive(id: string): Announcement | null {
-  const db = getDb();
-  const existing = getAnnouncementById(id);
+export async function toggleAnnouncementActive(id: string): Promise<Announcement | null> {
+  const repo = getAnnouncementRepository();
+  const existing = await repo.getAnnouncementById(id);
   if (!existing) return null;
 
-  db.prepare(
-    `UPDATE announcements SET is_active = ?, updated_at = datetime('now') WHERE id = ?`,
-  ).run(existing.isActive ? 0 : 1, id);
+  await repo.setActive(id, existing.is_active ? 0 : 1);
 
-  return getAnnouncementById(id);
+  const toggledRow = await repo.getAnnouncementById(id);
+  return toggledRow ? rowToAnnouncement(toggledRow) : null;
 }

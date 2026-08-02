@@ -1,34 +1,29 @@
 /**
- * @file 活动模块服务层统一导出
+ * @file 活动模块服务层统一导出（已迁移至 Repository 抽象层，ADR-009）
  */
 
 import 'server-only';
 
 export {
-  toEventItem,
-  toEventRegistration,
-  validateInput,
   listEvents,
-  getEventById,
+  getEvent,
   createEvent,
   updateEvent,
   deleteEvent,
-  getRegisteredCount,
+  autoArchivePastEvents,
   batchUpdateEvents,
 } from './crud';
 
 export {
-  getUserRegistration,
-  getEventRegistrations,
-  registerEvent,
-  cancelEventRegistration,
+  registerForEvent,
+  cancelRegistration,
+  getRegistration,
+  getEventRegistrationStats,
+  getStats,
   getUserRegisteredEvents,
   adminAddRegistration,
   adminUpdateRegistrationStatus,
-  getEventRegistrationStats,
 } from './registration';
-
-export { autoArchivePastEvents } from './archive';
 
 export {
   generateCheckinCodes,
@@ -51,8 +46,6 @@ export {
   listRegistrations,
   type AdminEventRegistration,
 } from './registrations';
-
-export { getDb } from '@/shared/db';
 
 export type {
   EventStatus,

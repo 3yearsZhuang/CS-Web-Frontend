@@ -3,7 +3,8 @@
  */
 
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getToolsRepository } from '@/shared/db/repositories';
 import { computePagination } from '@/shared/utils/pagination';
 import {
   type ResourceType,
@@ -15,6 +16,8 @@ import {
   type ResourceQueryInput,
   type ResourceListResult,
 } from '../../types';
+import type { QueryParams } from '@/shared/db/drivers';
+import type { ResourceRow } from '@/shared/db/repositories';
 
 /** 资源类型中文标签映射 */
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
@@ -27,11 +30,12 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
 };
 
 /** 提交新资源 */
-export function createResource(
+export async function createResource(
   userId: string,
   input: CreateResourceInput,
-): { ok: true; resource: Resource } | { ok: false; error: string } {
-  const db = getDb();
+): Promise<{ ok: true; resource: Resource } | { ok: false; error: string }> {
+  const repo = getToolsRepository();
+  const engine = await getDbEngine();
   const id = crypto.randomUUID();
 
   const title = input.title.trim();
@@ -45,24 +49,22 @@ export function createResource(
     return { ok: false, error: '标题和链接不能为空' };
   }
 
-  db.prepare(`
-    INSERT INTO resources (id, title, url, description, resource_type, tech_tags, file_url, submitted_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, title, url, description, resourceType, techTags, fileUrl, userId);
+  await engine.transaction(async (tx) => {
+    await repo.insertResource(tx, { id, title, url, description, resourceType, techTags, fileUrl, submittedBy: userId });
+  });
 
-  const resource = db.prepare('SELECT * FROM resources WHERE id = ?').get(id) as Resource;
-  return { ok: true, resource };
+  const resource = await repo.getResourceById(id);
+  return { ok: true, resource: resource as Resource };
 }
 
 /** 更新资源信息 */
-export function updateResource(
+export async function updateResource(
   resourceId: string,
   userId: string,
   input: UpdateResourceInput,
-): { ok: true; resource: Resource } | { ok: false; error: string } {
-  const db = getDb();
-
-  const existing = db.prepare('SELECT * FROM resources WHERE id = ?').get(resourceId) as Resource | undefined;
+): Promise<{ ok: true; resource: Resource } | { ok: false; error: string }> {
+  const repo = getToolsRepository();
+  const existing = await repo.getResourceById(resourceId);
   if (!existing) {
     return { ok: false, error: '资源不存在' };
   }
@@ -70,52 +72,33 @@ export function updateResource(
     return { ok: false, error: '只能编辑自己提交的资源' };
   }
 
-  const fields: string[] = [];
-  const args: unknown[] = [];
+  const fields: Record<string, unknown> = {};
 
-  if (input.title !== undefined) {
-    fields.push('title = ?');
-    args.push(input.title.trim());
-  }
-  if (input.url !== undefined) {
-    fields.push('url = ?');
-    args.push(input.url.trim());
-  }
-  if (input.description !== undefined) {
-    fields.push('description = ?');
-    args.push(input.description.trim() || null);
-  }
-  if (input.resourceType !== undefined) {
-    fields.push('resource_type = ?');
-    args.push(input.resourceType);
-  }
-  if (input.techTags !== undefined) {
-    fields.push('tech_tags = ?');
-    args.push(input.techTags.length ? JSON.stringify(input.techTags) : null);
-  }
+  if (input.title !== undefined) fields.title = input.title.trim();
+  if (input.url !== undefined) fields.url = input.url.trim();
+  if (input.description !== undefined) fields.description = input.description.trim() || null;
+  if (input.resourceType !== undefined) fields.resourceType = input.resourceType;
+  if (input.techTags !== undefined) fields.techTags = input.techTags.length ? JSON.stringify(input.techTags) : null;
 
-  if (fields.length === 0) {
+  if (Object.keys(fields).length === 0) {
     return { ok: false, error: '没有需要更新的字段' };
   }
 
-  fields.push('updated_at = datetime(\'now\')');
-  fields.push('status = \'draft\'');
-  args.push(resourceId);
+  fields.status = 'draft';
 
-  db.prepare(`UPDATE resources SET ${fields.join(', ')} WHERE id = ?`).run(...args);
+  await repo.updateResource(resourceId, fields as Partial<ResourceRow>);
 
-  const updated = db.prepare('SELECT * FROM resources WHERE id = ?').get(resourceId) as Resource;
-  return { ok: true, resource: updated };
+  const updated = await repo.getResourceById(resourceId);
+  return { ok: true, resource: updated as Resource };
 }
 
 /** 删除资源 */
-export function deleteResource(
+export async function deleteResource(
   resourceId: string,
   userId: string,
-): { ok: true } | { ok: false; error: string } {
-  const db = getDb();
-
-  const existing = db.prepare('SELECT * FROM resources WHERE id = ?').get(resourceId) as Resource | undefined;
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const repo = getToolsRepository();
+  const existing = await repo.getResourceById(resourceId);
   if (!existing) {
     return { ok: false, error: '资源不存在' };
   }
@@ -123,22 +106,22 @@ export function deleteResource(
     return { ok: false, error: '只能删除自己提交的资源' };
   }
 
-  db.prepare('DELETE FROM resources WHERE id = ?').run(resourceId);
+  await repo.deleteResource(resourceId);
   return { ok: true };
 }
 
 function buildResourceQuery(input: ResourceQueryInput, userId?: string): {
   where: string;
-  args: unknown[];
+  args: QueryParams;
 } {
   const conditions: string[] = [];
-  const args: unknown[] = [];
+  const args: QueryParams = [];
 
   if (input.status) {
     conditions.push('r.status = ?');
     args.push(input.status);
   } else {
-    conditions.push('r.status = \'published\'');
+    conditions.push("r.status = 'published'");
   }
 
   if (input.resourceType) {
@@ -161,11 +144,11 @@ function buildResourceQuery(input: ResourceQueryInput, userId?: string): {
 }
 
 /** 分页列出资源 */
-export function listResources(
+export async function listResources(
   input: ResourceQueryInput,
   userId?: string,
-): ResourceListResult {
-  const db = getDb();
+): Promise<ResourceListResult> {
+  const repo = getToolsRepository();
   const { page, pageSize } = computePagination({
     page: input.page,
     pageSize: input.pageSize,
@@ -179,93 +162,40 @@ export function listResources(
     ? 'r.like_count DESC, r.view_count DESC, r.created_at DESC'
     : 'r.created_at DESC';
 
-  const totalRow = db.prepare(
-    `SELECT COUNT(*) as count FROM resources r ${where}`,
-  ).get(...args) as { count: number };
-  const total = totalRow.count;
+  const total = await repo.countResources(where, args);
 
   const offset = (page - 1) * pageSize;
-  const resources = db.prepare(`
-    SELECT r.*,
-      u.display_name AS author_display_name,
-      u.avatar_url AS author_avatar_url,
-      u.tech_tags AS author_tech_tags,
-      ur.display_name AS reviewer_display_name
-    FROM resources r
-    LEFT JOIN users u ON r.submitted_by = u.id
-    LEFT JOIN users ur ON r.reviewed_by = ur.id
-    ${where}
-    ORDER BY ${orderBy}
-    LIMIT ? OFFSET ?
-  `).all(...args, pageSize, offset) as ResourceWithAuthor[];
+  const resources = await repo.listResourcesWithAuthor(where, [...args, pageSize, offset] as QueryParams, orderBy);
 
   const techTagCounts: Record<string, number> = {};
-  if (input.techTag) {
-    const counts = db.prepare(`
-      SELECT tech_tag, COUNT(*) as count FROM (
-        SELECT json_each.value AS tech_tag
-        FROM resources r, json_each(r.tech_tags)
-        WHERE r.status = 'published'
-      )
-      WHERE tech_tag = ?
-      GROUP BY tech_tag
-    `).all(input.techTag) as Array<{ tech_tag: string; count: number }>;
-    for (const c of counts) {
-      techTagCounts[c.tech_tag] = c.count;
-    }
-  } else {
-    const counts = db.prepare(`
-      SELECT json_each.value AS tech_tag, COUNT(*) as count
-      FROM resources r, json_each(r.tech_tags)
-      WHERE r.status = 'published'
-      GROUP BY tech_tag
-    `).all() as Array<{ tech_tag: string; count: number }>;
-    for (const c of counts) {
-      techTagCounts[c.tech_tag] = c.count;
-    }
+  const counts = await repo.getTechTagCounts(input.techTag ?? null);
+  for (const c of counts) {
+    techTagCounts[c.tech_tag] = c.count;
   }
 
   const totalPages = Math.ceil(total / pageSize) || 1;
 
-  return { resources, total, page, totalPages, techTagCounts };
+  return { resources: resources as ResourceWithAuthor[], total, page, totalPages, techTagCounts };
 }
 
 /** 根据 ID 获取资源详情 */
-export function getResourceById(resourceId: string): ResourceWithAuthor | null {
-  const db = getDb();
-  return db.prepare(`
-    SELECT r.*,
-      u.display_name AS author_display_name,
-      u.avatar_url AS author_avatar_url,
-      u.tech_tags AS author_tech_tags,
-      ur.display_name AS reviewer_display_name
-    FROM resources r
-    LEFT JOIN users u ON r.submitted_by = u.id
-    LEFT JOIN users ur ON r.reviewed_by = ur.id
-    WHERE r.id = ?
-  `).get(resourceId) as ResourceWithAuthor | undefined ?? null;
+export async function getResourceById(resourceId: string): Promise<ResourceWithAuthor | null> {
+  const repo = getToolsRepository();
+  const rows = await repo.listResourcesWithAuthor('WHERE r.id = ?', [resourceId, 1, 0] as QueryParams);
+  return (rows[0] as ResourceWithAuthor) ?? null;
 }
 
 /** 获取用户提交的资源列表 */
-export function getUserResources(
+export async function getUserResources(
   userId: string,
   status?: ResourceStatus,
-): Resource[] {
-  const db = getDb();
-  if (status) {
-    return db.prepare(
-      'SELECT * FROM resources WHERE submitted_by = ? AND status = ? ORDER BY created_at DESC',
-    ).all(userId, status) as Resource[];
-  }
-  return db.prepare(
-    'SELECT * FROM resources WHERE submitted_by = ? ORDER BY created_at DESC',
-  ).all(userId) as Resource[];
+): Promise<Resource[]> {
+  const repo = getToolsRepository();
+  return repo.getUserResources(userId, status ?? null) as Promise<Resource[]>;
 }
 
 /** 增加资源查看次数 */
-export function incrementResourceView(resourceId: string): void {
-  const db = getDb();
-  db.prepare(
-    'UPDATE resources SET view_count = view_count + 1 WHERE id = ?',
-  ).run(resourceId);
+export async function incrementResourceView(resourceId: string): Promise<void> {
+  const repo = getToolsRepository();
+  await repo.incrementResourceView(resourceId);
 }

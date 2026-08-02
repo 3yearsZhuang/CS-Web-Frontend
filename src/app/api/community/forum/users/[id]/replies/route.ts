@@ -35,7 +35,7 @@ export async function GET(
 
   const log = createRequestLogger(req);
   try {
-    const result = listUserReplies(id, page, pageSize);
+    const result = await listUserReplies(id, { page, pageSize });
     return NextResponse.json(result);
   } catch (err) {
     log.error({ err }, '获取用户回复列表失败');

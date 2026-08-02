@@ -3,9 +3,11 @@
  */
 
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getDbEngine } from '@/shared/db/drivers';
+import { getToolsRepository } from '@/shared/db/repositories';
 import { AppError } from '@/shared/app-error';
 import { logAdminAction } from '@/shared/security/audit';
+import type { QueryParams } from '@/shared/db/drivers';
 import {
   type TaskStatus,
   type TaskCategory,
@@ -69,39 +71,39 @@ function validateTaskInput(input: TaskInput): string | null {
 }
 
 /** 创建任务 */
-export function createTask(adminId: string, input: TaskInput): Task {
+export async function createTask(adminId: string, input: TaskInput): Promise<Task> {
   const err = validateTaskInput(input);
   if (err) throw new AppError(err, 'VALIDATION_ERROR');
 
-  const db = getDb();
+  const repo = getToolsRepository();
+  const engine = await getDbEngine();
   const id = crypto.randomUUID();
   const tagsStr = input.tags?.length ? JSON.stringify(input.tags) : '[]';
 
-  db.prepare(
-    `INSERT INTO tasks (id, title, description, content_markdown, category, tags, points, max_claimants, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    id,
-    input.title.trim(),
-    input.description.trim(),
-    input.contentMarkdown?.trim() || null,
-    input.category || 'general',
-    tagsStr,
-    input.points ?? 10,
-    input.maxClaimants ?? 1,
-    adminId,
-  );
+  await engine.transaction(async (tx) => {
+    await repo.insertTask(tx, {
+      id,
+      title: input.title.trim(),
+      description: input.description.trim(),
+      contentMarkdown: input.contentMarkdown?.trim() || null,
+      category: input.category || 'general',
+      tags: tagsStr,
+      points: input.points ?? 10,
+      maxClaimants: input.maxClaimants ?? 1,
+      createdBy: adminId,
+    });
+  });
 
   logAdminAction(adminId, 'task_create', null, { taskId: id, title: input.title.trim() });
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as TaskRow;
-  return toTask(row, 0);
+  const row = await repo.getTaskById(id);
+  return toTask(row as TaskRow, 0);
 }
 
 /** 更新任务 */
-export function updateTask(adminId: string, taskId: string, input: Partial<TaskInput>): Task {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
+export async function updateTask(adminId: string, taskId: string, input: Partial<TaskInput>): Promise<Task> {
+  const repo = getToolsRepository();
+  const existing = await repo.getTaskById(taskId);
   if (!existing) throw new AppError('任务不存在', 'NOT_FOUND');
 
   const merged: TaskInput = {
@@ -119,86 +121,79 @@ export function updateTask(adminId: string, taskId: string, input: Partial<TaskI
 
   const tagsStr = merged.tags?.length ? JSON.stringify(merged.tags) : '[]';
 
-  db.prepare(
-    `UPDATE tasks SET title = ?, description = ?, content_markdown = ?, category = ?, tags = ?, points = ?, max_claimants = ?, updated_at = datetime('now') WHERE id = ?`,
-  ).run(
-    merged.title.trim(),
-    merged.description.trim(),
-    merged.contentMarkdown?.trim() || null,
-    merged.category || 'general',
-    tagsStr,
-    merged.points ?? 10,
-    merged.maxClaimants ?? 1,
-    taskId,
-  );
+  await repo.updateTaskFields(taskId, {
+    title: merged.title.trim(),
+    description: merged.description.trim(),
+    contentMarkdown: merged.contentMarkdown?.trim() || null,
+    category: merged.category || 'general',
+    tags: tagsStr,
+    points: merged.points ?? 10,
+    maxClaimants: merged.maxClaimants ?? 1,
+  });
 
   logAdminAction(adminId, 'task_update', null, { taskId });
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow;
-  const claimCount = (db.prepare('SELECT COUNT(*) AS c FROM task_claims WHERE task_id = ? AND status != ?').get(taskId, 'cancelled') as { c: number }).c;
-  return toTask(row, claimCount);
+  const row = await repo.getTaskById(taskId);
+  const claimCount = await repo.getTaskClaimCount(taskId, 'active');
+  return toTask(row as TaskRow, claimCount);
 }
 
 /** 发布任务 */
-export function publishTask(adminId: string, taskId: string): Task {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
+export async function publishTask(adminId: string, taskId: string): Promise<Task> {
+  const repo = getToolsRepository();
+  const existing = await repo.getTaskById(taskId);
   if (!existing) throw new AppError('任务不存在', 'NOT_FOUND');
   if (existing.status !== 'draft') throw new AppError('只能发布草稿状态的任务', 'INVALID_STATUS');
 
-  db.prepare(
-    `UPDATE tasks SET status = 'published', published_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
-  ).run(taskId);
+  await repo.updateTaskFields(taskId, { status: 'published', publishedAt: new Date().toISOString() });
 
   logAdminAction(adminId, 'task_publish', null, { taskId });
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow;
-  return toTask(row, 0);
+  const row = await repo.getTaskById(taskId);
+  return toTask(row as TaskRow, 0);
 }
 
 /** 关闭任务 */
-export function closeTask(adminId: string, taskId: string): Task {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
+export async function closeTask(adminId: string, taskId: string): Promise<Task> {
+  const repo = getToolsRepository();
+  const existing = await repo.getTaskById(taskId);
   if (!existing) throw new AppError('任务不存在', 'NOT_FOUND');
   if (existing.status !== 'published') throw new AppError('只能关闭已发布的任务', 'INVALID_STATUS');
 
-  db.prepare(
-    `UPDATE tasks SET status = 'closed', closed_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
-  ).run(taskId);
+  await repo.updateTaskFields(taskId, { status: 'closed', closedAt: new Date().toISOString() });
 
   logAdminAction(adminId, 'task_close', null, { taskId });
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow;
-  const claimCount = (db.prepare('SELECT COUNT(*) AS c FROM task_claims WHERE task_id = ? AND status = ?').get(taskId, 'completed') as { c: number }).c;
-  return toTask(row, claimCount);
+  const row = await repo.getTaskById(taskId);
+  const claimCount = await repo.getTaskClaimCount(taskId, 'completed');
+  return toTask(row as TaskRow, claimCount);
 }
 
 /** 删除任务 */
-export function deleteTask(adminId: string, taskId: string): void {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
+export async function deleteTask(adminId: string, taskId: string): Promise<void> {
+  const repo = getToolsRepository();
+  const existing = await repo.getTaskById(taskId);
   if (!existing) throw new AppError('任务不存在', 'NOT_FOUND');
 
   logAdminAction(adminId, 'task_delete', null, { taskId, title: existing.title });
-  db.prepare('DELETE FROM tasks WHERE id = ?').run(taskId);
+  await repo.deleteTask(taskId);
 }
 
 /** 根据 ID 获取任务 */
-export function getTaskById(taskId: string): Task | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as TaskRow | undefined;
+export async function getTaskById(taskId: string): Promise<Task | null> {
+  const repo = getToolsRepository();
+  const row = await repo.getTaskById(taskId);
   if (!row) return null;
 
-  const claimCount = (db.prepare('SELECT COUNT(*) AS c FROM task_claims WHERE task_id = ? AND status != ?').get(taskId, 'cancelled') as { c: number }).c;
+  const claimCount = await repo.getTaskClaimCount(taskId, 'active');
   return toTask(row, claimCount);
 }
 
 /** 列出任务列表 */
-export function listTasks(opts: TaskListOptions = {}): { tasks: Task[]; total: number } {
-  const db = getDb();
+export async function listTasks(opts: TaskListOptions = {}): Promise<{ tasks: Task[]; total: number }> {
+  const repo = getToolsRepository();
   const conditions: string[] = [];
-  const params: unknown[] = [];
+  const params: QueryParams = [];
 
   if (opts.status) {
     conditions.push('status = ?');
@@ -214,16 +209,14 @@ export function listTasks(opts: TaskListOptions = {}): { tasks: Task[]; total: n
   const pageSize = opts.pageSize ?? 20;
   const offset = (page - 1) * pageSize;
 
-  const total = (db.prepare(`SELECT COUNT(*) AS c FROM tasks ${where}`).all(...params) as Array<{ c: number }>)[0].c;
+  const total = await repo.countTasks(where, params);
 
-  const rows = db.prepare(
-    `SELECT * FROM tasks ${where} ORDER BY published_at DESC NULLS LAST, created_at DESC LIMIT ? OFFSET ?`,
-  ).all(...params, pageSize, offset) as TaskRow[];
+  const rows = await repo.listTasks(where, [...params, pageSize, offset] as QueryParams);
 
-  const tasks = rows.map((row) => {
-    const claimCount = (db.prepare('SELECT COUNT(*) AS c FROM task_claims WHERE task_id = ? AND status != ?').get(row.id, 'cancelled') as { c: number }).c;
+  const tasks = await Promise.all(rows.map(async (row) => {
+    const claimCount = await repo.getTaskClaimCount(row.id, 'active');
     return toTask(row, claimCount);
-  });
+  }));
 
   return { tasks, total };
 }

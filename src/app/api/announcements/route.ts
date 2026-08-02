@@ -14,9 +14,9 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  const session = token ? getSession(token) : null;
+  const session = token ? await getSession(token) : null;
 
-  const announcements = getActiveAnnouncements(session?.user.role);
+  const announcements = await getActiveAnnouncements(session?.user.role);
 
   return NextResponse.json({ announcements });
 }

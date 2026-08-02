@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const params = req.nextUrl.searchParams;
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   if (sub === 'publish') {
     try {
-      const post = publishPost(admin.user.id, body.postId);
+      const post = await publishPost(admin.user.id, body.postId);
       return NextResponse.json({ post });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (sub === 'archive') {
     try {
-      const post = archivePost(admin.user.id, body.postId);
+      const post = await archivePost(admin.user.id, body.postId);
       return NextResponse.json({ post });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   if (sub === 'delete') {
     try {
-      deletePost(admin.user.id, body.postId, isAdminRole(admin.user.role));
+      await deletePost(body.postId, admin.user.id);
       return NextResponse.json({ ok: true });
     } catch (e: unknown) {
       return errorResponse(e);

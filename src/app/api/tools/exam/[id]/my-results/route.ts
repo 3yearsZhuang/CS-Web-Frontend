@@ -23,7 +23,7 @@ export async function GET(
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -32,7 +32,7 @@ export async function GET(
 
   const log = createRequestLogger(req);
   try {
-    const attempts = getUserAttempts(session.user.id, id);
+    const attempts = await getUserAttempts(session.user.id, id);
     return NextResponse.json({ attempts });
   } catch (err) {
     log.error({ err }, '获取成绩失败');

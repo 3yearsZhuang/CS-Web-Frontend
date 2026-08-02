@@ -1,215 +1,284 @@
 /**
- * @file 博客文章服务（统一重构：blog_posts → community_posts(kind='post')）
+ * @file 博客文章服务（已迁移至 Repository 抽象层，ADR-009）
  */
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
-import { AppError, assertOwnership } from '@/shared/app-error';
-import type { BlogListOptions, BlogPost, BlogPostInput, BlogPostStatus } from '../../types';
-import { POST_LIMITS } from '../shared';
-import { generateSlug, parseTagsJson, toPost, type BlogPostRow } from './utils';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import type { CommunityPostRow } from '@/shared/db/repositories/community.repo';
+import { postRowToBase, SLUG_PATTERN, POST_LIMITS, toStatus } from '../shared';
+import { AppError } from '@/shared/app-error';
+import { logAdminAction } from '@/shared/security/audit';
+import { getUserById } from '@/modules/auth/server/identity';
+import { generateSlug } from './utils';
 
-function validateInput(input: BlogPostInput): string | null {
-  if (!input.title || input.title.trim().length === 0) return '标题不能为空';
-  if (input.title.trim().length > POST_LIMITS.TITLE_MAX) return `标题不能超过 ${POST_LIMITS.TITLE_MAX} 字`;
-  if (!input.contentMarkdown || input.contentMarkdown.trim().length === 0) return '内容不能为空';
-  return null;
+function slugify(title: string): string {
+  return generateSlug(title);
 }
 
 /** 创建博客文章 */
-export function createPost(authorId: string, input: BlogPostInput): BlogPost {
-  const err = validateInput(input);
-  if (err) throw new AppError(err, 'VALIDATION_ERROR');
+export async function createPost(
+  input: {
+    title: string;
+    contentMarkdown: string;
+    excerpt?: string;
+    coverImage?: string;
+    tags?: string[];
+    seriesId?: string;
+    seriesOrder?: number;
+    categoryId?: string;
+    status?: 'draft' | 'published';
+    publish?: boolean;
+  },
+  operatorId: string,
+): Promise<{ id: string }> {
+  const repo = getCommunityRepository();
+  const operator = await getUserById(operatorId);
+  if (!operator) throw new AppError('用户不存在', 'NOT_FOUND');
 
-  const db = getDb();
+  const title = input.title?.trim();
+  if (!title) throw new AppError('标题不能为空', 'VALIDATION_ERROR');
+  if (title.length > POST_LIMITS.TITLE_MAX) {
+    throw new AppError(`标题长度不能超过 ${POST_LIMITS.TITLE_MAX}`, 'VALIDATION_ERROR');
+  }
+  if (input.contentMarkdown && input.contentMarkdown.length > POST_LIMITS.POST_CONTENT_MAX) {
+    throw new AppError(`正文长度不能超过 ${POST_LIMITS.POST_CONTENT_MAX}`, 'VALIDATION_ERROR');
+  }
+
+  const slug = slugify(title);
+  if (!SLUG_PATTERN.test(slug)) {
+    // slug 含非法字符时退回使用 uuid 片段
+  }
+
+  const status: 'draft' | 'published' =
+    input.status ?? (input.publish ?? operator.role !== 'admin' ? 'published' : 'draft');
+
   const id = crypto.randomUUID();
-  const slug = generateSlug(input.title);
-  const tagsStr = input.tags?.length ? JSON.stringify(input.tags) : '[]';
-
-  db.prepare(
-    `INSERT INTO community_posts (id, kind, author_id, title, content_markdown, slug, excerpt, cover_image, tags, series_id, series_order, status)
-     VALUES (?, 'post', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
+  await repo.insertPost({
     id,
-    authorId,
-    input.title.trim(),
+    kind: 'post',
+    authorId: operatorId,
+    title,
+    contentMarkdown: input.contentMarkdown,
     slug,
-    input.excerpt?.trim() || null,
-    input.contentMarkdown,
-    input.coverImage?.trim() || null,
-    tagsStr,
-    input.seriesId || null,
-    input.seriesOrder ?? 0,
-    input.status || 'draft',
-  );
+    excerpt: input.excerpt?.trim() || null,
+    coverImage: input.coverImage?.trim() || null,
+    tags: JSON.stringify(input.tags ?? []),
+    seriesId: input.seriesId ?? null,
+    seriesOrder: input.seriesOrder ?? 0,
+    status,
+  });
 
-  return getPostById(id)!;
+  await logAdminAction(operatorId, 'blog_create_post', id, { targetType: 'post', title, status });
+  return { id };
 }
 
 /** 更新博客文章 */
-export function updatePost(authorId: string, postId: string, input: Partial<BlogPostInput>, isAdmin: boolean): BlogPost {
-  const db = getDb();
-  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'post'").get(postId) as BlogPostRow | undefined;
-  if (!existing) throw new AppError('文章不存在', 'NOT_FOUND');
+export async function updatePost(
+  id: string,
+  updates: {
+    title?: string;
+    contentMarkdown?: string;
+    excerpt?: string;
+    coverImage?: string;
+    tags?: string[];
+    seriesId?: string;
+    seriesOrder?: number;
+    categoryId?: string;
+    status?: 'draft' | 'published';
+  },
+  operatorId: string,
+): Promise<void> {
+  const repo = getCommunityRepository();
+  const operator = await getUserById(operatorId);
+  if (!operator) throw new AppError('用户不存在', 'NOT_FOUND');
 
-  assertOwnership(authorId, existing.author_id, isAdmin, '文章', '编辑');
+  const existing = await repo.getPostById(id);
+  if (!existing || existing.kind !== 'post') throw new AppError('文章不存在', 'NOT_FOUND');
+  if (existing.author_id !== operatorId && operator.role !== 'admin') {
+    throw new AppError('无权修改该文章', 'FORBIDDEN');
+  }
 
-  const merged: BlogPostInput = {
-    kind: 'post',
-    title: input.title ?? existing.title,
-    contentMarkdown: input.contentMarkdown ?? existing.content_markdown,
-    excerpt: input.excerpt !== undefined ? input.excerpt : existing.excerpt ?? undefined,
-    coverImage: input.coverImage !== undefined ? input.coverImage : existing.cover_image ?? undefined,
-    tags: input.tags ?? parseTagsJson(existing.tags),
-    seriesId: input.seriesId !== undefined ? input.seriesId : existing.series_id ?? undefined,
-    seriesOrder: input.seriesOrder ?? existing.series_order,
-    status: input.status ?? (existing.status as BlogPostStatus),
-  };
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  if (updates.title !== undefined) {
+    const title = updates.title.trim();
+    if (!title) throw new AppError('标题不能为空', 'VALIDATION_ERROR');
+    if (title.length > POST_LIMITS.TITLE_MAX) {
+      throw new AppError(`标题长度不能超过 ${POST_LIMITS.TITLE_MAX}`, 'VALIDATION_ERROR');
+    }
+    sets.push('title = ?');
+    values.push(title);
+  }
+  if (updates.contentMarkdown !== undefined) {
+    if (updates.contentMarkdown.length > POST_LIMITS.POST_CONTENT_MAX) {
+      throw new AppError(`正文长度不能超过 ${POST_LIMITS.POST_CONTENT_MAX}`, 'VALIDATION_ERROR');
+    }
+    sets.push('content_markdown = ?');
+    values.push(updates.contentMarkdown);
+  }
+  if (updates.excerpt !== undefined) {
+    sets.push('excerpt = ?');
+    values.push(updates.excerpt);
+  }
+  if (updates.coverImage !== undefined) {
+    sets.push('cover_image = ?');
+    values.push(updates.coverImage);
+  }
+  if (updates.tags !== undefined) {
+    sets.push('tags = ?');
+    values.push(JSON.stringify(updates.tags));
+  }
+  if (updates.seriesId !== undefined) {
+    sets.push('series_id = ?');
+    values.push(updates.seriesId);
+  }
+  if (updates.seriesOrder !== undefined) {
+    sets.push('series_order = ?');
+    values.push(updates.seriesOrder);
+  }
+  if (updates.categoryId !== undefined) {
+    sets.push('category_id = ?');
+    values.push(updates.categoryId);
+  }
+  if (updates.status !== undefined) {
+    sets.push('status = ?');
+    values.push(updates.status);
+  }
+  if (sets.length === 0) return;
+  sets.push("updated_at = datetime('now')");
+  await repo.updatePost(sets, values, id);
+  await logAdminAction(operatorId, 'blog_update_post', id, { targetType: 'post', ...updates });
+}
 
-  const err = validateInput(merged);
-  if (err) throw new AppError(err, 'VALIDATION_ERROR');
-
-  const tagsStr = merged.tags?.length ? JSON.stringify(merged.tags) : '[]';
-
-  db.prepare(
-    `UPDATE community_posts SET title = ?, excerpt = ?, content_markdown = ?, cover_image = ?, tags = ?, series_id = ?, series_order = ?, status = ?, updated_at = datetime('now') WHERE id = ?`,
-  ).run(
-    merged.title.trim(),
-    merged.excerpt?.trim() || null,
-    merged.contentMarkdown,
-    merged.coverImage?.trim() || null,
-    tagsStr,
-    merged.seriesId || null,
-    merged.seriesOrder ?? 0,
-    merged.status,
-    postId,
+/** 发布文章 */
+export async function publishPost(id: string, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getPostById(id);
+  if (!existing || existing.kind !== 'post') throw new AppError('文章不存在', 'NOT_FOUND');
+  const operator = await getUserById(operatorId);
+  if (existing.author_id !== operatorId && operator?.role !== 'admin') {
+    throw new AppError('无权发布该文章', 'FORBIDDEN');
+  }
+  await repo.updatePost(
+    ["status = 'published'", "published_at = datetime('now')", "updated_at = datetime('now')"],
+    [],
+    id,
   );
-
-  return getPostById(postId)!;
+  await logAdminAction(operatorId, 'blog_publish_post', id, { targetType: 'post' });
 }
 
-/** 发布博客文章 */
-export function publishPost(_adminId: string, postId: string): BlogPost {
-  const db = getDb();
-  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'post'").get(postId) as BlogPostRow | undefined;
-  if (!existing) throw new AppError('文章不存在', 'NOT_FOUND');
-  if (existing.status === 'published') throw new AppError('文章已发布', 'INVALID_STATUS');
-
-  db.prepare(
-    `UPDATE community_posts SET status = 'published', published_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
-  ).run(postId);
-
-  return getPostById(postId)!;
-}
-
-/** 归档博客文章 */
-export function archivePost(_adminId: string, postId: string): BlogPost {
-  const db = getDb();
-  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'post'").get(postId) as BlogPostRow | undefined;
-  if (!existing) throw new AppError('文章不存在', 'NOT_FOUND');
-  db.prepare(
-    `UPDATE community_posts SET status = 'archived', updated_at = datetime('now') WHERE id = ?`,
-  ).run(postId);
-  return getPostById(postId)!;
-}
-
-/** 删除博客文章 */
-export function deletePost(authorId: string, postId: string, isAdmin: boolean): void {
-  const db = getDb();
-  const existing = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'post'").get(postId) as BlogPostRow | undefined;
-  if (!existing) throw new AppError('文章不存在', 'NOT_FOUND');
-  assertOwnership(authorId, existing.author_id, isAdmin, '文章', '删除');
-  db.prepare("UPDATE community_posts SET status = 'deleted', updated_at = datetime('now') WHERE id = ?").run(postId);
-}
-
-/** 根据 ID 获取博客文章 */
-export function getPostById(id: string): BlogPost | null {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM community_posts WHERE id = ? AND kind = 'post'").get(id) as BlogPostRow | undefined;
-  if (!row) return null;
-  const authorName = db
-    .prepare('SELECT display_name FROM users WHERE id = ?')
-    .get(row.author_id) as { display_name: string | null } | undefined;
-  return toPost(row, authorName?.display_name ?? null);
-}
-
-/** 根据 slug 获取博客文章 */
-export function getPostBySlug(slug: string): BlogPost | null {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM community_posts WHERE slug = ? AND kind = 'post'").get(slug) as BlogPostRow | undefined;
-  if (!row) return null;
-  const authorName = db
-    .prepare('SELECT display_name FROM users WHERE id = ?')
-    .get(row.author_id) as { display_name: string | null } | undefined;
-  return toPost(row, authorName?.display_name ?? null);
-}
-
-/** 列表查询（返回 { posts, total } 兼容旧 API） */
-export function listPosts(options: BlogListOptions = {}): { posts: BlogPost[]; total: number } {
-  const db = getDb();
-  const where: string[] = ["kind = 'post'"];
-  const params: unknown[] = [];
-
-  if (options.status) {
-    where.push('status = ?');
-    params.push(options.status);
+/** 归档文章 */
+export async function archivePost(id: string, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getPostById(id);
+  if (!existing || existing.kind !== 'post') throw new AppError('文章不存在', 'NOT_FOUND');
+  const operator = await getUserById(operatorId);
+  if (existing.author_id !== operatorId && operator?.role !== 'admin') {
+    throw new AppError('无权归档该文章', 'FORBIDDEN');
   }
-  if (options.authorId) {
+  await repo.updatePost(["status = 'archived'", "updated_at = datetime('now')"], [], id);
+  await logAdminAction(operatorId, 'blog_archive_post', id, { targetType: 'post' });
+}
+
+/** 删除文章（软删除） */
+export async function deletePost(id: string, operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getPostById(id);
+  if (!existing || existing.kind !== 'post') throw new AppError('文章不存在', 'NOT_FOUND');
+  const operator = await getUserById(operatorId);
+  if (existing.author_id !== operatorId && operator?.role !== 'admin') {
+    throw new AppError('无权删除该文章', 'FORBIDDEN');
+  }
+  await repo.updatePost(["status = 'deleted'", "updated_at = datetime('now')"], [], id);
+  await logAdminAction(operatorId, 'blog_delete_post', id, { targetType: 'post' });
+}
+
+/** 根据 ID 获取文章（含作者/分类摘要） */
+export async function getPostById(id: string): Promise<CommunityPostDetail | null> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostById(id);
+  if (!row || row.kind !== 'post') return null;
+  const [formatted] = await formatPostsForDetail([row]);
+  return formatted;
+}
+
+/** 根据 slug 获取文章 */
+export async function getPostBySlug(slug: string): Promise<CommunityPostDetail | null> {
+  const repo = getCommunityRepository();
+  const row = await repo.getPostBySlug(slug);
+  if (!row || row.kind !== 'post') return null;
+  const [formatted] = await formatPostsForDetail([row]);
+  return formatted;
+}
+
+/** 文章列表（分页，公开只返回 published） */
+export async function listPosts(params: {
+  authorId?: string;
+  tag?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+} = {}): Promise<{ items: CommunityPostDetail[]; total: number; page: number; pageSize: number }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+
+  const where: string[] = ["kind = 'post'", "status = 'published'"];
+  const queryParams: unknown[] = [];
+  if (params.authorId) {
     where.push('author_id = ?');
-    params.push(options.authorId);
+    queryParams.push(params.authorId);
   }
-  if (options.seriesId) {
-    where.push('series_id = ?');
-    params.push(options.seriesId);
-  }
-  if (options.tag) {
+  if (params.tag) {
     where.push('tags LIKE ?');
-    params.push(`%"${options.tag}"%`);
+    queryParams.push(`%"${params.tag}"%`);
   }
 
-  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const total = await repo.countPosts(`WHERE ${where.join(' AND ')}`, queryParams);
+  const rows = await repo.listPosts(where, queryParams, pageSize, offset);
+  const items = await formatPostsForDetail(rows);
+  return { items, total, page, pageSize };
+}
 
-  const totalRow = db.prepare(`SELECT COUNT(*) as count FROM community_posts ${whereSql}`).get(...params) as { count: number };
-  const total = totalRow.count;
+/** 增加文章浏览量 */
+export async function incrementViewCount(postId: string): Promise<void> {
+  await getCommunityRepository().incrementViewCount(postId);
+}
 
-  const { pageSize, offset } = computePaginationLocal(options.page, options.pageSize);
-  const rows = db
-    .prepare(
-      `SELECT * FROM community_posts ${whereSql} ORDER BY published_at IS NULL, published_at DESC, created_at DESC LIMIT ? OFFSET ?`,
-    )
-    .all(...params, pageSize, offset) as BlogPostRow[];
+/** 用户自己的文章列表（含草稿/隐藏） */
+export async function getUserPosts(
+  userId: string,
+  params: { page?: number; pageSize?: number } = {},
+): Promise<{ items: CommunityPostDetail[]; total: number; page: number; pageSize: number }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
 
-  const posts = rows.map((row) => {
-    const authorName = db
-      .prepare('SELECT display_name FROM users WHERE id = ?')
-      .get(row.author_id) as { display_name: string | null } | undefined;
-    return toPost(row, authorName?.display_name ?? null);
+  const where = ["kind = 'post'", 'author_id = ?'];
+  const queryParams = [userId];
+  const total = await repo.countPosts(`WHERE ${where.join(' AND ')}`, queryParams);
+  const rows = await repo.listPosts(where, queryParams, pageSize, offset);
+  const items = await formatPostsForDetail(rows);
+  return { items, total, page, pageSize };
+}
+
+// 复用 shared.formatPosts 做详情格式化（返回 CommunityPostDetail 兼容类型）
+async function formatPostsForDetail(rows: CommunityPostRow[]): Promise<CommunityPostDetail[]> {
+  const repo = getCommunityRepository();
+  const [authorMap, categoryMap] = await Promise.all([
+    repo.loadAuthorSummaries(rows.map((r) => r.author_id)),
+    repo.loadCategorySummaries(rows.filter((r) => r.category_id).map((r) => r.category_id as string)),
+  ]);
+  return rows.map((r) => {
+    const base = postRowToBase(r) as Record<string, unknown>;
+    return {
+      ...base,
+      author: authorMap.get(r.author_id) ?? null,
+      category: r.category_id ? categoryMap.get(r.category_id) ?? null : null,
+      isLiked: false,
+    } as unknown as CommunityPostDetail;
   });
-
-  return { posts, total };
 }
 
-/** 获取用户发布的文章（兼容） */
-export function getUserPosts(authorId: string): BlogPost[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT * FROM community_posts WHERE author_id = ? AND kind = 'post' ORDER BY created_at DESC`,
-    )
-    .all(authorId) as BlogPostRow[];
-  return rows.map((row) => {
-    const authorName = db.prepare('SELECT display_name FROM users WHERE id = ?').get(row.author_id) as { display_name: string | null } | undefined;
-    return toPost(row, authorName?.display_name ?? null);
-  });
-}
-
-/** 浏览计数 */
-export function incrementViewCount(postId: string): void {
-  const db = getDb();
-  db.prepare("UPDATE community_posts SET view_count = view_count + 1 WHERE id = ? AND kind = 'post'").run(postId);
-}
-
-function computePaginationLocal(page?: number, pageSize?: number): { page: number; pageSize: number; offset: number } {
-  const safePage = Math.max(1, page ?? 1);
-  const safePageSize = Math.min(100, Math.max(1, pageSize ?? 20));
-  return { page: safePage, pageSize: safePageSize, offset: (safePage - 1) * safePageSize };
-}
+import type { CommunityPostDetail } from '@/modules/community/types';

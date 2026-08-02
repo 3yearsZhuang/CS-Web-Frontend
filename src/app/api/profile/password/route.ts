@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   // 修改密码：验证旧密码 + 历史复用检测 + 更新 + 删除其他 session
   // （保留当前 session）。DB 操作下沉至 user/server 层。
-  const changeResult = changeUserPassword(
+  const changeResult = await changeUserPassword(
     session.user.id,
     currentPassword,
     newPassword,

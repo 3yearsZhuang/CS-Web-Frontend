@@ -18,7 +18,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -35,7 +35,7 @@ export async function POST(
 
   const { id } = await params;
   try {
-    const user = setUserActiveByAdmin(admin.user.id, id, true);
+    const user = await setUserActiveByAdmin(admin.user.id, id, true);
     return NextResponse.json({ user });
   } catch (err) {
     return errorResponse(err);

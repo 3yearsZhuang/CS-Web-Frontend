@@ -58,7 +58,7 @@ function createMockEngine(): DbEngine & {
       return 0;
     },
 
-    async query<T extends QueryRow = QueryRow>(
+    async query<T = QueryRow>(
       sql: string,
       params: import('../../src/shared/db/drivers').QueryParams = [],
     ) {
@@ -89,7 +89,7 @@ function createMockEngine(): DbEngine & {
       return [];
     },
 
-    async queryOne<T extends QueryRow = QueryRow>(
+    async queryOne<T = QueryRow>(
       sql: string,
       params: import('../../src/shared/db/drivers').QueryParams = [],
     ) {

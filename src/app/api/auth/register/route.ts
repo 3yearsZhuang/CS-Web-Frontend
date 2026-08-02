@@ -54,14 +54,14 @@ export async function POST(req: Request) {
 
   let user;
   try {
-    user = createUser(email, password);
+    user = await createUser(email, password);
   } catch (err) {
     return errorResponse(err, {
       EMAIL_EXISTS: '该邮箱已被注册，请直接登录',
     });
   }
 
-  const token = createSession(user.id, ip, req.headers.get('user-agent') || undefined);
+  const token = await createSession(user.id, ip, req.headers.get('user-agent') || undefined);
 
   const log = createRequestLogger(req);
   try {
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({ user: { id: user.id, email: user.email } });
-  res.cookies.set(AUTH_COOKIE_NAME, token, {
+  await res.cookies.set(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',

@@ -1,171 +1,110 @@
 /**
- * @file 论坛服务层 — 点赞与收藏（topic/reply + 主题收藏）
- *
- * 统一重构：forum_likes → community_reactions；forum_favorites → community_favorites
- * targetType 'topic'→'post'，'reply'→'comment'
+ * @file 反应（点赞/收藏）服务（已迁移至 Repository 抽象层，ADR-009）
  */
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import { loadAuthorSummaries, type AuthorSummary } from './shared';
 import { AppError } from '@/shared/app-error';
-import {
-  POST_LIMITS,
-  computePagination,
-  computeTotalPages,
-  loadAuthorSummaries,
-  loadCategorySummaries,
-  postRowToBase,
-  type CommunityPost,
-  type PostRow,
-  type LikeTargetType,
-} from './shared';
-import type { PaginatedPosts } from './topics';
+import { logAdminAction } from '@/shared/security/audit';
 
-/**
- * 切换点赞（登录用户）
- */
-export function toggleLike(
-  userId: string,
-  targetType: LikeTargetType,
-  targetId: string,
-): { liked: boolean; likeCount: number } {
-  if (targetType !== 'topic' && targetType !== 'reply') {
-    throw new AppError('targetType 必须为 topic 或 reply', 'VALIDATION_ERROR');
-  }
-
-  // 统一映射：topic→post，reply→comment
-  const unifiedType = targetType === 'topic' ? 'post' : 'comment';
-  const db = getDb();
-
-  if (unifiedType === 'post') {
-    const row = db
-      .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'topic' AND status = 'published'")
-      .get(targetId);
-    if (!row) throw new AppError('主题不存在或已删除', 'NOT_FOUND');
-  } else {
-    const row = db
-      .prepare("SELECT id FROM community_comments WHERE id = ? AND status = 'published'")
-      .get(targetId);
-    if (!row) throw new AppError('回复不存在或已删除', 'NOT_FOUND');
-  }
-
-  const existing = db
-    .prepare(
-      'SELECT id FROM community_reactions WHERE user_id = ? AND target_type = ? AND target_id = ?',
-    )
-    .get(userId, unifiedType, targetId) as { id: string } | undefined;
-
-  const table = unifiedType === 'post' ? 'community_posts' : 'community_comments';
-  let liked: boolean;
-  let likeCount: number;
-
-  const tx = db.transaction(() => {
-    if (existing) {
-      db.prepare('DELETE FROM community_reactions WHERE id = ?').run(existing.id);
-      db.prepare(`UPDATE ${table} SET like_count = MAX(like_count - 1, 0) WHERE id = ?`).run(targetId);
-      liked = false;
-    } else {
-      const id = crypto.randomUUID();
-      db.prepare(
-        'INSERT INTO community_reactions (id, user_id, target_type, target_id) VALUES (?, ?, ?, ?)',
-      ).run(id, userId, unifiedType, targetId);
-      db.prepare(`UPDATE ${table} SET like_count = like_count + 1 WHERE id = ?`).run(targetId);
-      liked = true;
-    }
-    const row = db.prepare(`SELECT like_count FROM ${table} WHERE id = ?`).get(targetId) as
-      | { like_count: number }
-      | undefined;
-    likeCount = row?.like_count ?? 0;
-  });
-  tx();
-
-  return { liked: liked!, likeCount: likeCount! };
+export interface ReactionTarget {
+  targetId: string;
+  targetType: 'post' | 'comment';
+  isLiked: boolean;
+  isFavorited: boolean;
 }
 
-/** 切换主题收藏（登录用户） */
-export function toggleFavorite(
-  userId: string,
-  topicId: string,
-): { favorited: boolean; favoriteCount: number } {
-  const db = getDb();
-  const topic = db
-    .prepare("SELECT id FROM community_posts WHERE id = ? AND kind = 'topic' AND status = 'published'")
-    .get(topicId);
-  if (!topic) {
-    throw new AppError('主题不存在或已删除', 'NOT_FOUND');
+const VALID_TARGETS = new Set(['post', 'comment']);
+
+export async function toggleLike(targetId: string, targetType: 'post' | 'comment', userId: string): Promise<{ liked: boolean; likeCount: number }> {
+  if (!VALID_TARGETS.has(targetType)) throw new AppError('无效的目标类型', 'INVALID_TARGET');
+  const repo = getCommunityRepository();
+  const tableName = targetType === 'post' ? 'community_posts' : 'community_comments';
+  const existing = await repo.getReaction(userId, 'like', targetId);
+  if (existing) {
+    await repo.deleteReactionById(existing.id);
+    await repo.decrementLike(tableName, targetId);
+    const likeCount = await repo.getLikeCount(tableName, targetId);
+    return { liked: false, likeCount };
   }
-
-  const existing = db
-    .prepare("SELECT id FROM community_favorites WHERE user_id = ? AND target_type = 'post' AND target_id = ?")
-    .get(userId, topicId) as { id: string } | undefined;
-
-  let favorited: boolean;
-  let favoriteCount: number;
-
-  const tx = db.transaction(() => {
-    if (existing) {
-      db.prepare('DELETE FROM community_favorites WHERE id = ?').run(existing.id);
-      db.prepare(
-        "UPDATE community_posts SET favorite_count = MAX(favorite_count - 1, 0) WHERE id = ?",
-      ).run(topicId);
-      favorited = false;
-    } else {
-      const id = crypto.randomUUID();
-      db.prepare(
-        "INSERT INTO community_favorites (id, user_id, target_type, target_id) VALUES (?, ?, 'post', ?)",
-      ).run(id, userId, topicId);
-      db.prepare(
-        "UPDATE community_posts SET favorite_count = favorite_count + 1 WHERE id = ?",
-      ).run(topicId);
-      favorited = true;
-    }
-    const row = db
-      .prepare('SELECT favorite_count FROM community_posts WHERE id = ?')
-      .get(topicId) as { favorite_count: number } | undefined;
-    favoriteCount = row?.favorite_count ?? 0;
-  });
-  tx();
-
-  return { favorited: favorited!, favoriteCount: favoriteCount! };
+  await repo.insertReaction(crypto.randomUUID(), userId, 'like', targetId);
+  await repo.incrementLike(tableName, targetId);
+  const likeCount = await repo.getLikeCount(tableName, targetId);
+  return { liked: true, likeCount };
 }
 
-/** 列出当前用户收藏的主题（分页） */
-export function listUserFavorites(
-  userId: string,
-  page: number = 1,
-  pageSize: number = POST_LIMITS.POSTS_PAGE_SIZE,
-): PaginatedPosts {
-  const db = getDb();
-  const { page: safePage, pageSize: safePageSize, offset } = computePagination({
-    page,
-    pageSize,
-    defaultPageSize: POST_LIMITS.POSTS_PAGE_SIZE,
-    maxPageSize: 100,
-  });
+export async function toggleFavorite(targetId: string, userId: string): Promise<{ favorited: boolean; favoriteCount: number }> {
+  const repo = getCommunityRepository();
+  const existing = await repo.getFavorite(userId, targetId);
+  if (existing) {
+    await repo.decrementFavorite(targetId);
+    await repo.deleteFavoriteById(existing.id);
+    const favoriteCount = await repo.getFavoriteCount(targetId);
+    return { favorited: false, favoriteCount };
+  }
+  await repo.insertFavorite(crypto.randomUUID(), userId, targetId);
+  await repo.incrementFavorite(targetId);
+  const favoriteCount = await repo.getFavoriteCount(targetId);
+  return { favorited: true, favoriteCount };
+}
 
-  const totalRow = db
-    .prepare("SELECT COUNT(*) as count FROM community_favorites WHERE user_id = ? AND target_type = 'post'")
-    .get(userId) as { count: number };
-  const total = totalRow.count;
-  const totalPages = computeTotalPages(total, safePageSize);
+export async function getReactionStatus(targetId: string, targetType: 'post' | 'comment', userId: string): Promise<{ isLiked: boolean; isFavorited: boolean; likeCount: number; favoriteCount: number }> {
+  if (!VALID_TARGETS.has(targetType)) throw new AppError('无效的目标类型', 'INVALID_TARGET');
+  const repo = getCommunityRepository();
+  const tableName = targetType === 'post' ? 'community_posts' : 'community_comments';
+  const [likeRow, favRow, likeCount, favoriteCount] = await Promise.all([
+    repo.getReaction(userId, 'like', targetId),
+    repo.getFavorite(userId, targetId),
+    repo.getLikeCount(tableName, targetId),
+    targetType === 'post' ? repo.getFavoriteCount(targetId) : Promise.resolve(0),
+  ]);
+  return {
+    isLiked: !!likeRow,
+    isFavorited: !!favRow,
+    likeCount,
+    favoriteCount,
+  };
+}
 
-  const rows = db
-    .prepare(
-      `SELECT t.* FROM community_posts t
-       INNER JOIN community_favorites f ON t.id = f.target_id
-       WHERE f.user_id = ? AND f.target_type = 'post' AND t.kind = 'topic' AND t.status = 'published'
-       ORDER BY f.created_at DESC
-       LIMIT ? OFFSET ?`,
-    )
-    .all(userId, safePageSize, offset) as PostRow[];
+export async function batchGetReactionStatus(targetIds: string[], targetType: 'post' | 'comment', userId: string): Promise<Map<string, { isLiked: boolean; isFavorited: boolean }>> {
+  const repo = getCommunityRepository();
+  const [liked, faved] = await Promise.all([
+    repo.getUserReactionTargets(userId, 'like', targetIds),
+    targetType === 'post' ? repo.getUserFavoriteTargets(userId, targetIds) : Promise.resolve(new Set<string>()),
+  ]);
+  const map = new Map<string, { isLiked: boolean; isFavorited: boolean }>();
+  for (const id of targetIds) {
+    map.set(id, { isLiked: liked.has(id), isFavorited: faved.has(id) });
+  }
+  return map;
+}
 
-  const authorMap = loadAuthorSummaries(rows.map((r) => r.author_id));
-  const categoryMap = loadCategorySummaries(rows.map((r) => r.category_id));
+export async function listUserFavorites(userId: string, params?: { page?: number; pageSize?: number }): Promise<{ items: Array<{ id: string; title: string; author: AuthorSummary | null }>; pagination: { page: number; pageSize: number; total: number; totalPages: number } }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params?.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
 
-  const items: CommunityPost[] = rows.map((row) => ({
-    ...postRowToBase(row),
-    author: authorMap.get(row.author_id) ?? null,
-    category: categoryMap.get(row.category_id ?? '') ?? null,
+  const total = await repo.countUserFavorites(userId);
+  const rows = await repo.listUserFavoritePosts(userId, pageSize, offset);
+  const authorIds = rows.map((r) => r.author_id);
+  const authorMap = await loadAuthorSummaries(authorIds);
+
+  const items = rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    author: authorMap.get(r.author_id) ?? null,
   }));
 
-  return { items, total, page: safePage, pageSize: safePageSize, totalPages };
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return {
+    items,
+    pagination: { page, pageSize, total, totalPages },
+  };
+}
+
+export async function moderateReaction(id: string, action: 'delete', operatorId: string): Promise<void> {
+  const repo = getCommunityRepository();
+  await repo.deleteReactionById(id);
+  await logAdminAction(operatorId, 'community.reaction.delete', id, { targetType: 'reaction', action });
 }

@@ -18,10 +18,10 @@ export async function POST(req: Request) {
 
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
 
-  if (is2FAEnabled(session.user.id)) {
+  if (await is2FAEnabled(session.user.id)) {
     return NextResponse.json({ error: '2FA 已启用，请先禁用', code: 'CONFLICT' }, { status: 400 });
   }
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const { secret, otpauthURI, backupCodes } = setup2FA(session.user.id, session.user.email);
+  const { secret, otpauthURI, backupCodes } = await setup2FA(session.user.id, session.user.email);
   const qrDataUrl = await QRCode.toDataURL(otpauthURI, { width: 240, margin: 1 });
 
   return NextResponse.json({

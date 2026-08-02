@@ -17,11 +17,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const analysis = analyzeLearningProfile(session.user.id);
+  const analysis = await analyzeLearningProfile(session.user.id);
   return NextResponse.json({ analysis });
 }

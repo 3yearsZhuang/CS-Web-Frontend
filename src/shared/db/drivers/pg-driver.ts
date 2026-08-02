@@ -60,7 +60,7 @@ export async function createPgEngine(): Promise<PgEngine> {
       return result.count;
     },
 
-    async query<T extends QueryRow = QueryRow>(
+    async query<T = QueryRow>(
       sql: string,
       params: QueryParams = [],
     ): Promise<T[]> {
@@ -69,7 +69,7 @@ export async function createPgEngine(): Promise<PgEngine> {
       return result as unknown as unknown as T[];
     },
 
-    async queryOne<T extends QueryRow = QueryRow>(
+    async queryOne<T = QueryRow>(
       sql: string,
       params: QueryParams = [],
     ): Promise<T | null> {
@@ -90,13 +90,13 @@ export async function createPgEngine(): Promise<PgEngine> {
               (r) => r.count,
             );
           },
-          query: <T extends QueryRow>(s: string, p: QueryParams = []): Promise<T[]> => {
+          query: <T = QueryRow>(s: string, p: QueryParams = []): Promise<T[]> => {
             const pgSql = convertPlaceholders(s);
             return txClient
               .unsafe(pgSql, p as unknown as postgres.Parameter[])
               .then((r) => r as unknown as unknown as T[]);
           },
-          queryOne: <T extends QueryRow>(s: string, p: QueryParams = []): Promise<T | null> => {
+          queryOne: <T = QueryRow>(s: string, p: QueryParams = []): Promise<T | null> => {
             const pgSql = convertPlaceholders(s);
             return txClient
               .unsafe(pgSql, p as unknown as postgres.Parameter[])

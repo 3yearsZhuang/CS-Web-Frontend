@@ -5,7 +5,7 @@
  * 活动不存在时返回 404。
  */
 import { NextResponse } from 'next/server';
-import { getEventById } from '@/modules/events/server';
+import { getEvent } from '@/modules/events/server';
 import { errorResponse } from '@/shared/security/security';
 
 export const runtime = 'nodejs';
@@ -16,7 +16,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const event = getEventById(id, { withRegisteredCount: true });
+    const event = await getEvent(id);
 
     if (!event) {
       return NextResponse.json({ error: '活动不存在' }, { status: 404 });

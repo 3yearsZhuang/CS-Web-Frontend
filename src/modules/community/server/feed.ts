@@ -1,5 +1,5 @@
 /**
- * @file 社区模块 — Feed 聚合查询
+ * @file 社区模块 — Feed 聚合查询（已迁移至 Repository 抽象层，ADR-009）
  *
  * 合并三源（论坛主题、博客文章、成员）为统一 Feed，支持标签筛选、关键词搜索与分页。
  */
@@ -14,6 +14,8 @@ import type {
   FeedPostItem,
   FeedMemberItem,
   PaginatedFeed,
+  CommunityPost,
+  CommunityPostDetail,
 } from '../types';
 
 /** 默认每页条数 — 兼顾信息密度与首屏性能 */
@@ -22,30 +24,30 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;
 
 /** 论坛主题 → Feed 项 */
-function toTopicFeed(topic: ReturnType<typeof listTopics>['items'][number]): FeedTopicItem {
+function toTopicFeed(topic: Awaited<ReturnType<typeof listTopics>>['items'][number]): FeedItem {
   return {
     kind: 'topic',
     sortAt: topic.lastReplyAt ?? topic.createdAt,
-    data: topic,
-  };
+    data: topic as unknown as CommunityPost,
+  } as FeedItem;
 }
 
 /** 博客文章 → Feed 项 */
-function toPostFeed(post: ReturnType<typeof listPosts>['posts'][number]): FeedPostItem {
+function toPostFeed(post: Awaited<ReturnType<typeof listPosts>>['items'][number]): FeedItem {
   return {
     kind: 'post',
     sortAt: post.publishedAt ?? post.createdAt,
-    data: post,
-  };
+    data: post as unknown as CommunityPostDetail,
+  } as FeedItem;
 }
 
 /** 成员 → Feed 项 */
-function toMemberFeed(member: ReturnType<typeof _listMembers>[number]): FeedMemberItem {
+function toMemberFeed(member: Awaited<ReturnType<typeof _listMembers>>[number]): FeedItem {
   return {
     kind: 'member',
     sortAt: member.joinedAt,
     data: member,
-  };
+  } as FeedItem;
 }
 
 /** 标签匹配：检查 Feed 项是否包含指定标签 */
@@ -95,21 +97,18 @@ function itemMatchesSearch(item: FeedItem, search: string): boolean {
  *
  * 并行查询三源 → 合并 → 过滤 → 排序 → 分页
  */
-export function getFeed(query: FeedQuery = {}): PaginatedFeed {
+export async function getFeed(query: FeedQuery = {}): Promise<PaginatedFeed> {
   const page = Math.max(1, query.page ?? 1);
-  const pageSize = Math.min(
-    MAX_PAGE_SIZE,
-    Math.max(1, query.pageSize ?? DEFAULT_PAGE_SIZE),
-  );
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, query.pageSize ?? DEFAULT_PAGE_SIZE));
 
-  const topics = query.kind && query.kind !== 'topic' ? [] : listTopics({ pageSize: 100 }).items;
-  const posts =
-    query.kind && query.kind !== 'post'
-      ? []
-      : listPosts({ status: 'published', pageSize: 100 }).posts;
-  // "全部" tab 排除成员（excludeMembers=true），仅成员 tab 显示成员
-  const members =
-    query.kind && query.kind !== 'member' ? [] : query.excludeMembers ? [] : _listMembers();
+  const [topicsRes, postsRes, members] = await Promise.all([
+    query.kind && query.kind !== 'topic' ? Promise.resolve(null) : listTopics({ pageSize: 100 }),
+    query.kind && query.kind !== 'post' ? Promise.resolve(null) : listPosts({ status: 'published', pageSize: 100 }),
+    query.kind && query.kind !== 'member' ? Promise.resolve([]) : query.excludeMembers ? Promise.resolve([]) : _listMembers(),
+  ]);
+
+  const topics = topicsRes?.items ?? [];
+  const posts = postsRes?.items ?? [];
 
   const items: FeedItem[] = [
     ...topics.map(toTopicFeed),
@@ -144,11 +143,11 @@ export function getFeed(query: FeedQuery = {}): PaginatedFeed {
  *
  * 合并三源的标签：论坛版块名、博客分类、成员 techTags
  */
-export function getFeedTags(): FeedTag[] {
+export async function getFeedTags(): Promise<FeedTag[]> {
   const tagMap = new Map<string, { topicCount: number; postCount: number; memberCount: number }>();
 
-  const topics = listTopics({ pageSize: 200 }).items;
-  for (const topic of topics) {
+  const topicsRes = await listTopics({ pageSize: 200 });
+  for (const topic of topicsRes.items) {
     const catName = topic.category?.name;
     if (!catName) continue;
     const entry = tagMap.get(catName) ?? { topicCount: 0, postCount: 0, memberCount: 0 };
@@ -156,8 +155,8 @@ export function getFeedTags(): FeedTag[] {
     tagMap.set(catName, entry);
   }
 
-  const posts = listPosts({ status: 'published', pageSize: 200 }).posts;
-  for (const post of posts) {
+  const postsRes = await listPosts({ status: 'published', pageSize: 200 });
+  for (const post of postsRes.items) {
     for (const tag of post.tags) {
       const entry = tagMap.get(tag) ?? { topicCount: 0, postCount: 0, memberCount: 0 };
       entry.postCount++;
@@ -171,7 +170,7 @@ export function getFeedTags(): FeedTag[] {
     }
   }
 
-  const memberTags = listAllTechTags();
+  const memberTags = await listAllTechTags();
   for (const tag of memberTags) {
     const entry = tagMap.get(tag) ?? { topicCount: 0, postCount: 0, memberCount: 0 };
     entry.memberCount = 1;
@@ -186,14 +185,19 @@ export function getFeedTags(): FeedTag[] {
 /**
  * 获取 Feed 总览统计
  */
-export function getFeedStats(): {
+export async function getFeedStats(): Promise<{
   topicCount: number;
   postCount: number;
   memberCount: number;
-} {
+}> {
+  const [topicsRes, postsRes, members] = await Promise.all([
+    listTopics({ pageSize: 1 }),
+    listPosts({ status: 'published', pageSize: 1 }),
+    _listMembers(),
+  ]);
   return {
-    topicCount: listTopics({ pageSize: 1 }).total,
-    postCount: listPosts({ status: 'published', pageSize: 1 }).total,
-    memberCount: _listMembers().length,
+    topicCount: topicsRes.pagination.total,
+    postCount: postsRes.total,
+    memberCount: members.length,
   };
 }

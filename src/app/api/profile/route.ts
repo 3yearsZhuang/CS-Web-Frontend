@@ -26,21 +26,21 @@ import { updateProfileSchema } from '@/shared/security/schemas';
 
 export const runtime = 'nodejs';
 
-function getUserIdFromRequest(req: Request): string | null {
+async function getUserIdFromRequest(req: Request): Promise<string | null> {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return session.user.id;
 }
 
 export async function GET(req: Request) {
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const profile = getProfile(userId);
+  const profile = await getProfile(userId);
   if (!profile) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }
@@ -52,7 +52,7 @@ export async function PUT(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -78,7 +78,7 @@ export async function PUT(req: Request) {
   }
 
   try {
-    const user = updateProfile(userId, result.data);
+    const user = await updateProfile(userId, result.data);
     return NextResponse.json({ user });
   } catch (err) {
     return errorResponse(err);

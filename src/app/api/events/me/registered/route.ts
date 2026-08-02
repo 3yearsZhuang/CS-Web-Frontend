@@ -7,6 +7,16 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/modules/auth/server';
 import { getUserRegisteredEvents } from '@/modules/events/server';
+
+interface RegisteredEventView {
+  id: string;
+  title: string;
+  date: string | null;
+  location: string | null;
+  coverImage: string | null;
+  status: string;
+  registeredCount: number;
+}
 import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
 import { getCookieValue } from '@/shared/security/security';
 
@@ -18,11 +28,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const events = getUserRegisteredEvents(session.user.id);
+  const events = await getUserRegisteredEvents(session.user.id);
   return NextResponse.json({ events });
 }

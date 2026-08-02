@@ -6,7 +6,7 @@
  */
 import { NextResponse } from 'next/server';
 import { getSession } from '@/modules/auth/server';
-import { getUserRegistration } from '@/modules/events/server';
+import { getRegistration } from '@/modules/events/server';
 import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
 import { getCookieValue } from '@/shared/security/security';
 
@@ -21,13 +21,13 @@ export async function GET(
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
   const { id } = await params;
-  const registration = getUserRegistration(session.user.id, id);
+  const registration = await getRegistration(session.user.id, id);
   const registered = registration?.status === 'registered';
 
   return NextResponse.json({

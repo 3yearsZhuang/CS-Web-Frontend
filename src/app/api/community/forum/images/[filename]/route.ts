@@ -22,7 +22,7 @@ export async function GET(
   if (!token) {
     return new Response('Unauthorized', { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return new Response('Unauthorized', { status: 401 });
   }

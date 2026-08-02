@@ -3,7 +3,6 @@
  */
 
 import crypto from 'node:crypto';
-import { getDb } from '@/shared/db';
 import { PASSWORD_HISTORY_LIMIT } from '@/shared/config/auth-constants';
 import {
   hashPassword,
@@ -11,6 +10,7 @@ import {
   SCRYPT_KEYLEN,
   SCRYPT_SALT_LEN,
 } from '@/shared/security/password';
+import { getAuthRepository } from '@/shared/db/repositories/auth.repo';
 
 // 向模块内 re-export，保持 './password' 引用便利
 export { hashPassword, verifyPassword, SCRYPT_KEYLEN, SCRYPT_SALT_LEN };
@@ -23,37 +23,21 @@ export const DUMMY_PASSWORD_HASH = (function () {
 })();
 
 /** 历史密码复用检测 — N 由 PASSWORD_HISTORY_LIMIT 控制，设为 0 则禁用 */
-export function isPasswordInHistory(userId: string, newPassword: string): boolean {
+export async function isPasswordInHistory(userId: string, newPassword: string): Promise<boolean> {
   if (PASSWORD_HISTORY_LIMIT <= 0) return false;
-  const db = getDb();
-  const rows = db
-    .prepare(
-      'SELECT password_hash FROM password_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-    )
-    .all(userId, PASSWORD_HISTORY_LIMIT) as { password_hash: string }[];
+  const repo = await getAuthRepository();
+  const rows = await repo.listPasswordHistory(userId, PASSWORD_HISTORY_LIMIT);
 
   return rows.some((row) => verifyPassword(newPassword, row.password_hash));
 }
 
 /** 记录密码到历史表 — 变更成功后调用，超出上限的旧记录自动清理 */
-export function recordPasswordHistory(userId: string, passwordHash: string): void {
+export async function recordPasswordHistory(userId: string, passwordHash: string): Promise<void> {
   if (PASSWORD_HISTORY_LIMIT <= 0) return;
-  const db = getDb();
-  const id = crypto.randomUUID();
-  db.prepare(
-    'INSERT INTO password_history (id, user_id, password_hash) VALUES (?, ?, ?)',
-  ).run(id, userId, passwordHash);
+  const repo = await getAuthRepository();
+  await repo.insertPasswordHistory(userId, passwordHash);
 
   // 清理超出保留上限 2 倍的旧记录，避免表无限膨胀
   const keepCount = PASSWORD_HISTORY_LIMIT * 2;
-  db.prepare(
-    `DELETE FROM password_history
-     WHERE user_id = ?
-       AND id NOT IN (
-         SELECT id FROM password_history
-         WHERE user_id = ?
-         ORDER BY created_at DESC
-         LIMIT ?
-       )`,
-  ).run(userId, userId, keepCount);
+  await repo.prunePasswordHistory(userId, keepCount);
 }

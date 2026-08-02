@@ -26,7 +26,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -62,7 +62,7 @@ export async function PATCH(
     return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
   }
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -79,7 +79,7 @@ export async function PATCH(
 
   const { key } = await params;
   try {
-    const role = updateRole(
+    const role = await updateRole(
       admin.user.id,
       key,
       result.data,
@@ -95,7 +95,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -112,7 +112,7 @@ export async function DELETE(
 
   const { key } = await params;
   try {
-    deleteRole(admin.user.id, key, {
+    await deleteRole(admin.user.id, key, {
       ip,
       userAgent: req.headers.get('user-agent'),
     });

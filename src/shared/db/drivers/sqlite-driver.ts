@@ -29,7 +29,7 @@ export function createSqliteEngine(): SqliteEngine {
       return result.changes;
     },
 
-    async query<T extends QueryRow = QueryRow>(
+    async query<T = QueryRow>(
       sql: string,
       params: QueryParams = [],
     ): Promise<T[]> {
@@ -37,7 +37,7 @@ export function createSqliteEngine(): SqliteEngine {
       return stmt.all(...params) as T[];
     },
 
-    async queryOne<T extends QueryRow = QueryRow>(
+    async queryOne<T = QueryRow>(
       sql: string,
       params: QueryParams = [],
     ): Promise<T | null> {
@@ -51,9 +51,9 @@ export function createSqliteEngine(): SqliteEngine {
       const txEngine: DbEngine = {
         provider: 'sqlite',
         execute: (s, p = []) => engine.execute(s, p),
-        query: <T extends QueryRow>(s: string, p: QueryParams = []) =>
+        query: <T = QueryRow>(s: string, p: QueryParams = []) =>
           engine.query<T>(s, p) as Promise<T[]>,
-        queryOne: <T extends QueryRow>(s: string, p: QueryParams = []) =>
+        queryOne: <T = QueryRow>(s: string, p: QueryParams = []) =>
           engine.queryOne<T>(s, p) as Promise<T | null>,
         transaction: <U>(inner: (t: DbEngine) => Promise<U>) => engine.transaction(inner),
       };

@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     let categoryId: string | undefined;
     if (categorySlug) {
-      const cat = getCategoryBySlug(categorySlug);
+      const cat = await getCategoryBySlug(categorySlug);
       if (!cat) {
         return NextResponse.json({ error: '版块不存在' }, { status: 404 });
       }
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -88,7 +88,7 @@ export async function POST(req: Request) {
   const { categoryId, title, contentMarkdown } = result.data;
 
   try {
-    const topic = createTopic(session.user.id, { categoryId, title, contentMarkdown });
+    const topic = await createTopic({ categoryId, title, contentMarkdown, authorId: session.user.id });
     return NextResponse.json({ ok: true, topic }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

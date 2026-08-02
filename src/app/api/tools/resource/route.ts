@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
   };
 
   try {
-    const resource = createResource(session.session.userId, input);
+    const resource = await createResource(session.session.userId, input);
     return NextResponse.json({ resource }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

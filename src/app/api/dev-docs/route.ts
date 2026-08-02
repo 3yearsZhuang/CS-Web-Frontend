@@ -31,7 +31,7 @@ function extractTitle(filePath: string, fallback: string): string {
 }
 
 export async function GET(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

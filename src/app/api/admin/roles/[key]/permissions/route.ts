@@ -33,7 +33,7 @@ export async function PUT(
     return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
   }
 
-  const admin = requireRoot(req);
+  const admin = await requireRoot(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -50,7 +50,7 @@ export async function PUT(
 
   const { key } = await params;
   try {
-    const role = updateRolePermissions(
+    const role = await updateRolePermissions(
       admin.user.id,
       key,
       result.data,

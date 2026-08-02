@@ -14,15 +14,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (originErr) return originErr;
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) {
     return NextResponse.json({ error: '文章不存在' }, { status: 404 });
   }
 
-  const result = toggleBlogLike(post.id, session.user.id);
+  const result = await toggleBlogLike(post.id, session.user.id);
   return NextResponse.json(result);
 }

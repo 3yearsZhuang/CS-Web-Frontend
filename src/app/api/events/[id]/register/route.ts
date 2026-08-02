@@ -14,9 +14,9 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/modules/auth/server';
 import {
-  registerEvent,
-  cancelEventRegistration,
-  getEventById,
+  registerForEvent,
+  cancelRegistration,
+  getEvent,
 } from '@/modules/events/server';
 import { appBus } from '@/shared/events/event-bus';
 import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
@@ -33,10 +33,10 @@ import { eventRegistrationSchema } from '@/shared/security/schemas';
 
 export const runtime = 'nodejs';
 
-function getUserIdFromRequest(req: Request): string | null {
+async function getUserIdFromRequest(req: Request): Promise<string | null> {
   const token = getCookieValue(req, AUTH_COOKIE_NAME);
   if (!token) return null;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return null;
   return session.user.id;
 }
@@ -48,7 +48,7 @@ export async function POST(
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -74,12 +74,12 @@ export async function POST(
   }
 
   try {
-    const result = registerEvent(userId, id, formData);
-    const event = getEventById(id);
+    const result = await registerForEvent(userId, id, formData);
+    const event = await getEvent(id);
     if (event) {
       appBus.emit('event.registered', { userId, eventId: id, eventTitle: event.title });
     }
-    return NextResponse.json({ ok: true, registration: result.registration });
+    return NextResponse.json({ ok: true, registration: result });
   } catch (err) {
     return errorResponse(err, {
       ALREADY_REGISTERED: '你已经报名了该活动',
@@ -96,7 +96,7 @@ export async function DELETE(
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const userId = getUserIdFromRequest(req);
+  const userId = await getUserIdFromRequest(req);
   if (!userId) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -111,10 +111,10 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const event = getEventById(id);
+  const event = await getEvent(id);
 
   try {
-    cancelEventRegistration(userId, id);
+    await cancelRegistration(userId, id);
     if (event) {
       appBus.emit('event.cancelled', { userId, eventId: id, eventTitle: event.title });
     }

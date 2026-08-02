@@ -16,11 +16,11 @@ export async function GET(req: Request) {
   if (!token) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '登录已过期' }, { status: 401 });
   }
 
-  const applications = listMyJoinApplications(session.user.id);
+  const applications = await listMyJoinApplications(session.user.id);
   return NextResponse.json({ applications });
 }

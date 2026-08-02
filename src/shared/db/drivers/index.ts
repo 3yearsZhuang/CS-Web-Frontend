@@ -21,11 +21,16 @@ export interface DbEngine {
   /** 执行写操作（INSERT/UPDATE/DELETE），返回受影响行数 */
   execute(sql: string, params?: QueryParams): Promise<number>;
 
-  /** 查询多行 */
-  query<T extends QueryRow = QueryRow>(sql: string, params?: QueryParams): Promise<T[]>;
+  /**
+   * 查询多行。
+   * 注意：泛型 T 不约束为 QueryRow —— 具体行接口（如 UserRow）没有索引签名，
+   * 无法赋值给 Record<string, unknown>，若加约束会导致 query<UserRow> 报错。
+   * caller 自行保证 T 与行结构匹配。
+   */
+  query<T = QueryRow>(sql: string, params?: QueryParams): Promise<T[]>;
 
   /** 查询单行，无结果返回 null */
-  queryOne<T extends QueryRow = QueryRow>(sql: string, params?: QueryParams): Promise<T | null>;
+  queryOne<T = QueryRow>(sql: string, params?: QueryParams): Promise<T | null>;
 
   /** 事务执行（嵌套通过 SAVEPOINT 支持，抛错 ROLLBACK，正常 COMMIT） */
   transaction<T>(fn: (tx: DbEngine) => Promise<T>): Promise<T>;

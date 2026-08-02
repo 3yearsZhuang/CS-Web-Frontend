@@ -29,7 +29,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -49,7 +49,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireModuleAdmin(req, 'exam');
+  const admin = await requireModuleAdmin(req, 'exam');
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);

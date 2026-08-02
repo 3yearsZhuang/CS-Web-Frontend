@@ -1,10 +1,9 @@
 /**
- * @file 个人资料服务 — 读取/更新/头像/活动记录（userId 始终从 session 获取，不接受客户端传入）
+ * @file 个人资料服务 — 读取/更新/头像/活动记录（userId 始终从 session 获取，不接受客户端传入）（ADR-009 async）
  */
 
 import path from 'node:path';
 import fs from 'node:fs';
-import { getDb } from '@/shared/db';
 import { logger } from '@/shared/logger';
 import { toSafeUser, type SafeUser, type UserRow } from '@/shared/types';
 import { AppError } from '@/shared/app-error';
@@ -18,6 +17,8 @@ import {
   isPasswordInHistory,
   recordPasswordHistory,
 } from '@/modules/auth/server';
+import { getAuthRepository } from '@/shared/db/repositories/auth.repo';
+import { getUserRepository } from '@/shared/db/repositories/user.repo';
 
 /**
  * 个人资料可编辑字段
@@ -48,25 +49,15 @@ export interface ActivityParticipation {
 /**
  * 获取用户完整资料（含活动记录）
  */
-export function getProfile(userId: string): {
+export async function getProfile(userId: string): Promise<{
   user: SafeUser;
   activities: ActivityParticipation[];
-} | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow | undefined;
+} | null> {
+  const repo = await getUserRepository();
+  const row = await repo.findById(userId);
   if (!row) return null;
 
-  const activities = db
-    .prepare(
-      'SELECT id, activity_title, activity_date, role, created_at FROM activity_participations WHERE user_id = ? ORDER BY activity_date DESC',
-    )
-    .all(userId) as Array<{
-    id: string;
-    activity_title: string;
-    activity_date: string;
-    role: string | null;
-    created_at: string;
-  }>;
+  const activities = await repo.listActivityParticipations(userId);
 
   return {
     user: toSafeUser(row),
@@ -81,13 +72,13 @@ export function getProfile(userId: string): {
 }
 
 /** 更新用户资料 — 输入校验失败抛 Error('VALIDATION_ERROR') */
-export function updateProfile(userId: string, update: ProfileUpdate): SafeUser {
+export async function updateProfile(userId: string, update: ProfileUpdate): Promise<SafeUser> {
   const validation = validateProfileFields(update);
   if (!validation.ok) {
     throw new AppError(validation.error || '输入校验失败', 'VALIDATION_ERROR');
   }
 
-  const db = getDb();
+  const repo = await getUserRepository();
   const sets: string[] = [];
   const values: unknown[] = [];
 
@@ -117,34 +108,24 @@ export function updateProfile(userId: string, update: ProfileUpdate): SafeUser {
   }
 
   if (sets.length === 0) {
-    const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow;
-    return toSafeUser(row);
+    const row = await repo.findById(userId);
+    return toSafeUser(row as UserRow);
   }
 
-  sets.push("updated_at = datetime('now')");
-  values.push(userId);
-
-  db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...values);
-
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow;
-  return toSafeUser(row);
+  const row = await repo.updateProfileFields(userId, sets, values);
+  return toSafeUser(row as UserRow);
 }
 
 /** 设置预设头像 — 预设 ID 无效时抛 Error('INVALID_PRESET') */
-export function setPresetAvatar(userId: string, presetId: number): SafeUser {
+export async function setPresetAvatar(userId: string, presetId: number): Promise<SafeUser> {
   if (!isValidPresetId(presetId)) {
     throw new AppError('无效的预设头像 ID', 'INVALID_PRESET');
   }
 
   const preset = getPresetById(presetId)!;
-  const db = getDb();
-
-  db.prepare(
-    "UPDATE users SET avatar_url = ?, avatar_type = 'preset', updated_at = datetime('now') WHERE id = ?",
-  ).run(preset.url, userId);
-
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow;
-  return toSafeUser(row);
+  const repo = await getUserRepository();
+  const row = await repo.setPresetAvatar(userId, preset.url);
+  return toSafeUser(row as UserRow);
 }
 
 /**
@@ -159,12 +140,12 @@ export function setPresetAvatar(userId: string, presetId: number): SafeUser {
  *
  * 抛 Error('FILE_TOO_LARGE' | 'INVALID_TYPE' | 'SAVE_FAILED')。
  */
-export function saveUploadedAvatar(
+export async function saveUploadedAvatar(
   userId: string,
   fileBuffer: Buffer,
   mimeType: string,
   originalName: string,
-): SafeUser {
+): Promise<SafeUser> {
   if (fileBuffer.length > AVATAR_LIMITS.MAX_SIZE) {
     throw new AppError(`文件大小不能超过 ${AVATAR_LIMITS.MAX_SIZE / 1024 / 1024}MB`, 'FILE_TOO_LARGE');
   }
@@ -198,12 +179,10 @@ export function saveUploadedAvatar(
     throw new AppError('头像保存失败', 'SAVE_FAILED');
   }
 
-  const db = getDb();
+  const repo = await getUserRepository();
   const avatarUrl = `/api/avatars/${filename}`;
 
-  const oldRow = db.prepare('SELECT avatar_url, avatar_type FROM users WHERE id = ?').get(userId) as
-    | { avatar_url: string | null; avatar_type: string | null }
-    | undefined;
+  const oldRow = await repo.findAvatarById(userId);
   if (oldRow?.avatar_type === 'uploaded' && oldRow.avatar_url) {
     const oldFilename = path.basename(oldRow.avatar_url);
     const oldPath = path.join(avatarsDir, oldFilename);
@@ -216,12 +195,8 @@ export function saveUploadedAvatar(
     }
   }
 
-  db.prepare(
-    "UPDATE users SET avatar_url = ?, avatar_type = 'uploaded', updated_at = datetime('now') WHERE id = ?",
-  ).run(avatarUrl, userId);
-
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow;
-  return toSafeUser(row);
+  const row = await repo.setUploadedAvatar(userId, avatarUrl);
+  return toSafeUser(row as UserRow);
 }
 
 /** 读取上传的头像 — filename 正则校验防止路径遍历 */
@@ -268,43 +243,37 @@ export type ChangePasswordResult =
  * 修改用户密码 — 验证旧密码 → 历史密码复用检测 → 更新哈希 → 清除其他 session（保留 keepSessionId）
  * 安全：userId 始终从 session 获取；旧密码校验失败返回 INVALID_CURRENT_PASSWORD，不泄露具体原因
  */
-export function changeUserPassword(
+export async function changeUserPassword(
   userId: string,
   oldPassword: string,
   newPassword: string,
   options?: { keepSessionId?: string },
-): ChangePasswordResult {
-  const db = getDb();
+): Promise<ChangePasswordResult> {
+  const userRepo = await getUserRepository();
+  const authRepo = await getAuthRepository();
 
   // 验证旧密码（用户来自 session，必定存在）
-  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(userId) as
-    | { password_hash: string }
-    | undefined;
+  const row = await userRepo.findPasswordHashById(userId);
   if (!row?.password_hash || !verifyPassword(oldPassword, row.password_hash)) {
     return { ok: false, reason: 'INVALID_CURRENT_PASSWORD' };
   }
 
   // 历史密码复用检测：新密码不能与最近 N 次历史密码相同
-  if (isPasswordInHistory(userId, newPassword)) {
+  if (await isPasswordInHistory(userId, newPassword)) {
     return { ok: false, reason: 'PASSWORD_IN_HISTORY' };
   }
 
   // 记录旧密码到历史表（在更新前获取当前哈希）
-  recordPasswordHistory(userId, row.password_hash);
+  await recordPasswordHistory(userId, row.password_hash);
 
   const passwordHash = hashPassword(newPassword);
-  db.prepare(
-    "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
-  ).run(passwordHash, userId);
+  await userRepo.updatePasswordHash(userId, passwordHash);
 
   // 修改后删除所有其他 session（保留当前 session）
   if (options?.keepSessionId) {
-    db.prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?').run(
-      userId,
-      options.keepSessionId,
-    );
+    await authRepo.deleteSessionsByUser(userId, options.keepSessionId);
   } else {
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+    await authRepo.deleteSessionsByUser(userId);
   }
 
   return { ok: true };
@@ -334,26 +303,9 @@ export interface PublicUserProfile {
 }
 
 /** 获取用户公开资料（无需登录）— 含论坛/考试统计，email 由调用方按需脱敏 */
-export function getPublicUserProfile(userId: string): PublicUserProfile | null {
-  const db = getDb();
-
-  const row = db.prepare(
-    `SELECT id, email, display_name, bio, avatar_url, avatar_type, github_url, website_url, tech_tags, role, created_at
-     FROM users WHERE id = ? AND is_active = 1`,
-  ).get(userId) as {
-    id: string;
-    email: string;
-    display_name: string | null;
-    bio: string | null;
-    avatar_url: string | null;
-    avatar_type: string | null;
-    github_url: string | null;
-    website_url: string | null;
-    tech_tags: string | null;
-    role: string;
-    created_at: string;
-  } | undefined;
-
+export async function getPublicUserProfile(userId: string): Promise<PublicUserProfile | null> {
+  const repo = await getUserRepository();
+  const row = await repo.findByIdForPublic(userId);
   if (!row) return null;
 
   let techTags: string[] = [];
@@ -365,47 +317,7 @@ export function getPublicUserProfile(userId: string): PublicUserProfile | null {
     }
   }
 
-  const topicCount = (
-    db
-      .prepare(
-        "SELECT COUNT(*) as cnt FROM community_posts WHERE author_id = ? AND kind = 'topic' AND status = 'published'",
-      )
-      .get(userId) as { cnt: number }
-  ).cnt;
-
-  const replyCount = (
-    db
-      .prepare(
-        "SELECT COUNT(*) as cnt FROM community_comments WHERE author_id = ? AND status = 'published'",
-      )
-      .get(userId) as { cnt: number }
-  ).cnt;
-
-  const examCount = (
-    db
-      .prepare(
-        `SELECT COUNT(DISTINCT ea.exam_id) as cnt
-         FROM exam_attempts ea
-         JOIN exams e ON ea.exam_id = e.id
-         WHERE ea.user_id = ? AND e.status = 'ended'`,
-      )
-      .get(userId) as { cnt: number }
-  ).cnt;
-
-  const examPassedCount = (
-    db
-      .prepare(
-        `SELECT COUNT(DISTINCT ea.exam_id) as cnt
-         FROM exam_attempts ea
-         JOIN exams e ON ea.exam_id = e.id
-         WHERE ea.user_id = ? AND e.status = 'ended'
-         GROUP BY ea.exam_id
-         HAVING SUM(ea.score) >= (
-           SELECT SUM(eq.score) FROM exam_questions eq WHERE eq.exam_id = ea.exam_id
-         ) * 0.6`,
-      )
-      .get(userId) as { cnt: number } | undefined
-  )?.cnt ?? 0;
+  const stats = await repo.getPublicStats(userId);
 
   return {
     user: {
@@ -422,10 +334,10 @@ export function getPublicUserProfile(userId: string): PublicUserProfile | null {
       createdAt: row.created_at,
     },
     stats: {
-      topicCount,
-      replyCount,
-      examCount,
-      examPassedCount,
+      topicCount: stats.topicCount,
+      replyCount: stats.replyCount,
+      examCount: stats.examCount,
+      examPassedCount: stats.examPassedCount,
     },
   };
 }

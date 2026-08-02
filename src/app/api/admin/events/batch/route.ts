@@ -17,7 +17,7 @@ import { batchEventSchema } from '@/shared/security/schemas';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (!admin.ok) return admin.response;
 
   const originErr = assertAllowedOrigin(req);
@@ -38,6 +38,6 @@ export async function POST(req: Request) {
 
   const { eventIds, status } = result.data;
 
-  const batchResult = batchUpdateEvents(admin.user.id, eventIds, { status });
+  const batchResult = await batchUpdateEvents(admin.user.id, eventIds, { status });
   return NextResponse.json(batchResult);
 }

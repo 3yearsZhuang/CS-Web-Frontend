@@ -1,107 +1,91 @@
 /**
- * @file 论坛服务层 — 用户主页数据（个人主页 Profile > Forum 标签页）
+ * @file 论坛服务层 — 用户维度数据（我的回复/话题/收藏，已迁移至 Repository）
  */
-import { getDb } from '@/shared/db';
-import {
-  FORUM_LIMITS,
-  computePagination,
-  computeTotalPages,
-  loadCategorySummaries,
-} from './shared';
-import {
-  listTopics,
-  type PaginatedPosts,
-} from './topics';
-import {
-  buildReplyDetails,
-} from './replies';
-import type { PaginatedComments } from '../../types';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import type { CommunityCommentRow } from '@/shared/db/repositories/community.repo';
+import { formatComments, formatPosts, loadCategorySummaries, type FormattedComment, type FormattedPost, type PaginationInfo } from '../shared';
+import { buildReplyDetails } from './replies';
+import { getTopicSummariesByIds } from '../shared';
 
-/** 列出某用户发布的主题（公开） */
-export function listUserTopics(
-  userId: string,
-  page: number = 1,
-  pageSize: number = FORUM_LIMITS.TOPICS_PAGE_SIZE,
-): PaginatedPosts {
-  return listTopics({ authorId: userId, page, pageSize });
+export interface ReplyActivityItem extends FormattedComment {
+  topicTitle: string;
+  categoryId: string | null;
+  categoryName: string | null;
 }
 
-/** 列出某用户的回复（公开） */
-export function listUserReplies(
+/** 用户发布的回复列表（分页，含主题标题与分类名） */
+export async function getUserReplies(
   userId: string,
-  page: number = 1,
-  pageSize: number = FORUM_LIMITS.REPLIES_PAGE_SIZE,
-): PaginatedComments {
-  const db = getDb();
-  const { page: safePage, pageSize: safePageSize, offset } = computePagination({
-    page,
-    pageSize,
-    defaultPageSize: FORUM_LIMITS.REPLIES_PAGE_SIZE,
-    maxPageSize: 100,
+  params: { page?: number; pageSize?: number } = {},
+): Promise<{ items: ReplyActivityItem[]; pagination: PaginationInfo }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+
+  const totalRow = await repo.countComments('WHERE author_id = ?', [userId]);
+  const rows = await repo.listComments(
+    `WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT ? OFFSET ?`,
+    [userId, pageSize, offset],
+  );
+  const formatted = (await buildReplyDetails(rows, userId, totalRow, page, pageSize, Math.max(1, Math.ceil(totalRow / pageSize)))).items;
+
+  const topicIds = [...new Set(formatted.map((r) => r.topicId))];
+  const topicSummaryMap = await getTopicSummariesByIds(topicIds);
+  const categoryIds = [...new Set(topicIds.map((id) => topicSummaryMap.get(id)?.categoryId).filter((c): c is string => !!c))];
+  const categorySummaryMap = await loadCategorySummaries(categoryIds);
+
+  const items: ReplyActivityItem[] = formatted.map((r) => {
+    const topic = topicSummaryMap.get(r.topicId);
+    const category = topic ? categorySummaryMap.get(topic.categoryId) ?? null : null;
+    return {
+      ...r,
+      topicTitle: topic?.title ?? '(已删除的主题)',
+      categoryId: topic?.categoryId ?? null,
+      categoryName: category?.name ?? null,
+    };
   });
 
-  const where = "author_id = ? AND status = 'published'";
-  const totalRow = db
-    .prepare(`SELECT COUNT(*) as count FROM community_comments WHERE ${where}`)
-    .get(userId) as { count: number };
-  const total = totalRow.count;
-  const totalPages = computeTotalPages(total, safePageSize);
-
-  const rows = db
-    .prepare(
-      `SELECT * FROM community_comments WHERE ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-    )
-    .all(userId, safePageSize, offset) as import('./shared').CommentRow[];
-
-  const result = buildReplyDetails(rows, undefined, total, safePage, safePageSize, totalPages);
-
-  // 批量加载回复所属主题的摘要（id / title / category slug+name）— 用于个人主页展示回复所属主题
-  if (result.items.length > 0) {
-    const topicIds = [...new Set(result.items.map((r) => r.topicId))].filter(Boolean);
-    const topicMap = new Map<
-      string,
-      { id: string; title: string; categoryId: string }
-    >();
-    if (topicIds.length > 0) {
-      const placeholders = topicIds.map(() => '?').join(',');
-      const topicRows = db
-        .prepare(
-          `SELECT id, title, category_id FROM community_posts WHERE id IN (${placeholders}) AND kind = 'topic'`,
-        )
-        .all(...topicIds) as Array<{
-          id: string;
-          title: string;
-          category_id: string;
-        }>;
-      for (const t of topicRows) {
-        topicMap.set(t.id, {
-          id: t.id,
-          title: t.title,
-          categoryId: t.category_id,
-        });
-      }
-    }
-    // 批量加载版块摘要
-    const categoryIds = [
-      ...new Set([...topicMap.values()].map((t) => t.categoryId)),
-    ].filter(Boolean);
-    const categoryMap = loadCategorySummaries(categoryIds);
-
-    // 为每条回复附加 topic 摘要
-    result.items = result.items.map((reply) => {
-      const t = topicMap.get(reply.topicId ?? '');
-      if (!t) return reply;
-      const cat = categoryMap.get(t.categoryId) ?? null;
-      return {
-        ...reply,
-        topic: {
-          id: t.id,
-          title: t.title,
-          category: cat ? { slug: cat.slug, name: cat.name } : null,
-        },
-      };
-    });
-  }
-
-  return result;
+  const totalPages = Math.max(1, Math.ceil(totalRow / pageSize));
+  return { items, pagination: { page, pageSize, total: totalRow, totalPages, hasNext: page < totalPages, hasPrev: page > 1 } };
 }
+
+/** 用户收藏的主题列表（分页） */
+export async function getUserFavorites(
+  userId: string,
+  params: { page?: number; pageSize?: number } = {},
+): Promise<{ items: FormattedPost[]; pagination: PaginationInfo }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+
+  const total = await repo.countUserFavorites(userId);
+  const rows = await repo.listUserFavoritePosts(userId, pageSize, offset);
+  const items = await formatPosts(rows, { currentUserId: userId });
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return { items, pagination: { page, pageSize, total, totalPages, hasNext: page < totalPages, hasPrev: page > 1 } };
+}
+
+/** 用户发布的主题列表（分页） */
+export async function getUserTopics(
+  userId: string,
+  params: { page?: number; pageSize?: number } = {},
+): Promise<{ items: FormattedPost[]; pagination: PaginationInfo }> {
+  const repo = getCommunityRepository();
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
+  const offset = (page - 1) * pageSize;
+
+  const total = await repo.countPosts("WHERE author_id = ? AND kind = 'topic'", [userId]);
+  const rows = await repo.listPosts(["author_id = ?", "kind = 'topic'"], [userId], pageSize, offset);
+  const items = await formatPosts(rows, { currentUserId: userId });
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  return { items, pagination: { page, pageSize, total, totalPages, hasNext: page < totalPages, hasPrev: page > 1 } };
+}
+
+/** 兼容别名 */
+export const listUserTopics = getUserTopics;
+export const listUserReplies = getUserReplies;

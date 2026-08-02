@@ -156,54 +156,54 @@ describe('2FA 完整流程', () => {
     inMemoryDb.prepare('INSERT OR IGNORE INTO users (id, email) VALUES (?, ?)').run(testUserId, testEmail);
   });
 
-  it('setup → confirm → verify → disable 完整流程', () => {
+  it('setup → confirm → verify → disable 完整流程', async () => {
     // 1. setup
-    const setup = setup2FA(testUserId, testEmail);
+    const setup = await setup2FA(testUserId, testEmail);
     expect(setup.secret).toMatch(/^[A-Z2-7]{32}$/);
     expect(setup.otpauthURI).toContain('otpauth://totp/');
     expect(setup.backupCodes).toHaveLength(8);
-    expect(is2FAEnabled(testUserId)).toBe(false);
+    expect(await is2FAEnabled(testUserId)).toBe(false);
 
     // 2. confirm
     const code = generateCurrentCode(setup.secret);
-    const confirmResult = confirm2FA(testUserId, code);
+    const confirmResult = await confirm2FA(testUserId, code);
     expect(confirmResult.ok).toBe(true);
-    expect(is2FAEnabled(testUserId)).toBe(true);
+    expect(await is2FAEnabled(testUserId)).toBe(true);
 
     // 3. verify with correct code
     const code2 = generateCurrentCode(setup.secret);
-    expect(verify2FA(testUserId, code2)).toBe(true);
+    expect(await verify2FA(testUserId, code2)).toBe(true);
 
     // 4. verify with backup code
-    expect(verify2FA(testUserId, setup.backupCodes[0])).toBe(true);
+    expect(await verify2FA(testUserId, setup.backupCodes[0])).toBe(true);
     // 备用码使用后应失效
-    expect(verify2FA(testUserId, setup.backupCodes[0])).toBe(false);
+    expect(await verify2FA(testUserId, setup.backupCodes[0])).toBe(false);
 
     // 5. disable
     const code3 = generateCurrentCode(setup.secret);
-    const disableResult = disable2FA(testUserId, code3);
+    const disableResult = await disable2FA(testUserId, code3);
     expect(disableResult.ok).toBe(true);
-    expect(is2FAEnabled(testUserId)).toBe(false);
+    expect(await is2FAEnabled(testUserId)).toBe(false);
   });
 
-  it('未启用 2FA 时 verify 应直接放行', () => {
-    expect(verify2FA('nonexistent-user', '123456')).toBe(true);
+  it('未启用 2FA 时 verify 应直接放行', async () => {
+    expect(await verify2FA('nonexistent-user', '123456')).toBe(true);
   });
 
-  it('confirm 时错误码应失败', () => {
+  it('confirm 时错误码应失败', async () => {
     setup2FA(testUserId, testEmail);
-    const result = confirm2FA(testUserId, '000000');
+    const result = await confirm2FA(testUserId, '000000');
     expect(result.ok).toBe(false);
     expect(result.error).toBe('验证码错误');
   });
 
-  it('regenerateBackupCodes 应返回新备用码', () => {
-    const setup = setup2FA(testUserId, testEmail);
+  it('regenerateBackupCodes 应返回新备用码', async () => {
+    const setup = await setup2FA(testUserId, testEmail);
     const code = generateCurrentCode(setup.secret);
     confirm2FA(testUserId, code);
 
     const code2 = generateCurrentCode(setup.secret);
-    const result = regenerateBackupCodes(testUserId, code2);
+    const result = await regenerateBackupCodes(testUserId, code2);
     expect(result.ok).toBe(true);
     expect(result.codes).toHaveLength(8);
     expect(result.codes).not.toEqual(setup.backupCodes);

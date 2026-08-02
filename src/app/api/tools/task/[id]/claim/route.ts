@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -30,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       body = await req.json();
     } catch { /* no body */ }
 
-    const result = claimTask(session.user.id, id, body.note);
+    const result = await claimTask(session.user.id, id, body.note);
     return NextResponse.json({ claim: result });
   } catch (e: unknown) {
     return errorResponse(e);
@@ -45,7 +45,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) {
     return NextResponse.json({ error: '未登录' }, { status: 401 });
   }
@@ -53,7 +53,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { id } = await params;
 
   try {
-    cancelClaimByTask(session.user.id, id);
+    await cancelClaimByTask(session.user.id, id);
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     return errorResponse(e);

@@ -3,9 +3,9 @@
  */
 import crypto from 'node:crypto';
 import { AppError } from '@/shared/app-error';
-import { getDb } from '@/shared/db';
 import { type SafeUser, type UserRow, toSafeUser } from '@/shared/types';
 import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from './password';
+import { getAuthRepository } from '@/shared/db/repositories/auth.repo';
 
 // ============= 向后兼容 re-export（保持旧 import 路径可用） =============
 export {
@@ -32,10 +32,10 @@ export {
 export { type SafeUser, type UserRow, toSafeUser, isAdminRole } from './user-types';
 
 /** 创建新用户 — 邮箱已存在时抛 Error('EMAIL_EXISTS') */
-export function createUser(email: string, password: string): SafeUser {
-  const db = getDb();
+export async function createUser(email: string, password: string): Promise<SafeUser> {
+  const repo = await getAuthRepository();
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
+  const existing = await repo.findUserByEmail(email.toLowerCase());
   if (existing) {
     throw new AppError('EMAIL_EXISTS', 'EMAIL_EXISTS');
   }
@@ -43,20 +43,16 @@ export function createUser(email: string, password: string): SafeUser {
   const id = crypto.randomUUID();
   const passwordHash = hashPassword(password);
 
-  db.prepare(
-    'INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)',
-  ).run(id, email.toLowerCase(), passwordHash);
+  await repo.insertUser(id, email.toLowerCase(), passwordHash);
 
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow;
-  return toSafeUser(row);
+  const row = await repo.findUserById(id);
+  return toSafeUser(row as UserRow);
 }
 
 /** 验证用户凭据 — 用户不存在时执行 dummy scrypt 均衡时序防邮箱枚举；禁用账号响应与密码错误一致 */
-export function authenticateUser(email: string, password: string): SafeUser | null {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase()) as
-    | UserRow
-    | undefined;
+export async function authenticateUser(email: string, password: string): Promise<SafeUser | null> {
+  const repo = await getAuthRepository();
+  const row = await repo.findUserByEmail(email.toLowerCase());
   if (!row) {
     verifyPassword(password, DUMMY_PASSWORD_HASH);
     return null;
@@ -67,10 +63,15 @@ export function authenticateUser(email: string, password: string): SafeUser | nu
 }
 
 /** 判断邮箱是否已被注册 — 注册前置检查，邮箱统一转小写查询 */
-export function isEmailRegistered(email: string): boolean {
-  const db = getDb();
-  const row = db
-    .prepare('SELECT id FROM users WHERE email = ?')
-    .get(email.toLowerCase());
-  return row !== undefined;
+export async function isEmailRegistered(email: string): Promise<boolean> {
+  const repo = await getAuthRepository();
+  const row = await repo.findUserByEmail(email.toLowerCase());
+  return row !== null;
+}
+
+/** 按 ID 获取用户（脱敏）— 供社区/权限校验复用 */
+export async function getUserById(id: string): Promise<SafeUser | null> {
+  const repo = await getAuthRepository();
+  const row = await repo.findUserById(id);
+  return row ? toSafeUser(row) : null;
 }

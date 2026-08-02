@@ -2,12 +2,12 @@
  * @file Agent 服务层统一导出
  */
 
-import { getDb } from '@/shared/db';
 import {
   type WeaknessTag,
   type RecommendedResource,
   type AuxilioAnalysis,
 } from '../../types';
+import { getToolsRepository } from '@/shared/db/repositories';
 
 const WEAKNESS_THRESHOLD = 0.6;
 const MAX_RECOMMENDATIONS = 10;
@@ -24,23 +24,10 @@ interface ResourceRow {
   created_at: string;
 }
 
-function calculateWeaknesses(userId: string): WeaknessTag[] {
-  const db = getDb();
+async function calculateWeaknesses(userId: string): Promise<WeaknessTag[]> {
+  const repo = getToolsRepository();
 
-  const rows = db.prepare(`
-    SELECT
-      ea.is_correct,
-      eq.title AS question_title,
-      e.tech_tags AS exam_tags
-    FROM exam_attempts ea
-    JOIN exam_questions eq ON ea.question_id = eq.id
-    JOIN exams e ON ea.exam_id = e.id
-    WHERE ea.user_id = ? AND ea.is_correct IS NOT NULL
-  `).all(userId) as Array<{
-    is_correct: number;
-    question_title: string;
-    exam_tags: string | null;
-  }>;
+  const rows = await repo.getExamAttemptAnalysis(userId);
 
   if (rows.length === 0) return [];
 
@@ -51,6 +38,7 @@ function calculateWeaknesses(userId: string): WeaknessTag[] {
     try {
       if (row.exam_tags) tags = JSON.parse(row.exam_tags) as string[];
     } catch {
+      /* ignore */
     }
     for (const tag of tags) {
       const existing = tagStats.get(tag) || { total: 0, correct: 0 };
@@ -73,15 +61,11 @@ function calculateWeaknesses(userId: string): WeaknessTag[] {
   return weaknesses;
 }
 
-function recommendResources(weaknessTags: string[]): RecommendedResource[] {
+async function recommendResources(weaknessTags: string[]): Promise<RecommendedResource[]> {
   if (weaknessTags.length === 0) return [];
 
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT * FROM resources WHERE status = 'published' ORDER BY view_count DESC, like_count DESC LIMIT 500`,
-    )
-    .all() as ResourceRow[];
+  const repo = getToolsRepository();
+  const rows = await repo.listPublishedResources();
 
   const results: RecommendedResource[] = [];
 
@@ -90,6 +74,7 @@ function recommendResources(weaknessTags: string[]): RecommendedResource[] {
     try {
       if (row.tech_tags) resourceTags = JSON.parse(row.tech_tags) as string[];
     } catch {
+      /* ignore */
     }
 
     for (const wt of weaknessTags) {
@@ -114,19 +99,13 @@ function recommendResources(weaknessTags: string[]): RecommendedResource[] {
 }
 
 /** 分析用户学习画像并推荐资源 */
-export function analyzeLearningProfile(userId: string): AuxilioAnalysis {
-  const db = getDb();
+export async function analyzeLearningProfile(userId: string): Promise<AuxilioAnalysis> {
+  const repo = getToolsRepository();
 
-  const statsRow = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct
-    FROM exam_attempts
-    WHERE user_id = ? AND is_correct IS NOT NULL
-  `).get(userId) as { total: number; correct: number };
+  const statsRow = await repo.getExamAttemptStats(userId);
 
-  const weaknesses = calculateWeaknesses(userId);
-  const recommendations = recommendResources(weaknesses.map((w) => w.tag));
+  const weaknesses = await calculateWeaknesses(userId);
+  const recommendations = await recommendResources(weaknesses.map((w) => w.tag));
 
   const total = statsRow.total || 0;
   const correct = statsRow.correct || 0;
