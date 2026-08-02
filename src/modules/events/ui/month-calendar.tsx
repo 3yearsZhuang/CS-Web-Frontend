@@ -5,7 +5,7 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatDateKey, parseEventDate } from '@/shared/utils/event-date';
 import type { EventItem } from '@/modules/events/types';
@@ -23,6 +23,27 @@ const MONTH_LABELS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ] as const;
+
+/** 月份中文名 — 用于下拉选择器与选中日标题 */
+const MONTH_LABELS_CN = [
+  '一月', '二月', '三月', '四月', '五月', '六月',
+  '七月', '八月', '九月', '十月', '十一月', '十二月',
+] as const;
+
+/** 快速选择器可选年份范围：活动最早年份 −2 至 当前年份 +2，至少覆盖 2020 起 */
+function getSelectableYears(events: EventItem[]): number[] {
+  const currentYear = new Date().getFullYear();
+  let minYear = currentYear;
+  for (const e of events) {
+    const p = parseEventDate(e.date);
+    if (p && p.year < minYear) minYear = p.year;
+  }
+  const start = Math.min(2020, minYear - 2);
+  const end = currentYear + 2;
+  const years: number[] = [];
+  for (let y = end; y >= start; y--) years.push(y);
+  return years;
+}
 
 /** 日历网格固定 6 行 × 7 列，覆盖整月 + 首尾溢出 */
 const CALENDAR_GRID_CELLS = 42;
@@ -53,6 +74,24 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [yearOpen, setYearOpen] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(false);
+
+  const selectableYears = useMemo(() => getSelectableYears(events), [events]);
+
+  // 点击页面其他区域时关闭下拉选择器
+  useEffect(() => {
+    if (!yearOpen && !monthOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-year-select]') && !target.closest('[data-month-select]')) {
+        setYearOpen(false);
+        setMonthOpen(false);
+      }
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [yearOpen, monthOpen]);
 
   // 将活动按日期分组：YYYY-MM-DD → EventItem[]
   const { eventsByDate, unscheduled } = useMemo(() => {
@@ -123,17 +162,85 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
   return (
     <div>
       {/* ============ 月份导航 ============ */}
-      <div className="flex items-end justify-between mb-8 sm:mb-10 border-b border-[var(--border)] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10 border-b border-[var(--border)] pb-4">
         <div>
           <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-1">
             {'// '}{viewYear} · {monthEvents > 0 ? `${monthEvents} event${monthEvents > 1 ? 's' : ''}` : 'no events'}
           </div>
-          <h3 className="display-serif text-[clamp(28px,5vw,48px)] leading-[1] text-[var(--foreground)]">
-            {MONTH_LABELS[viewMonth]}
+          <h3 className="display-serif text-[clamp(28px,5vw,48px)] leading-[1] text-[var(--foreground)] flex items-baseline flex-wrap gap-x-1">
+            {/* 月份快速选择器 */}
+            <div className="relative" data-month-select>
+              <button
+                type="button"
+                onClick={() => { setMonthOpen((o) => !o); setYearOpen(false); }}
+                className="inline-flex items-baseline hover:text-[var(--primary)] transition-colors focus-amber"
+                aria-haspopup="listbox"
+                aria-expanded={monthOpen}
+              >
+                {MONTH_LABELS[viewMonth]}
+                <span className="meta-mono text-[10px] ml-1 text-[var(--muted-foreground)]">▾</span>
+              </button>
+              {monthOpen && (
+                <div
+                  role="listbox"
+                  className="absolute z-20 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-lg max-h-64 overflow-y-auto w-[260px]"
+                >
+                  {MONTH_LABELS_CN.map((label, m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      role="option"
+                      aria-selected={m === viewMonth}
+                      onClick={() => { setViewMonth(m); setMonthOpen(false); setSelectedDate(null); }}
+                      className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
+                        m === viewMonth
+                          ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <span className="text-[var(--primary)]">.</span>
-            <span className="meta-mono text-[clamp(14px,2vw,20px)] ml-2 text-[var(--muted-foreground)] align-baseline">
-              {viewYear}
-            </span>
+            {/* 年份快速选择器 */}
+            <div className="relative" data-year-select>
+              <button
+                type="button"
+                onClick={() => { setYearOpen((o) => !o); setMonthOpen(false); }}
+                className="inline-flex items-baseline meta-mono text-[clamp(14px,2vw,20px)] ml-1 text-[var(--muted-foreground)] align-baseline hover:text-[var(--foreground)] transition-colors focus-amber"
+                aria-haspopup="listbox"
+                aria-expanded={yearOpen}
+              >
+                {viewYear}
+                <span className="text-[10px] ml-1">▾</span>
+              </button>
+              {yearOpen && (
+                <div
+                  role="listbox"
+                  className="absolute z-20 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-lg max-h-64 overflow-y-auto w-[200px]"
+                >
+                  {selectableYears.map((y) => (
+                    <button
+                      key={y}
+                      type="button"
+                      role="option"
+                      aria-selected={y === viewYear}
+                      onClick={() => { setViewYear(y); setYearOpen(false); setSelectedDate(null); }}
+                      className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
+                        y === viewYear
+                          ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
+                      }`}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </h3>
         </div>
         <div className="flex items-center gap-1.5">
@@ -193,9 +300,10 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
               <button
                 key={idx}
                 type="button"
-                onClick={() => hasEvents ? setSelectedDate(date) : null}
-                className={`relative aspect-square border-r border-b border-[var(--border)] p-1 sm:p-2 flex flex-col items-start transition-colors motion-reduce:transition-none ${
-                  hasEvents && isCurrentMonth ? 'cursor-pointer hover:bg-[var(--primary)]/5 hover:ring-1 hover:ring-inset hover:ring-[var(--primary)]/40' : 'cursor-default'
+                onClick={() => setSelectedDate(date)}
+                aria-pressed={selectedFlag}
+                className={`relative aspect-square border-r border-b border-[var(--border)] p-1 sm:p-2 flex flex-col items-start transition-colors motion-reduce:transition-none cursor-pointer ${
+                  isCurrentMonth ? 'hover:bg-[var(--primary)]/5 hover:ring-1 hover:ring-inset hover:ring-[var(--primary)]/40' : ''
                 } ${!isCurrentMonth ? 'opacity-30' : ''} ${
                   selectedFlag ? 'bg-[var(--primary)]/10 ring-1 ring-inset ring-[var(--primary)]/40' : ''
                 }`}
@@ -270,7 +378,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
           >
             <div className="border-t border-[var(--border)] pt-6">
               <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-4">
-                {'// '}{selectedDate.getFullYear()}.{String(selectedDate.getMonth() + 1).padStart(2, '0')}.{String(selectedDate.getDate()).padStart(2, '0')}
+                {'// '}{selectedDate.getFullYear()} 年 {selectedDate.getMonth() + 1} 月 {selectedDate.getDate()} 日
                 {' — '}
                 {selectedEvents.length} event{selectedEvents.length > 1 ? 's' : ''}
               </div>
