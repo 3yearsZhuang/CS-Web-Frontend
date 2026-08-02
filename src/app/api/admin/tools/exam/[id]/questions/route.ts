@@ -41,7 +41,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const questions = listQuestionsByExam(id);
+  const questions = await listQuestionsByExam(id);
   return NextResponse.json({ questions });
 }
 
@@ -82,7 +82,7 @@ export async function POST(
   };
 
   try {
-    const question = createQuestion(id, input);
+    const question = await createQuestion(id, input);
     return NextResponse.json({ question }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

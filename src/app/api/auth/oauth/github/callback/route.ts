@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     // 避免经 Referer 头、浏览器历史、服务端日志泄漏。
     // URL 中仅保留 oauth_2fa=1 作为前端展示 2FA UI 的标识（无敏感信息）。
     if (!result.isNewUser && (await is2FAEnabled(result.userId))) {
-      const twoFactorToken = create2FAToken(result.userId);
+      const twoFactorToken = await create2FAToken(result.userId);
       const loginUrl = new URL('/login', req.url);
       loginUrl.searchParams.set('oauth_2fa', '1');
       const res = NextResponse.redirect(loginUrl, { status: 302 });

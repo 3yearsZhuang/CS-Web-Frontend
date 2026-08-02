@@ -40,7 +40,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const announcement = getAnnouncementById(id);
+  const announcement = await getAnnouncementById(id);
   if (!announcement) {
     return jsonError('公告不存在', 404);
   }
@@ -72,7 +72,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const announcement = updateAnnouncement(id, result.data);
+  const announcement = await updateAnnouncement(id, result.data);
   if (!announcement) {
     return jsonError('公告不存在', 404);
   }
@@ -101,7 +101,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const existed = deleteAnnouncement(id);
+  const existed = await deleteAnnouncement(id);
   if (!existed) {
     return jsonError('公告不存在', 404);
   }

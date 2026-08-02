@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
     // stats 快捷查询
     if (searchParams.get('stats') === '1') {
-      return NextResponse.json(getFeedStats());
+      return NextResponse.json(await getFeedStats());
     }
 
     const kind = searchParams.get('kind') as 'topic' | 'post' | 'member' | null;
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'kind 参数无效' }, { status: 400 });
     }
 
-    const result = getFeed({
+    const result = await getFeed({
       kind: kind ?? undefined,
       tag: searchParams.get('tag') ?? undefined,
       search: searchParams.get('search') ?? undefined,

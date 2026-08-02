@@ -42,7 +42,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const exam = getExamById(id);
+  const exam = await getExamById(id);
   if (!exam) {
     return NextResponse.json({ error: '考试不存在' }, { status: 404 });
   }
@@ -79,7 +79,7 @@ export async function PUT(
   const input: Partial<ExamInput> = result.data;
 
   try {
-    const exam = updateExam(id, input);
+    const exam = await updateExam(id, input);
     return NextResponse.json({ exam });
   } catch (err) {
     return errorResponse(err);
@@ -103,7 +103,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    deleteExam(id);
+    await deleteExam(id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

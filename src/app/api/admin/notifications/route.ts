@@ -48,7 +48,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 20));
 
-  const broadcasts = listRecentBroadcasts(limit);
+  const broadcasts = await listRecentBroadcasts(limit);
   return NextResponse.json({ broadcasts });
 }
 

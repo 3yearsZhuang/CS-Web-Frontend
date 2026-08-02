@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   const adminId = url.searchParams.get('adminId') || undefined;
   const action = url.searchParams.get('action') || undefined;
 
-  const actions = listAdminActions(adminId, limit, action);
+  const actions = await listAdminActions(adminId, limit, action);
   return NextResponse.json({ actions });
 }
 

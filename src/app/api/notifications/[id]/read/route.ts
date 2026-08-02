@@ -39,7 +39,7 @@ export async function POST(
   const { id: notificationId } = await params;
 
   try {
-    markAsRead(userId, notificationId);
+    await markAsRead(userId, notificationId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

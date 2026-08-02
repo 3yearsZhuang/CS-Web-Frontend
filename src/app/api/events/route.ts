@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : undefined;
     const pageSize = pageSizeParam ? Math.max(1, Math.min(100, parseInt(pageSizeParam, 10))) : undefined;
 
-    const result = listEvents({
+    const result = await listEvents({
       status: status as EventStatus | undefined,
       search: search || undefined,
       tag: tag || undefined,

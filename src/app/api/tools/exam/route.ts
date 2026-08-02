@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
   const log = createRequestLogger(req);
   try {
-    const result = listExams({
+    const result = await listExams({
       status: 'published',
       page: Number.isFinite(page) ? page : 1,
       pageSize: Number.isFinite(pageSize) ? pageSize : 20,

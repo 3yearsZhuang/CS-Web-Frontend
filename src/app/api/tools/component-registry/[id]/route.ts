@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   try {
-    const item = updateComponent(id, parsed.data);
+    const item = await updateComponent(id, parsed.data);
     return NextResponse.json({ item });
   } catch (err) {
     return errorResponse(err);
@@ -76,7 +76,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   try {
-    deleteComponent(id);
+    await deleteComponent(id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

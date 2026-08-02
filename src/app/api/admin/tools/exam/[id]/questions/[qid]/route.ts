@@ -55,7 +55,7 @@ export async function PUT(
   const input: Partial<QuestionInput> = result.data;
 
   try {
-    const question = updateQuestion(qid, input);
+    const question = await updateQuestion(qid, input);
     return NextResponse.json({ question });
   } catch (err) {
     return errorResponse(err);
@@ -79,7 +79,7 @@ export async function DELETE(
 
   const { qid } = await params;
   try {
-    deleteQuestion(qid);
+    await deleteQuestion(qid);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

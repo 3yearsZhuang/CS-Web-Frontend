@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '缺少认证 token', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const userId = verify2FAToken(twoFactorToken);
+  const userId = await verify2FAToken(twoFactorToken);
   if (!userId) {
     // token 无效或已消费 — 若存在 OAuth 2FA cookie，清除以避免前端反复提交
     if (oauthTwoFactorToken) {
@@ -85,11 +85,11 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!is2FAEnabled(userId)) {
+  if (!await is2FAEnabled(userId)) {
     return NextResponse.json({ error: '未启用 2FA', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  if (!verify2FA(userId, code)) {
+  if (!await verify2FA(userId, code)) {
     return NextResponse.json({ error: '验证码错误', code: '2FA_FAILED' }, { status: 401 });
   }
 

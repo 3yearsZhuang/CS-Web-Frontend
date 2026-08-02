@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   const status = url.searchParams.get('status') as JoinApplicationStatus | null;
 
   try {
-    const applications = listJoinApplications(status || undefined);
+    const applications = await listJoinApplications(status || undefined);
     return NextResponse.json({ applications });
   } catch (err) {
     return errorResponse(err);

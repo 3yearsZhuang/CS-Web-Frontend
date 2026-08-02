@@ -44,7 +44,7 @@ export async function GET(req: Request) {
     });
   }
 
-  const roles = listRoles();
+  const roles = await listRoles();
   return NextResponse.json({ roles });
 }
 

@@ -43,7 +43,7 @@ export async function GET(
 
   const { key } = await params;
   try {
-    const role = getRole(key);
+    const role = await getRole(key);
     return NextResponse.json({ role });
   } catch (err) {
     return errorResponse(err);

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   if (!user) {
     // 安全：记录失败登录（user_id 为 null，仅记录邮箱用于暴力破解检测）
     // 不区分"用户不存在"与"密码错误"的响应，防邮箱枚举
-    recordLoginHistory(null, ip, userAgent, false, email.toLowerCase());
+    await recordLoginHistory(null, ip, userAgent, false, email.toLowerCase());
     return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
   }
 

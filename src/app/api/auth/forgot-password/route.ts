@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
   const log = createRequestLogger(req);
   try {
-    createResetRequest(email);
+    await createResetRequest(email);
   } catch (err) {
     log.error({ err }, '创建忘记密码申请失败');
   }

@@ -52,6 +52,6 @@ export async function GET(req: Request) {
   const pageSize = Number(url.searchParams.get('pageSize')) || 50;
   const page = Number(url.searchParams.get('page')) || 1;
 
-  const result = listUsers({ search, role, active, pageSize, page });
+  const result = await listUsers({ search, role, active, pageSize, page });
   return NextResponse.json(result);
 }

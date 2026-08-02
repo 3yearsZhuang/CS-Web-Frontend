@@ -42,9 +42,9 @@ export async function GET(
     const { id } = await context.params;
     const currentUser = await optionalUser(req);
 
-    const ipHash = currentUser ? undefined : hashIpForView(getClientIp(req));
+    const ipHash = currentUser ? undefined : await hashIpForView(getClientIp(req));
     try {
-      recordTopicView(id);
+      await recordTopicView(id);
     } catch (err) {
       log.error({ err }, '记录浏览失败');
     }

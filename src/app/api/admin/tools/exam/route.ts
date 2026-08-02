@@ -43,7 +43,7 @@ export async function GET(req: Request) {
   const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
 
   try {
-    const result = listExams({
+    const result = await listExams({
       status: status === 'draft' || status === 'published' || status === 'ended' ? status : undefined,
       page: Number.isFinite(page) ? page : 1,
       pageSize: Number.isFinite(pageSize) ? pageSize : 20,

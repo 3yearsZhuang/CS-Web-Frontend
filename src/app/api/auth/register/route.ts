@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!verifyCode(email, verificationCode)) {
+  if (!await verifyCode(email, verificationCode)) {
     return NextResponse.json({ error: '验证码错误或已过期', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 

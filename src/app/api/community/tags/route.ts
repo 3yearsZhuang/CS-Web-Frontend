@@ -12,7 +12,7 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   const log = createRequestLogger(req);
   try {
-    const tags = getFeedTags();
+    const tags = await getFeedTags();
     return NextResponse.json({ tags });
   } catch (err) {
     log.error({ err }, '标签查询失败');

@@ -43,8 +43,8 @@ export async function GET(
   const { id: eventId } = await params;
 
   try {
-    const checkins = getEventCheckins(eventId);
-    const stats = getCheckinStats(eventId);
+    const checkins = await getEventCheckins(eventId);
+    const stats = await getCheckinStats(eventId);
     return NextResponse.json({ checkins, stats });
   } catch (err) {
     return errorResponse(err);

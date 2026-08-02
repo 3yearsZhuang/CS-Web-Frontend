@@ -32,7 +32,7 @@ const createSchema = z.object({
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const components = listComponents();
+  const components = await listComponents();
   return NextResponse.json({ components });
 }
 
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const item = createComponent(parsed.data);
+    const item = await createComponent(parsed.data);
     return NextResponse.json({ item }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

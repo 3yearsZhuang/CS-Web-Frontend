@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    const url = saveResourceFile(userId, fileBuffer, ext);
+    const url = await saveResourceFile(userId, fileBuffer, ext);
     return NextResponse.json({ ok: true, url }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

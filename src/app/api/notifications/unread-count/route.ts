@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   }
 
   const userId = session.user.id;
-  const unreadCount = getUnreadCount(userId);
+  const unreadCount = await getUnreadCount(userId);
 
   return NextResponse.json({ unreadCount });
 }

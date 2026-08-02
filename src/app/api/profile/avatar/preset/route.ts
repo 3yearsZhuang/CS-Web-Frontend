@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
   const log = createRequestLogger(req);
   try {
-    const user = setPresetAvatar(userId, presetId);
+    const user = await setPresetAvatar(userId, presetId);
     return NextResponse.json({ user });
   } catch (err) {
     if (err instanceof Error && err.name === 'INVALID_PRESET') {

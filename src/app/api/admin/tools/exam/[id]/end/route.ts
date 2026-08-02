@@ -38,7 +38,7 @@ export async function POST(
 
   const { id } = await params;
   try {
-    const exam = endExam(id);
+    const exam = await endExam(id);
     return NextResponse.json({ exam });
   } catch (err) {
     return errorResponse(err);

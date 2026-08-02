@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   try {
-    const guide = updateGuide(id, parsed.data);
+    const guide = await updateGuide(id, parsed.data);
     return NextResponse.json({ guide });
   } catch (err) {
     return errorResponse(err);

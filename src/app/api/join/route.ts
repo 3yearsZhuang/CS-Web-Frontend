@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const application = submitJoinApplication({ ...result.data, userId: userId ?? undefined });
+    const application = await submitJoinApplication({ ...result.data, userId: userId ?? undefined });
     return NextResponse.json({ application }, { status: 201 });
   } catch (err) {
     if (err instanceof Error && err.name === 'VALIDATION_ERROR') {

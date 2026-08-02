@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (token) {
     const log = createRequestLogger(req);
     try {
-      deleteSession(token);
+      await deleteSession(token);
     } catch (err) {
       log.error({ err }, '登出时删除 session 失败');
     }

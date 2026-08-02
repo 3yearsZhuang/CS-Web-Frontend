@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const task = getTaskById(id);
+  const task = await getTaskById(id);
 
   if (!task) {
     return NextResponse.json({ error: '任务不存在' }, { status: 404 });

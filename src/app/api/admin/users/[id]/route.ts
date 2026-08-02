@@ -48,7 +48,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const user = getUserById(id);
+  const user = await getUserById(id);
   if (!user) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }

@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     return jsonError('操作过于频繁，请稍后再试', 429);
   }
 
-  const events = listEvents();
+  const events = await listEvents();
   return NextResponse.json({ events });
 }
 

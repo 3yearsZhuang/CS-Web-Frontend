@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   }
 
   const userId = session.user.id;
-  const count = markAllAsRead(userId);
+  const count = await markAllAsRead(userId);
 
   return NextResponse.json({ ok: true, count });
 }

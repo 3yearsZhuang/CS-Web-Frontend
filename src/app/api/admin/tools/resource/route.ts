@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
 
   try {
-    const result = listPendingResources(
+    const result = await listPendingResources(
       Number.isFinite(page) ? page : 1,
       Number.isFinite(pageSize) ? pageSize : 20,
     );

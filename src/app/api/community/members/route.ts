@@ -14,10 +14,10 @@ export async function GET(req: Request) {
   const all = searchParams.get('all');
 
   if (all === 'tags') {
-    const tags = listAllTechTags();
+    const tags = await listAllTechTags();
     return NextResponse.json({ tags });
   }
 
-  const members = listMembers(tag);
+  const members = await listMembers(tag);
   return NextResponse.json({ members });
 }

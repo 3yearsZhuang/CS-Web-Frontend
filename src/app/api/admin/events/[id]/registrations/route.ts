@@ -27,7 +27,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const registrations = listRegistrations(id);
+    const registrations = await listRegistrations(id);
     return NextResponse.json({ registrations });
   } catch (err) {
     return errorResponse(err);

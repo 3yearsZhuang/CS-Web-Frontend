@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(params.get('page') || '1', 10);
   const pageSize = parseInt(params.get('pageSize') || '20', 10);
 
-  const result = listTasks({
+  const result = await listTasks({
     status: status || 'published',
     category: category as TaskCategory | undefined,
     page,

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   try {
-    toggleVariant(id, parsed.data.variantId, parsed.data.enabled);
+    await toggleVariant(id, parsed.data.variantId, parsed.data.enabled);
     return NextResponse.json({ ok: true });
   } catch (err) {
     return errorResponse(err);

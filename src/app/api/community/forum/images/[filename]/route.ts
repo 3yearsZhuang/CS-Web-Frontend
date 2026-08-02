@@ -29,7 +29,7 @@ export async function GET(
 
   const { filename } = await params;
 
-  const result = readForumImage(filename);
+  const result = await readForumImage(filename);
   if (!result) {
     return new Response('Not Found', { status: 404 });
   }

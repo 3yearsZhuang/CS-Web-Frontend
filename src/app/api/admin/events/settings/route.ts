@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     return jsonError('操作过于频繁，请稍后再试', 429);
   }
 
-  const settings = getEventSettings();
+  const settings = await getEventSettings();
   return NextResponse.json({ settings });
 }
 
@@ -79,13 +79,13 @@ export async function PUT(req: Request) {
   ];
 
   try {
-    let settings = getEventSettings();
+    let settings = await getEventSettings();
 
     for (const key of validKeys) {
       if (key in body) {
         const value = body[key];
         if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
-          settings = updateEventSetting(key, value as number);
+          settings = await updateEventSetting(key, value as number);
         }
       }
     }
@@ -135,7 +135,7 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    const settings = resetEventSetting(key);
+    const settings = await resetEventSetting(key);
     return NextResponse.json({ settings });
   } catch (err) {
     return errorResponse(err);

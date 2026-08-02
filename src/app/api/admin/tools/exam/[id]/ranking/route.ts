@@ -38,7 +38,7 @@ export async function GET(
 
   const { id } = await params;
   try {
-    const ranking = getExamRanking(id);
+    const ranking = await getExamRanking(id);
     return NextResponse.json({ ranking });
   } catch (err) {
     return errorResponse(err);

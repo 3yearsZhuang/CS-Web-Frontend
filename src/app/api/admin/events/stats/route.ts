@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     return jsonError('操作过于频繁，请稍后再试', 429);
   }
 
-  const stats = getEventStats();
+  const stats = await getEventStats();
 
   return NextResponse.json({ stats });
 }

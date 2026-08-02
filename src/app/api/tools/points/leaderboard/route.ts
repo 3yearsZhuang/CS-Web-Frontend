@@ -7,6 +7,6 @@ import { getLeaderboard } from '@/modules/tools/server';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const board = getLeaderboard(20);
+  const board = await getLeaderboard(20);
   return NextResponse.json({ leaderboard: board });
 }

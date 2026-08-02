@@ -20,7 +20,7 @@ export async function GET(
 ) {
   const { filename } = await params;
 
-  const result = readUploadedAvatar(filename);
+  const result = await readUploadedAvatar(filename);
   if (!result) {
     return new Response('Not Found', { status: 404 });
   }

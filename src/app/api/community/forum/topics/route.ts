@@ -44,7 +44,7 @@ export async function GET(req: Request) {
         ? Number(url.searchParams.get('page_size'))
         : undefined,
     };
-    const result = listTopics(filters);
+    const result = await listTopics(filters);
     return NextResponse.json(result);
   } catch (err) {
     log.error({ err }, '获取主题列表失败');

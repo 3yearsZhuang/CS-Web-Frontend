@@ -40,6 +40,6 @@ export async function GET(req: Request) {
     ? (statusParam as ResetRequestStatus)
     : 'pending';
 
-  const requests = listResetRequests(status);
+  const requests = await listResetRequests(status);
   return NextResponse.json({ requests });
 }

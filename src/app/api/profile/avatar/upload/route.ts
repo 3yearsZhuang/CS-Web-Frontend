@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    const user = saveUploadedAvatar(userId, fileBuffer, file.type, file.name);
+    const user = await saveUploadedAvatar(userId, fileBuffer, file.type, file.name);
     return NextResponse.json({ user });
   } catch (err) {
     return errorResponse(err);

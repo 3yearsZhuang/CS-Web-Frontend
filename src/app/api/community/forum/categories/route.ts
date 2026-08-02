@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 export async function GET(req: Request) {
   const log = createRequestLogger(req);
   try {
-    const categories = listCategories();
+    const categories = await listCategories();
     return NextResponse.json({ items: categories });
   } catch (err) {
     log.error({ err }, '获取版块列表失败');

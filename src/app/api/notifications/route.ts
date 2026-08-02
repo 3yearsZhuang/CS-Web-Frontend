@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   const pageSize = Number(url.searchParams.get('page_size')) || 20;
 
   const result = await listNotifications(userId, { isRead, type, page, pageSize });
-  const unreadCount = getUnreadCount(userId);
+  const unreadCount = await getUnreadCount(userId);
 
   return NextResponse.json({
     notifications: result.notifications,

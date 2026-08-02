@@ -39,7 +39,7 @@ export async function GET(req: Request) {
   const data = parsed.data;
 
   try {
-    const result = listResources({
+    const result = await listResources({
       resourceType: data.resourceType ?? undefined,
       techTag: data.techTag ?? undefined,
       sort: data.sort ?? undefined,

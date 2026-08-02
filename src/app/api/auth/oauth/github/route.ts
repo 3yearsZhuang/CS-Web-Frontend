@@ -14,7 +14,7 @@ import { getGitHubAuthUrl } from '@/modules/auth/server';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const authUrl = getGitHubAuthUrl();
+  const authUrl = await getGitHubAuthUrl();
 
   if (!authUrl) {
     return NextResponse.json({ error: 'GitHub 登录未启用', code: 'NOT_FOUND' }, { status: 404 });
