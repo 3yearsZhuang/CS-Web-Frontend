@@ -214,17 +214,26 @@ export async function getPostBySlug(slug: string): Promise<CommunityPostDetail |
 export async function listPosts(params: {
   authorId?: string;
   tag?: string;
+  seriesId?: string;
   status?: string;
   page?: number;
   pageSize?: number;
+  /** 包含草稿等非公开状态（仅作者/管理员调用时） */
+  includeAllStatus?: boolean;
 } = {}): Promise<{ items: CommunityPostDetail[]; total: number; page: number; pageSize: number }> {
   const repo = getCommunityRepository();
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
   const offset = (page - 1) * pageSize;
 
-  const where: string[] = ["kind = 'post'", "status = 'published'"];
+  const where: string[] = ["kind = 'post'"];
   const queryParams: unknown[] = [];
+  if (params.status) {
+    where.push('status = ?');
+    queryParams.push(params.status);
+  } else if (!params.includeAllStatus) {
+    where.push("status = 'published'");
+  }
   if (params.authorId) {
     where.push('author_id = ?');
     queryParams.push(params.authorId);
@@ -233,11 +242,20 @@ export async function listPosts(params: {
     where.push('tags LIKE ?');
     queryParams.push(`%"${params.tag}"%`);
   }
+  if (params.seriesId) {
+    where.push('series_id = ?');
+    queryParams.push(params.seriesId);
+  }
 
   const total = await repo.countPosts(`WHERE ${where.join(' AND ')}`, queryParams);
   const rows = await repo.listPosts(where, queryParams, pageSize, offset);
   const items = await formatPostsForDetail(rows);
   return { items, total, page, pageSize };
+}
+
+/** 获取用户的草稿（含所有状态的文章，仅本人/管理员使用） */
+export async function getUserDrafts(userId: string, params: { page?: number; pageSize?: number } = {}): Promise<{ items: CommunityPostDetail[]; total: number; page: number; pageSize: number }> {
+  return listPosts({ authorId: userId, status: 'draft', includeAllStatus: true, page: params.page, pageSize: params.pageSize });
 }
 
 /** 增加文章浏览量 */

@@ -1,5 +1,8 @@
 /**
- * @file FeedItemCard — 聚合 Feed 统一卡片（判别联合，kind 区分 topic/post/member）
+ * @file FeedItemCard — 聚合 Feed 统一卡片（topic/post 合并为同一内容卡片，member 单独）
+ *
+ * 合并说明：原论坛主题(topic)与博客文章(post)采用不同卡片样式与 FORUM/BLOG 徽章，
+ * 现统一为单一内容卡片，不再做 kind 的 UI 区分（detail 数据层已统一为 CommunityPost）。
  */
 
 'use client';
@@ -16,62 +19,38 @@ interface FeedItemCardProps {
   index?: number;
 }
 
-/** 类型徽章配置 */
-const KIND_BADGE: Record<FeedItem['kind'], { label: string; color: string }> = {
-  topic: { label: 'FORUM', color: 'var(--primary)' },
-  post: { label: 'BLOG', color: '#5bc9c5' },
-  member: { label: 'MEMBER', color: '#d4a574' },
-};
-
 export function FeedItemCard({ item, index }: FeedItemCardProps) {
   const num = typeof index === 'number' ? String(index).padStart(2, '0') : null;
-  const badge = KIND_BADGE[item.kind];
 
-  if (item.kind === 'topic') {
-    return <TopicCard item={item} num={num} badge={badge} />;
+  if (item.kind === 'member') {
+    return <MemberCard item={item} num={num} />;
   }
-  if (item.kind === 'post') {
-    return <PostCard item={item} num={num} badge={badge} />;
-  }
-  return <MemberCard item={item} num={num} badge={badge} />;
+  return <ContentCard item={item} num={num} />;
 }
 
-// ============= 论坛主题卡片 =============
+// ============= 统一内容卡片（topic + post 合并） =============
 
-function TopicCard({
-  item,
-  num,
-  badge,
-}: {
-  item: Extract<FeedItem, { kind: 'topic' }>;
-  num: string | null;
-  badge: { label: string; color: string };
-}) {
+function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 'post' }>; num: string | null }) {
   const router = useRouter();
-  const topic = item.data;
-  const href = topic.category
-    ? `/community/forum/${topic.category.slug}/${topic.id}`
-    : `/community/forum/topic/${topic.id}`;
+  const post = item.data;
+  const href = `/community/${post.id}`;
+
+  // 中部摘要：论坛优先社交动态文案，博客优先 excerpt
+  const summary = post.excerpt ?? topicSocialCopy(post);
 
   return (
-    <Link href={href} className="block group focus-amber" aria-label={`查看主题 ${topic.title}`}>
+    <Link href={href} className="block group focus-amber" aria-label={`查看内容 ${post.title}`}>
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
-        {/* 左侧 — 编号 + 状态标记 */}
+        {/* 左侧 — 编号 + 状态标记（仅保留置顶/精选，不展示 FORUM/BLOG） */}
         <div className="col-span-12 sm:col-span-2 flex sm:flex-col items-start gap-2 sm:gap-1.5">
           {num && <div className="section-marker">[ {num} ]</div>}
           <div className="flex flex-wrap gap-1.5">
-            <span
-              className="meta-mono text-[11px] px-2 py-0.5 border"
-              style={{ color: badge.color, borderColor: badge.color }}
-            >
-              {badge.label}
-            </span>
-            {topic.isPinned && (
+            {post.isPinned && (
               <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
                 PIN
               </span>
             )}
-            {topic.isFeatured && (
+            {post.isFeatured && (
               <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
                 FEAT
               </span>
@@ -79,15 +58,16 @@ function TopicCard({
           </div>
         </div>
 
-        {/* 中部 — 标题 + 社交动态文案 + 作者/时间/版块 */}
+        {/* 中部 — 标题 + 摘要 + 作者/时间/版块/标签 */}
         <div className="col-span-12 sm:col-span-7 min-w-0">
           <h3 className="display-serif text-[clamp(16px,2vw,20px)] text-[var(--foreground)] leading-[1.3] mb-2 group-hover:text-[var(--primary)] transition-colors line-clamp-2">
-            {topic.title}
+            {post.title}
           </h3>
-          {/* 社交动态文案 */}
-          <p className="text-[12px] text-[var(--muted-foreground)] leading-[1.6] line-clamp-1 mb-2">
-            {topicSocialCopy(topic)}
-          </p>
+          {summary && (
+            <p className="text-[12px] text-[var(--muted-foreground)] leading-[1.6] line-clamp-1 mb-2">
+              {summary}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span
               role="link"
@@ -95,113 +75,38 @@ function TopicCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (topic.author?.id) router.push(`/users/${topic.author.id}`);
+                if (post.author?.id) router.push(`/users/${post.author.id}`);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (topic.author?.id) router.push(`/users/${topic.author.id}`);
+                  if (post.author?.id) router.push(`/users/${post.author.id}`);
                 }
               }}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer py-1 min-h-[44px]"
             >
               <Avatar
-                email={topic.author?.email ?? 'anonymous'}
-                displayName={topic.author?.displayName}
-                avatarUrl={topic.author?.avatarUrl}
-                avatarType={topic.author?.avatarType}
+                email={post.author?.email ?? 'anonymous'}
+                displayName={post.author?.displayName}
+                avatarUrl={post.author?.avatarUrl}
+                avatarType={post.author?.avatarType}
                 size={18}
               />
               <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors">
-                {topic.author?.displayName ?? '匿名'}
+                {post.author?.displayName ?? post.authorName ?? '匿名'}
               </span>
             </span>
             <span className="meta-mono">·</span>
             <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {formatDateTime(topic.createdAt)}
+              {formatDateTime(post.publishedAt ?? post.createdAt)}
             </span>
-            {topic.category && (
+            {post.category && (
               <>
                 <span className="meta-mono">·</span>
-                <span className="meta-mono text-[var(--primary)]">{topic.category.name}</span>
+                <span className="meta-mono text-[var(--primary)]">{post.category.name}</span>
               </>
             )}
-          </div>
-        </div>
-
-        {/* 右侧 — 统计 */}
-        <div className="col-span-12 sm:col-span-3 flex sm:flex-col items-start sm:items-end gap-3 sm:gap-1.5 mt-1 sm:mt-0">
-          <div className="flex sm:flex-col gap-3 sm:gap-1.5">
-            <StatItem label="Reply" value={topic.replyCount} />
-            <StatItem label="View" value={topic.viewCount} />
-            <StatItem label="Like" value={topic.likeCount} />
-          </div>
-        </div>
-      </article>
-    </Link>
-  );
-}
-
-// ============= 博客文章卡片 =============
-
-const BLOG_CATEGORY_LABELS: Record<string, string> = {
-  general: '通用',
-  frontend: '前端',
-  backend: '后端',
-  devops: '运维',
-  algorithm: '算法',
-  design: '设计',
-  tutorial: '教程',
-  essay: '随笔',
-};
-
-function PostCard({
-  item,
-  num,
-  badge,
-}: {
-  item: Extract<FeedItem, { kind: 'post' }>;
-  num: string | null;
-  badge: { label: string; color: string };
-}) {
-  const post = item.data;
-  const categoryLabel = BLOG_CATEGORY_LABELS[post.category?.slug ?? ''] ?? post.category?.name ?? '未分类';
-
-  return (
-    <Link href={`/community/blog/${post.slug}`} className="block group focus-amber" aria-label={`查看文章 ${post.title}`}>
-      <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
-        {/* 左侧 — 编号 + 类型徽章 */}
-        <div className="col-span-12 sm:col-span-2 flex sm:flex-col items-start gap-2 sm:gap-1.5">
-          {num && <div className="section-marker">[ {num} ]</div>}
-          <span
-            className="meta-mono text-[11px] px-2 py-0.5 border"
-            style={{ color: badge.color, borderColor: badge.color }}
-          >
-            {badge.label}
-          </span>
-        </div>
-
-        {/* 中部 — 标题 + 摘要 + 作者 */}
-        <div className="col-span-12 sm:col-span-7 min-w-0">
-          <h3 className="display-serif text-[clamp(16px,2vw,20px)] text-[var(--foreground)] leading-[1.3] mb-2 group-hover:text-[var(--primary)] transition-colors line-clamp-2">
-            {post.title}
-          </h3>
-          {post.excerpt && (
-            <p className="text-[13px] text-[var(--muted-foreground)] leading-[1.6] line-clamp-1 mb-2">
-              {post.excerpt}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {post.authorName ?? '匿名作者'}
-            </span>
-            <span className="meta-mono">·</span>
-            <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {formatDate(post.publishedAt ?? post.createdAt)}
-            </span>
-            <span className="meta-mono">·</span>
-            <span className="meta-mono text-[var(--primary)]">{categoryLabel}</span>
             {post.tags.length > 0 && (
               <>
                 <span className="meta-mono">·</span>
@@ -216,6 +121,7 @@ function PostCard({
         {/* 右侧 — 统计 */}
         <div className="col-span-12 sm:col-span-3 flex sm:flex-col items-start sm:items-end gap-3 sm:gap-1.5 mt-1 sm:mt-0">
           <div className="flex sm:flex-col gap-3 sm:gap-1.5">
+            {post.replyCount > 0 && <StatItem label="Reply" value={post.replyCount} />}
             <StatItem label="View" value={post.viewCount} />
             <StatItem label="Like" value={post.likeCount} />
           </div>
@@ -227,15 +133,7 @@ function PostCard({
 
 // ============= 成员卡片 =============
 
-function MemberCard({
-  item,
-  num,
-  badge,
-}: {
-  item: Extract<FeedItem, { kind: 'member' }>;
-  num: string | null;
-  badge: { label: string; color: string };
-}) {
+function MemberCard({ item, num }: { item: Extract<FeedItem, { kind: 'member' }>; num: string | null }) {
   const member = item.data;
 
   return (
@@ -245,15 +143,9 @@ function MemberCard({
       aria-label={`查看成员 ${member.displayName ?? '未命名用户'}`}
     >
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
-        {/* 左侧 — 编号 + 类型徽章 */}
+        {/* 左侧 — 编号 */}
         <div className="col-span-12 sm:col-span-2 flex sm:flex-col items-start gap-2 sm:gap-1.5">
           {num && <div className="section-marker">[ {num} ]</div>}
-          <span
-            className="meta-mono text-[11px] px-2 py-0.5 border"
-            style={{ color: badge.color, borderColor: badge.color }}
-          >
-            {badge.label}
-          </span>
         </div>
 
         {/* 中部 — 头像 + 姓名 + bio */}
@@ -327,7 +219,7 @@ function StatItem({ label, value }: { label: string; value: number }) {
 
 // ============= 社交动态文案生成 =============
 
-/** 根据论坛主题数据生成社交动态文案 */
+/** 根据内容数据生成社交动态文案（用于无 excerpt 时补充摘要） */
 function topicSocialCopy(topic: {
   replyCount: number;
   likeCount: number;

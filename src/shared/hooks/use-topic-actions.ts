@@ -86,7 +86,7 @@ export function useTopicActions({
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? '删除失败');
       }
-      router.push(`/community/forum/${categorySlug}`);
+      router.push('/community');
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败');
     }

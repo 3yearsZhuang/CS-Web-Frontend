@@ -1,11 +1,11 @@
 /**
- * @file 主题详情 /community/forum/[category]/[topicId] — 编排容器
+ * @file 社区内容详情 /community/[id] — 统一详情页（合并原论坛主题与博客文章）
  *
  * 数据流：
- *   - 数据加载 → useTopicDetail（topic + replies + currentUser + relatedTopics）
- *   - 主题写操作 → useTopicActions（点赞 / 收藏 / 删除）
+ *   - 数据加载 → useTopicDetail（post + replies + currentUser + relatedPosts）
+ *   - 内容写操作 → useTopicActions（点赞 / 收藏 / 删除）
  *   - 回复写操作 → useReplyActions（点赞 / 编辑 / 删除 / 提交 / 取消 / 楼中楼）
- *   - 页面仅负责编排：主题编辑开关、回复排序、渲染分支
+ *   - 页面仅负责编排：内容编辑开关、回复排序、渲染分支
  *   - 视觉分段：[ 00 ] TopicHero / TopicContent / [ 01-02 ] TopicReplySection
  */
 
@@ -26,10 +26,9 @@ import { useTopicActions } from '@/shared/hooks/use-topic-actions';
 import { useReplyActions } from '@/shared/hooks/use-reply-actions';
 import type { CommunityPostDetail } from '@/modules/community/types';
 
-export default function TopicDetailPage() {
-  const params = useParams<{ category: string; topicId: string }>();
-  const topicId = params?.topicId ?? '';
-  const categorySlug = params?.category ?? '';
+export default function CommunityPostDetailPage() {
+  const params = useParams<{ id: string }>();
+  const postId = params?.id ?? '';
 
   // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
   const { collapsed: heroCollapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
@@ -41,7 +40,7 @@ export default function TopicDetailPage() {
     onTitleClick,
   };
 
-  // 数据加载（hook 聚合 topic + replies + currentUser + relatedTopics）
+  // 数据加载（hook 聚合 post + replies + currentUser + relatedPosts）
   const {
     topic,
     setTopic,
@@ -58,9 +57,12 @@ export default function TopicDetailPage() {
     relatedTopics,
     loadReplies,
     nestedRepliesLoader,
-  } = useTopicDetail(topicId);
+  } = useTopicDetail(postId);
 
-  // 主题写操作（点赞 / 收藏 / 删除）
+  // 版块 slug（统一路由下从内容自身的 category 派生）
+  const categorySlug = topic?.category?.slug ?? '';
+
+  // 内容写操作（点赞 / 收藏 / 删除）
   const { handleTopicLike, handleTopicFavorite, handleDeleteTopic } = useTopicActions({
     topic,
     setTopic,
@@ -83,7 +85,7 @@ export default function TopicDetailPage() {
     handleReplyToParent,
   } = useReplyActions({ topic, setReplies, loadReplies, setError });
 
-  // 主题编辑状态（仅页面级 UI 开关）
+  // 内容编辑状态（仅页面级 UI 开关）
   const [editingTopic, setEditingTopic] = useState(false);
 
   // 回复排序
@@ -97,7 +99,7 @@ export default function TopicDetailPage() {
         sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'oldest':
-        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'hottest':
         sorted.sort((a, b) => b.likeCount - a.likeCount);
@@ -122,10 +124,10 @@ export default function TopicDetailPage() {
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error}</div>
           <Link
-            href={`/community/forum/${categorySlug}`}
+            href="/community"
             className="meta-mono text-[var(--primary)] underline-grow"
           >
-            ← 返回版块
+            ← 返回社区
           </Link>
         </div>
       </main>
@@ -141,7 +143,7 @@ export default function TopicDetailPage() {
   return (
     <main className="relative pt-16">
       {/* ============ [ 00 ] Topic Hero — 1s 后自动收缩悬浮（仅标题/元信息） ============ */}
-      <TopicHero topic={topic} categorySlug={categorySlug} replyTotal={replyTotal} hero={hero} />
+      <TopicHero topic={topic} categorySlug={categorySlug} replyTotal={replyTotal} hero={hero} currentUserId={currentUser?.id} />
 
       {/* ============ [ 00 ] Topic Content（Hero 延续 — 正文 + 操作栏 + 右侧栏） ============ */}
       <TopicContent

@@ -11,7 +11,7 @@ import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
 
 /** 通知类型 */
-type NotificationType = 'system' | 'admin' | 'activity';
+type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
 
 /** 通知数据结构 */
 interface Notification {
@@ -47,6 +47,22 @@ const TYPE_STYLES: Record<NotificationType, { label: string; className: string }
   activity: {
     label: 'ACT',
     className: 'text-emerald-500 bg-emerald-500/10',
+  },
+  like: {
+    label: 'LIKE',
+    className: 'text-pink-500 bg-pink-500/10',
+  },
+  reply: {
+    label: 'REPLY',
+    className: 'text-sky-500 bg-sky-500/10',
+  },
+  favorite: {
+    label: 'FAV',
+    className: 'text-amber-500 bg-amber-500/10',
+  },
+  follow: {
+    label: 'FOLLOW',
+    className: 'text-violet-500 bg-violet-500/10',
   },
 };
 

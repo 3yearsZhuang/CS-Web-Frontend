@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -34,7 +35,7 @@ interface FeedStats {
   memberCount: number;
 }
 
-type TabKey = 'all' | FeedKind | 'admin';
+type TabKey = 'all' | 'following' | FeedKind | 'admin';
 
 const PAGE_SIZE = 20;
 const SEARCH_MIN_LEN = 2;
@@ -42,12 +43,13 @@ const SEARCH_MAX_LEN = 80;
 
 const TAB_OPTIONS: { key: TabKey; num: string; label: string }[] = [
   { key: 'all', num: '01', label: '全部 / All' },
-  { key: 'topic', num: '02', label: '论坛 / Forum' },
-  { key: 'post', num: '03', label: '博客 / Blog' },
-  { key: 'member', num: '04', label: '成员 / Members' },
+  { key: 'following', num: '02', label: '关注流 / Following' },
+  { key: 'topic', num: '03', label: '论坛 / Forum' },
+  { key: 'post', num: '04', label: '博客 / Blog' },
+  { key: 'member', num: '05', label: '成员 / Members' },
 ];
 
-const TAB_TO_KIND: Record<Exclude<TabKey, 'admin'>, FeedKind | undefined> = {
+const TAB_TO_KIND: Record<Exclude<TabKey, 'admin' | 'following'>, FeedKind | undefined> = {
   all: undefined,
   topic: 'topic',
   post: 'post',
@@ -231,8 +233,8 @@ function CommunityPageContent() {
 
   /** 加载 Feed */
   const loadFeed = useCallback(async () => {
-    // "成员" tab 需登录，auth 检查未完成时保持 loading，未登录则不加载
-    if (activeTab === 'member') {
+    // "成员" / "关注流" tab 需登录，auth 检查未完成时保持 loading，未登录则不加载
+    if (activeTab === 'member' || activeTab === 'following') {
       if (!authChecked) return; // 等 auth 检查完成
       if (!isLoggedIn) {
         setItems([]);
@@ -246,10 +248,15 @@ function CommunityPageContent() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      const kind = (TAB_TO_KIND as Record<string, FeedKind | undefined>)[activeTab];
-      if (kind) params.set('kind', kind);
-      // "全部" tab 排除成员，仅展示话题+博客
-      if (activeTab === 'all') params.set('exclude', 'member');
+      if (activeTab === 'following') {
+        // 关注流：按关注对象聚合，不设 kind / exclude
+        params.set('feed', 'following');
+      } else {
+        const kind = (TAB_TO_KIND as Record<string, FeedKind | undefined>)[activeTab];
+        if (kind) params.set('kind', kind);
+        // "全部" tab 排除成员，仅展示话题+博客
+        if (activeTab === 'all') params.set('exclude', 'member');
+      }
       const q = searchQuery.trim();
       if (q.length >= SEARCH_MIN_LEN) params.set('search', q);
       if (selectedTag) params.set('tag', selectedTag);
@@ -257,6 +264,14 @@ function CommunityPageContent() {
       params.set('pageSize', String(PAGE_SIZE));
 
       const res = await fetch(`/api/community/feed?${params.toString()}`);
+      // 关注流 / 成员在会话失效时按未登录处理（feed API 返回 401）
+      if (res.status === 401 && (activeTab === 'following' || activeTab === 'member')) {
+        setItems([]);
+        setTotal(0);
+        setTotalPages(0);
+        setLoading(false);
+        return;
+      }
       if (!res.ok) throw new Error('加载失败');
       const data = (await res.json()) as PaginatedFeed;
       setItems(data.items ?? []);
@@ -476,6 +491,9 @@ function CommunityPageContent() {
                   >
                     {loading ? 'Searching...' : 'Search →'}
                   </Button>
+                  <Link href="/community/new" className="shrink-0">
+                    <Button className="whitespace-nowrap">发布内容 →</Button>
+                  </Link>
                 </div>
                 {searchQuery.length > 0 && (
                   <div className="mt-2 meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">
@@ -529,18 +547,20 @@ function CommunityPageContent() {
               )}
 
               {/* Feed 列表 */}
-              {activeTab === 'member' && authChecked && !isLoggedIn ? (
+              {(activeTab === 'member' || activeTab === 'following') && authChecked && !isLoggedIn ? (
                 <div className="py-20 text-center border-t border-[var(--border)]">
                   <div className="meta-mono text-[var(--muted-foreground)] text-[14px] mb-3">
                     {'// LOGIN REQUIRED'}
                   </div>
                   <div className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] mb-2">
-                    成员列表仅对登录用户开放
+                    {activeTab === 'following' ? '关注流仅对登录用户开放' : '成员列表仅对登录用户开放'}
                   </div>
                   <div className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-8">
-                    登录后查看社区成员的技术标签与活跃动态
+                    {activeTab === 'following'
+                      ? '登录后查看你关注的人的最新动态'
+                      : '登录后查看社区成员的技术标签与活跃动态'}
                   </div>
-                  <Button onClick={() => router.push('/login?redirect=/community?tab=member')}>
+                  <Button onClick={() => router.push(`/login?redirect=/community?tab=${activeTab}`)}>
                     登录 / Login →
                   </Button>
                 </div>

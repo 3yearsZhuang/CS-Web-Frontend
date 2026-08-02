@@ -67,6 +67,14 @@ export const hideTopicSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
+/** 举报请求 schema */
+export const reportSchema = z.object({
+  targetType: z.enum(['topic', 'comment'], { message: '举报目标类型必须是 topic 或 comment' }),
+  targetId: z.string().min(1, '举报目标 ID 不能为空'),
+  reason: z.string().min(1, '举报理由不能为空').max(200, '理由最多 200 个字符'),
+  detail: z.string().max(1000).optional(),
+});
+
 export const createCategorySchema = z.object({
   slug: z.string().min(1, '标识不能为空').max(50).regex(/^[a-z0-9-]+$/, '标识只能包含小写字母、数字和连字符'),
   name: z.string().min(1, '名称不能为空').max(50),

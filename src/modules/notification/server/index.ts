@@ -152,7 +152,7 @@ export async function listRecentBroadcasts(limit = 20): Promise<BroadcastRecord[
   return rows.map((r) => ({
     title: r.title,
     content: r.content ?? null,
-    type: (['system', 'admin', 'activity'].includes(r.type)
+    type: (['system', 'admin', 'activity', 'like', 'reply', 'favorite', 'follow'].includes(r.type)
       ? r.type
       : 'system') as NotificationType,
     createdAt: r.created_at,

@@ -24,7 +24,7 @@ export function toNotification(row: NotificationRow): Notification {
   return {
     id: row.id,
     userId: row.user_id,
-    type: (['system', 'admin', 'activity'].includes(row.type)
+    type: (['system', 'admin', 'activity', 'like', 'reply', 'favorite', 'follow'].includes(row.type)
       ? row.type
       : 'system') as NotificationType,
     title: row.title,

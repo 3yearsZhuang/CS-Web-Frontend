@@ -26,9 +26,7 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
       <ScrollIndicator gap="gap-3 sm:gap-4">
         <div className="flex gap-3 sm:gap-4 pb-2">
           {topics.map((topic) => {
-            const href = topic.category
-              ? `/community/forum/${topic.category.slug}/${topic.id}`
-              : `/community/forum/topic/${topic.id}`;
+            const href = `/community/${topic.id}`;
             const author = topic.author;
 
             return (

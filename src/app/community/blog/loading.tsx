@@ -1,1 +1,0 @@
-export { LoadingFallback as default } from '@/components/feedback/fallback';

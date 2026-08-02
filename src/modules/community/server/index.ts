@@ -19,6 +19,7 @@ export {
   getPostBySlug,
   listPosts,
   getUserPosts,
+  getUserDrafts,
 } from './blog';
 export {
   createSeries,

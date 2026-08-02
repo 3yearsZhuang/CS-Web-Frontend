@@ -1,6 +1,8 @@
 /**
- * @file 发新主题 /community/forum/new — 版块选择 + 标题 + Markdown 正文
+ * @file 发布内容 /community/new — 版块选择 + 标题 + Markdown 正文
  * 编辑器复用 MarkdownEditor（内置工具栏 + 图片上传 + 预览切换）
+ *
+ * 合并说明：原论坛(blog 之外的讨论)与博客文章统一为一套发布流程。
  */
 
 'use client';
@@ -65,7 +67,7 @@ function ComposePageContent() {
     onTitleClick,
   };
 
-  // 预选版块（来自 query string，例如从 /community/forum/[category] 跳转过来）
+  // 预选版块（来自 query string，例如从列表页跳转过来）
   const initialCategory = searchParams.get('category') ?? '';
 
   // 数据状态
@@ -161,7 +163,7 @@ function ComposePageContent() {
     return Object.keys(errs).length === 0;
   };
 
-  /** 提交新主题 */
+  /** 提交新内容 */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -187,15 +189,9 @@ function ComposePageContent() {
         return;
       }
 
-      // 成功 — 跳转主题详情
+      // 成功 — 跳转内容详情
       const ok = data as CreateTopicResponse;
-      const slug = ok.topic.category?.slug ?? initialCategory ?? '';
-      if (slug) {
-        router.push(`/community/forum/${slug}/${ok.topic.id}`);
-      } else {
-        // 兜底：跳回论坛首页
-        router.push('/community/forum');
-      }
+      router.push(`/community/${ok.topic.id}`);
     } catch {
       setFormError('网络错误，请重试');
     } finally {
@@ -223,10 +219,10 @@ function ComposePageContent() {
               请先 <span className="text-[var(--primary)]">登录</span>
             </h1>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] leading-[1.8] mb-8">
-              {'// 发帖需要登录账户，加入社区讨论'}
+              {'// 发布内容需要登录账户，加入社区讨论'}
             </p>
             <Button
-              onClick={() => router.push('/login?redirect=/community/forum/new')}
+              onClick={() => router.push('/login?redirect=/community/new')}
             >
               立即登录 →
             </Button>
@@ -245,7 +241,7 @@ function ComposePageContent() {
         index="00"
         label="Compose"
         hero={hero}
-        pageKey="forum-new"
+        pageKey="posts-new"
       >
         <RevealTitle>
           <h1
@@ -256,7 +252,7 @@ function ComposePageContent() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            发起 <span className="text-[var(--primary)]">讨论</span>
+            发布 <span className="text-[var(--primary)]">内容</span>
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -423,7 +419,7 @@ function ComposePageContent() {
                   disabled={submitting}
                   className="px-8 py-3 font-mono uppercase tracking-wider text-[12px]"
                 >
-                  {submitting ? 'Posting...' : '发布主题 →'}
+                  {submitting ? 'Posting...' : '发布内容 →'}
                 </Button>
                 <Button
                   variant="outline"
@@ -479,7 +475,7 @@ function ComposePageContent() {
             </div>
             <div className="col-span-12 md:col-span-10">
               <h2 className="display-serif text-[clamp(24px,4vw,40px)] text-[var(--foreground)] mb-8">
-                发帖 <span className="text-[var(--primary)]">提示</span>
+                发布 <span className="text-[var(--primary)]">提示</span>
               </h2>
               <div className="border-t border-[var(--border)] pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 max-w-3xl">
                 <div>
@@ -503,7 +499,7 @@ function ComposePageContent() {
                 <div>
                   <div className="ark-divider mb-3">{'// 04 审核'}</div>
                   <p className="text-[14px] leading-[1.7] text-[var(--muted-foreground)]">
-                    事后审核：发帖即发布，管理员有权隐藏违规内容。
+                    事后审核：发布即发布，管理员有权隐藏违规内容。
                   </p>
                 </div>
               </div>

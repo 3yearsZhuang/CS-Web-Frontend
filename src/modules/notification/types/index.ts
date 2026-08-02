@@ -2,8 +2,15 @@
  * @file 通知模块 — 共享类型
  */
 
-/** 通知类型：系统通知、管理员通知、活动通知 */
-export type NotificationType = 'system' | 'admin' | 'activity';
+/** 通知类型：系统通知、管理员通知、活动通知，以及社区互动通知 */
+export type NotificationType =
+  | 'system'
+  | 'admin'
+  | 'activity'
+  | 'like'
+  | 'reply'
+  | 'favorite'
+  | 'follow';
 
 /** 站内通知 */
 export interface Notification {

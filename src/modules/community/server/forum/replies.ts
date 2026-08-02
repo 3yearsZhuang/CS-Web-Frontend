@@ -103,11 +103,25 @@ export async function createReply(input: {
   if (topicRow && topicRow.author_id !== input.authorId) {
     await createNotification(
       topicRow.author_id,
-      'activity',
+      'reply',
       '你的话题有了新回复',
       '有人回复了你参与的话题',
-      input.topicId,
+      input.authorId,
     );
+  }
+
+  // 楼中楼：通知父回复作者（跳过自己与话题作者已通知的情况）
+  if (parentReplyId) {
+    const parentRow = await repo.getCommentById(parentReplyId);
+    if (parentRow && parentRow.author_id !== input.authorId) {
+      await createNotification(
+        parentRow.author_id,
+        'reply',
+        '你的回复有了新回复',
+        '有人在回复中提到了你，点击查看。',
+        input.authorId,
+      );
+    }
   }
 
   return { id };

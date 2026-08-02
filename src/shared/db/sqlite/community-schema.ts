@@ -169,6 +169,37 @@ export function initCommunitySchema(db: DB): void {
     CREATE INDEX IF NOT EXISTS idx_blog_series_slug ON blog_series(slug);
     CREATE INDEX IF NOT EXISTS idx_blog_series_created_by ON blog_series(created_by);
 
+    -- 用户关注关系
+    CREATE TABLE IF NOT EXISTS community_follows (
+      id TEXT PRIMARY KEY,
+      follower_id TEXT NOT NULL,
+      following_id TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(follower_id, following_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_community_follows_follower ON community_follows(follower_id);
+    CREATE INDEX IF NOT EXISTS idx_community_follows_following ON community_follows(following_id);
+
+    -- 用户举报
+    CREATE TABLE IF NOT EXISTS community_reports (
+      id TEXT PRIMARY KEY,
+      reporter_id TEXT NOT NULL,
+      target_type TEXT NOT NULL,
+      target_id TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      detail TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      handled_by TEXT,
+      handled_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (handled_by) REFERENCES users(id) ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_community_reports_status ON community_reports(status);
+    CREATE INDEX IF NOT EXISTS idx_community_reports_target ON community_reports(target_type, target_id);
+
     -- ============= 全文搜索（FTS5） =============
     CREATE VIRTUAL TABLE IF NOT EXISTS community_posts_fts USING fts5(
       title,

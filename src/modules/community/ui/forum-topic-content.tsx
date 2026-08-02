@@ -65,6 +65,7 @@ export function TopicContent({
                   showFavorite
                   favoriteCount={topic.favoriteCount}
                   isFavoritedByMe={topic.isFavoritedByMe}
+                  showReport
                   onLike={onTopicLike}
                   onFavorite={onTopicFavorite}
                   onEdit={onStartEdit}

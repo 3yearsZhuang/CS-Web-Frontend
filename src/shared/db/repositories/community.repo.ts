@@ -266,6 +266,36 @@ export interface CommunityRepository {
   ): Promise<Set<string>>;
   getUserFavoriteTargets(userId: string, ids: string[], eng?: DbEngine): Promise<Set<string>>;
 
+  // ---- follows ----
+  insertFollow(input: { id: string; followerId: string; followingId: string }, eng?: DbEngine): Promise<void>;
+  deleteFollow(followerId: string, followingId: string, eng?: DbEngine): Promise<void>;
+  getFollow(followerId: string, followingId: string, eng?: DbEngine): Promise<{ id: string } | null>;
+  listFollowing(followerId: string, limit: number, offset: number, eng?: DbEngine): Promise<Array<{ id: string; following_id: string; created_at: string }>>;
+  listFollowers(followingId: string, limit: number, offset: number, eng?: DbEngine): Promise<Array<{ id: string; follower_id: string; created_at: string }>>;
+  getFollowingIds(followerId: string, eng?: DbEngine): Promise<string[]>;
+  countFollowing(followerId: string, eng?: DbEngine): Promise<number>;
+  countFollowers(followingId: string, eng?: DbEngine): Promise<number>;
+  getFollowStates(followerId: string, targetIds: string[], eng?: DbEngine): Promise<Set<string>>;
+
+  // ---- reports ----
+  insertReport(input: { id: string; reporterId: string; targetType: string; targetId: string; reason: string; detail: string | null }, eng?: DbEngine): Promise<void>;
+  getReportById(id: string, eng?: DbEngine): Promise<{ id: string; status: string } | null>;
+  listReports(whereSql: string, params: unknown[], limit: number, offset: number, eng?: DbEngine): Promise<Array<{
+    id: string;
+    reporter_id: string;
+    target_type: string;
+    target_id: string;
+    reason: string;
+    detail: string | null;
+    status: string;
+    handled_by: string | null;
+    handled_at: string | null;
+    created_at: string;
+  }>>;
+  countReports(whereSql: string, params: unknown[], eng?: DbEngine): Promise<number>;
+  updateReportStatus(id: string, status: string, handledBy: string, eng?: DbEngine): Promise<void>;
+  hasUserReported(targetId: string, reporterId: string, eng?: DbEngine): Promise<boolean>;
+
   // ---- mentions ----
   findUsersByDisplayNames(names: string[], eng?: DbEngine): Promise<Array<{ id: string; display_name: string }>>;
   insertMention(
@@ -724,6 +754,126 @@ export function createCommunityRepository(): CommunityRepository {
       );
       for (const r of rows) set.add(r.target_id);
       return set;
+    },
+
+    // ---- follows ----
+    async insertFollow(input, eng?) {
+      const e = await resolveEngine(eng);
+      await e.execute(
+        'INSERT INTO community_follows (id, follower_id, following_id) VALUES (?, ?, ?)',
+        [input.id, input.followerId, input.followingId],
+      );
+    },
+    async deleteFollow(followerId, followingId, eng?) {
+      const e = await resolveEngine(eng);
+      await e.execute(
+        'DELETE FROM community_follows WHERE follower_id = ? AND following_id = ?',
+        [followerId, followingId],
+      );
+    },
+    async getFollow(followerId, followingId, eng?) {
+      const e = await resolveEngine(eng);
+      return e.queryOne<{ id: string }>(
+        'SELECT id FROM community_follows WHERE follower_id = ? AND following_id = ?',
+        [followerId, followingId],
+      );
+    },
+    async listFollowing(followerId, limit, offset, eng?) {
+      const e = await resolveEngine(eng);
+      return e.query<{ id: string; following_id: string; created_at: string }>(
+        'SELECT id, following_id, created_at FROM community_follows WHERE follower_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        [followerId, limit, offset],
+      );
+    },
+    async listFollowers(followingId, limit, offset, eng?) {
+      const e = await resolveEngine(eng);
+      return e.query<{ id: string; follower_id: string; created_at: string }>(
+        'SELECT id, follower_id, created_at FROM community_follows WHERE following_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        [followingId, limit, offset],
+      );
+    },
+    async getFollowingIds(followerId, eng?) {
+      const e = await resolveEngine(eng);
+      const rows = await e.query<{ following_id: string }>(
+        'SELECT following_id FROM community_follows WHERE follower_id = ?',
+        [followerId],
+      );
+      return rows.map((r) => r.following_id);
+    },
+    async countFollowing(followerId, eng?) {
+      const e = await resolveEngine(eng);
+      const row = await e.queryOne<{ count: number }>(
+        'SELECT COUNT(*) as count FROM community_follows WHERE follower_id = ?',
+        [followerId],
+      );
+      return row?.count ?? 0;
+    },
+    async countFollowers(followingId, eng?) {
+      const e = await resolveEngine(eng);
+      const row = await e.queryOne<{ count: number }>(
+        'SELECT COUNT(*) as count FROM community_follows WHERE following_id = ?',
+        [followingId],
+      );
+      return row?.count ?? 0;
+    },
+    async getFollowStates(followerId, targetIds, eng?) {
+      const e = await resolveEngine(eng);
+      const set = new Set<string>();
+      if (targetIds.length === 0) return set;
+      const placeholders = targetIds.map(() => '?').join(',');
+      const rows = await e.query<{ following_id: string }>(
+        `SELECT following_id FROM community_follows WHERE follower_id = ? AND following_id IN (${placeholders})`,
+        [followerId, ...targetIds] as QueryParams,
+      );
+      for (const r of rows) set.add(r.following_id);
+      return set;
+    },
+
+    // ---- reports ----
+    async insertReport(input, eng?) {
+      const e = await resolveEngine(eng);
+      await e.execute(
+        'INSERT INTO community_reports (id, reporter_id, target_type, target_id, reason, detail) VALUES (?, ?, ?, ?, ?, ?)',
+        [input.id, input.reporterId, input.targetType, input.targetId, input.reason, input.detail],
+      );
+    },
+    async getReportById(id, eng?) {
+      const e = await resolveEngine(eng);
+      return e.queryOne<{ id: string; status: string }>(
+        'SELECT id, status FROM community_reports WHERE id = ?',
+        [id],
+      );
+    },
+    async listReports(whereSql, params, limit, offset, eng?) {
+      const e = await resolveEngine(eng);
+      return e.query(
+        `SELECT id, reporter_id, target_type, target_id, reason, detail, status, handled_by, handled_at, created_at
+         FROM community_reports ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [...params, limit, offset] as QueryParams,
+      );
+    },
+    async countReports(whereSql, params, eng?) {
+      const e = await resolveEngine(eng);
+      const row = await e.queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM community_reports ${whereSql}`,
+        params as QueryParams,
+      );
+      return row?.count ?? 0;
+    },
+    async updateReportStatus(id, status, handledBy, eng?) {
+      const e = await resolveEngine(eng);
+      await e.execute(
+        "UPDATE community_reports SET status = ?, handled_by = ?, handled_at = datetime('now') WHERE id = ?",
+        [status, handledBy, id],
+      );
+    },
+    async hasUserReported(targetId, reporterId, eng?) {
+      const e = await resolveEngine(eng);
+      const row = await e.queryOne<{ id: string }>(
+        'SELECT id FROM community_reports WHERE target_id = ? AND reporter_id = ?',
+        [targetId, reporterId],
+      );
+      return row != null;
     },
 
     // ---- mentions ----

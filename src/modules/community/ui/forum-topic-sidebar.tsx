@@ -70,7 +70,7 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
             {relatedTopics.slice(0, 5).map((t) => (
               <Link
                 key={t.id}
-                href={`/community/forum/${t.category?.slug ?? ''}/${t.id}`}
+                href={`/community/${t.id}`}
                 className="block border-t border-[var(--border)]/50 py-3 group focus-amber"
               >
                 <p className="font-mono text-[12px] text-[var(--foreground)] leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
@@ -97,13 +97,13 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
             Section
           </h3>
           <Link
-            href={`/community/forum/${category.slug}`}
+            href={`/community?tab=topic`}
             className="block font-mono text-[12px] text-[var(--foreground)] hover:text-[var(--primary)] transition-colors mb-2 focus-amber"
           >
             {category.name}
           </Link>
           <Link
-            href="/community/forum"
+            href="/community"
             className="block font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
             ← 所有版块

@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { formatDateTime } from '@/shared/utils/utils';
 import { SectionLoading } from '@/components';
 
-type NotificationType = 'system' | 'admin' | 'activity';
+type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
 type FilterType = 'all' | 'unread' | NotificationType;
 
 interface Notification {
@@ -41,6 +41,10 @@ const FILTER_TABS: { value: FilterType; label: string }[] = [
   { value: 'system', label: '系统' },
   { value: 'admin', label: '管理员' },
   { value: 'activity', label: '活动' },
+  { value: 'like', label: '点赞' },
+  { value: 'reply', label: '回复' },
+  { value: 'favorite', label: '收藏' },
+  { value: 'follow', label: '关注' },
 ];
 
 const TYPE_STYLES: Record<NotificationType, { label: string; className: string }> = {
@@ -55,6 +59,22 @@ const TYPE_STYLES: Record<NotificationType, { label: string; className: string }
   activity: {
     label: 'ACT',
     className: 'text-emerald-500 bg-emerald-500/10',
+  },
+  like: {
+    label: 'LIKE',
+    className: 'text-pink-500 bg-pink-500/10',
+  },
+  reply: {
+    label: 'REPLY',
+    className: 'text-sky-500 bg-sky-500/10',
+  },
+  favorite: {
+    label: 'FAV',
+    className: 'text-amber-500 bg-amber-500/10',
+  },
+  follow: {
+    label: 'FOLLOW',
+    className: 'text-violet-500 bg-violet-500/10',
   },
 };
 

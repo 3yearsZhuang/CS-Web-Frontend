@@ -18,6 +18,9 @@
  */
 import { NextResponse } from 'next/server';
 import { getFeed, getFeedStats } from '@/modules/community/server';
+import { getSession } from '@/modules/auth/server';
+import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
+import { getCookieValue } from '@/shared/security/security';
 import { createRequestLogger } from '@/shared/logger';
 
 export const runtime = 'nodejs';
@@ -38,6 +41,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'kind 参数无效' }, { status: 400 });
     }
 
+    const feedParam = searchParams.get('feed');
+    const feed = feedParam === 'following' ? 'following' : 'all';
+
+    // following 维度需要登录
+    let currentUserId: string | undefined;
+    if (feed === 'following') {
+      const token = getCookieValue(req, AUTH_COOKIE_NAME);
+      const session = token ? await getSession(token) : null;
+      if (!session) {
+        return NextResponse.json({ error: '未登录' }, { status: 401 });
+      }
+      currentUserId = session.user.id;
+    }
+
     const result = await getFeed({
       kind: kind ?? undefined,
       tag: searchParams.get('tag') ?? undefined,
@@ -47,6 +64,8 @@ export async function GET(req: Request) {
         ? Number(searchParams.get('pageSize'))
         : undefined,
       excludeMembers: searchParams.get('exclude') === 'member',
+      feed,
+      currentUserId,
     });
 
     return NextResponse.json(result);

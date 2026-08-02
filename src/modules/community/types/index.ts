@@ -270,6 +270,10 @@ export interface FeedQuery {
   page?: number;
   pageSize?: number;
   excludeMembers?: boolean;
+  /** 关注流维度：仅返回当前用户关注的人发布的内容（需 currentUserId） */
+  feed?: 'following' | 'all';
+  /** 当前登录用户 id（feed=following 时用于过滤） */
+  currentUserId?: string;
 }
 
 export interface PaginatedFeed {

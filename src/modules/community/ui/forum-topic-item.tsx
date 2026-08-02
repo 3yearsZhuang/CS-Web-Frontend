@@ -28,9 +28,7 @@ export function ForumTopicItem({
   className = '',
 }: ForumTopicItemProps) {
   const router = useRouter();
-  const href = topic.category
-    ? `/community/forum/${topic.category.slug}/${topic.id}`
-    : `/community/forum/topic/${topic.id}`;
+  const href = `/community/${topic.id}`;
 
   const num =
     typeof index === 'number' ? String(index).padStart(2, '0') : null;

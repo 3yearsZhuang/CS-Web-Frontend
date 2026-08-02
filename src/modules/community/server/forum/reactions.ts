@@ -6,6 +6,7 @@ import { getCommunityRepository } from '@/shared/db/repositories/community.repo'
 import { loadAuthorSummaries, type AuthorSummary } from './shared';
 import { AppError } from '@/shared/app-error';
 import { logAdminAction } from '@/shared/security/audit';
+import { createNotification } from '@/modules/notification/server/notification-core';
 
 export interface ReactionTarget {
   targetId: string;
@@ -30,6 +31,23 @@ export async function toggleLike(targetId: string, targetType: 'post' | 'comment
   await repo.insertReaction(crypto.randomUUID(), userId, 'like', targetId);
   await repo.incrementLike(tableName, targetId);
   const likeCount = await repo.getLikeCount(tableName, targetId);
+
+  // 通知内容作者（跳过自己）
+  try {
+    const authorId = await getContentAuthorId(targetType, targetId);
+    if (authorId && authorId !== userId) {
+      await createNotification(
+        authorId,
+        'like',
+        '有人赞了你的内容',
+        targetType === 'post' ? '你的帖子获得了赞' : '你的回复获得了赞',
+        userId,
+      );
+    }
+  } catch {
+    // 通知失败不影响点赞业务
+  }
+
   return { liked: true, likeCount };
 }
 
@@ -45,7 +63,35 @@ export async function toggleFavorite(targetId: string, userId: string): Promise<
   await repo.insertFavorite(crypto.randomUUID(), userId, targetId);
   await repo.incrementFavorite(targetId);
   const favoriteCount = await repo.getFavoriteCount(targetId);
+
+  // 通知内容作者（跳过自己）
+  try {
+    const authorId = await getContentAuthorId('post', targetId);
+    if (authorId && authorId !== userId) {
+      await createNotification(
+        authorId,
+        'favorite',
+        '有人收藏了你的帖子',
+        '你的帖子被加入收藏',
+        userId,
+      );
+    }
+  } catch {
+    // 通知失败不影响收藏业务
+  }
+
   return { favorited: true, favoriteCount };
+}
+
+/** 获取内容作者 id（post 或 comment） */
+async function getContentAuthorId(targetType: 'post' | 'comment', targetId: string): Promise<string | null> {
+  const repo = getCommunityRepository();
+  if (targetType === 'post') {
+    const row = await repo.getPostById(targetId);
+    return row?.author_id ?? null;
+  }
+  const row = await repo.getCommentById(targetId);
+  return row?.author_id ?? null;
 }
 
 export async function getReactionStatus(targetId: string, targetType: 'post' | 'comment', userId: string): Promise<{ isLiked: boolean; isFavorited: boolean; likeCount: number; favoriteCount: number }> {

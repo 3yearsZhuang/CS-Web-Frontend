@@ -8,6 +8,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { formatDateTime } from '@/shared/utils/utils';
+import { FollowButton } from './follow-button';
 import type { CommunityPostDetail } from '@/modules/community/types';
 
 interface TopicHeroProps {
@@ -15,9 +16,11 @@ interface TopicHeroProps {
   categorySlug: string;
   replyTotal: number;
   hero: HeroState;
+  /** 当前登录用户 id（用于关注按钮） */
+  currentUserId?: string;
 }
 
-export function TopicHero({ topic, categorySlug, replyTotal, hero }: TopicHeroProps) {
+export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId }: TopicHeroProps) {
   return (
     <CollapsingHero
       index="00"
@@ -26,7 +29,7 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero }: TopicHeroPr
       minHeight="50vh"
       sidebarBottom={
         <Link
-          href={`/community/forum/${categorySlug}`}
+          href="/community"
           className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
         >
           ← 返回
@@ -41,11 +44,11 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero }: TopicHeroPr
         <RevealItem>
           <div className="flex items-center gap-2 mb-6 meta-mono text-[var(--muted-foreground)]">
             <Link href="/community" className="hover:text-[var(--primary)] transition-colors">
-              Forum
+              社区
             </Link>
             <span>/</span>
             <Link
-              href={`/community/forum/${categorySlug}`}
+              href="/community"
               className="hover:text-[var(--primary)] transition-colors"
             >
               {topic.category?.name ?? categorySlug}
@@ -128,6 +131,11 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero }: TopicHeroPr
             <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
               {replyTotal} replies
             </span>
+            <FollowButton
+              targetUserId={topic.authorId}
+              currentUserId={currentUserId}
+              compact
+            />
           </div>
         </RevealItem>
       </div>

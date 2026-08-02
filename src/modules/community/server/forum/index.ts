@@ -82,6 +82,31 @@ export { scanMentions } from './mentions';
 // ============= 用户主页论坛数据 =============
 export { listUserTopics, listUserReplies } from './user-data';
 
+// ============= 关注 =============
+export {
+  toggleFollow,
+  isFollowing,
+  getFollowStates,
+  listFollowing,
+  listFollowers,
+  getFollowCounts,
+  getFollowingIds,
+  type PaginatedFollows,
+  type FollowUserSummary,
+} from './follows';
+
+// ============= 举报 =============
+export {
+  submitReport,
+  listReports,
+  resolveReport,
+  dismissReport,
+  type ReportStatus,
+  type ReportTargetType,
+  type ReportListItem,
+  type PaginatedReports,
+} from './reports';
+
 // ============= 图片上传 =============
 export {
   FORUM_IMAGE_LIMITS,

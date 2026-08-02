@@ -1,0 +1,104 @@
+/**
+ * @file 草稿箱 /community/drafts
+ *
+ * 当前登录用户的草稿文章（status = 'draft'），仅本人可见。
+ */
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
+import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
+import { CommunityPostList } from '@/modules/community/ui/community-post-list';
+import { SectionLoading } from '@/components';
+import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+
+export default function DraftsPage() {
+  const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } =
+    useCollapsingHero();
+  const hero: HeroState = {
+    collapsed: heroCollapsed,
+    capsuleVisible,
+    onRevealComplete,
+    onTitleClick,
+  };
+
+  const [loginRequired, setLoginRequired] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    // 以一次探测请求判断登录态（草稿 API 未登录返回 401）
+    fetch('/api/community/drafts?page=1&pageSize=1', { cache: 'no-store' })
+      .then((res) => {
+        setLoginRequired(res.status === 401);
+      })
+      .catch(() => setLoginRequired(true))
+      .finally(() => setChecked(true));
+  }, []);
+
+  return (
+    <main className="relative pt-16">
+      <CollapsingHero index="00" label="Drafts" hero={hero} pageKey="drafts">
+        <RevealTitle>
+          <h1
+            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
+              hero.collapsed
+                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
+                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
+            }`}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          >
+            草稿箱
+          </h1>
+        </RevealTitle>
+        <RevealItem>
+          <div
+            className={`overflow-hidden transition-all hero-reveal ${
+              hero.collapsed ? 'max-h-[14px] opacity-30 mt-1' : 'max-h-[200px] opacity-100 mt-8 sm:mt-12'
+            }`}
+          >
+            <p className="max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
+              你的未发布文章，仅自己可见。
+            </p>
+          </div>
+        </RevealItem>
+      </CollapsingHero>
+
+      <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+        <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
+          {!checked ? (
+            <SectionLoading label="Loading..." />
+          ) : loginRequired ? (
+            <div className="py-16 text-center">
+              <div className="meta-mono text-[var(--muted-foreground)] mb-4">
+                {'// 草稿箱需要登录'}
+              </div>
+              <Link href="/login" className="meta-mono text-[var(--primary)] underline-grow">
+                去登录 →
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8 flex items-center justify-between">
+                <Link
+                  href="/community"
+                  className="meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
+                >
+                  ← 返回全部内容
+                </Link>
+                <Link href="/community/new" className="meta-mono text-[12px] text-[var(--primary)] underline-grow">
+                  写新文章 →
+                </Link>
+              </div>
+              <CommunityPostList
+                endpoint="/api/community/drafts"
+                emptyText="// 暂无草稿"
+              />
+            </>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

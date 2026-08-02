@@ -6,6 +6,9 @@
 import { listTopics } from './forum/topics';
 import { listPosts } from './blog/posts';
 import { listMembers as _listMembers, listAllTechTags } from './members';
+import { getFollowingIds } from './forum/follows';
+import { getCommunityRepository } from '@/shared/db/repositories/community.repo';
+import { formatPosts } from './shared';
 import type {
   FeedItem,
   FeedQuery,
@@ -48,6 +51,28 @@ function toMemberFeed(member: Awaited<ReturnType<typeof _listMembers>>[number]):
     sortAt: member.joinedAt,
     data: member,
   } as FeedItem;
+}
+
+/**
+ * 关注流：返回当前用户关注的人发布的全部内容（topic + post 合并）。
+ * 直接走 Repository 按 author_id IN (...) 查询，避免多次单 authorId 调用。
+ */
+async function listFollowingFeed(
+  currentUserId: string,
+  followingIds: string[],
+): Promise<FeedItem[]> {
+  const repo = getCommunityRepository();
+  const placeholders = followingIds.map(() => '?').join(',');
+  const rows = await repo.listPosts(
+    [`author_id IN (${placeholders})`, "status = 'published'"],
+    followingIds,
+    200,
+    0,
+  );
+  const formatted = await formatPosts(rows, { currentUserId });
+  return formatted.map((p) =>
+    (p.kind === 'topic' ? toTopicFeed : toPostFeed)(p as unknown as never),
+  );
 }
 
 /** 标签匹配：检查 Feed 项是否包含指定标签 */
@@ -100,6 +125,32 @@ function itemMatchesSearch(item: FeedItem, search: string): boolean {
 export async function getFeed(query: FeedQuery = {}): Promise<PaginatedFeed> {
   const page = Math.max(1, query.page ?? 1);
   const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, query.pageSize ?? DEFAULT_PAGE_SIZE));
+
+  // 关注流维度：仅返回关注用户的主题与文章（合并查询），不含成员项
+  const isFollowingFeed = query.feed === 'following' && !!query.currentUserId;
+  if (isFollowingFeed) {
+    const followingIds = await getFollowingIds(query.currentUserId!);
+    if (followingIds.length === 0) {
+      return { items: [], total: 0, page, pageSize, totalPages: 1 };
+    }
+    const items = await listFollowingFeed(query.currentUserId!, followingIds);
+    const filtered = items.filter((item) => {
+      if (query.tag && !itemMatchesTag(item, query.tag)) return false;
+      if (query.search && !itemMatchesSearch(item, query.search)) return false;
+      return true;
+    });
+    filtered.sort((a, b) => b.sortAt.localeCompare(a.sortAt));
+    const total = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const start = (page - 1) * pageSize;
+    return {
+      items: filtered.slice(start, start + pageSize),
+      total,
+      page,
+      pageSize,
+      totalPages,
+    };
+  }
 
   const [topicsRes, postsRes, members] = await Promise.all([
     query.kind && query.kind !== 'topic' ? Promise.resolve(null) : listTopics({ pageSize: 100 }),

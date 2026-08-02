@@ -93,15 +93,21 @@ const nextConfig: NextConfig = {
         destination: '/community',
         permanent: true,
       },
-      // 社区统一重构：forum/blog 顶层列表合并为 /community/posts
+      // 社区统一重构：forum/blog 顶层列表合并为 /community
       {
         source: '/community/forum',
-        destination: '/community/posts?kind=topic',
+        destination: '/community?tab=topic',
         permanent: true,
       },
       {
         source: '/community/blog',
-        destination: '/community/posts?kind=post',
+        destination: '/community?tab=post',
+        permanent: true,
+      },
+      // 去除 /community/posts 中间层，合并到 /community
+      {
+        source: '/community/posts',
+        destination: '/community',
         permanent: true,
       },
     ];

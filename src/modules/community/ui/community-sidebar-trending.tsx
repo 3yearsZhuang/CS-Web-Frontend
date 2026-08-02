@@ -64,9 +64,7 @@ export function CommunitySidebarTrending({
         <div className="space-y-0">
           {hotTopics.map((topic, idx) => {
             const num = String(idx + 1).padStart(2, '0');
-            const href = topic.category
-              ? `/community/forum/${topic.category.slug}/${topic.id}`
-              : `/community/forum/topic/${topic.id}`;
+            const href = `/community/${topic.id}`;
             return (
               <Link
                 key={topic.id}

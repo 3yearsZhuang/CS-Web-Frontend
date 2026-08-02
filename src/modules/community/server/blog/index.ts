@@ -13,6 +13,7 @@ export {
   getPostBySlug,
   listPosts,
   getUserPosts,
+  getUserDrafts,
   incrementViewCount,
 } from './posts';
 

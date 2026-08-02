@@ -163,7 +163,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
           </div>
           {activeSubTab === 'topics' && (
             <Link
-              href="/community/forum/new"
+              href="/community/new"
               className="meta-mono text-[var(--primary)] underline-grow shrink-0 ml-4"
             >
               发新主题 →
@@ -201,7 +201,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
                 href="/community"
                 className="meta-mono text-[var(--primary)] underline-grow"
               >
-                浏览论坛 →
+                浏览社区 →
               </Link>
             </div>
           ) : (
@@ -209,8 +209,8 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
               {replies.map((reply, idx) => {
                 const topicSlug = reply.topic?.category?.slug ?? '';
                 const topicHref = topicSlug
-                  ? `/community/forum/${topicSlug}/${reply.topicId}`
-                  : `/community/forum`;
+                  ? `/community/${reply.topicId}`
+                  : `/community`;
                 return (
                   <li
                     key={reply.id}

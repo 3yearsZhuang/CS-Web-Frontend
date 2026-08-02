@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
+import { ReportButton } from './report-button';
 
 type TargetType = 'topic' | 'reply';
 
@@ -44,6 +45,8 @@ interface ForumActionsProps {
   onEdit?: () => Promise<void>;
   /** 删除回调 */
   onDelete?: () => Promise<void>;
+  /** 是否显示举报按钮（非作者、已登录时由父组件控制） */
+  showReport?: boolean;
   /** 额外 className */
   className?: string;
 }
@@ -66,6 +69,7 @@ export function ForumActions({
   onReply,
   onEdit,
   onDelete,
+  showReport = false,
   className = '',
 }: ForumActionsProps) {
   const [likeBusy, setLikeBusy] = useState(false);
@@ -216,6 +220,11 @@ export function ForumActions({
         >
           {deleteBusy ? '...' : 'Del'}
         </Button>
+      )}
+
+      {/* 举报（非作者、已登录） */}
+      {showReport && !isAuthor && isLoggedIn && (
+        <ReportButton targetType={targetType} targetId={targetId} />
       )}
     </div>
   );
