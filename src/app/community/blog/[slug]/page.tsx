@@ -345,9 +345,9 @@ export default function BlogPostPage() {
               {/* 标签 */}
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-10">
-                  {post.tags.map((tag) => (
+                  {post.tags.map((tag, i) => (
                     <span
-                      key={tag}
+                      key={`${tag}-${i}`}
                       className="meta-mono text-[10px] px-2 py-1 border border-[var(--border)] text-[var(--muted-foreground)] uppercase tracking-wider"
                     >
                       #{tag}

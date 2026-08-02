@@ -584,8 +584,8 @@ export default function TaskPage() {
                               </p>
                               {task.tags.length > 0 && (
                                 <div className="flex gap-2 flex-wrap">
-                                  {task.tags.map((tag) => (
-                                    <span key={tag} className="tag-badge">{tag}</span>
+                                  {task.tags.map((tag, i) => (
+                                    <span key={`${tag}-${i}`} className="tag-badge">{tag}</span>
                                   ))}
                                 </div>
                               )}

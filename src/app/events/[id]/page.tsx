@@ -318,13 +318,8 @@ export default function EventDetailPage() {
             {(event.tags.length > 0 || event.topics.length > 0) && (
               <RevealItem>
                 <section className="mb-12 sm:mb-16 flex flex-wrap gap-3">
-                  {event.topics.map((t) => (
-                    <span key={t} className="tag-badge">
-                      {t}
-                    </span>
-                  ))}
-                  {event.tags.map((t) => (
-                    <span key={t} className="tag-badge">
+                  {[...new Set([...event.topics, ...event.tags])].map((t, i) => (
+                    <span key={`${t}-${i}`} className="tag-badge">
                       {t}
                     </span>
                   ))}

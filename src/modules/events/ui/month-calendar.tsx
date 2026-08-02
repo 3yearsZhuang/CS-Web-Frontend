@@ -413,8 +413,8 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                           )}
                           {(e.topics.length > 0 || e.tags.length > 0) && (
                             <div className="mt-3 flex flex-wrap gap-1.5">
-                              {[...e.topics, ...e.tags].slice(0, 5).map((t) => (
-                                <span key={t} className="tag-badge text-[9px] px-1.5 py-0.5">
+                              {[...new Set([...e.topics, ...e.tags])].slice(0, 5).map((t, i) => (
+                                <span key={`${t}-${i}`} className="tag-badge text-[9px] px-1.5 py-0.5">
                                   {t}
                                 </span>
                               ))}

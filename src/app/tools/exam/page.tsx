@@ -271,9 +271,9 @@ export default function ExamListPage() {
                           <Clock className="w-3 h-3" />
                           {formatDuration(exam.durationMinutes)}
                         </span>
-                        {tags.slice(0, 3).map((tag) => (
+                        {tags.slice(0, 3).map((tag, i) => (
                           <span
-                            key={tag}
+                            key={`${tag}-${i}`}
                             className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]"
                           >
                             {TECH_TAGS.find((t) => t.key === tag)?.label ?? tag}

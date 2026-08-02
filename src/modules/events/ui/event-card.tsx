@@ -61,8 +61,8 @@ export function EventCard({ event, isLeft }: EventCardProps) {
             </p>
             {(event.topics.length > 0 || event.tags.length > 0) && (
               <div className={`mt-4 flex flex-wrap gap-2 ${isLeft ? 'md:justify-end' : ''}`}>
-                {[...event.topics, ...event.tags].map((t) => (
-                  <span key={t} className="tag-badge">
+                {[...new Set([...event.topics, ...event.tags])].map((t, i) => (
+                  <span key={`${t}-${i}`} className="tag-badge">
                     {t}
                   </span>
                 ))}

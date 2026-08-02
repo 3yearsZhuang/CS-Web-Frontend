@@ -294,8 +294,8 @@ function MemberCard({
         <div className="col-span-12 sm:col-span-3 flex sm:flex-col items-start sm:items-end gap-2 mt-1 sm:mt-0">
           {member.techTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 sm:justify-end max-w-full">
-              {member.techTags.slice(0, 4).map((tag) => (
-                <span key={tag} className="tag-badge text-[11px]">
+              {member.techTags.slice(0, 4).map((tag, i) => (
+                <span key={`${tag}-${i}`} className="tag-badge text-[11px]">
                   {tag}
                 </span>
               ))}

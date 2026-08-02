@@ -1262,9 +1262,9 @@ function ProfileJoinTab() {
                 </div>
                 {app.techTags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    {app.techTags.map((tag) => (
+                    {app.techTags.map((tag, i) => (
                       <span
-                        key={tag}
+                        key={`${tag}-${i}`}
                         className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]"
                       >
                         {tag}

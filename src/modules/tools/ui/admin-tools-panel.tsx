@@ -505,8 +505,8 @@ export function AdminToolsPanel() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          {tags.map((tag) => (
-                            <span key={tag} className="meta-mono text-[10px] px-1.5 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
+                          {tags.map((tag, i) => (
+                            <span key={`${tag}-${i}`} className="meta-mono text-[10px] px-1.5 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
                               {TECH_TAGS.find((t) => t.key === tag)?.label ?? tag}
                             </span>
                           ))}

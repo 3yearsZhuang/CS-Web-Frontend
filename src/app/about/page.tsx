@@ -341,8 +341,8 @@ export default function AboutPage() {
                         </p>
                         {d.stack.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-1.5">
-                            {d.stack.map((s) => (
-                              <span key={s} className="tag-badge text-[11px]">
+                            {d.stack.map((s, i) => (
+                              <span key={`${s}-${i}`} className="tag-badge text-[11px]">
                                 {s}
                               </span>
                             ))}
@@ -392,8 +392,8 @@ export default function AboutPage() {
                           </p>
                           {step.details.length > 0 && (
                             <div className="mt-4 flex flex-wrap gap-2">
-                              {step.details.map((d) => (
-                                <span key={d} className="tag-badge">
+                              {step.details.map((d, i) => (
+                                <span key={`${d}-${i}`} className="tag-badge">
                                   {d}
                                 </span>
                               ))}
