@@ -1,85 +1,67 @@
 /**
- * @file 管理员入社申请审批 API — GET/PATCH /api/admin/join
- *
- * GET: 列出入社申请（支持按状态筛选）
- * PATCH: 审批入社申请（通过/拒绝）
+ * @file 入社申请管理 API — GET/POST /api/admin/join（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listJoinApplications, reviewJoinApplication, type JoinApplicationStatus } from '@/modules/join/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { z } from 'zod';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toJoinApplication } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-const reviewSchema = z.object({
-  applicationId: z.string().min(1, '申请 ID 不能为空'),
-  status: z.enum(['approved', 'rejected']),
-  reviewNote: z.string().max(200).optional(),
-});
-
 export async function GET(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`join-app-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const url = new URL(req.url);
-  const status = url.searchParams.get('status') as JoinApplicationStatus | null;
+  const status = url.searchParams.get('status') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  try {
-    const applications = await listJoinApplications(status || undefined);
-    return NextResponse.json({ applications });
-  } catch (err) {
-    return errorResponse(err);
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (status) params.set('status', status);
+
+  const proxy = await proxyBackend(req, { path: `/admin/join?${params.toString()}` });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ applications: [], total: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    applications: items.map(toJoinApplication),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
-export async function PATCH(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
+export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`join-app-review:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as {
+    applicationId?: string;
+    decision?: string;
+    note?: string;
+  };
+  if (!body.applicationId || !body.decision) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/join/${encodeURIComponent(body.applicationId)}`,
+    method: 'POST',
+    jsonBody: { decision: body.decision, note: body.note ?? null },
+  });
 
-  const result = reviewSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '处理失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  try {
-    const application = await reviewJoinApplication(
-      admin.user.id,
-      result.data.applicationId,
-      result.data.status,
-      result.data.reviewNote,
-    );
-    return NextResponse.json({ application });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

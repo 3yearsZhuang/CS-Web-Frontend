@@ -1,40 +1,59 @@
 /**
- * @file 管理员论坛回复详情 API
+ * @file 评论审核 API — PUT/DELETE /api/admin/community/forum/replies/[id]（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { hardDeleteReply } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function DELETE(
+export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-reply-hard-delete:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const body = (await req.json().catch(() => ({}))) as { contentMarkdown?: string };
+  const { id } = await params;
 
-  const { id } = await context.params;
-  try {
-    await hardDeleteReply(admin.user.id, id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/replies/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: { contentMarkdown: body.contentMarkdown },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '保存失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
+
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/replies/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

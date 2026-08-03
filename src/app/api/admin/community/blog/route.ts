@@ -1,53 +1,42 @@
 /**
- * @file 管理员博客管理 API
+ * @file 博客管理 API — POST /api/admin/community/blog（BFF 薄转发）
  */
-
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { publishPost, archivePost, deletePost } from '@/modules/community/server';
-import { isAdminRole } from '@/shared/types';
-import { assertAllowedOrigin, errorResponse } from '@/shared/security/security';
+import { NextResponse } from 'next/server';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
 
-  const params = req.nextUrl.searchParams;
-  const sub = params.get('sub');
-  const body = await req.json();
-
-  if (sub === 'publish') {
-    try {
-      const post = await publishPost(admin.user.id, body.postId);
-      return NextResponse.json({ post });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : String(e);
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
+  const body = (await req.json().catch(() => ({}))) as {
+    sub?: string;
+    postId?: string;
+  };
+  if (!body.sub || !body.postId) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  if (sub === 'archive') {
-    try {
-      const post = await archivePost(admin.user.id, body.postId);
-      return NextResponse.json({ post });
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : String(e);
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-  }
+  const proxy = await proxyBackend(req, {
+    path: '/admin/community/blog',
+    method: 'POST',
+    jsonBody: { sub: body.sub, post_id: Number(body.postId) },
+  });
 
-  if (sub === 'delete') {
-    try {
-      await deletePost(body.postId, admin.user.id);
-      return NextResponse.json({ ok: true });
-    } catch (e: unknown) {
-      return errorResponse(e);
-    }
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  return NextResponse.json({ error: '未知操作' }, { status: 400 });
+  const res = NextResponse.json({
+    ok: true,
+    post: proxy.body && typeof proxy.body === 'object' && 'post' in proxy.body
+      ? toCommunityPost((proxy.body as { post: Record<string, unknown> }).post)
+      : null,
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

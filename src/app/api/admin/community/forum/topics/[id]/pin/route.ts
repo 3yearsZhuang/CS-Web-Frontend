@@ -1,54 +1,39 @@
 /**
- * @file 管理员论坛主题置顶 API
+ * @file 内容审核 API — POST /api/admin/community/forum/topics/[id]/{hide|restore|pin|feature}（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { setTopicPinned } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { pinTopicSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-topic-pin:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const url = new URL(req.url);
+  const action = url.pathname.split('/').pop();
+  const { id } = await params;
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const body = await req.json().catch(() => ({}));
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/topics/${encodeURIComponent(id)}/${action}`,
+    method: 'POST',
+    jsonBody: action === 'hide' && (body as Record<string, unknown>).reason
+      ? { reason: (body as Record<string, unknown>).reason }
+      : undefined,
+  });
 
-  const result = pinTopicSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: '缺少必填字段：pinned (boolean)' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-  const { pinned } = result.data;
-
-  const { id } = await context.params;
-  try {
-    await setTopicPinned(admin.user.id, id, pinned);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

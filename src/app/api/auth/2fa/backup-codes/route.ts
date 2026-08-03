@@ -1,48 +1,36 @@
 /**
- * @file 2FA 备用码重新生成 API — POST /api/auth/2fa/backup-codes
+ * @file 重新生成备用码 API — POST /api/auth/2fa/backup-codes（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession, regenerateBackupCodes, is2FAEnabled } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue, getClientIp, assertAllowedOrigin, twoFactorLimiter, jsonError } from '@/shared/security/security';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  // CSRF 防御 + 限流：备用码重新生成需验证 TOTP，必须与 disable/verify 一致收紧
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = await getSession(token);
-  if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-
-  if (!await is2FAEnabled(session.user.id)) {
-    return NextResponse.json({ error: '未启用 2FA', code: 'VALIDATION_FAILED' }, { status: 400 });
-  }
-
-  const ip = getClientIp(req);
-  const rateKey = `${ip}:${session.user.id}`;
-  if (!twoFactorLimiter.check(rateKey)) {
-    const retryAfter = twoFactorLimiter.retryAfterSeconds(rateKey);
-    return jsonError('验证尝试过于频繁，请稍后再试', 429, 'RATE_LIMITED', {
-      'Retry-After': String(retryAfter),
-      'X-RateLimit-Remaining': '0',
-    });
-  }
-
-  const body = await req.json().catch(() => ({}));
-  const { code } = body as { code?: string };
-
-  if (!code) {
+  const body = (await req.json().catch(() => ({}))) as { code?: string };
+  if (!body.code) {
     return NextResponse.json({ error: '请输入验证码', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const result = await regenerateBackupCodes(session.user.id, code);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error, code: '2FA_FAILED' }, { status: 400 });
+  const proxy = await proxyBackend(req, {
+    path: '/auth/2fa/backup-codes',
+    method: 'POST',
+    jsonBody: { code: body.code },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '验证码错误');
+    const res = NextResponse.json({ error: err.error, code: '2FA_FAILED' }, { status: 400 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
 
-  return NextResponse.json({ codes: result.codes });
+  const backupCodes = (proxy.body as { backupCodes?: string[] }).backupCodes ?? [];
+  const res = NextResponse.json({ backupCodes });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

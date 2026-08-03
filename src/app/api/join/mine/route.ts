@@ -1,26 +1,21 @@
 /**
- * @file 用户自己的入社申请 API — GET /api/join/mine
- *
- * GET: 查询当前登录用户的入社申请列表
+ * @file 我的入社申请 API — GET /api/join/mine（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listMyJoinApplications } from '@/modules/join/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies, toJoinApplication } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '登录已过期' }, { status: 401 });
-  }
+  const proxy = await proxyBackend(req, { path: '/join/mine' });
 
-  const applications = await listMyJoinApplications(session.user.id);
-  return NextResponse.json({ applications });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ applications: [] });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const list = Array.isArray(proxy.body) ? proxy.body : [];
+  const res = NextResponse.json({ applications: list.map(toJoinApplication) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

@@ -1,80 +1,53 @@
 /**
- * @file 管理员操作日志列表 API
+ * @file 管理员操作日志 API — GET/DELETE /api/admin/actions（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { requireRoot, listAdminActions, deleteAdminActionsBefore } from '@/modules/admin/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  parseJsonBody,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { deleteActionLogSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toAdminAction } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireRoot(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    const retryAfter = adminActionsLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
-  }
-
   const url = new URL(req.url);
-  const limitParam = url.searchParams.get('limit');
-  const limit = limitParam ? Number(limitParam) : 50;
-  if (!Number.isFinite(limit) || limit < 1) {
-    return jsonError('limit 参数不合法', 400);
-  }
+  const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 100);
   const adminId = url.searchParams.get('adminId') || undefined;
   const action = url.searchParams.get('action') || undefined;
 
-  const actions = await listAdminActions(adminId, limit, action);
-  return NextResponse.json({ actions });
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (adminId) params.set('admin_id', adminId);
+  if (action) params.set('action', action);
+
+  const proxy = await proxyBackend(req, { path: `/admin/audit-logs?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({ actions: items.map(toAdminAction) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(req: Request) {
-  const admin = await requireRoot(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    const retryAfter = adminActionsLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
+  const body = (await req.json().catch(() => ({}))) as { before?: string };
+  if (!body.before) {
+    return NextResponse.json({ error: '缺少日期参数', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: '/admin/audit-logs/cleanup',
+    method: 'DELETE',
+    jsonBody: { before: body.before },
+  });
 
-  const result = deleteActionLogSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { before } = result.data;
-
-  try {
-    const count = await deleteAdminActionsBefore(admin.user.id, before);
-    return NextResponse.json({ ok: true, count });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const count = (proxy.body as { count?: number })?.count ?? 0;
+  const res = NextResponse.json({ ok: true, count });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

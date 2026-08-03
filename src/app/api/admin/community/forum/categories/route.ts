@@ -1,72 +1,45 @@
 /**
- * @file 管理员论坛分类列表 API
+ * @file 管理端分类 API — GET/POST /api/admin/community/forum/categories（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listCategories, createCategory, type CategoryInput } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { createCategorySchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toForumCategory } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-cat-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const categories = await listCategories();
-  return NextResponse.json({ items: categories });
+  const proxy = await proxyBackend(req, { path: '/admin/community/forum/categories' });
+  const list = Array.isArray(proxy.body) ? proxy.body : [];
+  const res = NextResponse.json({ categories: list.map(toForumCategory) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function POST(req: Request) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-cat-create:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const proxy = await proxyBackend(req, {
+    path: '/admin/community/forum/categories',
+    method: 'POST',
+    jsonBody: {
+      slug: body.slug,
+      name: body.name,
+      description: body.description ?? null,
+      icon: body.icon ?? null,
+      sort_order: body.sortOrder ?? 0,
+    },
+  });
+
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '创建失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = createCategorySchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const input: CategoryInput = {
-    slug: result.data.slug,
-    name: result.data.name,
-    description: result.data.description ?? undefined,
-    icon: result.data.icon ?? undefined,
-  };
-
-  try {
-    const category = await createCategory(input, admin.user.id);
-    return NextResponse.json({ category }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ category: toForumCategory(proxy.body) }, { status: 201 });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

@@ -1,88 +1,62 @@
 /**
- * @file 论坛回复详情 API
+ * @file 评论操作 API — PUT/DELETE /api/community/comments/[id]（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { updateReply, deleteReply } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  assertAllowedOrigin,
-  parseJsonBody,
-  getCookieValue,
-  errorResponse,
-} from '@/shared/security/security';
-import { z } from 'zod';
-
-const updateReplyContentSchema = z.object({
-  contentMarkdown: z.string().min(1, '内容不能为空').max(10000, '内容最多 10000 个字符'),
-});
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toCommunityComment } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  const body = (await req.json().catch(() => ({}))) as { contentMarkdown?: string };
+  const { id } = await params;
+  if (!body.contentMarkdown) {
+    return NextResponse.json({ error: '内容不能为空', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: `/community/comments/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: { contentMarkdown: body.contentMarkdown },
+  });
 
-  const result = updateReplyContentSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '保存失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { contentMarkdown } = result.data;
-
-  const { id } = await context.params;
-  const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
-
-  try {
-    const reply = await updateReply(id, { contentMarkdown }, session.user.id);
-    return NextResponse.json({ ok: true, reply });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ comment: toCommunityComment(proxy.body) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/community/comments/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
 
-  const { id } = await context.params;
-  const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
-
-  try {
-    await deleteReply(id, session.user.id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

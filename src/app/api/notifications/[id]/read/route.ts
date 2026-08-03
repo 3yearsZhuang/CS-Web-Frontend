@@ -1,19 +1,8 @@
 /**
- * @file 标记单条通知已读 API 路由 — POST /api/notifications/[id]/read
- *
- * 将指定通知标记为已读。
- * 校验通知存在且属于当前用户，否则返回相应错误。
- *
- * 安全控制：
- *   - 必须登录（session cookie 校验）
- *   - Origin / Referer 必须命中白名单（CSRF 防护）
- *   - 校验通知归属权，防止越权操作他人通知
+ * @file 标记已读 API — POST /api/notifications/[id]/read（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { markAsRead } from '@/modules/notification/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue, assertAllowedOrigin, errorResponse } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -21,27 +10,19 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  // 1. Origin 白名单校验（CSRF 防护 — 与其他 POST 路由一致）
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/notifications/${encodeURIComponent(id)}/read`,
+    method: 'POST',
+  });
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const userId = session.user.id;
-  const { id: notificationId } = await params;
-
-  try {
-    await markAsRead(userId, notificationId);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

@@ -1,25 +1,25 @@
 /**
- * @file 我的认领列表 API — GET /api/tools/task/claims
+ * @file 我的任务认领 API — GET /api/tools/task/claims（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getUserClaims } from '@/modules/tools/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const proxy = await proxyBackend(req, { path: '/tools/task/claims' });
 
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ claims: [] });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const claims = await getUserClaims(session.user.id);
-  return NextResponse.json({ claims });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    claims: items,
+    total: Number(body.total ?? 0),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

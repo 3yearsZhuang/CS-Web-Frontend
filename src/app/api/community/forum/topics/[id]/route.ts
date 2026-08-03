@@ -1,133 +1,84 @@
 /**
- * @file 论坛主题详情 API
+ * @file 主题详情/编辑/删除 API — /api/community/forum/topics/[id]（BFF 薄转发 → posts 统一端点）
  */
-
 import { NextResponse } from 'next/server';
-import {
-  getTopicById,
-  updateTopic,
-  deleteTopic,
-  recordTopicView,
-  hashIpForView,
-} from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import type { UserRole } from '@/shared/types/role-types';
-import {
-  assertAllowedOrigin,
-  parseJsonBody,
-  getCookieValue,
-  getClientIp,
-  errorResponse,
-} from '@/shared/security/security';
-import { updateTopicSchema } from '@/shared/security/schemas';
-import { createRequestLogger } from '@/shared/logger';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-async function optionalUser(req: Request): Promise<{ id: string; role: UserRole } | null> {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) return null;
-  const session = await getSession(token);
-  if (!session) return null;
-  return { id: session.user.id, role: session.user.role };
-}
-
 export async function GET(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const log = createRequestLogger(req);
-  try {
-    const { id } = await context.params;
-    const currentUser = await optionalUser(req);
+  const { id } = await params;
+  const proxy = await proxyBackend(req, { path: `/community/posts/${encodeURIComponent(id)}` });
 
-    const ipHash = currentUser ? undefined : await hashIpForView(getClientIp(req));
-    try {
-      await recordTopicView(id);
-    } catch (err) {
-      log.error({ err }, '记录浏览失败');
-    }
-
-    const topic = await getTopicById(id, { currentUserId: currentUser?.id });
-    if (!topic) {
-      return NextResponse.json({ error: '主题不存在' }, { status: 404 });
-    }
-    if (
-      topic.status !== 'published' &&
-      (!currentUser ||
-        (currentUser.id !== topic.authorId && currentUser.role !== 'admin' && currentUser.role !== 'root'))
-    ) {
-      return NextResponse.json({ error: '主题不存在' }, { status: 404 });
-    }
-    return NextResponse.json({ topic });
-  } catch (err) {
-    log.error({ err }, '获取主题详情失败');
-    return NextResponse.json({ error: '获取主题详情失败' }, { status: 500 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ topic: null });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ topic: toCommunityPost(proxy.body) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const body = (await req.json().catch(() => ({}))) as {
+    title?: string;
+    contentMarkdown?: string;
+    categoryId?: string;
+  };
+  const { id } = await params;
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: `/community/posts/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: {
+      title: body.title,
+      contentMarkdown: body.contentMarkdown,
+      categoryId: body.categoryId ? Number(body.categoryId) : undefined,
+    },
+  });
 
-  const result = updateTopicSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '保存失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { id } = await context.params;
-  const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
-
-  try {
-    const topic = await updateTopic(id, result.data, session.user.id);
-    return NextResponse.json({ ok: true, topic });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ topic: toCommunityPost(proxy.body) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/community/posts/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
 
-  const { id } = await context.params;
-  const isAdmin = session.user.role === 'admin' || session.user.role === 'root';
-
-  try {
-    await deleteTopic(id, session.user.id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

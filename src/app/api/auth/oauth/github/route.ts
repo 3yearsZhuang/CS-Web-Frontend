@@ -1,24 +1,20 @@
 /**
- * @file GitHub OAuth 授权跳转 API 路由 — GET /api/auth/oauth/github
- *
- * 生成 GitHub 授权 URL 并重定向用户到 GitHub 授权页面。
- * 若 GitHub OAuth 环境变量未配置，则返回 404。
- *
- * 安全控制：
- *   - 生成防 CSRF 的 state 参数并存入内存（generateOAuthState 内部处理）
- *   - state 一次性使用，10 分钟有效
+ * @file GitHub OAuth 入口 — GET /api/auth/oauth/github（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getGitHubAuthUrl } from '@/modules/auth/server';
+import { BACKEND_URL } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const authUrl = await getGitHubAuthUrl();
+  const res = await fetch(`${BACKEND_URL}/api/v1/auth/oauth/github`, {
+    redirect: 'manual',
+    cache: 'no-store',
+  });
 
-  if (!authUrl) {
+  const location = res.headers.get('location');
+  if (res.status >= 400 || !location) {
     return NextResponse.json({ error: 'GitHub 登录未启用', code: 'NOT_FOUND' }, { status: 404 });
   }
-
-  return NextResponse.redirect(authUrl, { status: 302 });
+  return NextResponse.redirect(location, { status: 302 });
 }

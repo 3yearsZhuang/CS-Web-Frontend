@@ -1,24 +1,9 @@
 /**
- * @file 用户提交举报 API
- *
- * POST /api/community/reports
- * body: { targetType: 'topic'|'comment', targetId, reason, detail? }
+ * @file 举报 API — POST /api/community/reports（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { submitReport } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  assertAllowedOrigin,
-  parseJsonBody,
-  getCookieValue,
-  getClientIp,
-  forumPostLimiter,
-  jsonError,
-  errorResponse,
-} from '@/shared/security/security';
-import { reportSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -26,45 +11,34 @@ export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const ip = getClientIp(req);
-  if (!forumPostLimiter.check(`community-report:${ip}`)) {
-    const retryAfter = forumPostLimiter.retryAfterSeconds(`community-report:${ip}`);
-    return jsonError('操作过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
+  const body = (await req.json().catch(() => ({}))) as {
+    targetType?: string;
+    targetId?: string;
+    reason?: string;
+    detail?: string;
+  };
+  if (!body.targetType || !body.targetId || !body.reason) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: '/community/reports',
+    method: 'POST',
+    jsonBody: {
+      targetType: body.targetType,
+      targetId: Number(body.targetId),
+      reason: body.reason,
+      detail: body.detail ?? null,
+    },
+  });
 
-  const result = reportSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '举报失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { targetType, targetId, reason, detail } = result.data;
-  try {
-    const created = await submitReport({
-      reporterId: session.user.id,
-      targetType,
-      targetId,
-      reason,
-      detail,
-    });
-    return NextResponse.json({ ok: true, id: created.id }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

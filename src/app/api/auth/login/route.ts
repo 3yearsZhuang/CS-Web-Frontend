@@ -1,21 +1,14 @@
 /**
- * @file 登录 API — POST /api/auth/login，验证凭据后创建 session 并设置 cookie
- * 安全：Content-Type + Origin 白名单 + IP/邮箱限流 + 密码长度上限，防 CSRF/暴力破解/scryptDoS
+ * @file 登录 API — POST /api/auth/login（BFF 薄转发 → FastAPI）
  */
 import { NextResponse } from 'next/server';
-import { authenticateUser, createSession, create2FAToken, recordLoginHistory, is2FAEnabled } from '@/modules/auth/server';
+import { assertAllowedOrigin } from '@/shared/security/security';
 import {
-  AUTH_COOKIE_NAME,
-  AUTH_COOKIE_MAX_AGE,
-  COOKIE_SECURE,
-} from '@/modules/auth/types/constants';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  jsonError,
-  getClientIp,
-  loginRateLimiter,
-} from '@/shared/security/security';
+  clearAuthCookies,
+  fetchMeWithPair,
+  proxyBackend,
+  setAuthCookies,
+} from '@/shared/backend-client';
 import { loginSchema } from '@/shared/security/schemas';
 
 export const runtime = 'nodejs';
@@ -24,61 +17,47 @@ export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = loginSchema.safeParse(parsed.body);
+  const parsed = await req.json().catch(() => null);
+  const result = loginSchema.safeParse(parsed);
   if (!result.success) {
     return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
   }
   const { email, password } = result.data;
 
-  const ip = getClientIp(req);
-  const rateKey = `${ip}:${email.toLowerCase()}`;
-  if (!loginRateLimiter.check(rateKey)) {
-    const retryAfter = loginRateLimiter.retryAfterSeconds(rateKey);
-    return jsonError('尝试过于频繁，请稍后再试', 429, 'RATE_LIMITED', {
-      'Retry-After': String(retryAfter),
-      'X-RateLimit-Remaining': '0',
-    });
-  }
+  const proxy = await proxyBackend(req, {
+    path: '/auth/login-email',
+    method: 'POST',
+    jsonBody: { email, password },
+    skipAuth: true,
+  });
 
-  const user = await authenticateUser(email, password);
-  const userAgent = req.headers.get('user-agent') || undefined;
-  if (!user) {
-    // 安全：记录失败登录（user_id 为 null，仅记录邮箱用于暴力破解检测）
-    // 不区分"用户不存在"与"密码错误"的响应，防邮箱枚举
-    await recordLoginHistory(null, ip, userAgent, false, email.toLowerCase());
+  if (proxy.status !== 200) {
     return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
   }
 
-  if (await is2FAEnabled(user.id)) {
-    const twoFactorToken = await create2FAToken(user.id);
-    return NextResponse.json({ requires2FA: true, twoFactorToken });
+  const body = proxy.body as {
+    requires_2fa?: boolean;
+    two_factor_token?: string | null;
+    access_token?: string;
+    refresh_token?: string;
+  };
+
+  if (body.requires_2fa) {
+    const res = NextResponse.json({ requires2FA: true, twoFactorToken: body.two_factor_token ?? null });
+    clearAuthCookies(res);
+    return res;
   }
 
-  // createSession 内部会校验 is_active — 纵深防御
-  // 理论上 authenticateUser 已守卫，但 authenticateUser 通过后到 createSession 之间用户可能被禁用
-  // 为防邮箱枚举，禁用账号返回与密码错误一致的 401
-  let token: string;
-  try {
-    token = await createSession(user.id, ip, userAgent);
-  } catch (err) {
-    if (err instanceof Error && (err.name === 'ACCOUNT_DISABLED' || err.name === 'USER_NOT_FOUND')) {
-      // 安全：记录禁用账号的失败登录
-      await recordLoginHistory(user.id, ip, userAgent, false, email.toLowerCase());
-      return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });
-    }
-    throw err;
-  }
+  const hasPair = Boolean(body.access_token && body.refresh_token);
+  const me = hasPair
+    ? await fetchMeWithPair(body as { access_token: string; refresh_token: string })
+    : null;
 
-  const res = NextResponse.json({ user: { id: user.id, email: user.email } });
-  res.cookies.set(AUTH_COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: AUTH_COOKIE_MAX_AGE,
-    secure: COOKIE_SECURE,
-  });
+  const res = NextResponse.json({ user: me?.user ?? null });
+  if (hasPair) {
+    setAuthCookies(res, body as { access_token: string; refresh_token: string });
+  } else {
+    clearAuthCookies(res);
+  }
   return res;
 }

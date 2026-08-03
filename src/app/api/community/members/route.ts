@@ -1,23 +1,20 @@
 /**
- * @file 成员名录 API 路由 — GET /api/members
- *
- * GET: 获取活跃成员列表，支持按技术标签筛选
+ * @file 成员列表 API — GET /api/community/members（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listMembers, listAllTechTags } from '@/modules/community/server';
+import { proxyBackend, setAuthCookies, toMember } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const tag = searchParams.get('tag') || undefined;
-  const all = searchParams.get('all');
+  const url = new URL(req.url);
+  const tag = url.searchParams.get('tag') || undefined;
 
-  if (all === 'tags') {
-    const tags = await listAllTechTags();
-    return NextResponse.json({ tags });
-  }
-
-  const members = await listMembers(tag);
-  return NextResponse.json({ members });
+  const proxy = await proxyBackend(req, {
+    path: `/community/members${tag ? `?tag=${encodeURIComponent(tag)}` : ''}`,
+  });
+  const list = Array.isArray(proxy.body) ? proxy.body : [];
+  const res = NextResponse.json({ members: list.map(toMember) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

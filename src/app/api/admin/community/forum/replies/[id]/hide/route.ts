@@ -1,48 +1,37 @@
 /**
- * @file 管理员论坛回复隐藏 API
+ * @file 评论隐藏 API — POST /api/admin/community/forum/replies/[id]/hide（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { hideReply } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { hideTopicSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-reply-hide:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = await req.json().catch(() => ({}));
+  const { id } = await params;
+
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/replies/${encodeURIComponent(id)}/hide`,
+    method: 'POST',
+    jsonBody: (body as Record<string, unknown>).reason
+      ? { reason: (body as Record<string, unknown>).reason }
+      : undefined,
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = hideTopicSchema.safeParse(parsed.body);
-  const reason = result.success ? result.data.reason : undefined;
-
-  const { id } = await context.params;
-  try {
-    await hideReply(admin.user.id, id, reason);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

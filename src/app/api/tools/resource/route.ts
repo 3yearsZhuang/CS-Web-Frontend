@@ -1,100 +1,73 @@
 /**
- * @file 资源站公开 API — GET/POST /api/tools/resource
- *
- * GET: 列出已发布资源（分页、支持分类/标签/类型过滤、排序）
- * POST: 提交新资源（需登录，进入 draft 审核状态）
+ * @file 资源列表/提交 API — GET/POST /api/tools/resource（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listResources, createResource, type CreateResourceInput } from '@/modules/tools/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  forumPostLimiter,
-  getCookieValue,
-} from '@/shared/security/security';
-import { createResourceSchema, resourceQuerySchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
+  const category = url.searchParams.get('category') || undefined;
+  const tag = url.searchParams.get('tag') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  const parsed = resourceQuerySchema.safeParse({
-    resourceType: url.searchParams.get('resourceType') ?? undefined,
-    techTag: url.searchParams.get('techTag') ?? undefined,
-    sort: url.searchParams.get('sort') ?? undefined,
-    page: url.searchParams.get('page') || '1',
-    pageSize: url.searchParams.get('pageSize') || '20',
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (category) params.set('category', category);
+  if (tag) params.set('tag', tag);
+
+  const proxy = await proxyBackend(req, { path: `/tools/resource?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    resources: items.map((r) => ({
+      id: String(r.id),
+      title: r.title,
+      description: r.description ?? null,
+      url: r.url,
+      resourceType: r.resource_type,
+      techTags: Array.isArray(r.tech_tags) ? r.tech_tags : [],
+      status: r.status,
+      viewCount: r.view_count ?? 0,
+      submittedBy: r.submitted_by != null ? String(r.submitted_by) : null,
+      createdAt: r.created_at ?? '',
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
   });
-
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message || '参数格式不正确' }, { status: 400 });
-  }
-
-  const data = parsed.data;
-
-  try {
-    const result = await listResources({
-      resourceType: data.resourceType ?? undefined,
-      techTag: data.techTag ?? undefined,
-      sort: data.sort ?? undefined,
-      page: data.page,
-      pageSize: data.pageSize,
-    });
-    return NextResponse.json(result);
-  } catch (err) {
-    return errorResponse(err);
-  }
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function POST(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!forumPostLimiter.check(`resource-create:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const proxy = await proxyBackend(req, {
+    path: '/tools/resource',
+    method: 'POST',
+    jsonBody: {
+      title: body.title,
+      description: body.description ?? null,
+      url: body.url,
+      resource_type: body.resourceType,
+      tech_tags: Array.isArray(body.techTags) ? body.techTags : [],
+    },
+  });
+
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '提交失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = createResourceSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const data = result.data;
-  const input: CreateResourceInput = {
-    title: data.title,
-    url: data.url,
-    description: data.description ?? undefined,
-    resourceType: data.resourceType ?? undefined,
-    techTags: data.techTags ?? undefined,
-    fileUrl: data.fileUrl ?? undefined,
-  };
-
-  try {
-    const resource = await createResource(session.session.userId, input);
-    return NextResponse.json({ resource }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ resource: proxy.body }, { status: 201 });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

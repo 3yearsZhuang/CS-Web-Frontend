@@ -1,28 +1,25 @@
 /**
- * @file 论坛概览 API
+ * @file 社区概览 API — GET /api/community/forum/overview（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listCategories, listTopics } from '@/modules/community/server';
+import { proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  try {
-    const categories = await listCategories();
-
-    const hotTopics = (await listTopics({ sort: 'hot', pageSize: 8 })).items;
-
-    const categoryPreviews = await Promise.all(
-      categories.map(async (cat) => ({
-        ...cat,
-        latestTopics: (await listTopics({ category: cat.id, sort: 'latest', pageSize: 3 })).items,
-      })),
-    );
-
-    return NextResponse.json({ categories: categoryPreviews, hotTopics });
-  } catch {
-    return NextResponse.json({ error: '获取论坛数据失败' }, { status: 500 });
-  }
+export async function GET(req: Request) {
+  const proxy = await proxyBackend(req, { path: '/community/forum/overview' });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const latest = (Array.isArray(body.latest_posts) ? body.latest_posts : []) as Array<
+    Record<string, unknown>
+  >;
+  const hot = (Array.isArray(body.hot_posts) ? body.hot_posts : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    latestPosts: latest.map(toCommunityPost),
+    hotPosts: hot.map(toCommunityPost),
+    totalPosts: body.total_posts ?? 0,
+    totalComments: body.total_comments ?? 0,
+    totalUsers: body.total_users ?? 0,
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

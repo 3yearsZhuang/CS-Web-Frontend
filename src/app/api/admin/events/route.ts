@@ -1,89 +1,71 @@
 /**
- * @file 管理员活动 API — GET/POST /api/admin/events
- *
- * GET: 列出所有活动（含 plan + archive），管理员查看
- * POST: 创建新活动
- *
- * 安全控制：
- *   - 必须管理员登录（requireAdmin 守卫）
- *   - Origin 白名单（GET + POST，与其他 admin 路由一致）
- *   - POST 需 JSON Content-Type
- *   - 速率限制（adminActionsLimiter）
- *   - 所有写操作记录审计日志（在 events.ts 中完成）
+ * @file 管理端活动 API — GET/POST /api/admin/events（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listEvents, createEvent, type EventInput } from '@/modules/events/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { createEventSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toEventItem } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
+  const url = new URL(req.url);
+  const month = url.searchParams.get('month') || undefined;
+  const status = url.searchParams.get('status') || undefined;
+  const search = url.searchParams.get('search') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (month) params.set('month', month);
+  if (status) params.set('status', status);
+  if (search) params.set('search', search);
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`events-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const events = await listEvents();
-  return NextResponse.json({ events });
+  const proxy = await proxyBackend(req, { path: `/admin/events?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    events: items.map(toEventItem),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function POST(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`events-create:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const proxy = await proxyBackend(req, {
+    path: '/admin/events',
+    method: 'POST',
+    jsonBody: {
+      title: body.title,
+      month: body.month ?? null,
+      date: body.date ?? null,
+      description: body.description ?? null,
+      status: body.status ?? 'upcoming',
+      year: body.year ?? null,
+      topics: Array.isArray(body.topics) ? body.topics : [],
+      tags: Array.isArray(body.tags) ? body.tags : [],
+      is_pinned: body.isPinned ?? false,
+      capacity: body.capacity ?? 0,
+      content_markdown: body.contentMarkdown ?? null,
+      registration_fields: body.registrationFields ?? [],
+    },
+  });
+
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '创建失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = createEventSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const input: EventInput = {
-    month: result.data.month,
-    date: result.data.date,
-    title: result.data.title,
-    description: result.data.description ?? null,
-    status: result.data.status as EventInput['status'],
-    year: result.data.year,
-    topics: result.data.topics ?? [],
-    tags: result.data.tags ?? [],
-    isPinned: false,
-    capacity: result.data.capacity ?? 0,
-    contentMarkdown: result.data.contentMarkdown ?? null,
-    registrationFields: result.data.registrationFields as EventInput['registrationFields'],
-  };
-
-  try {
-    const event = await createEvent(input, admin.user.id);
-    return NextResponse.json({ event }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ event: toEventItem(proxy.body) }, { status: 201 });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

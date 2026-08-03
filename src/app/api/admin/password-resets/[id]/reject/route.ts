@@ -1,19 +1,9 @@
 /**
- * @file 管理员密码重置拒绝 API
+ * @file 密码重置拒绝 API — POST /api/admin/password-resets/[id]/reject（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { rejectResetRequest } from '@/modules/auth/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  parseJsonBody,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { approveRejectResetSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -21,32 +11,22 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    const retryAfter = adminActionsLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
-  }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = approveRejectResetSchema.safeParse(parsed.body);
-  const note = result.success ? result.data.note : undefined;
-
   const { id } = await params;
-  try {
-    await rejectResetRequest(admin.user.id, id, note);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/admin/password-resets/${encodeURIComponent(id)}/reject`,
+    method: 'POST',
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

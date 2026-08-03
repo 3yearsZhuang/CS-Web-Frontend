@@ -1,17 +1,8 @@
 /**
- * @file 公开用户资料 API — GET /api/users/:id
- *
- * GET: 获取用户公开资料（无需登录）
- *   - 基本信息：displayName, bio, avatarUrl, githubUrl, websiteUrl, techTags
- *   - 论坛统计：主题数、回复数
- *   - 考试统计：参加考试数、通过数
+ * @file 用户公开主页 API — GET /api/users/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getPublicUserProfile } from '@/modules/user/server';
-import { getCookieValue } from '@/shared/security/security';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { maskEmail } from '@/shared/utils';
+import { proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -20,32 +11,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const proxy = await proxyBackend(req, { path: `/users/${encodeURIComponent(id)}/public-profile` });
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  const session = token ? await getSession(token) : null;
-  const isLoggedIn = session !== null;
-
-  // DB 查询下沉至 user/server 层，返回不含敏感字段的公开资料 + 统计。
-  const profile = await getPublicUserProfile(id);
-  if (!profile) {
-    return NextResponse.json({ error: '用户不存在' }, { status: 404 });
+  if (proxy.status !== 200) {
+    return NextResponse.json({ user: null });
   }
-
-  // email 仅在登录时返回（并脱敏），未登录时不暴露。
-  return NextResponse.json({
-    user: {
-      id: profile.user.id,
-      email: isLoggedIn ? await maskEmail(profile.user.email) ?? undefined : undefined,
-      displayName: profile.user.displayName,
-      bio: profile.user.bio,
-      avatarUrl: profile.user.avatarUrl,
-      avatarType: profile.user.avatarType,
-      githubUrl: profile.user.githubUrl,
-      websiteUrl: profile.user.websiteUrl,
-      techTags: profile.user.techTags,
-      role: profile.user.role,
-      createdAt: profile.user.createdAt,
-    },
-    stats: profile.stats,
-  });
+  const res = NextResponse.json(proxy.body);
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

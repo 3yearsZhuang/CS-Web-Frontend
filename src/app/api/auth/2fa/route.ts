@@ -1,25 +1,31 @@
 /**
- * @file 2FA 状态查询 + 初始化设置 API
- *
- * GET  /api/auth/2fa          — 查询当前 2FA 状态
- * POST /api/auth/2fa/setup    — 初始化 2FA（生成 secret + backup codes）
+ * @file 2FA API — GET /api/auth/2fa（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession, is2FAEnabled, setup2FA, require2FAForAdmin } from '@/modules/auth/server';
-import QRCode from 'qrcode';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, resolvePrimaryRole, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
-  const session = await getSession(token);
-  if (!session) return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+  const proxy = await proxyBackend(req, { path: '/auth/2fa' });
 
-  const enabled = await is2FAEnabled(session.user.id);
-  const required = await require2FAForAdmin(session.user.role);
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
 
-  return NextResponse.json({ enabled, required });
+  const meProxy = await proxyBackend(req, { path: '/auth/me' });
+  const roles =
+    meProxy.status === 200 && meProxy.body && typeof meProxy.body === 'object'
+      ? ((meProxy.body as { roles?: string[] }).roles ?? [])
+      : [];
+
+  const body = proxy.body as { enabled?: boolean } | null;
+  const res = NextResponse.json({
+    enabled: body?.enabled ?? false,
+    required: resolvePrimaryRole(roles) === 'admin',
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

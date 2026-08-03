@@ -1,46 +1,32 @@
 /**
- * @file 活动 API — GET /api/events
- *
- * 公开读取：任何访客可查看活动列表。
- * 支持 category / status / search / tag / page / page_size 参数。
- * 写操作通过 /api/admin/events 路由（需管理员权限）。
+ * @file 活动列表 API — GET /api/events（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listEvents, type EventStatus } from '@/modules/events/server';
-import { errorResponse } from '@/shared/security/security';
+import { proxyBackend, setAuthCookies, toEventItem } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  try {
-    const url = new URL(req.url);
-    const status = url.searchParams.get('status');
-    const search = url.searchParams.get('search');
-    const tag = url.searchParams.get('tag');
-    const pageParam = url.searchParams.get('page');
-    const pageSizeParam = url.searchParams.get('page_size');
+  const url = new URL(req.url);
+  const month = url.searchParams.get('month') || undefined;
+  const status = url.searchParams.get('status') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-    if (status && status !== 'upcoming' && status !== 'ongoing' && status !== 'ended') {
-      return NextResponse.json({ error: 'status 参数无效' }, { status: 400 });
-    }
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (month) params.set('month', month);
+  if (status) params.set('status', status);
 
-    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : undefined;
-    const pageSize = pageSizeParam ? Math.max(1, Math.min(100, parseInt(pageSizeParam, 10))) : undefined;
-
-    const result = await listEvents({
-      status: status as EventStatus | undefined,
-      search: search || undefined,
-      tag: tag || undefined,
-      page,
-      pageSize,
-    });
-
-    const response = Array.isArray(result)
-      ? { events: result }
-      : result;
-
-    return NextResponse.json(response);
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const proxy = await proxyBackend(req, { path: `/events?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    events: items.map(toEventItem),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

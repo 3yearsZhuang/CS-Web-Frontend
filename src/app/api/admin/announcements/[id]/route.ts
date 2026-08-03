@@ -1,114 +1,67 @@
 /**
- * @file 管理员公告 CRUD API — GET/PATCH/DELETE /api/admin/announcements/[id]
- *
- * GET: 获取单个公告
- * PATCH: 更新公告（标题、内容、级别、状态等）
- * DELETE: 删除公告
+ * @file 管理端公告详情 API — PUT/DELETE /api/admin/announcements/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import {
-  getAnnouncementById,
-  updateAnnouncement,
-  deleteAnnouncement,
-} from '@/modules/announcement/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { logAdminAction } from '@/shared/security/audit';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { updateAnnouncementSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toAnnouncement } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function GET(
+export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`announcements-get:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const { id } = await params;
-  const announcement = await getAnnouncementById(id);
-  if (!announcement) {
-    return jsonError('公告不存在', 404);
-  }
 
-  return NextResponse.json({ announcement });
-}
-
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`announcements-update:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = updateAnnouncementSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
-  }
-
-  const { id } = await params;
-  const announcement = await updateAnnouncement(id, result.data);
-  if (!announcement) {
-    return jsonError('公告不存在', 404);
-  }
-
-  await logAdminAction(admin.user.id, 'update_announcement', null, {
-    announcementId: id,
-    changes: result.data,
+  const proxy = await proxyBackend(req, {
+    path: `/admin/announcements/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: {
+      title: body.title,
+      content: body.content,
+      level: body.level,
+      is_active: body.isActive,
+      is_dismissible: body.isDismissible,
+      priority: body.priority,
+      expires_at: body.expiresAt ?? null,
+    },
   });
 
-  return NextResponse.json({ announcement });
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '更新失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json(toAnnouncement(proxy.body));
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`announcements-delete:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const { id } = await params;
-  const existed = await deleteAnnouncement(id);
-  if (!existed) {
-    return jsonError('公告不存在', 404);
-  }
-
-  await logAdminAction(admin.user.id, 'delete_announcement', null, {
-    announcementId: id,
+  const proxy = await proxyBackend(req, {
+    path: `/admin/announcements/${encodeURIComponent(id)}`,
+    method: 'DELETE',
   });
 
-  return NextResponse.json({ ok: true });
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

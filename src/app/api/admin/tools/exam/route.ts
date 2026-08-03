@@ -1,96 +1,72 @@
 /**
- * @file 管理员考试管理 API — GET/POST /api/admin/tools/exam
- *
- * GET: 列出所有考试（分页，支持状态过滤）
- * POST: 创建新考试（draft 状态）
- *
- * 安全控制：
- *   - 必须管理员登录（requireAdmin 守卫）
- *   - Origin 白名单
- *   - JSON Content-Type（POST）
- *   - 速率限制（adminActionsLimiter）
+ * @file 管理端考试 API — GET/POST /api/admin/tools/exam（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listExams, createExam, type ExamInput } from '@/modules/tools/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { createExamSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireModuleAdmin(req, 'exam');
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`exam-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const url = new URL(req.url);
-  const status = url.searchParams.get('status') as 'draft' | 'published' | 'ended' | null;
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
+  const status = url.searchParams.get('status') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  try {
-    const result = await listExams({
-      status: status === 'draft' || status === 'published' || status === 'ended' ? status : undefined,
-      page: Number.isFinite(page) ? page : 1,
-      pageSize: Number.isFinite(pageSize) ? pageSize : 20,
-    });
-    return NextResponse.json(result);
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (status) params.set('status', status);
+
+  const proxy = await proxyBackend(req, { path: `/admin/tools/exam?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    exams: items.map((e) => ({
+      id: String(e.id),
+      title: e.title,
+      category: e.category,
+      difficulty: e.difficulty,
+      status: e.status,
+      questionCount: e.question_count ?? 0,
+      attemptCount: e.attempt_count ?? 0,
+      createdAt: e.created_at ?? '',
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function POST(req: Request) {
-  const admin = await requireModuleAdmin(req, 'exam');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`exam-create:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const proxy = await proxyBackend(req, {
+    path: '/admin/tools/exam',
+    method: 'POST',
+    jsonBody: {
+      title: body.title,
+      description: body.description ?? '',
+      category: body.category ?? 'general',
+      difficulty: body.difficulty ?? 'medium',
+      duration_minutes: body.durationMinutes ?? 30,
+      pass_score: body.passScore ?? 60,
+      max_attempts: body.maxAttempts ?? 1,
+      questions: Array.isArray(body.questions) ? body.questions : [],
+    },
+  });
+
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '创建失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = createExamSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const data = result.data;
-  const input: ExamInput = {
-    title: data.title,
-    description: data.description ?? undefined,
-    startTime: data.startTime,
-    endTime: data.endTime,
-    durationMinutes: data.durationMinutes,
-    techTags: data.techTags ?? undefined,
-  };
-
-  try {
-    const exam = await createExam(admin.user.id, input);
-    return NextResponse.json({ exam }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ exam: proxy.body }, { status: 201 });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

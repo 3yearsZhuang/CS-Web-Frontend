@@ -1,40 +1,32 @@
 /**
- * @file 管理员论坛回复恢复 API
+ * @file 评论恢复 API — POST /api/admin/community/forum/replies/[id]/restore（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { restoreReply } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-reply-restore:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/replies/${encodeURIComponent(id)}/restore`,
+    method: 'POST',
+  });
 
-  const { id } = await context.params;
-  try {
-    await restoreReply(admin.user.id, id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

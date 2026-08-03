@@ -1,31 +1,46 @@
 /**
- * @file 用户考试浏览 API — GET /api/tools/exam
- *
- * GET: 列出已发布的考试（分页）
- *
- * 公开浏览，无需登录。
+ * @file 考试列表 API — GET /api/tools/exam（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listExams } from '@/modules/tools/server';
-import { createRequestLogger } from '@/shared/logger';
+import { proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
+  const status = url.searchParams.get('status') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  const log = createRequestLogger(req);
-  try {
-    const result = await listExams({
-      status: 'published',
-      page: Number.isFinite(page) ? page : 1,
-      pageSize: Number.isFinite(pageSize) ? pageSize : 20,
-    });
-    return NextResponse.json(result);
-  } catch (err) {
-    log.error({ err }, '获取考试列表失败');
-    return NextResponse.json({ error: '获取考试列表失败' }, { status: 500 });
-  }
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (status) params.set('status', status);
+
+  const proxy = await proxyBackend(req, { path: `/tools/exam?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    exams: items.map((e) => ({
+      id: String(e.id),
+      title: e.title,
+      description: e.description ?? null,
+      category: e.category,
+      difficulty: e.difficulty,
+      durationMinutes: e.duration_minutes ?? 0,
+      questionCount: e.question_count ?? 0,
+      totalScore: e.total_score ?? 0,
+      status: e.status,
+      maxAttempts: e.max_attempts ?? 1,
+      passScore: e.pass_score ?? 0,
+      publishedAt: e.published_at ?? null,
+      endedAt: e.ended_at ?? null,
+      createdAt: e.created_at ?? '',
+      attemptCount: e.attempt_count ?? 0,
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
