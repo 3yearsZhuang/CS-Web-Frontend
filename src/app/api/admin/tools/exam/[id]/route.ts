@@ -1,5 +1,5 @@
 /**
- * @file 管理端考试详情 API — GET/PUT/DELETE /api/admin/tools/exam/[id]（BFF 薄转发）
+ * @file 管理端考试详情 API — GET/PUT/DELETE /api/tools/admin/exam/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const proxy = await proxyBackend(req, { path: `/admin/tools/exam/${encodeURIComponent(id)}` });
+  const proxy = await proxyBackend(req, { path: `/tools/admin/exam/${encodeURIComponent(id)}` });
 
   if (proxy.status !== 200) {
     return NextResponse.json({ exam: null });
@@ -33,7 +33,7 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}`,
     method: 'PUT',
     jsonBody: {
       title: body.title,
@@ -66,7 +66,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 

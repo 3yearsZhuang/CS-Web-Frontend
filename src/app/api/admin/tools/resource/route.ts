@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (status) params.set('status', status);
 
-  const proxy = await proxyBackend(req, { path: `/admin/tools/resource?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/tools/resource?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
@@ -54,9 +54,13 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/resource/${encodeURIComponent(body.resourceId)}/review`,
+    path: `/tools/admin/resource`,
     method: 'POST',
-    jsonBody: { action: body.action, review_note: body.reviewNote ?? null },
+    jsonBody: {
+      resource_id: Number(body.resourceId),
+      action: body.action,
+      review_note: body.reviewNote ?? null,
+    },
   });
 
   if (proxy.status !== 200) {

@@ -1,5 +1,5 @@
 /**
- * @file 管理端公告详情 API — PUT/DELETE /api/admin/announcements/[id]（BFF 薄转发）
+ * @file 管理端公告详情 API — PUT/DELETE /api/announcements/admin/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -7,7 +7,7 @@ import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toAnnou
 
 export const runtime = 'nodejs';
 
-export async function PUT(
+export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -18,8 +18,8 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/announcements/${encodeURIComponent(id)}`,
-    method: 'PUT',
+    path: `/announcements/admin/${encodeURIComponent(id)}`,
+    method: 'PATCH',
     jsonBody: {
       title: body.title,
       content: body.content,
@@ -51,7 +51,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/announcements/${encodeURIComponent(id)}`,
+    path: `/announcements/admin/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 

@@ -17,6 +17,14 @@ export async function GET(
     return NextResponse.json({ exam: null });
   }
   const e = proxy.body as Record<string, unknown>;
+  // 题目列表走独立端点（公开端点不泄露答案）
+  const qProxy = await proxyBackend(req, {
+    path: `/tools/exam/${encodeURIComponent(id)}/questions`,
+  });
+  const qBody = (qProxy.body ?? {}) as Record<string, unknown>;
+  const questions = (Array.isArray(qBody.questions) ? qBody.questions : []) as Array<
+    Record<string, unknown>
+  >;
   const res = NextResponse.json({
     exam: {
       id: String(e.id),
@@ -33,16 +41,20 @@ export async function GET(
       publishedAt: e.published_at ?? null,
       endedAt: e.ended_at ?? null,
       createdAt: e.created_at ?? '',
-      questions: Array.isArray(e.questions)
-        ? e.questions.map((q) => ({
-            id: String(q.id),
-            questionType: q.question_type,
-            content: q.content,
-            options: q.options ?? [],
-            score: q.score ?? 0,
-            orderIndex: q.order_index ?? 0,
-          }))
-        : [],
+      questions: questions.map((q) => ({
+        id: String(q.id),
+        questionType: q.type,
+        content: q.content_markdown ?? q.title,
+        options: Array.isArray(q.options)
+          ? q.options.map((o) => ({
+              id: String(o.id),
+              label: o.label,
+              content: o.content,
+            }))
+          : [],
+        score: q.score ?? 0,
+        orderIndex: q.sort_order ?? 0,
+      })),
       myAttempts: Array.isArray(e.my_attempts) ? e.my_attempts : [],
       bestScore: e.best_score ?? null,
     },

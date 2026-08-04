@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: '/auth/profile/avatar',
+    path: '/profile/avatar/upload',
     method: 'POST',
     formData,
   });

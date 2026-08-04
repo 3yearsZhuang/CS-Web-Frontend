@@ -1,5 +1,5 @@
 /**
- * @file 入社申请管理 API — GET/POST /api/admin/join（BFF 薄转发）
+ * @file 入社申请管理 API — GET/POST /api/join/admin（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (status) params.set('status', status);
 
-  const proxy = await proxyBackend(req, { path: `/admin/join?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/join/admin?${params.toString()}` });
 
   if (proxy.status !== 200) {
     const res = NextResponse.json({ applications: [], total: 0 });
@@ -50,8 +50,8 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/join/${encodeURIComponent(body.applicationId)}`,
-    method: 'POST',
+    path: `/join/admin/${encodeURIComponent(body.applicationId)}`,
+    method: 'PATCH',
     jsonBody: { decision: body.decision, note: body.note ?? null },
   });
 

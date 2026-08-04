@@ -1,5 +1,5 @@
 /**
- * @file 管理端通知 API — GET /api/admin/notifications（BFF 薄转发）
+ * @file 管理端通知 API — GET /api/notifications/broadcast-history（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { clearAuthCookies, proxyBackend, setAuthCookies, toNotification } from '@/shared/backend-client';
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/notifications?page=${page}&page_size=${pageSize}`,
+    path: `/notifications/broadcast-history?page=${page}&page_size=${pageSize}`,
   });
 
   if (proxy.status !== 200) {
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     return res;
   }
   const body = (proxy.body ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const items = (Array.isArray(body.broadcast_history) ? body.broadcast_history : body.items ?? []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
     notifications: items.map(toNotification),
     total: Number(body.total ?? 0),

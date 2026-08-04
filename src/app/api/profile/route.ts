@@ -15,7 +15,7 @@ import {
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const proxy = await proxyBackend(req, { path: '/auth/profile' });
+  const proxy = await proxyBackend(req, { path: '/profile' });
 
   if (proxy.status !== 200) {
     const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
@@ -43,7 +43,7 @@ export async function PUT(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const proxy = await proxyBackend(req, {
-    path: '/auth/profile',
+    path: '/profile',
     method: 'PUT',
     jsonBody: {
       display_name: body.displayName,
@@ -61,8 +61,17 @@ export async function PUT(req: Request) {
     return res;
   }
 
-  const payload = proxy.body as { user?: BackendUser; roles?: string[] };
-  const res = NextResponse.json({ user: payload.user ? toSafeUserFromBackend(payload.user, payload.roles) : null });
+  const payload = proxy.body as
+    | (BackendUser & { roles?: string[] })
+    | { user?: BackendUser; roles?: string[] }
+    | null;
+  const backendUser =
+    payload && 'user' in payload && payload.user
+      ? payload.user
+      : (payload as BackendUser | null);
+  const res = NextResponse.json({
+    user: backendUser ? toSafeUserFromBackend(backendUser, (payload as { roles?: string[] })?.roles) : null,
+  });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

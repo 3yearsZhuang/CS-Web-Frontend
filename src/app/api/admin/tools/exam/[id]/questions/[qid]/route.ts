@@ -1,5 +1,5 @@
 /**
- * @file 考试题目操作 API — PUT/DELETE /api/admin/tools/exam/[id]/questions/[qid]（BFF 薄转发）
+ * @file 考试题目操作 API — PUT/DELETE /api/tools/admin/exam/[id]/questions/[qid]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -18,7 +18,7 @@ export async function PUT(
   const { id, qid } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
     method: 'PUT',
     jsonBody: {
       question_type: body.questionType,
@@ -49,7 +49,7 @@ export async function DELETE(
 
   const { id, qid } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
     method: 'DELETE',
   });
 

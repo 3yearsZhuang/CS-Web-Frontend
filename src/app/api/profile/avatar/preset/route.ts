@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: '/auth/profile/avatar',
+    path: '/profile/avatar/preset',
     method: 'PUT',
     jsonBody: { avatar_type: avatarType },
   });

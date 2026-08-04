@@ -1,5 +1,5 @@
 /**
- * @file 考试结束 API — POST /api/admin/tools/exam/[id]/end（BFF 薄转发）
+ * @file 考试结束 API — POST /api/tools/admin/exam/[id]/end（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -16,7 +16,7 @@ export async function POST(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/end`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/end`,
     method: 'POST',
   });
 

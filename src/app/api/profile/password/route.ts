@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const { currentPassword, newPassword } = result.data;
 
   const proxy = await proxyBackend(req, {
-    path: '/auth/change-password',
+    path: '/profile/password',
     method: 'POST',
     jsonBody: { current_password: currentPassword, new_password: newPassword },
   });

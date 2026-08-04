@@ -1,5 +1,5 @@
 /**
- * @file 管理端考试 API — GET/POST /api/admin/tools/exam（BFF 薄转发）
+ * @file 管理端考试 API — GET/POST /api/tools/admin/exam（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (status) params.set('status', status);
 
-  const proxy = await proxyBackend(req, { path: `/admin/tools/exam?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/tools/admin/exam?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const proxy = await proxyBackend(req, {
-    path: '/admin/tools/exam',
+    path: '/tools/admin/exam',
     method: 'POST',
     jsonBody: {
       title: body.title,
@@ -56,7 +56,18 @@ export async function POST(req: Request) {
       duration_minutes: body.durationMinutes ?? 30,
       pass_score: body.passScore ?? 60,
       max_attempts: body.maxAttempts ?? 1,
-      questions: Array.isArray(body.questions) ? body.questions : [],
+      questions: Array.isArray(body.questions)
+        ? body.questions.map((q) => ({
+            type: (q as Record<string, unknown>).questionType ?? 'single_choice',
+            title: (q as Record<string, unknown>).content ?? '',
+            content_markdown: (q as Record<string, unknown>).contentMarkdown ?? null,
+            score: (q as Record<string, unknown>).score ?? 5,
+            sort_order: (q as Record<string, unknown>).orderIndex ?? 0,
+            options: Array.isArray((q as Record<string, unknown>).options)
+              ? (q as Record<string, unknown>).options
+              : [],
+          }))
+        : [],
     },
   });
 

@@ -1,5 +1,5 @@
 /**
- * @file 考试排名 API — GET /api/admin/tools/exam/[id]/ranking（BFF 薄转发）
+ * @file 考试排名 API — GET /api/tools/admin/exam/[id]/ranking（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { proxyBackend, setAuthCookies } from '@/shared/backend-client';
@@ -15,7 +15,7 @@ export async function GET(
   const limit = Math.min(Number(url.searchParams.get('limit')) || 50, 100);
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/ranking?limit=${limit}`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/ranking?limit=${limit}`,
   });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.ranking) ? body.ranking : []) as Array<Record<string, unknown>>;

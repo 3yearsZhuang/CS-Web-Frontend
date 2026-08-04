@@ -1,5 +1,5 @@
 /**
- * @file 考试题目 API — GET/POST /api/admin/tools/exam/[id]/questions（BFF 薄转发）
+ * @file 考试题目 API — GET/POST /api/tools/admin/exam/[id]/questions（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/questions`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions`,
   });
 
   if (proxy.status !== 200) {
@@ -35,7 +35,7 @@ export async function POST(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/tools/exam/${encodeURIComponent(id)}/questions`,
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions`,
     method: 'POST',
     jsonBody: {
       question_type: body.questionType ?? 'single_choice',

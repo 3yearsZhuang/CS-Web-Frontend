@@ -1,5 +1,5 @@
 /**
- * @file 管理端任务 API — POST /api/admin/tools/task（BFF 薄转发）
+ * @file 管理端任务 API — POST /api/tools/admin/task（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '缺少任务数据', code: 'VALIDATION_FAILED' }, { status: 400 });
     }
     const proxy = await proxyBackend(req, {
-      path: '/admin/tools/task',
+      path: '/tools/admin/task',
       method: 'POST',
       jsonBody: {
         title: task.title,
@@ -50,9 +50,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: '缺少 taskId', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
   const pathMap: Record<string, string> = {
-    publish: '/admin/tools/task/${id}/publish',
-    close: '/admin/tools/task/${id}/close',
-    delete: '/admin/tools/task/${id}',
+    publish: '/tools/admin/task/${id}/publish',
+    close: '/tools/admin/task/${id}/close',
+    delete: '/tools/admin/task/${id}',
   };
   const path = pathMap[action as string];
   if (!path) {
