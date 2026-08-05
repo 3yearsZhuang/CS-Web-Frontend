@@ -14,6 +14,8 @@ cp .env.example .env  # 复制环境变量模板
 pnpm dev              # 启动开发服务器 → http://localhost:2333
 ```
 
+> ⚠️ 前端为 BFF，需后端 FastAPI 运行才能完整工作。推荐在根仓库用 `make dev-up` 并行启动前后端（后端 :9000 / 前端 :2333）；或单独启动后端（见 [根 README](../README.md)）。需配置 `BACKEND_URL` 指向后端。
+
 生产部署：
 
 ```bash
@@ -36,13 +38,13 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 ## 项目架构
 
-基于 Next.js 16 App Router 的全栈应用，采用模块化单体架构：
+前端为 **BFF（Backend-for-Frontend）薄转发层**，基于 Next.js 16 App Router；业务数据、认证、邮件均由后端 FastAPI + PostgreSQL 承载，前端 API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
 
 - 业务模块：位于 `src/modules/`，按业务域拆分（admin / announcement / auth / community / events / join / notification / tools / user）。其中 `community` 已扁平化合并原 forum / blog / members 三个子域
-- 共享基础设施：`src/shared/`（数据库/邮件/安全/事件总线/配置/hooks）
+- 共享基础设施：`src/shared/`（BFF 客户端 / 安全 / 配置 / hooks）。其中 `db/`、`utils/mail.ts`、`events/` 为迁移前单体遗留代码，**运行时不被任何 API 路由引用**，待清理
 - 测试：`tools/tests/`（Vitest 单元 + Playwright E2E）
 
-详细结构见 [架构文档](tools/docs/Devdocs-Arch.md)。
+> 顶层编排与全栈架构见根仓库 [README.md](../README.md) 与 [docs/RootDoc-Deploy.md](../docs/RootDoc-Deploy.md)；详细前端结构见 [架构文档](tools/docs/FrontDoc-Arch.md)。
 
 ---
 
@@ -83,13 +85,12 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | 框架 | Next.js 16 · App Router · React 19 |
 | 样式 | Tailwind CSS v4 · CSS 变量双主题 |
 | 动画 | Motion (Framer Motion 下一代) |
-| 数据库 | better-sqlite3（同步，WAL 模式，无外部依赖） |
-| 认证 | scrypt 密码哈希 · 服务端 session · HMAC 验证码 · TOTP 2FA · GitHub OAuth |
-| 邮件 | nodemailer |
-| 双因素认证 | TOTP (RFC 6238) · 密钥由 `AUTH_SESSION_SECRET` 经 HKDF-SHA256 派生 AES-256-GCM 加密 · 备用码 · OAuth 2FA 强制 |
+| 数据库 | 无本地业务库——前端为 BFF，业务数据由后端 PostgreSQL 承载（`better-sqlite3` 依赖为迁移前遗留，仅开发/种子脚本使用，运行时 API 路由不引用） |
+| 认证 | 后端 JWT 双 token（access 15min / refresh 7day）· BFF 以 HttpOnly Cookie 托管 · 401 静默刷新 · TOTP 2FA / GitHub OAuth 由后端处理 |
+| 邮件 | 由后端 aiosmtplib 承载（前端 `nodemailer` 为迁移前遗留，运行时未使用） |
 | 测试 | Vitest（单元，441+）· Playwright（E2E） |
 | 代码检查 | ESLint 9 · TypeScript 5 |
-| 日志/监控 | pino 结构化日志（NDJSON）· 请求 ID 链路 · 健康检查端点 · 错误率监控 · 可选 Sentry（`SENTRY_DSN` 动态接入） |
+| 日志/监控 | pino 结构化日志（NDJSON）· 请求 ID 链路 · 健康检查 `/api/health`（转发后端）· 错误率监控 · 可选 Sentry（`SENTRY_DSN` 动态接入） |
 
 ---
 
@@ -145,15 +146,13 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 | 变量 | 说明 | 默认 |
 |------|------|------|
-| `SQLITE_DB_PATH` | SQLite 数据库路径 | `data/app.db` |
-| `AUTH_SESSION_SECRET` | Session 签名密钥（≥32字节，生产必填） | 随机 |
-| `NEXT_PUBLIC_SITE_URL` | 站点 URL | `http://localhost:2333` |
-| `ALLOWED_ORIGINS` | Origin 白名单（逗号分隔） | `http://localhost:2333,http://localhost:3000` |
-| `SMTP_HOST/PORT/USER/PASS/FROM` | 邮件服务配置 | 控制台输出验证码 |
-| `PASSWORD_RESET_DEFAULT` | 管理员重置密码时使用的默认密码（建议改为更复杂值） | `FZTBU_CS` |
-| `TRUST_PROXY` | 是否信任反向代理头 | `false` |
+| `BACKEND_URL` | BFF 转发的后端 FastAPI 地址 | `http://localhost:9000` |
+| `NEXT_PUBLIC_SITE_URL` | 站点 URL（metadata base URL） | `http://localhost:2333` |
+| `ALLOWED_ORIGINS` | Origin 白名单（逗号分隔，POST 端点防 Login CSRF） | `http://localhost:2333,http://localhost:3000` |
+| `TRUST_PROXY` | 是否信任反向代理头（Caddy/Nginx 后须 true） | `false` |
 | `SENTRY_DSN` | Sentry 错误监控（可选，运行时动态导入，留空不启用） | 未启用 |
-| `GITHUB_CLIENT_ID/SECRET/CALLBACK_URL` | GitHub OAuth 第三方登录配置 | 未启用 |
+
+> 以下为迁移前单体遗留变量，运行时**不被任何 API 路由引用**（认证/邮件/OAuth 已由后端承载），仅遗留代码与开发脚本可能使用，待后续清理：`SQLITE_DB_PATH`、`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`。
 
 ---
 
@@ -173,8 +172,6 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `pnpm test` | 运行单元测试（Vitest） |
 | `pnpm lint` | ESLint 检查 |
 | `pnpm ts-check` | TypeScript 类型检查 |
-| `pnpm db:setup-litestream` | 裸机安装 Litestream 并注册 systemd 服务 |
-| `pnpm db:restore-drill` | 隔离环境演练 Litestream 备份恢复（数据完整性校验） |
 | `pnpm deploy:build` | 构建部署镜像（Docker Compose，tools/deploy） |
 | `pnpm deploy:up` | 启动部署（应用 + Caddy 反向代理） |
 | `pnpm deploy:down` | 停止部署 |
@@ -210,14 +207,14 @@ tools/tests/
 
 | 文档 | 说明 |
 |------|------|
-| [架构 + API 文档](tools/docs/Devdocs-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
-| [安全文档](tools/docs/Devdocs-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
-| [运维文档](tools/docs/Devdocs-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
-| [演进与 ADR](tools/docs/Devdocs-evolution.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
-| [Markdown 编辑器](tools/docs/Devdocs-markdown-editor.md) | 编辑器使用指南 |
-| [入职指南 + 项目规则](tools/docs/Devdocs-onboarding-guide.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单 |
-| [PG 数据迁移](tools/docs/Devdocs-pg-migration.md) | SQLite → PostgreSQL 迁移脚本用法与注意事项（`migrate-sqlite-to-pg.mjs`） |
-| [国际化 i18n](tools/docs/Devdocs-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
+| [架构 + API 文档](tools/docs/FrontDoc-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
+| [安全文档](tools/docs/FrontDoc-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
+| [运维文档](tools/docs/FrontDoc-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
+| [演进与 ADR](tools/docs/FrontDoc-Evo.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
+| [Markdown 编辑器](tools/docs/FrontDoc-MDE.md) | 编辑器使用指南 |
+| [入职指南 + 项目规则](tools/docs/FrontDoc-Onboard.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单 |
+| [PG 数据迁移](tools/docs/FrontDoc-PGMig.md) | SQLite → PostgreSQL 迁移脚本用法与注意事项（`migrate-sqlite-to-pg.mjs`） |
+| [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 
 ---

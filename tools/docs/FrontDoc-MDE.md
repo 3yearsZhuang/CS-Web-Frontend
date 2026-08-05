@@ -3,8 +3,9 @@
 > 文档定位：Markdown 编辑器组件使用指南（how-to）
 > 受众：前端开发者 / 需要接入富文本编辑的模块负责人
 > Source of truth：编辑器组件架构、接入方式、内容限制的唯一权威位置
-> 关联：组件目录见 [Devdocs-Arch.md](Devdocs-Arch.md)；设计规范见 [Devdocs-UI-design.md](Devdocs-UI-design.md)
+> 关联：组件目录见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；设计规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
 > 最后更新：2026-08-01（修复组件路径与 API 路径重复）
+> 更新人：3yearsZ
 > cadence：编辑器组件变更时
 > Stale 信号：组件路径与实际目录结构不一致 / API 路径与路由 handler 不一致
 

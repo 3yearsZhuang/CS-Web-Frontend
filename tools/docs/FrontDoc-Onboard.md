@@ -3,8 +3,9 @@
 > 文档定位：新人上手指南 + 工程规范（tutorial + reference）
 > 受众：新加入项目的开发者 / 全体代码贡献者
 > Source of truth：开发环境、启动流程、模块协作规范、禁止事项、防再犯清单的唯一权威位置
-> 关联：架构与 API 见 [Devdocs-Arch.md](Devdocs-Arch.md)；安全见 [Devdocs-Sec.md](Devdocs-Sec.md)；运维见 [Devdocs-Ops.md](Devdocs-Ops.md)；演进与 ADR 见 [Devdocs-evolution.md](Devdocs-evolution.md)
-> 最后更新：2026-08-01（合并原「入职指南」与「项目规则」）
+> 关联：架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；运维见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进与 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)
+> 最后更新：2026-08-05（修正技术栈与快速开始：前端已降级为 BFF，业务数据/认证/邮件由后端承载）
+> 更新人：3yearsZ
 > 变更触发：开发环境变更 / 启动流程变更 / 新增禁止事项 / 协作流程变更 / 新增 ADR
 > Stale 信号：启动命令与 package.json scripts 不一致 / ADR 编号与 evolution 最新不一致 / 禁止事项与实际依赖冲突
 
@@ -17,33 +18,25 @@
 
 ## 1. 快速开始
 
+> ⚠️ 前端为 BFF，**需后端 FastAPI 运行才能完整工作**。推荐在根仓库用 `make dev-up` 并行启动前后端（后端 :9000 / 前端 :2333）。单独 `pnpm dev` 仅能起前端，API 调用会失败。
+
 ```bash
 git clone <repo-url> fztbucs-projects
 cd fztbucs-projects
 pnpm install
-pnpm dev
+pnpm dev          # 前端 :2333（需另起后端，见根 README / docs/RootDoc-Deploy.md）
 ```
 
 浏览器打开 <http://localhost:2333>（⚠️ 端口是 2333，不是 3000）
 
-首次启动会自动：
-- 创建 `data/` 目录和 `data/app.db` SQLite 数据库
-- 执行 schema 初始化 + 增量迁移
-- 种子数据仅在表为空时写入（events 活动 + forum 版块）
+> 注：迁移前"首次启动自动创建 `data/app.db` SQLite + schema 初始化 + 种子数据"的描述已作废——业务数据现由后端 PostgreSQL 承载，前端不再初始化本地数据库。
 
-### 创建管理员账号
+### 创建管理员账号 / 生成测试数据（⚠️ 遗留脚本）
 
-```bash
-pnpm create-user --role admin                                # 交互式输入邮箱和密码
-pnpm create-user --role admin --email a@b.com --password xxx  # 命令行参数式
-```
+`pnpm create-user` 与 `pnpm seed` 为**迁移前遗留脚本，仍直连本地 SQLite**（`better-sqlite3`），写入的 `data/app.db` 并非运行时数据源（后端 PostgreSQL）。在新架构下：
 
-### 生成测试数据（考试 + 资源）
-
-```bash
-pnpm seed
-pnpm seed -- --clear                  # 先清空再生成
-```
+- 创建管理员请走后端流程（见后端 `docs/BackDoc-Onboard.md` 与 `scripts/init_database.py`）
+- 测试数据请通过后端 API 或后端种子脚本写入 PostgreSQL
 
 ---
 
@@ -51,13 +44,13 @@ pnpm seed -- --clear                  # 先清空再生成
 
 | 层 | 技术 | 备注 |
 |---|------|------|
-| 框架 | Next.js 16.2 (App Router) | React Server Components 模式 |
+| 框架 | Next.js 16.2 (App Router) | React Server Components 模式；前端为 BFF 薄转发层 |
 | 语言 | TypeScript | 严格模式 |
 | 样式 | Tailwind CSS v4 | `globals.css` 定义 CSS 变量 + 双主题 |
 | 动画 | Motion (原 Framer Motion) | 页面过渡、莫比乌斯环粒子 |
-| 数据库 | SQLite (better-sqlite3) | WAL 模式，单文件 `data/app.db` |
-| ORM | 无 | 直接写 SQL，`shared/db.ts` 返回 `Database` 实例 |
-| 部署 | Docker + Caddy + Litestream | Caddy 自动 HTTPS，Litestream 实时备份到 S3 |
+| 数据库 | 无本地业务库 | 业务数据由后端 PostgreSQL 承载；前端 API 路由经 `shared/backend-client.ts` 代理到后端 |
+| 认证/邮件 | 后端承载 | JWT 双 token（BFF HttpOnly Cookie 托管）/ aiosmtplib；前端 `shared/db`、`utils/mail.ts`、`security/password.ts` 为迁移前遗留，运行时不引用 |
+| 部署 | 根仓库 Docker Compose + Caddy | 全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)；Litestream/SQLite 备份体系已随前后端分离移除 |
 | 包管理 | pnpm | `preinstall` 脚本强制 pnpm |
 | 测试 | Vitest + Playwright | 单元测试 `vitest`，E2E `playwright test` |
 | 图标 | Lucide React | |
@@ -212,12 +205,12 @@ pnpm e2e              # Playwright E2E 测试
 
 | 文档 | 说明 |
 |------|------|
-| [架构 + API 文档](./Devdocs-Arch.md) | 完整目录结构 + 页面路由表 + 组件清单 + 模块化分析 + **API 端点契约（Part B）** |
-| [安全文档](./Devdocs-Sec.md) | 安全审计（OWASP）+ 角色体系与权限矩阵 |
-| [运维文档](./Devdocs-Ops.md) | 部署（Part A）、SLO（Part B）、Runbook（Part C）：Docker 部署、Caddy 配置、Litestream 备份、回滚与故障处置 |
-| [演进与 ADR](./Devdocs-evolution.md) | 迭代路线图、PostgreSQL 迁移、多语言微服务迁移、ADR 与风险登记 |
-| [UI 设计规范](./Devdocs-UI-design.md) | 设计规范：颜色、字体、动画、组件风格 |
-| [Markdown 编辑器](./Devdocs-markdown-editor.md) | Markdown 编辑器组件说明 |
+| [架构 + API 文档](./FrontDoc-Arch.md) | 完整目录结构 + 页面路由表 + 组件清单 + 模块化分析 + **API 端点契约（Part B）** |
+| [安全文档](./FrontDoc-Sec.md) | 安全审计（OWASP）+ 角色体系与权限矩阵 |
+| [运维文档](./FrontDoc-Ops.md) | 部署（Part A）、SLO（Part B）、Runbook（Part C）：Docker 部署、Caddy 配置、Litestream 备份、回滚与故障处置 |
+| [演进与 ADR](./FrontDoc-Evo.md) | 迭代路线图、PostgreSQL 迁移、多语言微服务迁移、ADR 与风险登记 |
+| [UI 设计规范](./FrontDoc-UID.md) | 设计规范：颜色、字体、动画、组件风格 |
+| [Markdown 编辑器](./FrontDoc-MDE.md) | Markdown 编辑器组件说明 |
 | [项目规则](#八项目规则) | 开发约定、模块协作规范、ADR 引用规则、防再犯清单（本节之后的第 8 节） |
 
 ---
@@ -262,13 +255,13 @@ pnpm e2e              # Playwright E2E 测试
 
 ## 8.2 设计规范
 
-所有前端开发必须严格遵守 `tools/docs/Devdocs-UI-design.md`（编辑式技术极简 & 悬浮胶囊导航设计规范）。新增页面、组件、视觉交互等均需对照设计规范 Checklist 逐项检查。
+所有前端开发必须严格遵守 `tools/docs/FrontDoc-UID.md`（编辑式技术极简 & 悬浮胶囊导航设计规范）。新增页面、组件、视觉交互等均需对照设计规范 Checklist 逐项检查。
 
 ---
 
 ## 8.3 模块化开发规范
 
-> 详见 [Devdocs-Arch.md](Devdocs-Arch.md)，以下仅列出关键约束。
+> 详见 [FrontDoc-Arch.md](FrontDoc-Arch.md)，以下仅列出关键约束。
 
 ### 1. 模块结构
 
@@ -326,7 +319,7 @@ appBus.on('topic.created', (payload) => {
 
 ### 5. 依赖矩阵维护
 
-新增模块或修改模块依赖时，必须同步更新 [Devdocs-Arch.md](Devdocs-Arch.md) 的「2.3 直接导入依赖矩阵」。该矩阵是架构不变量 FF1（依赖方向单向）的检查依据。
+新增模块或修改模块依赖时，必须同步更新 [FrontDoc-Arch.md](FrontDoc-Arch.md) 的「2.3 直接导入依赖矩阵」。该矩阵是架构不变量 FF1（依赖方向单向）的检查依据。
 
 ---
 
@@ -344,7 +337,7 @@ appBus.on('topic.created', (payload) => {
 
 ### 2. ADR 格式
 
-所有 ADR 记录在 [Devdocs-evolution.md](Devdocs-evolution.md) 的「五、架构决策记录」章节，格式：
+所有 ADR 记录在 [FrontDoc-Evo.md](FrontDoc-Evo.md) 的「五、架构决策记录」章节，格式：
 
 ```markdown
 ### ADR-XXX: <决策标题>
@@ -364,7 +357,7 @@ appBus.on('topic.created', (payload) => {
 当某个文档需要引用 ADR 时，使用锚点链接：
 
 ```markdown
-对应 [ADR-013](Devdocs-evolution.md#adr-013-事件监听器显式初始化)
+对应 [ADR-013](FrontDoc-Evo.md#adr-013-事件监听器显式初始化)
 ```
 
 锚点规则：GitHub 风格锚点 = 标题转小写 + 空格转连字符 + 移除标点。中文保留。
@@ -390,13 +383,13 @@ appBus.on('topic.created', (payload) => {
 
 | 文档 | Diátaxis 象限 | 职责 | 更新触发 | Stale 信号 |
 |------|------|------|---------|---------|
-| `Devdocs-Arch.md` | reference | 项目结构、模块化分析、代码质量、依赖矩阵、API 端点/鉴权/速率限制/状态码（Part B） | 目录结构调整、新增模块、依赖矩阵变更、新增/修改 API、安全措施变更 | 矩阵与实际 import 不一致；端点签名与路由 handler 不一致 |
-| `Devdocs-evolution.md` | explanation + operational | 路线图、ADR、风险登记、健壮函数、里程碑 | 架构决策、风险识别、里程碑推进 | ADR 状态与实施记录不一致；R 项等级未随修复更新 |
-| `Devdocs-Sec.md` | reference | 安全审计、角色权限、事件驱动安全、运行时监测 | 安全发现、2FA/权限变更、ADR-013/014 推进 | 发现项状态与代码现状不一致 |
-| `Devdocs-onboarding-guide.md` | tutorial + reference | 新人上手指南 + 项目规则、模块协作规范、ADR 引用规则、防再犯清单 | 开发环境变更、启动流程变更、新增禁止事项、协作流程变更、新增 ADR | 启动命令与 package.json scripts 不一致；ADR 编号与 evolution 最新不一致；禁止事项与实际依赖冲突 |
-| `Devdocs-UI-design.md` | reference | 设计规范、视觉交互 | 新增页面/组件、视觉变更 | 组件清单与实际文件不一致 |
-| `Devdocs-Ops.md` | how-to + reference | 部署配置、环境变量、SLO、Runbook（Part A/B/C） | 部署流程变更、新增环境变量、SLO 阈值调整、新增故障场景 | 环境变量表与 `.env.example` 不一致 |
-| `Devdocs-markdown-editor.md` | how-to | Markdown 编辑器使用 | 编辑器功能变更 | 功能描述与组件实现不一致 |
+| `FrontDoc-Arch.md` | reference | 项目结构、模块化分析、代码质量、依赖矩阵、API 端点/鉴权/速率限制/状态码（Part B） | 目录结构调整、新增模块、依赖矩阵变更、新增/修改 API、安全措施变更 | 矩阵与实际 import 不一致；端点签名与路由 handler 不一致 |
+| `FrontDoc-Evo.md` | explanation + operational | 路线图、ADR、风险登记、健壮函数、里程碑 | 架构决策、风险识别、里程碑推进 | ADR 状态与实施记录不一致；R 项等级未随修复更新 |
+| `FrontDoc-Sec.md` | reference | 安全审计、角色权限、事件驱动安全、运行时监测 | 安全发现、2FA/权限变更、ADR-013/014 推进 | 发现项状态与代码现状不一致 |
+| `FrontDoc-Onboard.md` | tutorial + reference | 新人上手指南 + 项目规则、模块协作规范、ADR 引用规则、防再犯清单 | 开发环境变更、启动流程变更、新增禁止事项、协作流程变更、新增 ADR | 启动命令与 package.json scripts 不一致；ADR 编号与 evolution 最新不一致；禁止事项与实际依赖冲突 |
+| `FrontDoc-UID.md` | reference | 设计规范、视觉交互 | 新增页面/组件、视觉变更 | 组件清单与实际文件不一致 |
+| `FrontDoc-Ops.md` | how-to + reference | 部署配置、环境变量、SLO、Runbook（Part A/B/C） | 部署流程变更、新增环境变量、SLO 阈值调整、新增故障场景 | 环境变量表与 `.env.example` 不一致 |
+| `FrontDoc-MDE.md` | how-to | Markdown 编辑器使用 | 编辑器功能变更 | 功能描述与组件实现不一致 |
 
 ### 2. Source-of-Truth 无重复规则
 
@@ -404,13 +397,13 @@ appBus.on('topic.created', (payload) => {
 
 | 维度 | 权威位置 |
 |------|---------|
-| 禁止事项/工程契约 | `Devdocs-onboarding-guide.md`「8.1 禁止事项」（本文件第 8 节） |
-| 架构决策记录 | `Devdocs-evolution.md` ADR 章节 |
-| 风险登记 | `Devdocs-evolution.md` R 表 |
-| 模块依赖矩阵 | `Devdocs-Arch.md` 2.3 节 |
-| 安全发现 | `Devdocs-Sec.md` |
-| API 契约 | `Devdocs-Arch.md` Part B（原 Devdocs-api-reference.md 已合并） |
-| 环境变量 | `Devdocs-Ops.md` Part A（权威）+ `README.md`（摘要） |
+| 禁止事项/工程契约 | `FrontDoc-Onboard.md`「8.1 禁止事项」（本文件第 8 节） |
+| 架构决策记录 | `FrontDoc-Evo.md` ADR 章节 |
+| 风险登记 | `FrontDoc-Evo.md` R 表 |
+| 模块依赖矩阵 | `FrontDoc-Arch.md` 2.3 节 |
+| 安全发现 | `FrontDoc-Sec.md` |
+| API 契约 | `FrontDoc-Arch.md` Part B（原 Devdocs-api-reference.md 已合并） |
+| 环境变量 | `FrontDoc-Ops.md` Part A（权威）+ `README.md`（摘要） |
 
 重复处理：发现重复时，非权威位置必须删除内容并改为锚点引用；禁止两处同时维护同一信息。重复维护必然产生漂移。
 
@@ -419,15 +412,15 @@ appBus.on('topic.created', (payload) => {
 完成代码修改后，逐项确认（作为 PR 自检模板）：
 
 - [ ] `pnpm run ts-check` 通过（类型检查）
-- [ ] 如调整目录结构 -> 更新 `Devdocs-Arch.md` Part A
-- [ ] 如新增/修改 API -> 更新 `Devdocs-Arch.md` Part B
-- [ ] 如新增/修改管理员权限 -> 更新 `Devdocs-Sec.md` Part 2
-- [ ] 如做出架构决策 -> 在 `Devdocs-evolution.md` 新增 ADR
+- [ ] 如调整目录结构 -> 更新 `FrontDoc-Arch.md` Part A
+- [ ] 如新增/修改 API -> 更新 `FrontDoc-Arch.md` Part B
+- [ ] 如新增/修改管理员权限 -> 更新 `FrontDoc-Sec.md` Part 2
+- [ ] 如做出架构决策 -> 在 `FrontDoc-Evo.md` 新增 ADR
 - [ ] 如新增禁止事项 -> 更新本文档「8.1 禁止事项」
-- [ ] 如新增页面/组件 -> 更新 `Devdocs-UI-design.md`
-- [ ] 如新增环境变量 -> 更新 `Devdocs-Ops.md` Part A 与 `README.md` 环境变量表
-- [ ] 如完成路线图项 -> 在 `Devdocs-evolution.md` 标注 `✅` + 完成日期
-- [ ] 如修改 2FA/OAuth/密码重置/限流 -> 更新 `Devdocs-Sec.md` 对应发现项 + roadmap ADR
+- [ ] 如新增页面/组件 -> 更新 `FrontDoc-UID.md`
+- [ ] 如新增环境变量 -> 更新 `FrontDoc-Ops.md` Part A 与 `README.md` 环境变量表
+- [ ] 如完成路线图项 -> 在 `FrontDoc-Evo.md` 标注 `✅` + 完成日期
+- [ ] 如修改 2FA/OAuth/密码重置/限流 -> 更新 `FrontDoc-Sec.md` 对应发现项 + roadmap ADR
 - [ ] 如修改 events.date 格式或归档逻辑 -> 同步前后端解析（SQL REPLACE + regex），补充回归测试
 - [ ] 如修改 `expires_at` / `created_at` 等日期字段的比较逻辑 -> 用 `datetime(col)` 归一化两侧格式（ISO 与 SQLite datetime 混用时 `T` > 空格致字典序错乱），补充 ISO 格式回归测试（参见 ADR-017）
 - [ ] 如修改 server-only 边界 -> 同步 `tsconfig.json` paths + `vitest.config.ts` alias + 本文档 server-only 章节

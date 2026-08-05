@@ -1,9 +1,11 @@
 # FZTBUCS-PG-Migration-数据库迁移脚本使用说明
 
-> 文档定位：SQLite → PostgreSQL 数据迁移脚本的使用与注意事项（how-to + runbook）
+> 文档定位：SQLite -> PostgreSQL 数据迁移脚本的使用与注意事项（how-to + runbook）
 > 受众：前端维护者 / 后端迁移实施者 / 发布决策者
 > Source of truth：迁移脚本 `tools/scripts/migrate-sqlite-to-pg.mjs` 的唯一权威使用文档
-> 关联：数据库双引擎演进与迁移规划见 [Devdocs-evolution.md](Devdocs-evolution.md) Part B；运维/回滚见 [Devdocs-Ops.md](Devdocs-Ops.md)；架构见 [Devdocs-Arch.md](Devdocs-Arch.md)
+> 关联：数据库双引擎演进与迁移规划见 [FrontDoc-Evo.md](FrontDoc-Evo.md) Part B；运维/回滚见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；架构见 [FrontDoc-Arch.md](FrontDoc-Arch.md)
+> 最后更新：2026-08-05（统一 FrontDoc 命名）
+> 更新人：3yearsZ
 > 变更触发：迁移脚本参数/行为变更、字段映射变更、新增被迁移表
 > Stale 信号：脚本路径/参数与本文不一致、表清单与脚本不符
 
@@ -13,7 +15,7 @@
 
 将旧前端单体库 `data/app.db`（SQLite）的业务数据迁移到后端 PostgreSQL（默认库 `domefff`）。
 
-**为什么不能直导**：SQLite 主键为 TEXT/UUID，PG 为 Integer 自增；脚本必须建立「UUID → Integer」映射、按外键依赖序逐层导入，并处理认证字段与类型转换。详见 [Devdocs-evolution.md](Devdocs-evolution.md) Part B。
+**为什么不能直导**：SQLite 主键为 TEXT/UUID，PG 为 Integer 自增；脚本必须建立「UUID -> Integer」映射、按外键依赖序逐层导入，并处理认证字段与类型转换。详见 [FrontDoc-Evo.md](FrontDoc-Evo.md) Part B。
 
 **文件位置**：`tools/scripts/migrate-sqlite-to-pg.mjs`（Node ESM，依赖 `better-sqlite3` + `postgres`）。
 
@@ -74,21 +76,21 @@ PGHOST=localhost ... node tools/scripts/migrate-sqlite-to-pg.mjs
 ## 四、关键实现与注意事项（踩坑记录）
 
 ### 4.1 主键重映射（最高风险）
-- 全部 UUID/TEXT 主键 → PG Integer 自增序列，脚本在内存维护 `UUID→Integer` 映射。
+- 全部 UUID/TEXT 主键 -> PG Integer 自增序列，脚本在内存维护 `UUID->Integer` 映射。
 - **19 张表**含 `user_id`/`author_id` 外键，须按映射回填；否则外键悬空。
-- 导入顺序严格按外键依赖：roles → users → categories → posts → comments → events → exams → resources → component → 其余。
+- 导入顺序严格按外键依赖：roles -> users -> categories -> posts -> comments -> events -> exams -> resources -> component -> 其余。
 
 ### 4.2 认证字段差异
-- SQLite `users.role` 单列 → PG `user_roles` 多对多（`admin`→admin、`user`→user）。
-- `root` 角色：PG 无此角色 → 映射为 `is_superuser=true` + 挂 `admin` 角色。
+- SQLite `users.role` 单列 -> PG `user_roles` 多对多（`admin`->admin、`user`->user）。
+- `root` 角色：PG 无此角色 -> 映射为 `is_superuser=true` + 挂 `admin` 角色。
 - `username`：SQLite 无此字段，由 email 前缀/display_name 派生，冲突自动加 `_1` 后缀。
 - 密码：scrypt 哈希**原样搬移**，登录时后端 `password_compat` 懒升级为 bcrypt（零停机）。
 
 ### 4.3 类型转换
-- Integer 布尔 0/1 → PG `boolean`
-- ISO / `YYYY-MM-DD HH:MM:SS` 日期 → PG `timestamptz`
-- JSON 文本（`'[]'`）→ PG `jsonb`
-- 组件注册表：SQLite `item.id` 是 `cmp-button` 形式（**≠ slug**，slug 是 `button`），variants/guides 的 `item_id` 引用的是 **id** 而非 slug —— 脚本按 `item.id` 回填，勿误用 slug。
+- Integer 布尔 0/1 -> PG `boolean`
+- ISO / `YYYY-MM-DD HH:MM:SS` 日期 -> PG `timestamptz`
+- JSON 文本（`'[]'`）-> PG `jsonb`
+- 组件注册表：SQLite `item.id` 是 `cmp-button` 形式（**≠ slug**，slug 是 `button`），variants/guides 的 `item_id` 引用的是 **id** 而非 slug -- 脚本按 `item.id` 回填，勿误用 slug。
 
 ### 4.4 论坛图片 URL 重写
 - 旧前端论坛图 URL 为 `/api/forum/images/`，后端为 `/api/community/forum/images/`。
@@ -105,36 +107,15 @@ PGHOST=localhost ... node tools/scripts/migrate-sqlite-to-pg.mjs
 
 ---
 
-## 五、静态资源迁移（脚本不自动做，需手动）
+## 五、静态资源迁移与迁移后验证
 
-脚本只迁数据库表；图片文件需手动复制：
-
-```bash
-# 头像（被引用的 5 个上传头像）
-cp CS-Web-Frontend/data/avatars/*.jpg CS-Web-Frontend/data/avatars/*.png CS-Web-Backend/data/avatars/
-
-# 论坛图片
-cp CS-Web-Frontend/data/forum-images/* CS-Web-Backend/data/forum-images/
-```
-
-> `CS-Web-Backend/data/` 是后端运行时上传目录，**已在后端 `.gitignore` 中忽略，不入库**。
-
----
-
-## 六、迁移后验证清单
-
-- [ ] 逐表行数与 SQLite 一致（`SELECT COUNT(*)`）
-- [ ] 外键完整性 0 孤儿（user_roles / posts / comments / registrations / questions / options / variants / guides / resources）
-- [ ] 用户角色映射抽查（admin/user/root-superuser）
-- [ ] 自增序列已 `setval` 同步（脚本自动）
-- [ ] 后端 `/health` healthy、`/readyz` ready
-- [ ] alembic 版本一致（`alembic current` 与 head 相同）
+> ℹ️ 待办条目（静态资源手动复制、迁移后验证清单）已迁移至根目录 `项目待办事项.md`。
 
 ---
 
 ## 七、关联文档
 
-- 迁移规划 / 双引擎演进：`tools/docs/Devdocs-evolution.md` Part B
-- 运维 / 回滚流程：`tools/docs/Devdocs-Ops.md`
+- 迁移规划 / 双引擎演进：`tools/docs/FrontDoc-Evo.md` Part B
+- 运维 / 回滚流程：`tools/docs/FrontDoc-Ops.md`
 - 后端迁移计划：`CS-Web-Backend/docs/archive/migration_plan.md` Phase 6
 - 迁移执行记录：`数据迁移执行记录.md`（仓库根）

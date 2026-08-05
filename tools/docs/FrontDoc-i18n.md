@@ -3,7 +3,9 @@
 > 文档定位：前端国际化（i18n）迁移的当前状态、标准迁移流程、剩余待办清单（status + runbook）
 > 受众：前端维护者 / 后续执行迁移的开发者
 > Source of truth：`src/i18n/` 语言包 + 各组件 `useTranslations` 使用情况；本文与代码同步更新
-> 关联：next-intl 官方文档（App Router，无 i18n 路由模式）；架构见 [Devdocs-Arch.md](Devdocs-Arch.md)；UI 规范见 [Devdocs-UI-design.md](Devdocs-UI-design.md)
+> 关联：next-intl 官方文档（App Router，无 i18n 路由模式）；架构见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；UI 规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
+> 最后更新：2026-08-05（统一 FrontDoc 命名）
+> 更新人：3yearsZ
 > 变更触发：新增/修改语言包 key、迁移组件文案、调整语言切换机制
 > Stale 信号：某组件仍含硬编码中文但未登记在"剩余清单"，或语言包 key 与组件引用不一致
 
@@ -41,28 +43,7 @@
 
 ## 三、已完成迁移（累计）
 
-### 3.1 布局/全局
-- `components/layout/navbar.tsx`（导航项、logo、语言切换器、菜单 aria）
-- `components/layout/footer.tsx`（版权、链接）
-
-### 3.2 主页面（11 个）
-| 页面 | namespace |
-|---|---|
-| 首页 `/` | `home` |
-| 登录 `/login` | `auth` |
-| 社区 `/community` | `community` |
-| 事件 `/events` | `events` |
-| 工具 `/tools` | `tools` |
-| 个人中心 `/profile` | `profile` |
-| 关于 `/about` | `about` |
-| 加入 `/join` | `join` |
-| 管理后台 `/admin` | `admin` |
-| 社区帖子详情 `/community/[id]`（主页面） | `communityDetail` |
-| Navbar/Footer | `nav` / `footer` |
-
-### 3.3 管理后台用户管理
-- `modules/admin/ui/user-modals.tsx`（编辑/重置/删除/禁用/批准/拒绝 7 个模态框）→ `adminUsers`
-- `modules/admin/ui/user-list-view.tsx`（用户列表，搜索/筛选/表格/操作/分页）→ `userList`
+> ℹ️ 已完成迁移记录已迁移至根目录 `项目演变历史.md`。
 
 ---
 
@@ -88,28 +69,7 @@
 
 ## 五、剩余待迁移清单（后续迭代）
 
-> 来自 code-explorer 全量盘点（约 1000+ 处硬编码中文，`src/modules/**` 完全未迁移）。
-
-### 5.1 管理后台子面板 `src/modules/admin/ui/*`（~500 处）
-| 文件 | 文案(估) |
-|---|---|
-| `admin-events-panel.tsx` / `event-modals.tsx` / `event-list.tsx` / `admin-events-settings.tsx` | ~167 |
-| `admin-join-panel.tsx` / `user-resets-view.tsx` | ~84 |
-| `admin-roles-panel.tsx` / `create-role-form.tsx` / `role-modals.tsx` / `role-permission-matrix.tsx` | ~90 |
-| `admin-notifications-panel.tsx` / `admin-messages-panel.tsx` / `broadcast-history-panel.tsx` | ~76 |
-| `admin-users-panel.tsx` / `admin-logs-panel.tsx` / `shared.tsx` | ~80 |
-
-### 5.2 社区子组件 `src/modules/community/ui/*`（~400 处）
-`topics-manager`(~60)、`categories-manager`(~56)、`forum-profile-tab`(~39)、`announcements-manager`(~34)、`forum-reply-item`(~32)、`feed-item-card`(~28)、`forum-markdown-editor`(~24)、`forum-actions`(~41)、`users-manager`(~22)、`forum-markdown-renderer`(~20)、`reports-manager`(~20)、`report-button`(~19)、`featured-topic-strip`(~16)、`forum-markdown-editor-base`(~12)、`follow-button`(~10)、`forum-admin-panel`(~10)、`forum-topic-sidebar`(~10)、`forum-topic-item`(~10)、`community-post-list`(~9)、`dashboard-manager`(~10)、`forum-reply-sort-bar`(~9)、`community-sidebar-trending`(~8)、`forum-topic-reply-editor`(~8)、`forum-topic-reply-section`(~7)、`community-sidebar-nav`(~7)、`forum-topic-hero`(~5)、`forum-topic-edit-form`(~3)、`forum-topic-replies`(~3)、`forum-topic-content`(~2)
-
-### 5.3 事件/工具/公告/认证模块 `src/modules/{events,tools,announcement,auth}/ui/*`（~270 处）
-`two-factor-settings`(~53)、`admin-announcements-panel`(~54)、`tool-task-manage`(~49)、`component-registry-shell`(~45)、`tool-exam-manage`(~42)、`month-calendar`(~35)、`dev-docs-viewer`(~25)、`component-registry-detail`(~24)、`component-registry-drawer`(~19)、`component-registry-store`(~17)、`component-registry-variant-renderer`(~16)、`year-accordion-timeline`(~16)、`tool-resource-review`(~14)、`event-filter-bar`(~12)、`admin-tools-panel`(~7)、`event-status-badge`(~4)、`event-card`(~3)
-
-### 5.4 社区子页 `src/app/community/*`（~75 处）
-`new/page.tsx`(~61)、`drafts/page.tsx`(~10)、`series/[id]/page.tsx`(~5)、`tags/[tag]/page.tsx`(~5)
-
-### 5.5 全局组件 `src/components/*`（~25 处）
-`user-menu.tsx`(~12)、`notification-bell.tsx`(~6)、`theme-toggle.tsx`(~2)、`tech-tag-selector.tsx`(~1)、`announcement-banner.tsx`(~1)、`confirm-dialog.tsx`(~3)
+> ℹ️ 剩余待迁移清单（后续迭代）已迁移至根目录 `项目待办事项.md`。
 
 ---
 
@@ -123,6 +83,4 @@
 
 ## 七、下一步建议
 
-1. 按 5.1 → 5.2 → 5.3 → 5.4 → 5.5 的优先级继续迁移（管理后台与社区组件是文案最集中处）。
-2. 迁移时复用各页面已建立的 namespace；同一模块的组件可共用 namespace（如 `admin` / `community`）。
-3. 每个文件遵循"四、标准迁移流程"。
+> ℹ️ 下一步建议已迁移至根目录 `项目待办事项.md`。

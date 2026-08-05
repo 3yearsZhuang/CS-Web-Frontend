@@ -1,6 +1,6 @@
 # src/modules — 业务域模块
 
-> 遵循 `tools/docs/GENERAL.md`（按业务域模块化，GENERAL 3.4）。
+> 遵循 `../../docs/RootDoc-FEArch.md`（按业务域模块化，3.4）。
 > 每个业务域自包含 `server/ types/ ui/` 三层，域内复用就地建子目录，不往外推。
 
 ## 域清单

@@ -3,8 +3,9 @@
 > 文档定位：前端视觉与交互设计规范（reference）
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
-> 关联：组件清单见 [Devdocs-Arch.md](Devdocs-Arch.md)；新页面接入见 [Devdocs-onboarding-guide.md](Devdocs-onboarding-guide.md)
+> 关联：组件清单见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；新页面接入见 [FrontDoc-Onboard.md](FrontDoc-Onboard.md)
 > 最后更新：2026-08-01（同步组件目录重构 + 修复 community 路径重复）
+> 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
 > Stale 信号：组件清单与实际文件不一致 / Checklist 与实际组件不符
@@ -456,11 +457,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ### 10.4 中文文本规则
 
-> 通用中文排版规则已提炼到根仓库 `../../docs/engineering-conventions.md` §九，此处保留项目内引用。
-
-- 汉字之间不留空格
-- 中英文之间留空格
-- 中文与数字之间留空格
+> 通用中文排版规则（汉字间不留空格、中英文间留空格、中文与数字间留空格）已提炼到根仓库 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §九，此处不再重复。
 
 ---
 
@@ -514,7 +511,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/components/layout/navbar.tsx` | 全局导航 |
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
-| `tools/docs/Devdocs-UI-design.md` | 本文档 - 完整设计规范 |
+| `tools/docs/FrontDoc-UID.md` | 本文档 - 完整设计规范 |
 
 ---
 

@@ -1,6 +1,6 @@
 # src/components — 通用 UI 组件库
 
-> 遵循 `tools/docs/GENERAL.md`（Atomic Design 分层 + 目录即模块）。
+> 遵循 `../../docs/RootDoc-FEArch.md`（Atomic Design 分层 + 目录即模块）。
 > 新增组件前先查下方清单；满足「重复 ≥ 2 次 / 职责单一 / 可独立存在 / 可配置化」才新建（GENERAL 2.4）。
 
 ## 分层
