@@ -1,25 +1,16 @@
 /**
- * @file 注册 API — POST /api/auth/register，校验验证码后创建用户与 session
- * 安全：Content-Type + Origin 白名单 + IP 限流（5 次/分钟）+ 验证码一次性 10 分钟有效
+ * @file 注册 API — POST /api/auth/register（BFF 薄转发 → FastAPI）
  */
 import { NextResponse } from 'next/server';
-import { createUser, createSession, verifyCode } from '@/modules/auth/server';
-import { appBus } from '@/shared/events/event-bus';
+import { assertAllowedOrigin } from '@/shared/security/security';
 import {
-  AUTH_COOKIE_NAME,
-  AUTH_COOKIE_MAX_AGE,
-  COOKIE_SECURE,
-} from '@/modules/auth/types/constants';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  jsonError,
-  getClientIp,
-  registerRateLimiter,
-  errorResponse,
-} from '@/shared/security/security';
+  clearAuthCookies,
+  fetchMeWithPair,
+  normalizeError,
+  proxyBackend,
+  setAuthCookies,
+} from '@/shared/backend-client';
 import { registerSchema } from '@/shared/security/schemas';
-import { createRequestLogger } from '@/shared/logger';
 
 export const runtime = 'nodejs';
 
@@ -27,10 +18,8 @@ export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = registerSchema.safeParse(parsed.body);
+  const parsed = await req.json().catch(() => null);
+  const result = registerSchema.safeParse(parsed);
   if (!result.success) {
     return NextResponse.json(
       { error: result.error.issues[0]?.message || '请求格式不正确' },
@@ -39,44 +28,32 @@ export async function POST(req: Request) {
   }
   const { email, password, verificationCode } = result.data;
 
-  const ip = getClientIp(req);
-  const rateKey = `register:${ip}`;
-  if (!registerRateLimiter.check(rateKey)) {
-    const retryAfter = registerRateLimiter.retryAfterSeconds(rateKey);
-    return jsonError('注册请求过于频繁，请稍后再试', 429, 'RATE_LIMITED', {
-      'Retry-After': String(retryAfter),
-    });
-  }
-
-  if (!await verifyCode(email, verificationCode)) {
-    return NextResponse.json({ error: '验证码错误或已过期', code: 'VALIDATION_FAILED' }, { status: 400 });
-  }
-
-  let user;
-  try {
-    user = await createUser(email, password);
-  } catch (err) {
-    return errorResponse(err, {
-      EMAIL_EXISTS: '该邮箱已被注册，请直接登录',
-    });
-  }
-
-  const token = await createSession(user.id, ip, req.headers.get('user-agent') || undefined);
-
-  const log = createRequestLogger(req);
-  try {
-    appBus.emit('user.registered', { userId: user.id });
-  } catch (err) {
-    log.error({ err }, '发送欢迎通知失败');
-  }
-
-  const res = NextResponse.json({ user: { id: user.id, email: user.email } });
-  await res.cookies.set(AUTH_COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: AUTH_COOKIE_MAX_AGE,
-    secure: COOKIE_SECURE,
+  const proxy = await proxyBackend(req, {
+    path: '/auth/register',
+    method: 'POST',
+    jsonBody: { email, password, code: verificationCode },
+    skipAuth: true,
   });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '注册失败');
+    if (err.code === 'EMAIL_EXISTS') {
+      return NextResponse.json({ error: '该邮箱已被注册，请直接登录', code: 'EMAIL_EXISTS' }, { status: 409 });
+    }
+    return NextResponse.json(err, { status: proxy.status });
+  }
+
+  const body = proxy.body as { access_token?: string; refresh_token?: string };
+  const hasPair = Boolean(body.access_token && body.refresh_token);
+  const me = hasPair
+    ? await fetchMeWithPair(body as { access_token: string; refresh_token: string })
+    : null;
+
+  const res = NextResponse.json({ user: me?.user ?? null });
+  if (hasPair) {
+    setAuthCookies(res, body as { access_token: string; refresh_token: string });
+  } else {
+    clearAuthCookies(res);
+  }
   return res;
 }

@@ -1,94 +1,75 @@
 /**
- * @file 管理员资源审核 API — GET/PATCH /api/admin/tools/resource
- *
- * GET: 列出待审核资源（分页）
- * PATCH: 审核资源（通过/拒绝）
+ * @file 管理端资源审核 API — GET/POST /api/admin/tools/resource（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { listPendingResources, reviewResource, type ReviewResourceInput } from '@/modules/tools/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { reviewResourceSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`resource-review-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const url = new URL(req.url);
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
+  const status = url.searchParams.get('status') || undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  try {
-    const result = await listPendingResources(
-      Number.isFinite(page) ? page : 1,
-      Number.isFinite(pageSize) ? pageSize : 20,
-    );
-    return NextResponse.json(result);
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (status) params.set('status', status);
+
+  const proxy = await proxyBackend(req, { path: `/tools/resource?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    resources: items.map((r) => ({
+      id: String(r.id),
+      title: r.title,
+      description: r.description ?? null,
+      url: r.url,
+      resourceType: r.resource_type,
+      techTags: Array.isArray(r.tech_tags) ? r.tech_tags : [],
+      status: r.status,
+      submittedBy: r.submitted_by != null ? String(r.submitted_by) : null,
+      createdAt: r.created_at ?? '',
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
-export async function PATCH(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
+export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`resource-review:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = reviewResourceSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const data = result.data;
-  const requestUrl = new URL(req.url);
-  const resourceId = requestUrl.searchParams.get('id');
-
-  if (!resourceId) {
-    return NextResponse.json({ error: '缺少资源 ID' }, { status: 400 });
-  }
-
-  const input: ReviewResourceInput = {
-    status: data.status,
-    note: data.note ?? undefined,
+  const body = (await req.json().catch(() => ({}))) as {
+    resourceId?: string;
+    action?: string;
+    reviewNote?: string;
   };
-
-  try {
-    const reviewResult = await reviewResource(resourceId, admin.user.id, input, ip, undefined);
-    if (!reviewResult.ok) {
-      return NextResponse.json({ error: reviewResult.error }, { status: 400 });
-    }
-    return NextResponse.json({ resource: reviewResult.resource });
-  } catch (err) {
-    return errorResponse(err);
+  if (!body.resourceId || !body.action) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
+
+  const proxy = await proxyBackend(req, {
+    path: `/tools/admin/resource`,
+    method: 'POST',
+    jsonBody: {
+      resource_id: Number(body.resourceId),
+      action: body.action,
+      review_note: body.reviewNote ?? null,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

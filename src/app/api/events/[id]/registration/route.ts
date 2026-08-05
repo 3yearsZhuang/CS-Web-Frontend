@@ -1,14 +1,9 @@
 /**
- * @file 活动报名状态 API — GET /api/events/[id]/registration
- *
- * 查询当前登录用户在某活动中的报名状态。
- * 返回是否已报名以及报名记录详情。
+ * @file 我的报名状态 API — GET/DELETE /api/events/[id]/registration（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getRegistration } from '@/modules/events/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -16,22 +11,41 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/events/${encodeURIComponent(id)}/registration`,
+  });
 
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ registration: null });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ registration: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
 
   const { id } = await params;
-  const registration = await getRegistration(session.user.id, id);
-  const registered = registration?.status === 'registered';
-
-  return NextResponse.json({
-    registered,
-    registration,
+  const proxy = await proxyBackend(req, {
+    path: `/events/${encodeURIComponent(id)}/registration`,
+    method: 'DELETE',
   });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '取消报名失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

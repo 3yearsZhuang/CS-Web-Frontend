@@ -1,5 +1,62 @@
+# ============ CS-Web-Frontend + CS-Web-Backend 一键部署 ============
+# 使用：
+#   1. 目录布局：CS-Web-Frontend 与 CS-Web-Backend 同级
+#   2. cp .env.example .env 并填写（前端变量）
+#   3. cp ../CS-Web-Backend/.env.docker.example ../CS-Web-Backend/.env 并填写（后端变量）
+#   4. docker compose up -d --build
+#   5. Caddy 自动申请 HTTPS（域名在 Caddyfile 配置）；无域名可去掉 caddy 服务
+#
+# 架构：前端（BFF）通过内部网络把 /api 转发到 backend:8000，
+#       PostgreSQL 数据持久化在 pgdata 卷，公网只暴露 Caddy（80/443）。
+
 services:
-  # ============ 应用容器 ============
+  # ============ 后端 FastAPI（BFF 转发目标）============
+  db:
+    image: postgres:16-alpine
+    container_name: cs-backend-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-domefff}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?请在 ../CS-Web-Backend/.env 中设置 DATABASE_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-domefff}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - cs-net
+
+  backend:
+    build:
+      context: ../../CS-Web-Backend
+    container_name: cs-backend
+    restart: unless-stopped
+    env_file: ../../CS-Web-Backend/.env
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: ${DATABASE_NAME:-domefff}
+      DATABASE_USER: ${DATABASE_USER:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DB_AUTO_CREATE_DATABASE: "true"
+      DB_AUTO_MIGRATE: "true"
+      SECRET_KEY: ${SECRET_KEY}
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY}
+      PASSWORD_RESET_DEFAULT: ${PASSWORD_RESET_DEFAULT:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:2333}
+      REQUIRE_REDIS_FOR_SECURITY: "false"
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cs-net
+
+  # ============ 前端 Next.js（BFF）============
   cs-website:
     build:
       context: ../..
@@ -9,23 +66,23 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=2333
+      # BFF 转发目标：容器内直连后端，无需暴露公网
+      - BACKEND_URL=http://backend:8000
       - AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
       - SQLITE_DB_PATH=/app/data/app.db
       - TRUST_PROXY=true
     volumes:
-      # 持久化 SQLite 数据库 + 用户上传头像
+      # 持久化：用户上传文件等本地数据
       - ../data:/app/data
-      # Litestream 备份目录（本地磁盘备份）
       - ../backups:/app/backups
     networks:
       - cs-net
-    # 不直接暴露端口，由 Caddy 反向代理
-    expose:
-      - "2333"
+    depends_on:
+      - backend
 
-  # ============ Caddy 反向代理（自动 HTTPS） ============
+  # ============ Caddy 反向代理（自动 HTTPS）============
   caddy:
     image: caddy:2-alpine
     container_name: cs-caddy
@@ -43,6 +100,7 @@ services:
       - cs-website
 
 volumes:
+  pgdata:
   caddy_data:
   caddy_config:
 

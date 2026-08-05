@@ -1,27 +1,9 @@
 /**
- * @file 管理员题目管理 API — PUT/DELETE /api/admin/tools/exam/:id/questions/:qid
- *
- * PUT: 更新题目（含选项全量替换）
- * DELETE: 删除题目
- *
- * 安全控制：
- *   - 必须管理员登录（requireAdmin 守卫）
- *   - Origin 白名单
- *   - JSON Content-Type（PUT）
- *   - 速率限制（adminActionsLimiter）
+ * @file 考试题目操作 API — PUT/DELETE /api/tools/admin/exam/[id]/questions/[qid]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { updateQuestion, deleteQuestion, type QuestionInput } from '@/modules/tools/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { updateQuestionSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -29,59 +11,55 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string; qid: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'exam');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`exam-question-put:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const { id, qid } = await params;
+
+  const proxy = await proxyBackend(req, {
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
+    method: 'PUT',
+    jsonBody: {
+      question_type: body.questionType,
+      content: body.content,
+      options: Array.isArray(body.options) ? body.options : undefined,
+      score: body.score,
+      order_index: body.orderIndex,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '更新失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { qid } = await params;
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = updateQuestionSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const input: Partial<QuestionInput> = result.data;
-
-  try {
-    const question = await updateQuestion(qid, input);
-    return NextResponse.json({ question });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ question: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string; qid: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'exam');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`exam-question-delete:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const { id, qid } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/tools/admin/exam/${encodeURIComponent(id)}/questions/${encodeURIComponent(qid)}`,
+    method: 'DELETE',
+  });
 
-  const { qid } = await params;
-  try {
-    await deleteQuestion(qid);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

@@ -1,79 +1,65 @@
 /**
- * @file 管理员论坛分类详情 API
+ * @file 管理端分类操作 API — PUT/DELETE /api/admin/community/forum/categories/[id]（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { updateCategory, deleteCategory, type CategoryInput } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { updateCategorySchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toForumCategory } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-cat-put:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const { id } = await params;
+
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/categories/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: {
+      slug: body.slug,
+      name: body.name,
+      description: body.description,
+      icon: body.icon,
+      sort_order: body.sortOrder,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '保存失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = updateCategorySchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
-  }
-
-  const input: Partial<CategoryInput> = result.data;
-
-  const { id } = await context.params;
-  try {
-    const category = await updateCategory(id, input, admin.user.id);
-    return NextResponse.json({ category });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ category: toForumCategory(proxy.body) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-cat-delete:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/categories/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
 
-  const { id } = await context.params;
-  try {
-    await deleteCategory(admin.user.id, id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

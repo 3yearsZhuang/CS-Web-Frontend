@@ -1,38 +1,21 @@
 /**
- * @file 当前用户已报名活动列表 API — GET /api/events/me/registered
- *
- * 返回当前登录用户已报名且状态为 registered 的活动列表，
- * 按报名时间倒序排列。
+ * @file 我的报名列表 API — GET /api/events/me/registered（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getUserRegisteredEvents } from '@/modules/events/server';
-
-interface RegisteredEventView {
-  id: string;
-  title: string;
-  date: string | null;
-  location: string | null;
-  coverImage: string | null;
-  status: string;
-  registeredCount: number;
-}
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies, toEventItem } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const proxy = await proxyBackend(req, { path: '/events/me/registered' });
 
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ events: [] });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const events = await getUserRegisteredEvents(session.user.id);
-  return NextResponse.json({ events });
+  const list = Array.isArray(proxy.body) ? proxy.body : [];
+  const res = NextResponse.json({ events: list.map(toEventItem) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

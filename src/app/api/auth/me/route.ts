@@ -1,26 +1,35 @@
 /**
- * @file 当前用户 API 路由 — GET /api/auth/me
- *
- * 从 cookie 读取 session，返回用户信息或 401。
- * 返回完整 SafeUser（含 displayName, avatarUrl, avatarType）供前端展示。
+ * @file 当前用户 API — GET /api/auth/me（BFF 薄转发 → FastAPI）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import {
+  clearAuthCookies,
+  proxyBackend,
+  setAuthCookies,
+  toSafeUserFromBackend,
+  type BackendUser,
+} from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+  const proxy = await proxyBackend(req, { path: '/auth/me' });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
 
-  const data = await getSession(token);
-  if (!data) {
-    return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+  const body = proxy.body as { user?: BackendUser; roles?: string[] } | null;
+  if (!body?.user) {
+    const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
 
-  return NextResponse.json({ user: data.user });
+  const user = toSafeUserFromBackend(body.user, body.roles);
+  const res = NextResponse.json({ user });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

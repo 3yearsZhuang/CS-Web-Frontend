@@ -1,27 +1,21 @@
 /**
- * @file 未读通知数量 API — GET /api/notifications/unread-count，供导航栏铃铛使用
+ * @file 未读数 API — GET /api/notifications/unread-count（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getUnreadCount } from '@/modules/notification/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  const proxy = await proxyBackend(req, { path: '/notifications/unread-count' });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ count: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const userId = session.user.id;
-  const unreadCount = await getUnreadCount(userId);
-
-  return NextResponse.json({ unreadCount });
+  const count = (proxy.body as { unread_count?: number })?.unread_count ?? 0;
+  const res = NextResponse.json({ count });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

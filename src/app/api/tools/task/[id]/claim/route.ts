@@ -1,61 +1,32 @@
 /**
- * @file 任务认领 API — POST / DELETE /api/tools/task/[id]/claim
+ * @file 任务认领 API — POST /api/tools/task/[id]/claim（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { claimTask, cancelClaimByTask } from '@/modules/tools/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue, assertAllowedOrigin, errorResponse } from '@/shared/security/security';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
 
   const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/tools/task/${encodeURIComponent(id)}/claim`,
+    method: 'POST',
+  });
 
-  try {
-    let body: { note?: string } = {};
-    try {
-      body = await req.json();
-    } catch { /* no body */ }
-
-    const result = await claimTask(session.user.id, id, body.note);
-    return NextResponse.json({ claim: result });
-  } catch (e: unknown) {
-    return errorResponse(e);
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '认领失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-}
-
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const { id } = await params;
-
-  try {
-    await cancelClaimByTask(session.user.id, id);
-    return NextResponse.json({ ok: true });
-  } catch (e: unknown) {
-    return errorResponse(e);
-  }
+  const res = NextResponse.json({ claim: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

@@ -1,28 +1,9 @@
 /**
- * @file 管理员活动 API — PUT/DELETE /api/admin/events/:id
- *
- * PUT: 更新活动（全量或部分字段）
- * DELETE: 删除活动
- *
- * 安全控制：
- *   - 必须管理员登录（requireAdmin 守卫）
- *   - Origin 白名单（PUT + DELETE，DELETE 为状态变更亦需校验）
- *   - JSON Content-Type（PUT）
- *   - 速率限制（adminActionsLimiter）
- *   - 审计日志（在 events.ts 中完成）
+ * @file 管理端活动详情 API — PUT/DELETE /api/admin/events/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { updateEvent, deleteEvent, type EventInput } from '@/modules/events/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { updateEventSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toEventItem } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -30,71 +11,64 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`events-put:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const { id } = await params;
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
 
-  const result = updateEventSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  const proxy = await proxyBackend(req, {
+    path: `/admin/events/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: {
+      title: body.title,
+      month: body.month,
+      date: body.date,
+      description: body.description,
+      status: body.status,
+      year: body.year,
+      topics: Array.isArray(body.topics) ? body.topics : undefined,
+      tags: Array.isArray(body.tags) ? body.tags : undefined,
+      is_pinned: body.isPinned,
+      capacity: body.capacity,
+      content_markdown: body.contentMarkdown,
+      registration_fields: Array.isArray(body.registrationFields)
+        ? body.registrationFields
+        : undefined,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '更新失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const input: Partial<EventInput> = {};
-  const data = result.data;
-  if (data.month !== undefined) input.month = data.month;
-  if (data.date !== undefined) input.date = data.date;
-  if (data.title !== undefined) input.title = data.title;
-  if (data.description !== undefined) input.description = data.description ?? null;
-  if (data.status !== undefined) input.status = data.status as EventInput['status'];
-  if (data.year !== undefined) input.year = data.year;
-  if (data.topics !== undefined) input.topics = data.topics;
-  if (data.tags !== undefined) input.tags = data.tags;
-  if (data.capacity !== undefined) input.capacity = data.capacity;
-  if (data.contentMarkdown !== undefined) input.contentMarkdown = data.contentMarkdown ?? null;
-  if (data.registrationFields !== undefined) input.registrationFields = data.registrationFields as EventInput['registrationFields'];
-
-  try {
-    const event = await updateEvent(id, input, admin.user.id);
-    return NextResponse.json({ event });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ event: toEventItem(proxy.body) });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`events-delete:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const { id } = await params;
-  try {
-    await deleteEvent(admin.user.id, id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/admin/events/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

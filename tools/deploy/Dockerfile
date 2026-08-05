@@ -1,4 +1,4 @@
-# ============ Stage 1: Builder ============
+﻿# ============ Stage 1: Builder ============
 FROM node:20-slim AS builder
 
 # better-sqlite3 预编译包不可用时需要编译，安装构建工具
@@ -51,7 +51,7 @@ RUN pnpm install --prod --frozen-lockfile && \
     pnpm store prune
 
 # 从 builder 复制构建产物
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/.build ./.build
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./

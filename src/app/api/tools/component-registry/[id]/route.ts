@@ -1,84 +1,83 @@
 /**
- * @file 组件注册表 [id] API — PATCH 更新 / DELETE 删除
- *
- * 仅管理员可调用。
+ * @file 组件详情 API — GET/PUT/DELETE /api/tools/component-registry/[id]（BFF 薄转发）
  */
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { updateComponent, deleteComponent } from '@/modules/tools/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  validateBody,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { z } from 'zod';
-
-const updateSchema = z.object({
-  name: z.string().min(1).max(64).optional(),
-  slug: z
-    .string()
-    .min(2)
-    .max(64)
-    .regex(/^[a-z][a-z0-9-]*$/)
-    .optional(),
-  category: z.string().min(1).max(32).optional(),
-  description: z.string().max(500).optional(),
-  migrationStatus: z.enum(['legacy', 'migrating', 'done']).optional(),
-});
+import { NextResponse } from 'next/server';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+  });
 
-  const parsed = await validateBody(req, updateSchema);
-  if (!parsed.ok) return parsed.response;
-
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    const retryAfter = adminActionsLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
+  if (proxy.status !== 200) {
+    return NextResponse.json({ component: null });
   }
-
-  try {
-    const item = await updateComponent(id, parsed.data);
-    return NextResponse.json({ item });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ component: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    return jsonError('请求过于频繁，请稍后再试', 429);
-  }
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const { id } = await params;
 
-  try {
-    await deleteComponent(id);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    method: 'PUT',
+    jsonBody: {
+      name: body.name,
+      slug: body.slug,
+      category: body.category,
+      description: body.description,
+      sort_order: body.sortOrder,
+      migration_status: body.migrationStatus,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '更新失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ component: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
+
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    method: 'DELETE',
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '删除失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

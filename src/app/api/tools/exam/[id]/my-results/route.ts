@@ -1,17 +1,8 @@
 /**
- * @file 用户成绩查询 API — GET /api/tools/exam/:id/my-results
- *
- * GET: 获取当前用户在该考试中的答题记录
- *
- * 安全控制：
- *   - 必须登录
+ * @file 我的考试成绩 API — GET /api/tools/exam/[id]/my-results（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getUserAttempts } from '@/modules/tools/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -19,23 +10,17 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
   const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/tools/exam/${encodeURIComponent(id)}/my-results`,
+  });
 
-  const log = createRequestLogger(req);
-  try {
-    const attempts = await getUserAttempts(session.user.id, id);
-    return NextResponse.json({ attempts });
-  } catch (err) {
-    log.error({ err }, '获取成绩失败');
-    return NextResponse.json({ error: '获取成绩失败' }, { status: 500 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ results: [] });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ results: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

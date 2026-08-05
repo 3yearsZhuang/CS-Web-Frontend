@@ -1,25 +1,36 @@
 /**
- * @file 积分详情 API — GET /api/tools/points
+ * @file 我的积分 API — GET /api/tools/points（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession } from '@/modules/auth/server';
-import { getUserPointsProfile } from '@/modules/tools/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
+  const proxy = await proxyBackend(req, { path: '/tools/points' });
 
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ balance: 0, transactions: [] }, { status: 401 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const profile = await getUserPointsProfile(session.user.id);
-  return NextResponse.json({ profile });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.transactions) ? body.transactions : []) as Array<
+    Record<string, unknown>
+  >;
+  const res = NextResponse.json({
+    balance: body.balance ?? 0,
+    level: body.level ?? 1,
+    levelTitle: body.level_title ?? '新手学徒',
+    transactions: items.map((t) => ({
+      id: String(t.id),
+      amount: t.amount ?? 0,
+      reason: t.reason ?? '',
+      sourceType: t.source_type ?? null,
+      balanceAfter: t.balance_after ?? 0,
+      createdAt: t.created_at ?? '',
+    })),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

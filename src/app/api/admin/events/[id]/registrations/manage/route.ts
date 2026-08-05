@@ -1,19 +1,9 @@
 /**
- * @file 管理员活动报名管理 API
+ * @file 报名管理 API — POST /api/admin/events/[id]/registrations/manage（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { adminAddRegistration, adminUpdateRegistrationStatus } from '@/modules/events/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-  getClientIp,
-} from '@/shared/security/security';
-import { manageRegistrationSchema, updateRegistrationSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -21,68 +11,31 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`registrations-manage:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as {
+    action?: string;
+    registrationId?: string;
+  };
+  const { id } = await params;
+  if (!body.action || !body.registrationId) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const { id: eventId } = await params;
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/events/${encodeURIComponent(id)}/registrations/${encodeURIComponent(body.registrationId)}/manage`,
+    method: 'POST',
+    jsonBody: { action: body.action },
+  });
 
-  const result = manageRegistrationSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const body = parsed.body as { formData?: Record<string, string> };
-  try {
-    const res = await adminAddRegistration(admin.user.id, result.data.userId, eventId, body.formData);
-    return NextResponse.json({ ok: true, registration: res.registration }, { status: 201 });
-  } catch (err) {
-    return errorResponse(err, {
-      NOT_FOUND: '活动不存在',
-      ALREADY_REGISTERED: '该用户已报名此活动',
-      FULL: '活动名额已满',
-    });
-  }
-}
-
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`registrations-manage:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = updateRegistrationSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
-  }
-
-  try {
-    await adminUpdateRegistrationStatus(admin.user.id, result.data.registrationId, result.data.status);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err, {
-      NOT_FOUND: '报名记录不存在',
-    });
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

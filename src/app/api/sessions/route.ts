@@ -1,77 +1,58 @@
 /**
- * @file 会话管理 API — GET/DELETE /api/sessions，列出与远程登出活跃会话
+ * @file 会话管理 API — GET/DELETE /api/sessions（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getSession, listUserSessions, deleteSessionById } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getCookieValue,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  profileUpdateLimiter,
-} from '@/shared/security/security';
-import { z } from 'zod';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-const deleteSessionSchema = z.object({
-  sessionId: z.string().min(1, 'sessionId 不能为空'),
-});
-
-async function getUserIdFromRequest(req: Request): Promise<string | null> {
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) return null;
-  const session = await getSession(token);
-  if (!session) return null;
-  return session.user.id;
-}
-
 export async function GET(req: Request) {
-  const userId = await getUserIdFromRequest(req);
-  if (!userId) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  const proxy = await proxyBackend(req, { path: '/auth/sessions' });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
 
-  const sessions = await listUserSessions(userId);
-  return NextResponse.json({ sessions });
+  const sessions = ((proxy.body as { sessions?: Array<Record<string, unknown>> }).sessions ?? []).map(
+    (s) => ({
+      id: String(s.id),
+      userAgent: s.user_agent ?? null,
+      ipAddress: s.ip_address ?? null,
+      isCurrent: s.is_current === true,
+      createdAt: s.created_at ?? '',
+      lastSeenAt: s.last_seen_at ?? null,
+      expiresAt: s.expires_at ?? null,
+    }),
+  );
+  const res = NextResponse.json({ sessions });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
 
 export async function DELETE(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const userId = await getUserIdFromRequest(req);
-  if (!userId) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
+  const body = (await req.json().catch(() => ({}))) as { sessionId?: string };
+  if (!body.sessionId) {
+    return NextResponse.json({ error: '缺少会话 ID', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const ip = getClientIp(req);
-  const rateKey = `session-delete:${ip}`;
-  if (!profileUpdateLimiter.check(rateKey)) {
-    const retryAfter = profileUpdateLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
-  }
+  const proxy = await proxyBackend(req, {
+    path: `/auth/sessions/${encodeURIComponent(body.sessionId)}`,
+    method: 'DELETE',
+  });
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = deleteSessionSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: result.error.issues[0]?.message || '请求格式不正确' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  try {
-    await deleteSessionById(userId, result.data.sessionId);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

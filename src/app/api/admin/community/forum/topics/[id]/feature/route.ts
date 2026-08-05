@@ -1,54 +1,32 @@
 /**
- * @file 管理员论坛主题精华 API
+ * @file 内容加精 API — POST /api/admin/community/forum/topics/[id]/feature（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { setTopicFeatured } from '@/modules/community/server';
-import { requireModuleAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { featureTopicSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(
   req: Request,
-  context: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireModuleAdmin(req, 'forum');
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`forum-topic-feature:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
+  const { id } = await params;
+  const proxy = await proxyBackend(req, {
+    path: `/admin/community/forum/topics/${encodeURIComponent(id)}/feature`,
+    method: 'POST',
+  });
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = featureTopicSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return NextResponse.json(
-      { error: '缺少必填字段：featured (boolean)' },
-      { status: 400 },
-    );
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-  const { featured } = result.data;
-
-  const { id } = await context.params;
-  try {
-    await setTopicFeatured(admin.user.id, id, featured);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
-  }
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

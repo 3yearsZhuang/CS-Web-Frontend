@@ -1,14 +1,10 @@
 /**
- * @file 入社申请 API 路由 — POST /api/join
- *
- * POST: 提交入社申请（游客可提交，登录用户自动关联 userId）
+ * @file 入社申请 API — POST /api/join（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { submitJoinApplication } from '@/modules/join/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { parseJsonBody, getCookieValue, getClientIp, jsonError } from '@/shared/security/security';
 import { z } from 'zod';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { normalizeError, proxyBackend, setAuthCookies, toJoinApplication } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -23,17 +19,11 @@ const submitSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  // 可选登录：有 session 则关联 userId，无 session 则游客提交（userId = null）
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  const session = token ? await getSession(token) : null;
-  const userId = session?.user.id ?? null;
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
-
-  const result = submitSchema.safeParse(parsed.body);
+  const parsed = await req.json().catch(() => null);
+  const result = submitSchema.safeParse(parsed);
   if (!result.success) {
     return NextResponse.json(
       { error: result.error.issues[0]?.message || '请求格式不正确' },
@@ -41,13 +31,27 @@ export async function POST(req: Request) {
     );
   }
 
-  try {
-    const application = await submitJoinApplication({ ...result.data, userId: userId ?? undefined });
-    return NextResponse.json({ application }, { status: 201 });
-  } catch (err) {
-    if (err instanceof Error && err.name === 'VALIDATION_ERROR') {
-      return NextResponse.json({ error: err.message }, { status: 400 });
-    }
-    return jsonError('提交失败，请稍后再试', 500);
+  const { studentId, applicantName, major, techTags, reason, contactQq, contactPhone } = result.data;
+
+  const proxy = await proxyBackend(req, {
+    path: '/join',
+    method: 'POST',
+    jsonBody: {
+      student_id: studentId,
+      applicant_name: applicantName,
+      major,
+      tech_tags: techTags,
+      reason,
+      contact_qq: contactQq,
+      contact_phone: contactPhone,
+    },
+  });
+
+  if (proxy.status !== 200 && proxy.status !== 201) {
+    const err = normalizeError(proxy.body, '提交失败');
+    return NextResponse.json(err, { status: proxy.status });
   }
+  const res = NextResponse.json({ application: toJoinApplication(proxy.body) }, { status: 201 });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

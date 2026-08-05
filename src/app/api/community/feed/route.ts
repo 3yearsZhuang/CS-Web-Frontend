@@ -1,76 +1,39 @@
 /**
- * @file 社区聚合 API 路由 — GET /api/community/feed
- *
- * 提供跨模块的统一 Feed 接口，混合 forum topics + blog posts + members。
- *
- * 查询参数：
- *   - kind    — 类型筛选：topic | post | member（可选，默认全部）
- *   - tag     — 标签筛选（跨类型匹配）
- *   - search  — 关键词搜索（跨类型匹配标题/摘要/正文）
- *   - page    — 页码（默认 1）
- *   - pageSize — 每页条数（默认 20，最大 50）
- *
- * 响应：
- *   {
- *     items: FeedItem[],   // 判别联合，前端按 kind 渲染
- *     total, page, pageSize, totalPages
- *   }
+ * @file Feed API — GET /api/community/feed（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getFeed, getFeedStats } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue } from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const log = createRequestLogger(req);
-  try {
-    const url = new URL(req.url);
-    const { searchParams } = url;
+  const url = new URL(req.url);
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
+  const tag = url.searchParams.get('tag') || undefined;
+  const type = url.searchParams.get('type') || undefined;
+  const seriesId = url.searchParams.get('seriesId') || undefined;
 
-    // stats 快捷查询
-    if (searchParams.get('stats') === '1') {
-      return NextResponse.json(await getFeedStats());
-    }
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (tag) params.set('tag', tag);
+  if (type) params.set('type', type);
+  if (seriesId) params.set('series_id', seriesId);
 
-    const kind = searchParams.get('kind') as 'topic' | 'post' | 'member' | null;
-    if (kind && !['topic', 'post', 'member'].includes(kind)) {
-      return NextResponse.json({ error: 'kind 参数无效' }, { status: 400 });
-    }
-
-    const feedParam = searchParams.get('feed');
-    const feed = feedParam === 'following' ? 'following' : 'all';
-
-    // following 维度需要登录
-    let currentUserId: string | undefined;
-    if (feed === 'following') {
-      const token = getCookieValue(req, AUTH_COOKIE_NAME);
-      const session = token ? await getSession(token) : null;
-      if (!session) {
-        return NextResponse.json({ error: '未登录' }, { status: 401 });
-      }
-      currentUserId = session.user.id;
-    }
-
-    const result = await getFeed({
-      kind: kind ?? undefined,
-      tag: searchParams.get('tag') ?? undefined,
-      search: searchParams.get('search') ?? undefined,
-      page: searchParams.get('page') ? Number(searchParams.get('page')) : undefined,
-      pageSize: searchParams.get('pageSize')
-        ? Number(searchParams.get('pageSize'))
-        : undefined,
-      excludeMembers: searchParams.get('exclude') === 'member',
-      feed,
-      currentUserId,
-    });
-
-    return NextResponse.json(result);
-  } catch (err) {
-    log.error({ err }, 'Feed 查询失败');
-    return NextResponse.json({ error: '获取 Feed 失败' }, { status: 500 });
-  }
+  const proxy = await proxyBackend(req, { path: `/community/feed?${params.toString()}` });
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    feed: items.map((item) => ({
+      ...toCommunityPost(item),
+      source: item.source ?? null,
+      categoryName: item.category_name ?? null,
+      authorName: item.author_name ?? null,
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

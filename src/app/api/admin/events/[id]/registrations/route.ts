@@ -1,11 +1,8 @@
 /**
- * @file 管理员活动报名列表 API
+ * @file 活动报名列表 API — GET /api/admin/events/[id]/registrations（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listRegistrations } from '@/modules/events/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { assertAllowedOrigin, getClientIp, jsonError, errorResponse, adminActionsLimiter } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -13,23 +10,37 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`event-registrations:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const { id } = await params;
+  const url = new URL(req.url);
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 50, 100);
 
-  try {
-    const registrations = await listRegistrations(id);
-    return NextResponse.json({ registrations });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/admin/events/${encodeURIComponent(id)}/registrations?page=${page}&page_size=${pageSize}`,
+  });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ registrations: [], total: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    registrations: items.map((r) => ({
+      id: String(r.id),
+      userId: r.user_id != null ? String(r.user_id) : null,
+      displayName: r.display_name ?? null,
+      email: r.email ?? null,
+      status: r.status,
+      formData: r.form_data ?? null,
+      registeredAt: r.registered_at ?? '',
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

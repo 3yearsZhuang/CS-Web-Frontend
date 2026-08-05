@@ -1,59 +1,44 @@
 /**
- * @file 关注/粉丝列表 API
- *
- * GET /api/community/forum/follows?type=following|followers&page=&page_size=
- * 返回当前登录用户的关注列表或粉丝列表（含互相关注状态）。
+ * @file 关注/粉丝列表 API — GET /api/community/forum/follows（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listFollowing, listFollowers } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  getCookieValue,
-  forumLikeLimiter,
-  jsonError,
-} from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!forumLikeLimiter.check(`forum-follows:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
   const url = new URL(req.url);
   const type = url.searchParams.get('type') ?? 'following';
-  const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : 1;
-  const pageSize = url.searchParams.get('page_size')
-    ? Number(url.searchParams.get('page_size'))
-    : undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('page_size')) || 20, 50);
 
-  const log = createRequestLogger(req);
-  try {
-    const result =
-      type === 'followers'
-        ? await listFollowers(session.user.id, { page, pageSize, currentUserId: session.user.id })
-        : await listFollowing(session.user.id, { page, pageSize, currentUserId: session.user.id });
-    return NextResponse.json(result);
-  } catch (err) {
-    log.error({ err }, '获取关注列表失败');
-    return NextResponse.json({ error: '获取关注列表失败' }, { status: 500 });
+  const proxy = await proxyBackend(req, {
+    path: `/community/follows?type=${type}&page=${page}&page_size=${pageSize}`,
+  });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ items: [], total: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    users: items.map((u) => ({
+      id: String(u.id),
+      displayName: u.display_name ?? null,
+      avatarUrl: u.avatar_url ?? null,
+      avatarType: u.avatar_type ?? 'initial',
+      bio: u.bio ?? null,
+      techTags: Array.isArray(u.tech_tags) ? u.tech_tags : [],
+      followingCount: u.following_count ?? 0,
+      followerCount: u.follower_count ?? 0,
+      isFollowing: u.is_following ?? false,
+    })),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

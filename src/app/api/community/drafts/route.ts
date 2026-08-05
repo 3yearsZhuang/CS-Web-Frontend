@@ -1,49 +1,34 @@
 /**
- * @file 我的草稿箱 API — GET /api/community/drafts
- *
- * 返回当前登录用户的草稿文章（status = 'draft'），仅本人可见。
+ * @file 我的草稿 API — GET /api/community/drafts（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { getUserDrafts } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import { getCookieValue, assertAllowedOrigin, getClientIp, forumPostLimiter, jsonError } from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { clearAuthCookies, proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  if (!forumPostLimiter.check(`community-drafts:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
   const url = new URL(req.url);
-  const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : 1;
-  const pageSize = url.searchParams.get('pageSize')
-    ? Number(url.searchParams.get('pageSize'))
-    : undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  const log = createRequestLogger(req);
-  try {
-    const result = await getUserDrafts(session.user.id, { page, pageSize });
-    const totalPages = result.pageSize > 0 ? Math.ceil(result.total / result.pageSize) : 1;
-    return NextResponse.json({ ...result, totalPages });
-  } catch (err) {
-    log.error({ err }, '获取草稿失败');
-    return NextResponse.json({ error: '获取草稿失败' }, { status: 500 });
+  const proxy = await proxyBackend(req, {
+    path: `/community/drafts?page=${page}&page_size=${pageSize}`,
+  });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ drafts: [], total: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    drafts: items.map(toCommunityPost),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

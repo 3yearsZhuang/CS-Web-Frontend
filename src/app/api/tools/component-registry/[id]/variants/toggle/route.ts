@@ -1,50 +1,38 @@
 /**
- * @file 组件注册表变体切换 API — POST toggle
- *
- * 切换指定变体的启用/禁用状态。仅管理员可调用。
+ * @file 组件变体开关 API — POST /api/tools/component-registry/[id]/variants/toggle（BFF 薄转发）
  */
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/modules/admin/server';
-import { toggleVariant } from '@/modules/tools/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  errorResponse,
-  validateBody,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import { z } from 'zod';
-
-const toggleSchema = z.object({
-  variantId: z.string().min(1, 'variantId 不能为空'),
-  enabled: z.boolean(),
-});
+import { NextResponse } from 'next/server';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-
-  const parsed = await validateBody(req, toggleSchema);
-  if (!parsed.ok) return parsed.response;
-
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    return jsonError('请求过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as { variantId?: string; enabled?: boolean };
+  const { id } = await params;
+  if (!body.variantId) {
+    return NextResponse.json({ error: '缺少变体 ID', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  try {
-    await toggleVariant(id, parsed.data.variantId, parsed.data.enabled);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    return errorResponse(err);
+  const proxy = await proxyBackend(req, {
+    path: `/tools/component-registry/${encodeURIComponent(id)}/variants/${encodeURIComponent(body.variantId)}/toggle`,
+    method: 'POST',
+    jsonBody: { enabled: body.enabled ?? true },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const res = NextResponse.json({ component: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

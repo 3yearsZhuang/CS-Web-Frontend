@@ -1,52 +1,34 @@
 /**
- * @file 论坛收藏列表 API
+ * @file 收藏列表 API — GET /api/community/forum/favorites（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listUserFavorites } from '@/modules/community/server';
-import { getSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME } from '@/modules/auth/types/constants';
-import {
-  assertAllowedOrigin,
-  getCookieValue,
-  getClientIp,
-  forumLikeLimiter,
-  jsonError,
-} from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { clearAuthCookies, proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
-  if (!token) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-  const session = await getSession(token);
-  if (!session) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
-  const ip = getClientIp(req);
-  if (!forumLikeLimiter.check(`forum-favorites-list:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
-  }
-
   const url = new URL(req.url);
-  const page = url.searchParams.get('page') ? Number(url.searchParams.get('page')) : 1;
-  const pageSize = url.searchParams.get('page_size')
-    ? Number(url.searchParams.get('page_size'))
-    : undefined;
+  const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
-  const log = createRequestLogger(req);
-  try {
-    const result = await listUserFavorites(session.user.id, { page, pageSize });
-    return NextResponse.json(result);
-  } catch (err) {
-    log.error({ err }, '获取收藏列表失败');
-    return NextResponse.json({ error: '获取收藏列表失败' }, { status: 500 });
+  const proxy = await proxyBackend(req, {
+    path: `/community/favorites?page=${page}&page_size=${pageSize}`,
+  });
+
+  if (proxy.status !== 200) {
+    const res = NextResponse.json({ posts: [], total: 0 });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
+  const body = (proxy.body ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  const res = NextResponse.json({
+    posts: items.map(toCommunityPost),
+    total: Number(body.total ?? 0),
+    page,
+    pageSize,
+    totalPages: Number(body.total_pages ?? 1),
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

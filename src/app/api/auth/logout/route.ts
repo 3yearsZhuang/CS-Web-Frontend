@@ -1,12 +1,10 @@
 /**
- * @file 登出 API — POST /api/auth/logout，删除 session 并清除 cookie
- * 不校验 Content-Type：body 为空且 Origin 白名单已提供 CSRF 防御
+ * @file 登出 API — POST /api/auth/logout（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { deleteSession } from '@/modules/auth/server';
-import { AUTH_COOKIE_NAME, COOKIE_SECURE } from '@/modules/auth/types/constants';
-import { assertAllowedOrigin, getCookieValue } from '@/shared/security/security';
-import { createRequestLogger } from '@/shared/logger';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, proxyBackend, REFRESH_COOKIE } from '@/shared/backend-client';
+import { getCookieValue } from '@/shared/security/security';
 
 export const runtime = 'nodejs';
 
@@ -14,24 +12,15 @@ export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const token = getCookieValue(req, AUTH_COOKIE_NAME);
+  const refreshToken = getCookieValue(req, REFRESH_COOKIE);
+  await proxyBackend(req, {
+    path: '/auth/logout',
+    method: 'POST',
+    jsonBody: refreshToken ? { refresh_token: refreshToken } : undefined,
+    skipAuth: true,
+  }).catch(() => null);
 
-  if (token) {
-    const log = createRequestLogger(req);
-    try {
-      await deleteSession(token);
-    } catch (err) {
-      log.error({ err }, '登出时删除 session 失败');
-    }
-  }
-
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(AUTH_COOKIE_NAME, '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 0,
-    secure: COOKIE_SECURE,
-  });
+  const res = NextResponse.json({ message: '已登出' });
+  clearAuthCookies(res);
   return res;
 }

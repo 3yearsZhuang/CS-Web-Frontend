@@ -1,57 +1,26 @@
 /**
- * @file 管理员用户列表 API
+ * @file 管理员用户列表 API — GET /api/admin/users（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { listUsers, requireAdmin } from '@/modules/admin/server';
-import {
-  assertAllowedOrigin,
-  getClientIp,
-  jsonError,
-  adminActionsLimiter,
-} from '@/shared/security/security';
-import type { UserRole } from '@/shared/types';
+import { proxyBackend, setAuthCookies, toAdminUserList } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const ip = getClientIp(req);
-  const rateKey = `admin-action:${ip}`;
-  if (!adminActionsLimiter.check(rateKey)) {
-    const retryAfter = adminActionsLimiter.retryAfterSeconds(rateKey);
-    return jsonError('请求过于频繁，请稍后再试', 429, {
-      'Retry-After': String(retryAfter),
-    });
-  }
-
   const url = new URL(req.url);
-  const search = url.searchParams.get('search') || undefined;
-
-  const roleParam = url.searchParams.get('role') || 'all';
-  let role: UserRole | 'all' = 'all';
-  if (roleParam === 'user' || roleParam === 'admin') {
-    role = roleParam;
-  } else if (roleParam !== 'all') {
-    return jsonError('role 参数不合法', 400);
-  }
-
-  const activeParam = url.searchParams.get('active') || 'all';
-  let active: 'all' | 'active' | 'inactive' = 'all';
-  if (activeParam === 'active' || activeParam === 'inactive') {
-    active = activeParam;
-  } else if (activeParam !== 'all') {
-    return jsonError('active 参数不合法', 400);
-  }
-
-  const pageSize = Number(url.searchParams.get('pageSize')) || 50;
   const page = Number(url.searchParams.get('page')) || 1;
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 50, 100);
+  const search = url.searchParams.get('search') || undefined;
+  const status = url.searchParams.get('status') || undefined;
+  const role = url.searchParams.get('role') || undefined;
 
-  const result = await listUsers({ search, role, active, pageSize, page });
-  return NextResponse.json(result);
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (search) params.set('search', search);
+  if (status) params.set('status', status);
+  if (role) params.set('role', role);
+
+  const proxy = await proxyBackend(req, { path: `/admin/users?${params.toString()}` });
+  const res = NextResponse.json(toAdminUserList((proxy.body ?? {}) as Record<string, unknown>));
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

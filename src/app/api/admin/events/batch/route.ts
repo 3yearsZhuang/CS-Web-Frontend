@@ -1,43 +1,39 @@
 /**
- * @file 管理员活动批量操作 API
+ * @file 活动批量操作 API — POST /api/admin/events/batch（BFF 薄转发）
  */
-
 import { NextResponse } from 'next/server';
-import { batchUpdateEvents } from '@/modules/events/server';
-import { requireAdmin } from '@/modules/admin/server';
-import {
-  parseJsonBody,
-  assertAllowedOrigin,
-  jsonError,
-  adminActionsLimiter,
-  getClientIp,
-} from '@/shared/security/security';
-import { batchEventSchema } from '@/shared/security/schemas';
+import { assertAllowedOrigin } from '@/shared/security/security';
+import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin.response;
-
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const ip = getClientIp(req);
-  if (!adminActionsLimiter.check(`events-batch:${ip}`)) {
-    return jsonError('操作过于频繁，请稍后再试', 429);
+  const body = (await req.json().catch(() => ({}))) as {
+    action?: string;
+    eventIds?: string[];
+    month?: string;
+  };
+  const { action, eventIds } = body;
+  if (!action || !Array.isArray(eventIds) || eventIds.length === 0) {
+    return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  const parsed = await parseJsonBody(req);
-  if (!parsed.ok) return parsed.response;
+  const proxy = await proxyBackend(req, {
+    path: '/admin/events/batch',
+    method: 'POST',
+    jsonBody: { action, event_ids: eventIds.map(Number) },
+  });
 
-  const result = batchEventSchema.safeParse(parsed.body);
-  if (!result.success) {
-    return jsonError(result.error.issues[0]?.message || '请求格式不正确', 400);
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '操作失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
   }
-
-  const { eventIds, status } = result.data;
-
-  const batchResult = await batchUpdateEvents(admin.user.id, eventIds, { status });
-  return NextResponse.json(batchResult);
+  const res = NextResponse.json({ ok: true });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }

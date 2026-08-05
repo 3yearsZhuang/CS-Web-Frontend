@@ -1,0 +1,23 @@
+# 构建上下文裁剪（tools/deploy/Dockerfile 使用，context = 仓库根）
+node_modules
+.build
+.next
+dist
+data
+backups
+tools/docs
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+!tools/deploy/.env.example
+.DS_Store
+*.swp
+*.log
+coverage
+.test-results
+playwright-report
+.codegraph
+.vscode
+.idea

@@ -1,13 +1,8 @@
 /**
- * @file 用户考试详情 API — GET /api/tools/exam/:id
- *
- * GET: 获取考试详情（含题目，不暴露选择题正确答案）
- *
- * 登录后可查看，考试结束后可查看题目。
+ * @file 考试详情 API — GET /api/tools/exam/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { getExamById, listQuestionsByExam, type ExamQuestion } from '@/modules/tools/server';
-import { createRequestLogger } from '@/shared/logger';
+import { proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -16,36 +11,54 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const proxy = await proxyBackend(req, { path: `/tools/exam/${encodeURIComponent(id)}` });
 
-  const log = createRequestLogger(req);
-  try {
-    const exam = await getExamById(id);
-    if (!exam) {
-      return NextResponse.json({ error: '考试不存在' }, { status: 404 });
-    }
-
-    if (exam.status === 'draft') {
-      return NextResponse.json({ error: '考试未发布' }, { status: 404 });
-    }
-
-    const questions = await listQuestionsByExam(id);
-
-    const sanitizedQuestions: ExamQuestion[] = questions.map((q) => {
-      if (exam.status === 'ended') {
-        return q;
-      }
-      return {
-        ...q,
-        options: q.options?.map((opt) => ({
-          ...opt,
-          isCorrect: false,
-        })),
-      };
-    });
-
-    return NextResponse.json({ exam, questions: sanitizedQuestions });
-  } catch (err) {
-    log.error({ err }, '获取考试详情失败');
-    return NextResponse.json({ error: '获取考试详情失败' }, { status: 500 });
+  if (proxy.status !== 200) {
+    return NextResponse.json({ exam: null });
   }
+  const e = proxy.body as Record<string, unknown>;
+  // 题目列表走独立端点（公开端点不泄露答案）
+  const qProxy = await proxyBackend(req, {
+    path: `/tools/exam/${encodeURIComponent(id)}/questions`,
+  });
+  const qBody = (qProxy.body ?? {}) as Record<string, unknown>;
+  const questions = (Array.isArray(qBody.questions) ? qBody.questions : []) as Array<
+    Record<string, unknown>
+  >;
+  const res = NextResponse.json({
+    exam: {
+      id: String(e.id),
+      title: e.title,
+      description: e.description ?? null,
+      category: e.category,
+      difficulty: e.difficulty,
+      durationMinutes: e.duration_minutes ?? 0,
+      questionCount: e.question_count ?? 0,
+      totalScore: e.total_score ?? 0,
+      status: e.status,
+      maxAttempts: e.max_attempts ?? 1,
+      passScore: e.pass_score ?? 0,
+      publishedAt: e.published_at ?? null,
+      endedAt: e.ended_at ?? null,
+      createdAt: e.created_at ?? '',
+      questions: questions.map((q) => ({
+        id: String(q.id),
+        questionType: q.type,
+        content: q.content_markdown ?? q.title,
+        options: Array.isArray(q.options)
+          ? q.options.map((o) => ({
+              id: String(o.id),
+              label: o.label,
+              content: o.content,
+            }))
+          : [],
+        score: q.score ?? 0,
+        orderIndex: q.sort_order ?? 0,
+      })),
+      myAttempts: Array.isArray(e.my_attempts) ? e.my_attempts : [],
+      bestScore: e.best_score ?? null,
+    },
+  });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
 }
