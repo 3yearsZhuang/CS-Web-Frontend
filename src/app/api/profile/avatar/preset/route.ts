@@ -1,5 +1,8 @@
 /**
  * @file 预设头像 API — POST /api/profile/avatar/preset（BFF 薄转发）
+ *
+ * 契约对齐：后端 POST /profile/avatar/preset，body {presetId}（camel），
+ * 返回 UserOut；前端 use-profile 期望 {user}。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -11,16 +14,15 @@ export async function POST(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const body = (await req.json().catch(() => ({}))) as { avatarType?: string };
-  const avatarType = body.avatarType;
-  if (!avatarType) {
+  const body = (await req.json().catch(() => ({}))) as { presetId?: number };
+  if (typeof body.presetId !== 'number') {
     return NextResponse.json({ error: '请选择头像类型', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
   const proxy = await proxyBackend(req, {
     path: '/profile/avatar/preset',
-    method: 'PUT',
-    jsonBody: { avatar_type: avatarType },
+    method: 'POST',
+    jsonBody: { presetId: body.presetId },
   });
 
   if (proxy.status !== 200) {
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
     return res;
   }
 
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.json({ user: proxy.body ?? null });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

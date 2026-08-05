@@ -43,6 +43,18 @@ const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg:
   done: { label: 'Done', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
 };
 
+// 兜底：后端若返回未定义的迁移状态，使用中性样式，避免读取 undefined.bg 崩溃。
+const STATUS_FALLBACK: { label: string; color: string; bg: string } = {
+  label: 'Unknown',
+  color: 'text-[var(--muted-foreground)]',
+  bg: 'bg-[var(--muted)]/20',
+};
+
+function getStatusConfig(status: MigrationStatus | undefined | null) {
+  if (status && STATUS_CONFIG[status]) return STATUS_CONFIG[status];
+  return STATUS_FALLBACK;
+}
+
 const STATUS_ORDER: MigrationStatus[] = ['legacy', 'migrating', 'done'];
 
 /* ============= 内部组件 ============= */
@@ -281,7 +293,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                       </div>
                     ) : (
                       filteredComponents.map((item) => {
-                        const st = STATUS_CONFIG[item.migrationStatus];
+                        const st = getStatusConfig(item.migrationStatus);
                         const isSelected = selectedId === item.id;
                         return (
                           <button

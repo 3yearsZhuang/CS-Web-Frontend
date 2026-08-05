@@ -36,13 +36,15 @@ export async function POST(req: Request) {
   }
 
   const body = proxy.body as {
-    requires2fa?: boolean;
+    requires2Fa?: boolean;
     twoFactorToken?: string | null;
     accessToken?: string;
     refreshToken?: string;
   };
 
-  if (body.requires2fa) {
+  // 后端 LoginResponse camel_config() 序列化 requires_2fa → requires2Fa（to_camel 对数字后
+  // 下划线首字母大写），此处按后端真实契约读取。
+  if (body.requires2Fa) {
     const res = NextResponse.json({ requires2FA: true, twoFactorToken: body.twoFactorToken ?? null });
     clearAuthCookies(res);
     return res;

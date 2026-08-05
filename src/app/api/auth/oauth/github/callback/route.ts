@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   );
 
   const body = (await res.json().catch(() => ({}))) as {
-    requires2fa?: boolean;
+    requires2Fa?: boolean;
     twoFactorToken?: string | null;
     accessToken?: string;
     refreshToken?: string;
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(redirectUrl, { status: 302 });
   }
 
-  if (body.requires2fa && body.twoFactorToken) {
+  if (body.requires2Fa && body.twoFactorToken) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('oauth_2fa', '1');
     const res2 = NextResponse.redirect(loginUrl, { status: 302 });

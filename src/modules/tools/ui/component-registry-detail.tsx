@@ -60,7 +60,11 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
     );
   }
 
-  const status = STATUS_CONFIG[item.migrationStatus];
+  const status = STATUS_CONFIG[item.migrationStatus] ?? {
+    label: 'Unknown',
+    color: 'text-[var(--muted-foreground)]',
+    bg: 'bg-[var(--muted)]/20',
+  };
   const canAdvance = item.migrationStatus !== 'done';
   const canRetreat = item.migrationStatus !== 'legacy';
 

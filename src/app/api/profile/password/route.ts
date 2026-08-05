@@ -25,7 +25,8 @@ export async function POST(req: Request) {
   const proxy = await proxyBackend(req, {
     path: '/profile/password',
     method: 'POST',
-    jsonBody: { current_password: currentPassword, new_password: newPassword },
+    // 后端契约：ChangePasswordRequest{oldPassword, newPassword}（camel_config）
+    jsonBody: { oldPassword: currentPassword, newPassword },
   });
 
   if (proxy.status !== 200) {

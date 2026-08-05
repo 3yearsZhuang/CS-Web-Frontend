@@ -18,13 +18,14 @@ export async function GET(req: Request) {
 
   const sessions = ((proxy.body as { sessions?: Array<Record<string, unknown>> }).sessions ?? []).map(
     (s) => ({
+      // 后端 SessionOut 经 camel_config() 输出 camelCase 字段，勿读 snake_case
       id: String(s.id),
-      userAgent: s.user_agent ?? null,
-      ipAddress: s.ip_address ?? null,
-      isCurrent: s.is_current === true,
-      createdAt: s.created_at ?? '',
-      lastSeenAt: s.last_seen_at ?? null,
-      expiresAt: s.expires_at ?? null,
+      userAgent: s.userAgent ?? null,
+      ipAddress: s.ipAddress ?? null,
+      isCurrent: false, // 后端未提供"当前会话"标记（无 is_current 字段）
+      createdAt: s.createdAt ?? '',
+      lastSeenAt: null,
+      expiresAt: s.expiresAt ?? null,
     }),
   );
   const res = NextResponse.json({ sessions });

@@ -28,7 +28,7 @@ export async function GET(req: Request) {
     total: Number(body.total ?? 0),
     page,
     pageSize,
-    totalPages: Number(body.total_pages ?? 1),
+    totalPages: Number(body.totalPages ?? 1),
   });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

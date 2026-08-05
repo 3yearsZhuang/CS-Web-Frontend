@@ -18,6 +18,7 @@ export async function POST(
   const proxy = await proxyBackend(req, {
     path: `/admin/password-resets/${encodeURIComponent(id)}/approve`,
     method: 'POST',
+    jsonBody: {}, // 后端 ResetRequestResolve 为必填 body（note 可选）
   });
 
   if (proxy.status !== 200) {

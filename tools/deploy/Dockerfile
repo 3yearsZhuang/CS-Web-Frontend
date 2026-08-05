@@ -12,8 +12,11 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
-# 复制源码
-COPY . .
+# 复制源码（精确 COPY，仅构建所需；不携带 tools/docs/、各类文档等无关文件，
+# 实现构建内容隔离。context 仍为仓库根，因 Next.js 应用根即仓库根。）
+COPY package.json pnpm-lock.yaml .npmrc tsconfig.json next.config.ts postcss.config.mjs ./
+COPY src ./src
+COPY public ./public
 
 # 构建 Next.js 生产版本
 RUN pnpm next build
