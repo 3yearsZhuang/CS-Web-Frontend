@@ -235,9 +235,9 @@ export const COMPONENT_SEEDS: ComponentSeed[] = [
     antiPatterns: ['非管理员可访问', '审批无备注'],
   },
   {
-    id: 'cmp-admin-announcements-panel', name: 'AdminAnnouncementsPanel', slug: 'admin-announcements-panel',
-    category: 'layout', status: 'migrating', sortOrder: 31,
-    description: '管理员公告管理面板，公告 CRUD + 级别/优先级/角色配置',
+    id: 'cmp-admin-announcements-panel', name: 'AnnouncementsPanel', slug: 'admin-announcements-panel',
+    category: 'layout', status: 'done', sortOrder: 31,
+    description: '管理员公告管理面板（announcement 域唯一实现），公告 CRUD + 级别/优先级/角色配置',
     useCases: ['公告发布', '公告级别设置', '定向角色推送'],
     antiPatterns: ['公告无过期时间', '高优先级滥用'],
   },

@@ -3,7 +3,7 @@
  */
 
 import crypto from 'node:crypto';
-import { PASSWORD_HISTORY_LIMIT } from '@/shared/config/auth-constants';
+import { PASSWORD_HISTORY_LIMIT } from '@/shared/config';
 import {
   hashPassword,
   verifyPassword,

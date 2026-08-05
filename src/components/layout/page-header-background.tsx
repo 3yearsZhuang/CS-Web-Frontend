@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { getHeaderImage } from '@/shared/config/header-images';
+import { getHeaderImage } from '@/shared/config';
 
 /** PageHeaderBackground 组件 Props */
 interface PageHeaderBackgroundProps {

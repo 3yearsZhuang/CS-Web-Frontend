@@ -12,7 +12,7 @@ import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { Button } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import { AnnouncementsPanel } from './announcements-panel';
+import { AnnouncementsPanel } from '@/modules/announcement/ui/admin-announcements-panel';
 import { BroadcastHistoryPanel } from './broadcast-history-panel';
 
 /* ============= 子 Tab 类型 ============= */

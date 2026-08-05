@@ -10,7 +10,7 @@ import { Button } from '@/components';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useRef, useEffect, Suspense } from 'react';
 import { EMAIL_REGEX } from '@/modules/auth/types/constants';
-import { PASSWORD_MIN_LENGTH } from '@/shared/config/auth-constants';
+import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import { Github } from 'lucide-react';
 
 /** 密码强度等级 */

@@ -1,11 +1,15 @@
-'use client'
 /**
- * @file 管理员公告面板组件
+ * @file 公告管理面板 — announcement 域唯一实现（GENERAL 2.4 按关注点拆分）
+ *
+ * 自包含公告的增删改查与表单渲染，供 admin-messages-panel 子 Tab 嵌入。
+ * （曾与 admin/announcements-panel.tsx 重复，已收敛至此域单一定位。）
  */
+'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
-import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
+import { RevealItem } from '@/components/effects/motion-primitives';
+import { SectionLoading } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 
 type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
@@ -52,22 +56,22 @@ const levelOptions: { value: AnnouncementLevel; label: string }[] = [
   { value: 'error', label: '重要' },
 ];
 
-/** 管理员公告面板 — 创建/编辑/删除/启停公告 */
-export function AdminAnnouncementsPanel() {
+/** 公告管理子面板 — 列表 + 新建/编辑表单 + 启用/删除 */
+export function AnnouncementsPanel() {
+  const { confirm } = useConfirm();
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [annLoading, setAnnLoading] = useState(true);
+  const [annError, setAnnError] = useState<string | null>(null);
+  const [annSuccess, setAnnSuccess] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AnnouncementForm>({ ...emptyForm });
   const [submitting, setSubmitting] = useState(false);
 
-  const { confirm } = useConfirm();
-
   const fetchAnnouncements = useCallback(async () => {
     try {
-      setLoading(true);
+      setAnnLoading(true);
       const res = await fetch('/api/admin/announcements');
       if (!res.ok) {
         const data = await res.json();
@@ -75,11 +79,11 @@ export function AdminAnnouncementsPanel() {
       }
       const data = await res.json();
       setAnnouncements(data.items || []);
-      setError(null);
+      setAnnError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '未知错误');
+      setAnnError(err instanceof Error ? err.message : '未知错误');
     } finally {
-      setLoading(false);
+      setAnnLoading(false);
     }
   }, []);
 
@@ -87,9 +91,9 @@ export function AdminAnnouncementsPanel() {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
 
-  const showSuccess = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(null), 3000);
+  const annShowSuccess = (msg: string) => {
+    setAnnSuccess(msg);
+    setTimeout(() => setAnnSuccess(null), 3000);
   };
 
   const resetForm = () => {
@@ -112,15 +116,13 @@ export function AdminAnnouncementsPanel() {
     setShowForm(true);
   };
 
-  const handleSubmit = async () => {
+  const handleAnnSubmit = async () => {
     if (!form.title.trim()) {
-      setError('标题不能为空');
+      setAnnError('标题不能为空');
       return;
     }
-
     setSubmitting(true);
-    setError(null);
-
+    setAnnError(null);
     try {
       const body: Record<string, unknown> = {
         title: form.title.trim(),
@@ -131,7 +133,6 @@ export function AdminAnnouncementsPanel() {
         expiresAt: form.expiresAt || null,
         targetRoles: form.targetRoles.length > 0 ? form.targetRoles : null,
       };
-
       let res: Response;
       if (editingId) {
         res = await fetch(`/api/admin/announcements/${editingId}`, {
@@ -146,17 +147,13 @@ export function AdminAnnouncementsPanel() {
           body: JSON.stringify(body),
         });
       }
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || '操作失败');
-      }
-
-      showSuccess(editingId ? '公告已更新' : '公告已创建');
+      if (!res.ok) throw new Error(data.error || '操作失败');
+      annShowSuccess(editingId ? '公告已更新' : '公告已创建');
       resetForm();
       fetchAnnouncements();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
+      setAnnError(err instanceof Error ? err.message : '操作失败');
     } finally {
       setSubmitting(false);
     }
@@ -175,7 +172,7 @@ export function AdminAnnouncementsPanel() {
       }
       fetchAnnouncements();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '操作失败');
+      setAnnError(err instanceof Error ? err.message : '操作失败');
     }
   };
 
@@ -187,17 +184,16 @@ export function AdminAnnouncementsPanel() {
       confirmLabel: '确认删除',
     });
     if (!confirmed) return;
-
     try {
       const res = await fetch(`/api/admin/announcements/${a.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || '删除失败');
       }
-      showSuccess('公告已删除');
+      annShowSuccess('公告已删除');
       fetchAnnouncements();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '删除失败');
+      setAnnError(err instanceof Error ? err.message : '删除失败');
     }
   };
 
@@ -219,17 +215,11 @@ export function AdminAnnouncementsPanel() {
   };
 
   return (
-    <StaggerContainer>
-      <RevealTitle>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-mono tracking-wider text-[var(--muted-foreground)]">
-              [07]
-            </span>
-            <h2 className="text-[13px] font-mono tracking-widest text-[var(--foreground)]">
-              公告 / Announcements
-            </h2>
-          </div>
+    <>
+      {/* 操作栏 */}
+      <RevealItem>
+        <div className="py-5 flex items-center justify-between">
+          <div className="meta-mono text-[var(--muted-foreground)]">[ {announcements.length} 条公告 ]</div>
           <button
             onClick={() => {
               resetForm();
@@ -241,18 +231,18 @@ export function AdminAnnouncementsPanel() {
             新建公告
           </button>
         </div>
-      </RevealTitle>
+      </RevealItem>
 
-      {/* 成功/错误提示 */}
-      {successMsg && (
-        <div className="mt-3 p-3 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[11px] font-mono leading-relaxed text-[var(--muted-foreground)]">
-          {successMsg}
+      {/* 提示信息 */}
+      {annSuccess && (
+        <div className="p-3 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[11px] font-mono text-[var(--muted-foreground)]">
+          {annSuccess}
         </div>
       )}
-      {error && (
-        <div className="mt-3 p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">关闭</button>
+      {annError && (
+        <div className="p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
+          {annError}
+          <button onClick={() => setAnnError(null)} className="ml-2 underline">关闭</button>
         </div>
       )}
 
@@ -267,7 +257,6 @@ export function AdminAnnouncementsPanel() {
               <X size={14} />
             </button>
           </div>
-
           <div className="space-y-4">
             <div>
               <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">标题 *</label>
@@ -280,7 +269,6 @@ export function AdminAnnouncementsPanel() {
                 placeholder="公告标题"
               />
             </div>
-
             <div>
               <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">内容</label>
               <textarea
@@ -292,7 +280,6 @@ export function AdminAnnouncementsPanel() {
                 placeholder="可选，公告详细内容"
               />
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">级别</label>
@@ -306,7 +293,6 @@ export function AdminAnnouncementsPanel() {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">优先级</label>
                 <input
@@ -318,7 +304,6 @@ export function AdminAnnouncementsPanel() {
                   className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
                 />
               </div>
-
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">过期时间</label>
                 <input
@@ -328,7 +313,6 @@ export function AdminAnnouncementsPanel() {
                   className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
                 />
               </div>
-
               <div className="flex items-end gap-2 pb-2">
                 <label className="flex items-center gap-2 text-[11px] font-mono text-[var(--foreground)] cursor-pointer">
                   <input
@@ -341,16 +325,12 @@ export function AdminAnnouncementsPanel() {
                 </label>
               </div>
             </div>
-
             <div className="flex justify-end gap-2">
-              <button
-                onClick={resetForm}
-                className="px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-              >
+              <button onClick={resetForm} className="px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
                 取消
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={handleAnnSubmit}
                 disabled={submitting || !form.title.trim()}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 disabled:opacity-50 transition-colors"
               >
@@ -363,12 +343,10 @@ export function AdminAnnouncementsPanel() {
       )}
 
       {/* 公告列表 */}
-      {loading ? (
-        <div className="mt-6 text-center text-[12px] font-mono text-[var(--muted-foreground)]">
-          加载中...
-        </div>
+      {annLoading ? (
+        <SectionLoading label="加载中..." />
       ) : announcements.length === 0 ? (
-        <div className="mt-6 text-center text-[12px] font-mono text-[var(--muted-foreground)]">
+        <div className="py-12 text-center text-[12px] font-mono text-[var(--muted-foreground)]">
           暂无公告，点击「新建公告」创建第一条。
         </div>
       ) : (
@@ -388,64 +366,60 @@ export function AdminAnnouncementsPanel() {
               </thead>
               <tbody>
                 {announcements.map((a) => (
-                  <RevealItem key={a.id}>
-                    <tr className="border-b border-[var(--border)] hover:bg-[var(--foreground)]/3 transition-colors">
-                      <td className="px-4 py-2.5">
-                        <div className="text-[12px] font-mono text-[var(--foreground)] truncate max-w-[300px]">
-                          {a.title}
+                  <tr key={a.id} className="border-b border-[var(--border)] hover:bg-[var(--foreground)]/3 transition-colors">
+                    <td className="px-4 py-2.5">
+                      <div className="text-[12px] font-mono text-[var(--foreground)] truncate max-w-[300px]">{a.title}</div>
+                      {a.content && (
+                        <div className="text-[10px] font-mono text-[var(--muted-foreground)] truncate max-w-[300px] mt-0.5">
+                          {a.content.slice(0, 80)}
                         </div>
-                        {a.content && (
-                          <div className="text-[10px] font-mono text-[var(--muted-foreground)] truncate max-w-[300px] mt-0.5">
-                            {a.content.slice(0, 80)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5">{levelBadge(a.level)}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[11px] font-mono ${a.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--muted-foreground)]'}`}>
-                          {a.isActive ? '生效中' : '已关闭'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">{a.priority}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
-                        {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('zh-CN') : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
-                        {new Date(a.createdAt).toLocaleDateString('zh-CN')}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => startEdit(a)}
-                            className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                            title="编辑"
-                          >
-                            <Save size={13} />
-                          </button>
-                          <button
-                            onClick={() => toggleActive(a)}
-                            className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                            title={a.isActive ? '关闭' : '激活'}
-                          >
-                            {a.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
-                          </button>
-                          <button
-                            onClick={() => handleDelete(a)}
-                            className="p-1 text-[var(--muted-foreground)] hover:text-red-500 transition-colors"
-                            title="删除"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </RevealItem>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">{levelBadge(a.level)}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`text-[11px] font-mono ${a.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--muted-foreground)]'}`}>
+                        {a.isActive ? '生效中' : '已关闭'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">{a.priority}</td>
+                    <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
+                      {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('zh-CN') : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
+                      {new Date(a.createdAt).toLocaleDateString('zh-CN')}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => startEdit(a)}
+                          className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                          title="编辑"
+                        >
+                          <Save size={13} />
+                        </button>
+                        <button
+                          onClick={() => toggleActive(a)}
+                          className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                          title={a.isActive ? '关闭' : '激活'}
+                        >
+                          {a.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(a)}
+                          className="p-1 text-[var(--muted-foreground)] hover:text-red-500 transition-colors"
+                          title="删除"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
       )}
-    </StaggerContainer>
+    </>
   );
 }

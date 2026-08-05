@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import { logger } from '@/shared/logger';
 import { toSafeUser, type SafeUser, type UserRow } from '@/shared/types';
 import { AppError } from '@/shared/app-error';
-import { isValidPresetId, getPresetById } from '@/shared/config/avatar-presets';
+import { isValidPresetId, getPresetById } from '@/shared/config';
 import { validateProfileFields, type ProfileFields } from '../types';
 import { validateTechTags } from '@/shared/utils/tech-tags';
 import { validateImageMagicBytes } from '@/shared/utils/image-utils';

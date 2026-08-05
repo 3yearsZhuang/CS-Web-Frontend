@@ -9,7 +9,7 @@ import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH,
   PASSWORD_COMPLEXITY,
-} from '@/shared/config/auth-constants';
+} from '@/shared/config';
 
 // ---------------------------------------------------------------------------
 // 基础类型

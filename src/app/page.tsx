@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MobiusRing } from '@/components/effects/mobius-ring';
 import { Avatar } from '@/components/avatar';
-import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config/admin-avatars';
+import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
 import { Button } from '@/components';
 import { RevealItem, RevealTitle, StaggerContainer } from '@/components/effects/motion-primitives';

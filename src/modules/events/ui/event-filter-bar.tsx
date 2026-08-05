@@ -10,9 +10,9 @@ export type StatusFilter = '' | 'upcoming' | 'ongoing' | 'ended';
 
 const STATUS_OPTIONS: FilterBarOption[] = [
   { value: '', label: '全部' },
-  { value: 'upcoming', label: '即将开始', dot: 'upcoming' },
-  { value: 'ongoing', label: '进行中', dot: 'ongoing' },
-  { value: 'ended', label: '已结束', dot: 'ended' },
+  { value: 'upcoming', label: '即将开始', dotClassName: 'bg-[var(--primary)]' },
+  { value: 'ongoing', label: '进行中', dotClassName: 'bg-emerald-500' },
+  { value: 'ended', label: '已结束', dotClassName: 'bg-[var(--muted-foreground)]' },
 ];
 
 interface EventFilterBarProps {

@@ -1,48 +1,60 @@
 'use client';
 
 /**
- * @file useAdminUsers — 管理员用户管理逻辑 Hook
+ * @file useAdminUsers — 管理员用户管理逻辑 Hook（组合层）
  *
- * 从 `AdminUsersPanel` 组件拆出（GENERAL 2.2 展示/容器分离、2.4 逻辑 >150 行提为 Hook）。
- * 集中所有状态、数据获取与操作 handlers，组件只保留渲染。
+ * 已按关注点拆分为三个 Hook（GENERAL 2.4）：
+ * - useUserList：用户列表 / 搜索 / 筛选 / 分页
+ * - useUserResets：密码重置申请列表
+ * - 本文件保留：模态框状态与操作 handlers、权限判断、子视图切换
+ * 组件只保留渲染（GENERAL 2.2 展示/容器分离）。
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/components/feedback/toast';
 import {
   LIMITS,
-  PAGE_SIZE,
   type SafeUser,
-  type UserListResult,
   type PasswordResetRequest,
 } from '@/modules/admin/ui/types';
 import { isValidHttpUrl as isValidUrl } from '@/modules/user/types';
+import { useUserList } from './use-user-list';
+import { useUserResets } from './use-user-resets';
 import type {
-  ActiveFilter,
   EditForm,
-  ResetStatusFilter,
-  RoleFilter,
   UserModal,
   UserSubView,
 } from './users-panel-utils';
 
 export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
-  const router = useRouter();
+  // 列表数据（用户列表 / 搜索 / 筛选 / 分页）
+  const {
+    users,
+    total,
+    page,
+    totalPages,
+    setUsers,
+    setTotal,
+    searchInput,
+    setSearchInput,
+    roleFilter,
+    setRoleFilter,
+    activeFilter,
+    setActiveFilter,
+    listLoading,
+    listError,
+    fetchUsers,
+  } = useUserList(currentUser, onForbidden);
 
-  // 列表数据
-  const [users, setUsers] = useState<SafeUser[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [page, setPage] = useState(1);
-  const [listLoading, setListLoading] = useState(false);
-  const [listError, setListError] = useState<string | null>(null);
-
-  // 筛选 / 搜索
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
-  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
+  // 密码重置申请
+  const {
+    resetRequests,
+    resetStatusFilter,
+    setResetStatusFilter,
+    resetListLoading,
+    resetListError,
+    fetchPasswordResets,
+  } = useUserResets(onForbidden);
 
   // 模态框
   const [modal, setModal] = useState<UserModal>({ type: 'none' });
@@ -62,114 +74,13 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
   // 用户管理子视图
   const [userSubView, setUserSubView] = useState<UserSubView>('list');
 
-  // 密码重置申请
-  const [resetRequests, setResetRequests] = useState<PasswordResetRequest[]>([]);
-  const [resetStatusFilter, setResetStatusFilter] = useState<ResetStatusFilter>('pending');
-  const [resetListLoading, setResetListLoading] = useState(false);
-  const [resetListError, setResetListError] = useState<string | null>(null);
+  // 重置申请行内状态
   const [resetActionLoading, setResetActionLoading] = useState(false);
   const [resetActionError, setResetActionError] = useState<string | null>(null);
   const [approveNote, setApproveNote] = useState('');
   const [rejectNote, setRejectNote] = useState('');
 
-  /* ============= 数据获取 ============= */
-
-  const fetchUsers = useCallback(
-    async (opts?: { page?: number; search?: string; role?: RoleFilter; active?: ActiveFilter }) => {
-      const p = opts?.page ?? page;
-      const s = opts?.search ?? search;
-      const r = opts?.role ?? roleFilter;
-      const a = opts?.active ?? activeFilter;
-
-      setListLoading(true);
-      setListError(null);
-      try {
-        const params = new URLSearchParams({
-          page: String(p),
-          pageSize: String(PAGE_SIZE),
-          role: r,
-          active: a,
-        });
-        if (s) params.set('search', s);
-
-        const res = await fetch(`/api/admin/users?${params.toString()}`, {
-          cache: 'no-store',
-        });
-
-        if (res.status === 401) {
-          router.replace('/login');
-          return;
-        }
-        if (res.status === 403) {
-          onForbidden();
-          return;
-        }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
-        }
-
-        const data = (await res.json()) as UserListResult;
-        setUsers(data.users);
-        setTotal(data.total);
-        setTotalPages(data.totalPages);
-        setPage(data.page);
-      } catch (err) {
-        setListError(err instanceof Error ? err.message : '加载失败');
-      } finally {
-        setListLoading(false);
-      }
-    },
-    [page, search, roleFilter, activeFilter, router, onForbidden],
-  );
-
-  const fetchPasswordResets = useCallback(
-    async (status?: ResetStatusFilter) => {
-      const s = status ?? resetStatusFilter;
-      setResetListLoading(true);
-      setResetListError(null);
-      try {
-        const params = new URLSearchParams();
-        if (s !== 'all') params.set('status', s);
-        const res = await fetch(`/api/admin/password-resets?${params.toString()}`, {
-          cache: 'no-store',
-        });
-        if (res.status === 401) {
-          router.replace('/login');
-          return;
-        }
-        if (res.status === 403) {
-          onForbidden();
-          return;
-        }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
-        }
-        const data = (await res.json()) as { requests: PasswordResetRequest[] };
-        setResetRequests(data.requests ?? []);
-      } catch (err) {
-        setResetListError(err instanceof Error ? err.message : '加载失败');
-      } finally {
-        setResetListLoading(false);
-      }
-    },
-    [resetStatusFilter, router, onForbidden],
-  );
-
   /* ============= 副作用 ============= */
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  useEffect(() => {
-    fetchUsers({ page: 1, search, role: roleFilter, active: activeFilter });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchUsers 已 useCallback 稳定化
-  }, [search, roleFilter, activeFilter]);
 
   useEffect(() => {
     if (userSubView !== 'resets') return;
@@ -188,7 +99,7 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     [isRootTarget, isAdminTarget],
   );
 
-  /* ============= 行内操作 ============= */
+  /* ============= 行内操作（打开模态框） ============= */
 
   const openEdit = (u: SafeUser) => {
     setEditForm({
@@ -222,6 +133,20 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setModal({ type: 'disable', user: u });
   };
 
+  const closeModal = () => {
+    setModal({ type: 'none' });
+    setEditForm(null);
+    setEditError(null);
+    setResetPassword('');
+    setResetError(null);
+    setDeleteError(null);
+    setApproveNote('');
+    setRejectNote('');
+    setResetActionError(null);
+  };
+
+  /* ============= 模态框操作 ============= */
+
   const handleToggleActive = async () => {
     if (modal.type !== 'disable') return;
     const u = modal.user;
@@ -244,18 +169,6 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     } catch {
       pushToast('error', '网络错误，请稍后再试');
     }
-  };
-
-  const closeModal = () => {
-    setModal({ type: 'none' });
-    setEditForm(null);
-    setEditError(null);
-    setResetPassword('');
-    setResetError(null);
-    setDeleteError(null);
-    setApproveNote('');
-    setRejectNote('');
-    setResetActionError(null);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {

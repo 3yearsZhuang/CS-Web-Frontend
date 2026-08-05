@@ -12,4 +12,4 @@ export {
   PASSWORD_MAX_LENGTH,
   ALLOWED_ORIGINS,
   COOKIE_SECURE,
-} from '@/shared/config/auth-constants';
+} from '@/shared/config';

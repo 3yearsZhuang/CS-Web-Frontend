@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PASSWORD_MIN_LENGTH } from '@/shared/config/auth-constants';
+import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -15,7 +15,7 @@ import { Avatar } from '@/components/avatar';
 import { TwoFactorSettings } from '@/modules/auth/ui/two-factor-settings';
 import { ProfileForumTab } from '@/modules/community/ui/forum-profile-tab';
 import { TechTagSelector } from '@/components/tech-tag-selector';
-import { AVATAR_PRESETS } from '@/shared/config/avatar-presets';
+import { AVATAR_PRESETS } from '@/shared/config';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
 import type { User, ActivityParticipation } from '@/modules/user/types';

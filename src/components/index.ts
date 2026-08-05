@@ -27,6 +27,12 @@ export { Spinner } from './primitives/spinner';
 export type { SpinnerProps } from './primitives/spinner';
 export { ConfirmDialog, ConfirmProvider, useConfirm } from './primitives/confirm-dialog';
 export type { ConfirmDialogProps, ConfirmOptions, ConfirmVariant } from './primitives/confirm-dialog';
+export { FilterBar } from './primitives/filter-bar';
+export type { FilterBarOption } from './primitives/filter-bar';
+export { InlineTabs } from './primitives/inline-tabs';
+export type { InlineTabsOption } from './primitives/inline-tabs';
+export { SectionNav } from './primitives/section-nav';
+export type { SectionNavOption } from './primitives/section-nav';
 
 // ---- layout：全局布局结构 ----
 export { Navbar } from './layout/navbar';
