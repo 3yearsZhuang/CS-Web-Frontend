@@ -1,0 +1,289 @@
+'use client';
+
+/**
+ * @file useResources — 学习资源站共享状态与逻辑 Hook
+ *
+ * 从 `app/tools/resource/page.tsx` 拆出，遵循 GENERAL 2.2「展示与容器分离」、
+ * 2.4「逻辑 > 150 行提为 Hook / 组件 > 500 行拆分」。各渲染子组件复用本 Hook 返回值。
+ */
+
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { BookOpen, Video, GraduationCap, Wrench, BookMarked, Package } from 'lucide-react';
+import { useAuth } from '@/shared/hooks/use-auth';
+import { TECH_TAGS, type TechTag } from '@/shared/utils/tech-tags';
+
+export type ResourceType = 'all' | 'article' | 'video' | 'course' | 'tool' | 'book' | 'other';
+
+export const TYPE_LABELS: Record<ResourceType, string> = {
+  all: '全部',
+  article: '文章',
+  video: '视频',
+  course: '课程',
+  tool: '工具',
+  book: '书籍',
+  other: '其他',
+};
+
+export const TYPE_ICONS: Record<Exclude<ResourceType, 'all'>, React.ReactNode> = {
+  article: <BookOpen className="w-4 h-4" />,
+  video: <Video className="w-4 h-4" />,
+  course: <GraduationCap className="w-4 h-4" />,
+  tool: <Wrench className="w-4 h-4" />,
+  book: <BookMarked className="w-4 h-4" />,
+  other: <Package className="w-4 h-4" />,
+};
+
+/** 资源类型 → 展示标签 */
+export function typeLabelOf(t: string): string {
+  return TYPE_LABELS[t as ResourceType] ?? t;
+}
+
+/** 资源类型 → 展示图标 */
+export function typeIconOf(t: string): React.ReactNode {
+  return TYPE_ICONS[t as Exclude<ResourceType, 'all'>] ?? TYPE_ICONS.other;
+}
+
+export interface ResourceItem {
+  id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  resource_type: string;
+  tech_tags: string | null;
+  status: string;
+  submitted_by: string;
+  author_display_name: string | null;
+  author_avatar_url: string | null;
+  author_tech_tags: string | null;
+  view_count: number;
+  like_count: number;
+  created_at: string;
+}
+
+export interface ResourceListData {
+  resources: ResourceItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+  techTagCounts: Record<string, number>;
+}
+
+export function formatDate(iso: string): string {
+  const d = new Date(iso + 'Z');
+  if (isNaN(d.getTime())) return '—';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
+}
+
+export function useResources() {
+  const { isLoggedIn } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [data, setData] = useState<ResourceListData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeType, setActiveType] = useState<ResourceType>('all');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [sort, setSort] = useState<'latest' | 'popular'>('latest');
+  const [page, setPage] = useState(1);
+
+  // 提交弹窗
+  const [showSubmit, setShowSubmit] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [form, setForm] = useState({
+    title: '',
+    url: '',
+    description: '',
+    resourceType: 'article' as ResourceType,
+    techTags: [] as string[],
+    fileUrl: '' as string,
+  });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (activeType !== 'all') params.set('resourceType', activeType);
+      if (activeTag) params.set('techTag', activeTag);
+      params.set('sort', sort);
+      params.set('page', String(page));
+      params.set('pageSize', '20');
+
+      const res = await fetch(`/api/tools/resource?${params.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, [activeType, activeTag, sort, page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (searchParams.get('submit') === '1' && isLoggedIn) {
+      setShowSubmit(true);
+    }
+  }, [searchParams, isLoggedIn]);
+
+  const closeSubmit = useCallback(() => {
+    setShowSubmit(false);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+    setForm({ title: '', url: '', description: '', resourceType: 'article', techTags: [], fileUrl: '' });
+    router.replace('/tools/resource', { scroll: false });
+  }, [router]);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setSubmitError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/tools/resource/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        setForm((f) => ({ ...f, fileUrl: json.url }));
+      } else {
+        const json = await res.json();
+        setSubmitError(json.error || '文件上传失败');
+      }
+    } catch {
+      setSubmitError('文件上传失败，请重试');
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setSubmitLoading(true);
+      setSubmitError(null);
+
+      try {
+        const res = await fetch('/api/tools/resource', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: form.title,
+            url: form.url,
+            description: form.description || undefined,
+            resourceType: form.resourceType,
+            techTags: form.techTags.length ? form.techTags : undefined,
+            fileUrl: form.fileUrl || undefined,
+          }),
+        });
+
+        if (res.ok) {
+          setSubmitSuccess(true);
+          setForm({ title: '', url: '', description: '', resourceType: 'article', techTags: [], fileUrl: '' });
+          fetchData();
+        } else {
+          const json = await res.json();
+          setSubmitError(json.error || '提交失败');
+        }
+      } catch {
+        setSubmitError('网络错误，请重试');
+      } finally {
+        setSubmitLoading(false);
+      }
+    },
+    [form, fetchData],
+  );
+
+  const typeTabs = useMemo(
+    () =>
+      Object.entries(TYPE_LABELS).map(([key, label]) => ({
+        key,
+        num: key === 'all' ? '00' : String(Object.keys(TYPE_LABELS).indexOf(key)).padStart(2, '0'),
+        label: `${label}${key !== 'all' ? ` / ${key.charAt(0).toUpperCase() + key.slice(1)}` : ''}`,
+      })),
+    [],
+  );
+
+  const techTagTabs = useMemo(() => {
+    const counts = data?.techTagCounts ?? {};
+    return [
+      { key: '__all__', label: '全部', count: data?.total ?? 0 },
+      ...TECH_TAGS.map((t: TechTag) => ({
+        key: t.key,
+        label: t.label,
+        count: counts[t.key] ?? 0,
+      })),
+    ];
+  }, [data]);
+
+  const pages = data?.totalPages ?? 1;
+  const activeTypeLabel = TYPE_LABELS[activeType];
+
+  const setType = useCallback((key: string) => {
+    setActiveType(key as ResourceType);
+    setPage(1);
+  }, []);
+  const setTag = useCallback((key: string) => {
+    setActiveTag(key === '__all__' ? null : key);
+    setPage(1);
+  }, []);
+  const setSortAndReset = useCallback((s: 'latest' | 'popular') => {
+    setSort(s);
+    setPage(1);
+  }, []);
+
+  const openSubmit = useCallback(() => {
+    router.push('/tools/resource?submit=1', { scroll: false });
+  }, [router]);
+
+  return {
+    isLoggedIn,
+    data,
+    loading,
+    activeType,
+    activeTypeLabel,
+    activeTag,
+    sort,
+    page,
+    pages,
+    typeTabs,
+    techTagTabs,
+    showSubmit,
+    submitLoading,
+    submitError,
+    submitSuccess,
+    form,
+    setForm,
+    uploading,
+    fileInputRef,
+    setType,
+    setTag,
+    setSortAndReset,
+    setPage,
+    openSubmit,
+    closeSubmit,
+    handleFileUpload,
+    handleSubmit,
+  };
+}
+
+export type ResourcesState = ReturnType<typeof useResources>;

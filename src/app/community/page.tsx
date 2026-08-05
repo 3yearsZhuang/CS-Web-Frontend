@@ -1,14 +1,15 @@
 /**
- * @file 社区聚合首页 /community — 三栏布局：版块导航 + Feed 流 + 热榜/活跃用户
- * 用判别联合 FeedItem 统一渲染 topic/post/member，支持类型/搜索/标签三维度过滤
+ * @file 社区聚合首页 /community — 装配层
+ *
+ * 遵循 GENERAL 2.2「展示/容器分离」、2.4「组件 > 500 行拆分」：
+ * 本文件仅负责 Hero、三栏布局、搜索条、标签筛选、Feed 列表与分页的编排；
+ * 全部状态与逻辑下放到 `useCommunityFeed` Hook，卡片/侧栏复用既有 modules 子组件。
  */
 
 'use client';
 
-import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { Suspense } from 'react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { FeedItemCard } from '@/modules/community/ui/feed-item-card';
@@ -16,41 +17,8 @@ import { CommunitySidebarNav } from '@/modules/community/ui/community-sidebar-na
 import { CommunitySidebarTrending } from '@/modules/community/ui/community-sidebar-trending';
 import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip';
 import { AdminForumPanel } from '@/modules/community/ui/forum-admin-panel';
-import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
-import type {
-  FeedItem,
-  FeedKind,
-  PaginatedFeed,
-  FeedTag,
-} from '@/modules/community/types';
-import type { SafeUser } from '@/modules/admin/ui/types';
-import type { CommunityCategory } from '@/modules/community/types';
-import type { CommunityPost } from '@/modules/community/types';
-import type { MemberItem } from '@/modules/community/types';
-
-interface FeedStats {
-  topicCount: number;
-  postCount: number;
-  memberCount: number;
-}
-
-type TabKey = 'all' | 'following' | FeedKind | 'admin';
-
-const PAGE_SIZE = 20;
-const SEARCH_MIN_LEN = 2;
-const SEARCH_MAX_LEN = 80;
-
-const TAB_OPTIONS: { key: TabKey; num: string; labelKey: string }[] = [
-  { key: 'all', num: '01', labelKey: 'tabAll' },
-  { key: 'following', num: '02', labelKey: 'tabFollowing' },
-  { key: 'member', num: '03', labelKey: 'tabMember' },
-];
-
-const TAB_TO_KIND: Partial<Record<Exclude<TabKey, 'admin' | 'following'>, FeedKind | undefined>> = {
-  all: undefined,
-  member: 'member',
-};
+import { useCommunityFeed, type CommunityFeedState } from './use-community-feed';
 
 export default function CommunityPage() {
   return (
@@ -67,266 +35,49 @@ export default function CommunityPage() {
 }
 
 function CommunityPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const t = useTranslations('community');
-
-  const initialSearchQuery = searchParams.get('q') ?? '';
-  const initialTab = (searchParams.get('tab') as TabKey) ?? 'all';
-
-  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
-      })
-      .then((data) => {
-        if (cancelled) return;
-        if (data) {
-          setIsLoggedIn(true);
-          const user = data.user;
-          if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-            setCurrentUser(user);
-          }
-        }
-        setAuthChecked(true);
-      })
-      .catch(() => {
-        if (!cancelled) setAuthChecked(true);
-      });
-    return () => { cancelled = true; };
-  }, []);
-
-  const isAdmin = currentUser !== null;
-
-  const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } =
-    useCollapsingHero();
+  const c = useCommunityFeed();
+  const {
+    t,
+    router,
+    currentUser,
+    isLoggedIn,
+    authChecked,
+    isAdmin,
+    activeTab,
+    communityTabs,
+    items,
+    total,
+    totalPages,
+    page,
+    setPage,
+    searchQuery,
+    setSearchQuery,
+    selectedTag,
+    tags,
+    stats,
+    loading,
+    error,
+    categories,
+    hotTopics,
+    activeMembers,
+    featuredTopics,
+    searchInputRef,
+    pageNums,
+    hasSearch,
+    isInitialLoading,
+    handleTabChange,
+    handleSearchSubmit,
+    handleClearSearch,
+    handleTagClick,
+    PAGE_SIZE,
+  } = c;
 
   const hero: HeroState = {
-    collapsed: heroCollapsed,
-    capsuleVisible,
-    onRevealComplete,
-    onTitleClick,
+    collapsed: c.heroCollapsed,
+    capsuleVisible: c.capsuleVisible,
+    onRevealComplete: c.onRevealComplete,
+    onTitleClick: c.onTitleClick,
   };
-
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-
-  const communityTabs = [
-    ...TAB_OPTIONS.map((opt) => ({
-      key: opt.key,
-      num: opt.num,
-      label: t(opt.labelKey as Parameters<typeof t>[0]),
-    })),
-    ...(isAdmin ? [{ key: 'admin' as TabKey, num: '99', label: t('tabAdmin') }] : []),
-  ];
-
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [tags, setTags] = useState<FeedTag[]>([]);
-  const [stats, setStats] = useState<FeedStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // 三栏布局数据
-  const [categories, setCategories] = useState<CommunityCategory[]>([]);
-  const [hotTopics, setHotTopics] = useState<CommunityPost[]>([]);
-  const [activeMembers, setActiveMembers] = useState<MemberItem[]>([]);
-  const [featuredTopics, setFeaturedTopics] = useState<CommunityPost[]>([]);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  /** 同步 URL */
-  const syncUrl = useCallback(
-    (q: string, tab: TabKey, p: number, tag: string | null) => {
-      const params = new URLSearchParams();
-      if (q.trim()) params.set('q', q.trim());
-      if (tab !== 'all') params.set('tab', tab);
-      if (p > 1) params.set('page', String(p));
-      if (tag) params.set('tag', tag);
-      const qs = params.toString();
-      router.replace(`/community${qs ? `?${qs}` : ''}`, { scroll: false });
-    },
-    [router],
-  );
-
-  /** 加载聚合标签与统计 */
-  useEffect(() => {
-    fetch('/api/community/tags')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = await res.json();
-        setTags(data.tags ?? []);
-      })
-      .catch(() => {
-        /* 标签加载失败不阻塞 Feed */
-      });
-
-    fetch('/api/community/feed?stats=1')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as FeedStats;
-        setStats(data);
-      })
-      .catch(() => {
-        /* 统计加载失败不阻塞 */
-      });
-  }, []);
-
-  /** 加载侧边栏数据（版块 + 热榜 + 活跃用户） */
-  useEffect(() => {
-    // 版块列表
-    fetch('/api/community/forum/categories')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityCategory[] };
-        setCategories(data.items ?? []);
-      })
-      .catch(() => {});
-
-    // 热榜
-    const hotParams = new URLSearchParams();
-    hotParams.set('sort', 'hot');
-    hotParams.set('page_size', '8');
-    fetch(`/api/community/forum/topics?${hotParams.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityPost[] };
-        setHotTopics((data.items ?? []).slice(0, 6));
-      })
-      .catch(() => {});
-
-    // 活跃用户
-    fetch('/api/community/members?sort=active&limit=6')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { members: MemberItem[] };
-        setActiveMembers(data.members ?? []);
-      })
-      .catch(() => {});
-
-    // 精选/置顶
-    const featParams = new URLSearchParams();
-    featParams.set('page_size', '8');
-    featParams.set('sort', 'latest');
-    fetch(`/api/community/forum/topics?${featParams.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityPost[] };
-        const items = data.items ?? [];
-        setFeaturedTopics(items.filter((t) => t.isPinned || t.isFeatured).slice(0, 6));
-      })
-      .catch(() => {});
-  }, []);
-
-  /** 加载 Feed */
-  const loadFeed = useCallback(async () => {
-    // "成员" / "关注流" tab 需登录，auth 检查未完成时保持 loading，未登录则不加载
-    if (activeTab === 'member' || activeTab === 'following') {
-      if (!authChecked) return; // 等 auth 检查完成
-      if (!isLoggedIn) {
-        setItems([]);
-        setTotal(0);
-        setTotalPages(0);
-        setLoading(false);
-        return;
-      }
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (activeTab === 'following') {
-        // 关注流：按关注对象聚合，不设 kind / exclude
-        params.set('feed', 'following');
-      } else {
-        const kind = (TAB_TO_KIND as Record<string, FeedKind | undefined>)[activeTab];
-        if (kind) params.set('kind', kind);
-        // "全部" tab 排除成员，仅展示话题+博客
-        if (activeTab === 'all') params.set('exclude', 'member');
-      }
-      const q = searchQuery.trim();
-      if (q.length >= SEARCH_MIN_LEN) params.set('search', q);
-      if (selectedTag) params.set('tag', selectedTag);
-      params.set('page', String(page));
-      params.set('pageSize', String(PAGE_SIZE));
-
-      const res = await fetch(`/api/community/feed?${params.toString()}`);
-      // 关注流 / 成员在会话失效时按未登录处理（feed API 返回 401）
-      if (res.status === 401 && (activeTab === 'following' || activeTab === 'member')) {
-        setItems([]);
-        setTotal(0);
-        setTotalPages(0);
-        setLoading(false);
-        return;
-      }
-      if (!res.ok) throw new Error('加载失败');
-      const data = (await res.json()) as PaginatedFeed;
-      setItems(data.items ?? []);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, searchQuery, selectedTag, page, isLoggedIn, authChecked]);
-
-  useEffect(() => {
-    void loadFeed();
-    syncUrl(searchQuery, activeTab, page, selectedTag);
-  }, [loadFeed, syncUrl, searchQuery, activeTab, page, selectedTag]);
-
-  /** Tab 切换 */
-  const handleTabChange = (key: string) => {
-    setActiveTab(key as TabKey);
-    setPage(1);
-  };
-
-  /** 搜索提交 */
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    void loadFeed();
-  };
-
-  /** 清空搜索 */
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setSelectedTag(null);
-    setPage(1);
-    searchInputRef.current?.focus();
-  };
-
-  /** 点击标签 */
-  const handleTagClick = (tag: string) => {
-    setSelectedTag(tag === selectedTag ? null : tag);
-    setPage(1);
-  };
-
-  /** 分页范围 */
-  const pageNums = (() => {
-    const max = totalPages;
-    const cur = page;
-    const range: number[] = [];
-    const start = Math.max(1, Math.min(cur - 2, max - 4));
-    const end = Math.min(max, start + 4);
-    for (let i = start; i <= end; i++) range.push(i);
-    return range;
-  })();
-
-  const hasSearch = searchQuery.trim().length >= SEARCH_MIN_LEN || !!selectedTag;
-  const isInitialLoading = loading && items.length === 0;
 
   if (isInitialLoading) {
     return (
@@ -363,9 +114,7 @@ function CommunityPageContent() {
             <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             <span
               className={`transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'inline opacity-100 ml-1'
-                  : 'block max-h-[1.5em] opacity-100'
+                hero.collapsed ? 'inline opacity-100 ml-1' : 'block max-h-[1.5em] opacity-100'
               } overflow-hidden`}
             >
               {t('heroTitle3')}
@@ -384,9 +133,7 @@ function CommunityPageContent() {
         <RevealItem>
           <div
             className={`overflow-hidden transition-all hero-reveal ${
-              hero.collapsed
-                ? 'max-h-[14px] opacity-30 mt-1'
-                : 'max-h-[200px] opacity-100 mt-8 sm:mt-12'
+              hero.collapsed ? 'max-h-[14px] opacity-30 mt-1' : 'max-h-[200px] opacity-100 mt-8 sm:mt-12'
             }`}
           >
             <p
@@ -395,10 +142,7 @@ function CommunityPageContent() {
               }`}
             >
               {t('heroDesc1')}
-              <span className="serif-italic text-[var(--foreground)]">
-                {t('heroDesc2')}
-              </span>
-              。
+              <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>。
             </p>
           </div>
         </RevealItem>
@@ -415,7 +159,6 @@ function CommunityPageContent() {
 
             {/* 中间 — Feed 流 */}
             <div className="flex-1 md:px-6 lg:px-10 min-w-0">
-              {/* 标题 + 统计 */}
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
                 <div>
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
@@ -423,9 +166,7 @@ function CommunityPageContent() {
                     {hasSearch && searchQuery.trim() && (
                       <span className="text-[var(--primary)] ml-2">「{searchQuery.trim()}」</span>
                     )}
-                    {selectedTag && (
-                      <span className="text-[var(--primary)] ml-2">#{selectedTag}</span>
-                    )}
+                    {selectedTag && <span className="text-[var(--primary)] ml-2">#{selectedTag}</span>}
                   </h2>
                   <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px]">
                     {hasSearch
@@ -441,9 +182,6 @@ function CommunityPageContent() {
                 </div>
               </div>
 
-              {/* 类型 Tab 已由 CollapsingHero 的胶囊统一承载（桌面悬浮胶囊 + 移动端 SectionNav），
-                  此处不再重复渲染 FilterBar，避免「01全部/03论坛/04博客」双份出现。 */}
-
               {/* 搜索条 */}
               <form onSubmit={handleSearchSubmit} className="mb-8">
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -456,7 +194,7 @@ function CommunityPageContent() {
                         setSearchQuery(e.target.value);
                         setPage(1);
                       }}
-                      maxLength={SEARCH_MAX_LEN}
+                      maxLength={80}
                       placeholder={t('searchPlaceholderFull')}
                       aria-label={t('searchPlaceholderFull')}
                       className="w-full px-4 py-4 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[16px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors pr-12"
@@ -474,7 +212,7 @@ function CommunityPageContent() {
                   </div>
                   <Button
                     type="submit"
-                    disabled={loading || searchQuery.trim().length < SEARCH_MIN_LEN}
+                    disabled={loading || searchQuery.trim().length < 2}
                     className="disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {loading ? t('searching') : t('search')}
@@ -485,12 +223,12 @@ function CommunityPageContent() {
                 </div>
                 {searchQuery.length > 0 && (
                   <div className="mt-2 meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">
-                    {searchQuery.length} / {SEARCH_MAX_LEN} {t('chars')}
+                    {searchQuery.length} / 80 {t('chars')}
                   </div>
                 )}
               </form>
 
-              {/* 精选/置顶横滑区 — 仅在 all Tab 且无搜索时显示 */}
+              {/* 精选/置顶横滑区 */}
               {!hasSearch && activeTab === 'all' && featuredTopics.length > 0 && (
                 <FeaturedTopicStrip topics={featuredTopics} className="mb-8" />
               )}
@@ -522,9 +260,7 @@ function CommunityPageContent() {
 
               {selectedTag && (
                 <div className="mb-8 flex items-center gap-3">
-                  <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {t('selectedTag')}
-                  </span>
+                  <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('selectedTag')}</span>
                   <button
                     onClick={() => handleTagClick(selectedTag)}
                     className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors focus-amber"
@@ -537,18 +273,14 @@ function CommunityPageContent() {
               {/* Feed 列表 */}
               {(activeTab === 'member' || activeTab === 'following') && authChecked && !isLoggedIn ? (
                 <div className="py-20 text-center border-t border-[var(--border)]">
-                  <div className="meta-mono text-[var(--muted-foreground)] text-[14px] mb-3">
-                    {t('loginRequired')}
-                  </div>
+                  <div className="meta-mono text-[var(--muted-foreground)] text-[14px] mb-3">{t('loginRequired')}</div>
                   <div className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] mb-2">
                     {activeTab === 'following' ? t('followingRequiresLogin') : t('memberRequiresLogin')}
                   </div>
                   <div className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-8">
                     {activeTab === 'following' ? t('followingLoginDesc') : t('memberLoginDesc')}
                   </div>
-                  <Button onClick={() => router.push(`/login?redirect=/community?tab=${activeTab}`)}>
-                    {t('login')}
-                  </Button>
+                  <Button onClick={() => router.push(`/login?redirect=/community?tab=${activeTab}`)}>{t('login')}</Button>
                 </div>
               ) : loading ? (
                 <SectionLoading label={hasSearch ? 'Searching...' : 'Loading...'} />
@@ -629,18 +361,14 @@ function CommunityPageContent() {
               )}
             </div>
 
-            {/* 右侧栏 — 仪表盘 + 热榜 + 活跃用户（桌面端显示） */}
+            {/* 右侧栏 — 热榜 + 活跃用户（桌面端显示） */}
             <div className="hidden md:block w-[220px] lg:w-[260px] flex-shrink-0 md:pl-6 md:border-l md:border-[var(--border)]">
               <CommunitySidebarTrending
                 hotTopics={hotTopics}
                 activeMembers={activeMembers}
                 stats={
                   stats
-                    ? {
-                        todayTopics: stats.topicCount,
-                        activeUsers: stats.memberCount,
-                        onlineUsers: 0,
-                      }
+                    ? { todayTopics: stats.topicCount, activeUsers: stats.memberCount, onlineUsers: 0 }
                     : null
                 }
               />

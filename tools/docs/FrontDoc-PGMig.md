@@ -117,5 +117,5 @@ PGHOST=localhost ... node tools/scripts/migrate-sqlite-to-pg.mjs
 
 - 迁移规划 / 双引擎演进：`tools/docs/FrontDoc-Evo.md` Part B
 - 运维 / 回滚流程：`tools/docs/FrontDoc-Ops.md`
-- 后端迁移计划：`CS-Web-Backend/docs/archive/migration_plan.md` Phase 6
+- 后端迁移计划与验证：`CS-Web-Backend/docs/BackDoc-MigV.md`（含 Phase 6 迁移脚本规划与执行验证）
 - 迁移执行记录：`数据迁移执行记录.md`（仓库根）

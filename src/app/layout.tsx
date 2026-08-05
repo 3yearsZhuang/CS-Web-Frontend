@@ -133,9 +133,15 @@ export default async function RootLayout({
         {/*
           防闪烁：SSR 默认深色，首帧由下方内联脚本按 next-themes 存储值校正主题类，
           避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
+
+          suppressHydrationWarning：浏览器 CSP 在校验后会把 DOM 中 <script> 的
+          nonce 属性移除（DOM 中 nonce=""），但 React 服务端 HTML 带 nonce="值"，
+          导致水合时属性不匹配。该脚本属一次性内联副作用，无需 React 协调其属性，
+          故抑制该元素的水合告警（与 <html suppressHydrationWarning> 同理）。
         */}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
           }}

@@ -1,63 +1,37 @@
 /**
- * @file 发布内容 /community/new — 版块选择 + 标题 + Markdown 正文
- * 编辑器复用 MarkdownEditor（内置工具栏 + 图片上传 + 预览切换）
+ * @file 发布内容 /community/new — 装配层
  *
- * 合并说明：原论坛(blog 之外的讨论)与博客文章统一为一套发布流程。
+ * 遵循 GENERAL 2.2「展示/容器分离」、2.4「组件 > 500 行拆分」：
+ * 本文件仅负责 Hero、鉴权态分支、表单编排与提示区；
+ * 全部状态与逻辑下放到 `useCompose` Hook，表单渲染拆分到 `ComposeForm`。
  */
 
 'use client';
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
-import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
-import { useConfirm } from '@/components/primitives/confirm-dialog';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import type { CommunityCategory } from '@/modules/community/types';
+import { useCompose } from './use-compose';
+import { ComposeForm } from './compose-form';
 
-/** 后端长度限制（与 server/forum.ts LIMITS 保持一致） */
-const LIMITS = {
-  TITLE_MIN: 4,
-  TITLE_MAX: 120,
-  CONTENT_MIN: 10,
-  CONTENT_MAX: 20000,
-} as const;
-
-interface CurrentUserResponse {
-  user: {
-    id: string;
-    role: 'user' | 'admin';
-  };
-}
-
-interface CategoriesResponse {
-  items: CommunityCategory[];
-}
-
-interface CreateTopicResponse {
-  ok: true;
-  topic: {
-    id: string;
-    categoryId: string;
-    category?: { slug: string; name: string } | null;
-  };
-}
-
-interface ErrorResponse {
-  error: string;
+export default function ComposePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="relative pt-16 min-h-screen flex items-center justify-center">
+          <SectionLoading label="Loading..." />
+        </main>
+      }
+    >
+      <ComposePageContent />
+    </Suspense>
+  );
 }
 
 function ComposePageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const { confirm } = useConfirm();
-
-  // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
+  const c = useCompose();
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -67,140 +41,8 @@ function ComposePageContent() {
     onTitleClick,
   };
 
-  // 预选版块（来自 query string，例如从列表页跳转过来）
-  const initialCategory = searchParams.get('category') ?? '';
-
-  // 数据状态
-  const [categories, setCategories] = useState<CommunityCategory[]>([]);
-  const [loadingCats, setLoadingCats] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // 表单状态
-  const [categoryId, setCategoryId] = useState('');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-
-  // 提交状态
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{
-    title?: string;
-    content?: string;
-    categoryId?: string;
-  }>({});
-
-  /** 加载当前用户 + 版块列表 */
-  const loadInitial = useCallback(async () => {
-    setLoadingCats(true);
-    try {
-      const [meRes, catRes] = await Promise.all([
-        fetch('/api/auth/me'),
-        fetch('/api/community/forum/categories'),
-      ]);
-
-      // 鉴权
-      if (meRes.ok) {
-        const me = (await meRes.json()) as CurrentUserResponse;
-        setIsLoggedIn(Boolean(me?.user?.id));
-      } else {
-        setIsLoggedIn(false);
-      }
-      setAuthChecked(true);
-
-      // 版块列表
-      if (catRes.ok) {
-        const catData = (await catRes.json()) as CategoriesResponse;
-        const cats = catData.items ?? [];
-        setCategories(cats);
-        // 自动选择预选版块或第一个版块
-        if (initialCategory) {
-          const matched = cats.find((c) => c.slug === initialCategory);
-          if (matched) {
-            setCategoryId(matched.id);
-          }
-        }
-        if (!categoryId && cats.length > 0) {
-          setCategoryId(cats[0].id);
-        }
-      }
-    } catch {
-      setFormError('加载失败，请刷新重试');
-    } finally {
-      setLoadingCats(false);
-    }
-    // 仅初始挂载时执行
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialCategory]);
-
-  useEffect(() => {
-    void loadInitial();
-  }, [loadInitial]);
-
-  /** 表单校验 */
-  const validate = (): boolean => {
-    const errs: typeof fieldErrors = {};
-
-    if (!categoryId) {
-      errs.categoryId = '请选择一个版块';
-    }
-
-    const trimmedTitle = title.trim();
-    if (trimmedTitle.length < LIMITS.TITLE_MIN) {
-      errs.title = `标题至少 ${LIMITS.TITLE_MIN} 个字符`;
-    } else if (trimmedTitle.length > LIMITS.TITLE_MAX) {
-      errs.title = `标题不能超过 ${LIMITS.TITLE_MAX} 个字符`;
-    }
-
-    const trimmedContent = content.trim();
-    if (trimmedContent.length < LIMITS.CONTENT_MIN) {
-      errs.content = `正文至少 ${LIMITS.CONTENT_MIN} 个字符`;
-    } else if (trimmedContent.length > LIMITS.CONTENT_MAX) {
-      errs.content = `正文不能超过 ${LIMITS.CONTENT_MAX} 个字符`;
-    }
-
-    setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  /** 提交新内容 */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    if (!validate()) return;
-
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/community/forum/topics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoryId,
-          title: title.trim(),
-          contentMarkdown: content,
-        }),
-      });
-
-      const data = (await res.json()) as CreateTopicResponse | ErrorResponse;
-      if (!res.ok) {
-        const errMsg = (data as ErrorResponse).error ?? '发布失败';
-        setFormError(errMsg);
-        return;
-      }
-
-      // 成功 — 跳转内容详情
-      const ok = data as CreateTopicResponse;
-      router.push(`/community/${ok.topic.id}`);
-    } catch {
-      setFormError('网络错误，请重试');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   // 鉴权未完成 — 显示 Loading
-  if (!authChecked || loadingCats) {
+  if (!c.authChecked || c.loadingCats) {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
         <SectionLoading label="Loading..." />
@@ -209,7 +51,7 @@ function ComposePageContent() {
   }
 
   // 未登录 — 提示登录
-  if (!isLoggedIn) {
+  if (!c.isLoggedIn) {
     return (
       <main className="relative pt-16">
         <section className="px-4 sm:px-6 md:px-8 py-20 sm:py-32 min-h-[60vh] flex items-center justify-center">
@@ -221,28 +63,17 @@ function ComposePageContent() {
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] leading-[1.8] mb-8">
               {'// 发布内容需要登录账户，加入社区讨论'}
             </p>
-            <Button
-              onClick={() => router.push('/login?redirect=/community/new')}
-            >
-              立即登录 →
-            </Button>
+            <Button onClick={() => c.router.push('/login?redirect=/community/new')}>立即登录 →</Button>
           </div>
         </section>
       </main>
     );
   }
 
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-
   return (
     <main className="relative pt-16">
       {/* ============ [ 00 ] Hero — 1s 后自动收缩悬浮 ============ */}
-      <CollapsingHero
-        index="00"
-        label="Compose"
-        hero={hero}
-        pageKey="posts-new"
-      >
+      <CollapsingHero index="00" label="Compose" hero={hero} pageKey="posts-new">
         <RevealTitle>
           <h1
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
@@ -284,181 +115,7 @@ function ComposePageContent() {
         className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]"
       >
         <div className="max-w-[1600px] mx-auto w-full">
-          <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-0">
-            {/* 左侧章节标记 */}
-            <div className="col-span-12 md:col-span-2 mb-6 md:mb-0">
-              <div className="section-marker">[ 01 ]</div>
-              <div className="meta-mono mt-2">表单 / Form</div>
-            </div>
-
-            {/* 右侧表单 */}
-            <div className="col-span-12 md:col-span-10">
-              {/* 版块选择 */}
-              <div className="mb-8">
-                <label
-                  htmlFor="category-select"
-                  className="meta-mono block mb-3 text-[var(--foreground)]"
-                >
-                  Category <span className="text-[var(--primary)]">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    id="category-select"
-                    value={categoryId}
-                    onChange={(e) => {
-                      setCategoryId(e.target.value);
-                      setFieldErrors((f) => ({ ...f, categoryId: undefined }));
-                    }}
-                    className={`${INPUT_CLASS} appearance-none pr-10 cursor-pointer`}
-                    disabled={categories.length === 0}
-                  >
-                    {categories.length === 0 ? (
-                      <option value="">无可用版块</option>
-                    ) : (
-                      categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                          {cat.description ? ` — ${cat.description.slice(0, 30)}` : ''}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  {/* 自定义下拉箭头 */}
-                  <span
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 meta-mono text-[var(--muted-foreground)]"
-                    aria-hidden="true"
-                  >
-                    ▼
-                  </span>
-                </div>
-                {fieldErrors.categoryId && (
-                  <div className="mt-2 meta-mono text-[var(--destructive)]">
-                    {fieldErrors.categoryId}
-                  </div>
-                )}
-                {selectedCategory?.description && (
-                  <div className="mt-3 meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[12px] leading-[1.7]">
-                    {'// '}{selectedCategory.description}
-                  </div>
-                )}
-              </div>
-
-              {/* 标题输入 */}
-              <div className="mb-8">
-                <label
-                  htmlFor="title-input"
-                  className="meta-mono block mb-3 text-[var(--foreground)]"
-                >
-                  Title <span className="text-[var(--primary)]">*</span>
-                </label>
-                <input
-                  id="title-input"
-                  type="text"
-                  value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
-                    setFieldErrors((f) => ({ ...f, title: undefined }));
-                  }}
-                  maxLength={LIMITS.TITLE_MAX}
-                  placeholder="简明扼要地描述主题..."
-                  className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <div className="meta-mono text-[var(--muted-foreground)]">
-                    {fieldErrors.title && (
-                      <span className="text-[var(--destructive)]">
-                        {fieldErrors.title}
-                      </span>
-                    )}
-                  </div>
-                  <div className="meta-mono text-[var(--muted-foreground)]">
-                    {title.length} / {LIMITS.TITLE_MAX}
-                  </div>
-                </div>
-              </div>
-
-              {/* 正文编辑器 */}
-              <div className="mb-8">
-                <label className="meta-mono block mb-3 text-[var(--foreground)]">
-                  Content <span className="text-[var(--primary)]">*</span>
-                </label>
-                <MarkdownEditor
-                  value={content}
-                  onChange={(v) => {
-                    setContent(v);
-                    setFieldErrors((f) => ({ ...f, content: undefined }));
-                  }}
-                  placeholder="在此输入正文...（支持 Markdown 语法，可上传图片）"
-                  minHeight={360}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <div className="meta-mono text-[var(--muted-foreground)]">
-                    {fieldErrors.content && (
-                      <span className="text-[var(--destructive)]">
-                        {fieldErrors.content}
-                      </span>
-                    )}
-                  </div>
-                  <div className="meta-mono text-[var(--muted-foreground)]">
-                    {content.length} / {LIMITS.CONTENT_MAX} chars
-                  </div>
-                </div>
-              </div>
-
-              {/* 全局错误提示 */}
-              {formError && (
-                <div className="mb-6 px-4 py-3 border border-[var(--destructive)] bg-[var(--destructive)]/5 meta-mono text-[var(--destructive)]">
-                  {formError}
-                </div>
-              )}
-
-              {/* 操作按钮 */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t border-[var(--border)]">
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-8 py-3 font-mono uppercase tracking-wider text-[12px]"
-                >
-                  {submitting ? 'Posting...' : '发布内容 →'}
-                </Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={async () => {
-                    const hasContent = title.trim() || content.trim();
-                    if (!hasContent) {
-                      setTitle('');
-                      setContent('');
-                      setFieldErrors({});
-                      setFormError(null);
-                      return;
-                    }
-                    const confirmed = await confirm({
-                      title: '清空内容',
-                      message: '确定要清空所有内容吗？',
-                      variant: 'warning',
-                      confirmLabel: '确认清空',
-                    });
-                    if (confirmed) {
-                      setTitle('');
-                      setContent('');
-                      setFieldErrors({});
-                      setFormError(null);
-                    }
-                  }}
-                  disabled={submitting}
-                >
-                  清空
-                </Button>
-                <Link
-                  href="/community"
-                  className="px-6 py-3 border border-[var(--border)] text-[var(--muted-foreground)] font-mono uppercase tracking-wider text-[12px] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber flex items-center"
-                >
-                  取消
-                </Link>
-              </div>
-            </div>
-          </form>
+          <ComposeForm {...c} />
         </div>
       </section>
 
@@ -508,19 +165,5 @@ function ComposePageContent() {
         </div>
       </section>
     </main>
-  );
-}
-
-export default function ComposePage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="relative pt-16 min-h-screen flex items-center justify-center">
-          <SectionLoading label="Loading..." />
-        </main>
-      }
-    >
-      <ComposePageContent />
-    </Suspense>
   );
 }
