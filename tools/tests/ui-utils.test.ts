@@ -20,8 +20,8 @@ describe('logs-utils (admin-logs-panel 拆分)', () => {
     adminEmail: 'a@fztbu.cn',
     targetUserId: 'u-1',
     targetEmail: 'u@fztbu.cn',
-    action: 'update_user' as const,
-    details: JSON.stringify({ role: { to: 'admin' } }),
+    action: 'user.grant_role' as const,
+    details: JSON.stringify({ role: 'admin' }),
     createdAt: '2026-01-01T00:00:00.000Z',
   };
 
@@ -31,7 +31,7 @@ describe('logs-utils (admin-logs-panel 拆分)', () => {
   });
 
   it('describeAction 解析 details 变更', () => {
-    expect(describeAction(base as never)).toContain('角色 → admin');
+    expect(describeAction(base as never)).toContain('授予了角色 admin');
   });
 
   it('formatAdminName 优先返回邮箱', () => {
@@ -72,8 +72,9 @@ describe('tool-types (admin-tools-panel 拆分)', () => {
   });
 
   it('formatDate 格式化 ISO 时间', () => {
-    expect(formatDate('2026-01-01')).toBe('2026-01-01 00:00');
-    expect(formatDate('invalid')).toBe('—');
+    // formatDate 使用本地时区，断言与 TZ 无关的日期片段；无效输入原样返回（utils.formatDateTime 约定）
+    expect(formatDate('2026-01-01T00:00:00Z')).toMatch(/2026.*01.*01/);
+    expect(formatDate('invalid')).toBe('invalid');
   });
 });
 

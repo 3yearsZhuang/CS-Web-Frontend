@@ -9,8 +9,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
-import { requireAdmin, requireRoot } from '@/modules/admin/server';
-import { logAdminAction } from '@/shared/security/audit';
+import { requireAdmin, requireRoot } from '@/shared/security/guards';
 import {
   parseJsonBody,
   assertAllowedOrigin,
@@ -18,6 +17,27 @@ import {
   jsonError,
   adminActionsLimiter,
 } from '@/shared/security/security';
+import { proxyBackend } from '@/shared/backend-client';
+
+/**
+ * 审计开发文档变更 — 经 BFF 转发至后端 POST /api/v1/audit/logs。
+ * actor / client_meta（IP、UA）由后端依据鉴权用户与请求自动填充，前端无法伪造。
+ */
+async function auditDevDoc(
+  req: Request,
+  action: string,
+  detail: Record<string, unknown>,
+): Promise<void> {
+  await proxyBackend(req, {
+    path: '/audit/logs',
+    method: 'POST',
+    jsonBody: {
+      action,
+      resource_type: 'dev_doc',
+      detail,
+    },
+  });
+}
 
 export const runtime = 'nodejs';
 
@@ -107,8 +127,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
 
   try {
     fs.writeFileSync(filePath, body.content, 'utf-8');
-    // 审计失败不应阻断文档写入（迁移后前端 SQLite admin_actions 外键不再与后端用户对齐）。
-    await logAdminAction(root.user.id, 'dev-docs.update', null, { slug, size: body.content.length }, ip, req.headers.get('user-agent')).catch(() => {});
+    // 审计失败不应阻断文档写入（后端审计 actor/client_meta 自鉴权与请求自动填充）。
+    await auditDevDoc(req, 'dev-docs.update', { slug, size: body.content.length }).catch(() => {});
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('写入文档失败', 500);
@@ -135,9 +155,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug:
 
   try {
     fs.unlinkSync(filePath);
-    const ip = getClientIp(req);
     // 审计失败不应阻断文档删除（同 PUT 说明）。
-    await logAdminAction(root.user.id, 'dev-docs.delete', null, { slug }, ip, req.headers.get('user-agent')).catch(() => {});
+    await auditDevDoc(req, 'dev-docs.delete', { slug }).catch(() => {});
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('删除文档失败', 500);

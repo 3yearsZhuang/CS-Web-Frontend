@@ -74,7 +74,7 @@ async function main() {
   console.log(`▶ Clearing port ${port} before start...`);
   await killPortIfListening(port);
 
-  // SQLite DB 父目录
+  // 上传文件根目录（前端不再有 SQLite，data/ 仅用于运行时本地文件）
   const dataDir = resolve(projectRoot, 'data');
   if (!existsSync(dataDir)) {
     console.log(`▶ Creating data directory: ${dataDir}`);

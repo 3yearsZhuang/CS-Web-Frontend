@@ -89,16 +89,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Audit (production deps only)
-        run: pnpm audit --prod
-        continue-on-error: true
-        # 1.0 阶段：audit 失败不阻塞 CI（仅警告）。
-        # 后续可改为阻塞：移除 continue-on-error。
-        # 详见 Devdocs-roadmap.md R19。
+      - name: Audit (production deps, blocking on moderate+)
+        run: pnpm audit --prod --audit-level=moderate
+        # 1.0 GA 门禁（G1）：中危及以上漏洞强制阻断发布，杜绝"带洞上线"。
+        # 误报可用 `pnpm audit` 给出的豁免方式处理；不应再通过 continue-on-error 放行。
 
       - name: Audit summary
         if: always()
         run: |
           echo "## Dependency Audit" >> $GITHUB_STEP_SUMMARY
-          echo "审计结果仅作参考，0.9.1 阶段不阻塞 CI。" >> $GITHUB_STEP_SUMMARY
-          echo "高危漏洞应记录至 Devdocs-roadmap.md R 表并尽快修复。" >> $GITHUB_STEP_SUMMARY
+          echo "生产依赖审计（moderate+ 阻断）。出现中危以上漏洞时 CI 已失败，须修复或经团队评审豁免后方可合并。" >> $GITHUB_STEP_SUMMARY

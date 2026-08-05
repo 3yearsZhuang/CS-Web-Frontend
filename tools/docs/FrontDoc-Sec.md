@@ -72,7 +72,7 @@
 |---|------|------|------|:---:|------|:---:|
 | 10 | 速率限制为单进程内存实现 | 🟡中 | `shared/security/security.ts` | **[BFF]+[后端]** | BFF 仍为单进程内存限流（仅 Origin 校验等 BFF 自身用）；业务限流已由后端 Redis 实现 | ✅ 已标注 |
 | 11 | 输入校验 | - | `shared/security/security.ts` | **[BFF]** | BFF 全入口 Zod `validateBody` + Content-Type 校验；密码上限 1024 字节防 scrypt DoS（遗留，后端 bcrypt 也有 72 字节限制） | ✅ 良好 |
-| 12 | 速率限制覆盖 | - | `shared/security/security.ts` | **[后端]** | 原前端 18 场景限流器多为遗留；业务限流覆盖由后端统一 | ✅ 良好 |
+| 12 | 速率限制覆盖 | - | `shared/security/security.ts` | **[后端]** | 前端 18 场景限流器多为遗留；业务限流覆盖由后端统一 | ✅ 良好 |
 
 ### A05: 安全配置错误
 

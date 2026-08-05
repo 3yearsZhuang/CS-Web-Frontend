@@ -1,14 +1,12 @@
 /**
- * @file 管理员身份校验守卫 — 请求级身份校验 + 高危操作二次密码确认
+ * @file 管理员身份校验守卫（纯 BFF 版，无 server 依赖）— 请求级身份校验 + 模块权限判定
  *
- * 鉴权统一走后端 JWT（BFF HttpOnly Cookie 中的 access/refresh token），
- * 通过 /auth/me 实时读取用户与角色。前身为前端 SQLite session（auth_session），
- * 在 SQLite → PostgreSQL 数据迁移后该 session 已与后端登录解耦、登录不再创建，
- * 继续依赖会导致开发者中心等 requireAdmin 守卫的接口永远 401。
+ * 从请求解析后端身份（/auth/me），以角色实时判定 admin/module 权限。
+ * 不依赖 src/modules 下各模块的 server 层与 src/shared/db（纯 BFF 收口，B1 阶段1），
+ * RBAC 纯函数 hasModulePermission 来自 src/modules/auth/types（无 DB 依赖）。
  */
-import { type SafeUser } from '@/shared/types';
-import { isAdminRole } from '@/shared/types';
-import { hasModulePermission, type AdminModule } from '@/modules/auth/server';
+import { type SafeUser, isAdminRole } from '@/shared/types';
+import { hasModulePermission, type AdminModule } from '@/modules/auth/types';
 import { NextResponse } from 'next/server';
 import { proxyBackend, toSafeUserFromBackend, type BackendUser } from '@/shared/backend-client';
 
@@ -86,34 +84,4 @@ export async function requireModuleAdmin(req: Request, module: AdminModule): Pro
     };
   }
   return { ok: true, user: admin.user };
-}
-
-/**
- * 高危操作二次密码确认 — 以 /auth/me 校验身份；密码二次确认需由后端完成。
- * 注意：前端 SQLite 的 password_hash 在迁移后不再与后端同步，这里不再本地比对密码，
- * 保留签名以兼容尚未接入的调用方。
- */
-export async function requirePasswordConfirmation(
-  req: Request,
-  password: string,
-): Promise<
-  | { ok: true; user: SafeUser }
-  | { ok: false; response: NextResponse }
-> {
-  const admin = await requireAdmin(req);
-  if (!admin.ok) return admin;
-
-  if (!password) {
-    return { ok: false, response: NextResponse.json({ error: '高危操作需要输入密码确认', code: 'PASSWORD_REQUIRED' }, { status: 403 }) };
-  }
-
-  // 迁移后前端 SQLite 密码哈希不再可信，密码二次确认应由后端鉴权端点承担。
-  // 当前无调用方接入，这里返回明确错误，避免走无效的本地比对路径。
-  return {
-    ok: false,
-    response: NextResponse.json(
-      { error: '密码确认需通过后端鉴权，当前端点未支持', code: 'NOT_SUPPORTED' },
-      { status: 501 },
-    ),
-  };
 }

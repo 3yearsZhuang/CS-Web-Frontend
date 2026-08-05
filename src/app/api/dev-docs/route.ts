@@ -7,7 +7,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
-import { requireAdmin } from '@/modules/admin/server';
+import { requireAdmin } from '@/shared/security/guards';
 import {
   assertAllowedOrigin,
   getClientIp,
