@@ -1,5 +1,7 @@
 # FZTBUCS-Evolution-演进路线图与迁移文档
 
+> **当前进度 / 真实状态（2026-08-06）**：前后端分离已完成（前端为 BFF 薄转发，运行时不复读 SQLite）；后端 FastAPI + PostgreSQL 承载全部业务。事件总线跨实例（ADR-014）于 2026-08-06 落地（arq/Redis 广播）。论坛 + 成员搜索已升级为 GIN + tsvector（替代原 ILIKE 降级）。本文中标注 `⚠️ 规划中` 的段落为远期目标态，尚未落地。
+
 > 文档定位：演进规划与迁移实施权威文档（reference + how-to）
 > 受众：架构师 / 技术负责人 / 后端迁移实施者 / oncall / 发布决策者
 > Source of truth：功能规划、架构决策（ADR）、迁移路径的唯一权威位置
