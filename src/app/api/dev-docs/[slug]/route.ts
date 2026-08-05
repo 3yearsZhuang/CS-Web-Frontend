@@ -107,7 +107,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
 
   try {
     fs.writeFileSync(filePath, body.content, 'utf-8');
-    await logAdminAction(root.user.id, 'dev-docs.update', null, { slug, size: body.content.length }, ip, req.headers.get('user-agent'));
+    // 审计失败不应阻断文档写入（迁移后前端 SQLite admin_actions 外键不再与后端用户对齐）。
+    await logAdminAction(root.user.id, 'dev-docs.update', null, { slug, size: body.content.length }, ip, req.headers.get('user-agent')).catch(() => {});
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('写入文档失败', 500);
@@ -135,7 +136,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug:
   try {
     fs.unlinkSync(filePath);
     const ip = getClientIp(req);
-    await logAdminAction(root.user.id, 'dev-docs.delete', null, { slug }, ip, req.headers.get('user-agent'));
+    // 审计失败不应阻断文档删除（同 PUT 说明）。
+    await logAdminAction(root.user.id, 'dev-docs.delete', null, { slug }, ip, req.headers.get('user-agent')).catch(() => {});
     return NextResponse.json({ ok: true, slug });
   } catch {
     return jsonError('删除文档失败', 500);

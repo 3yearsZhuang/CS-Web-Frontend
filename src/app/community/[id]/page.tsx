@@ -25,6 +25,7 @@ import { useTopicDetail } from '@/shared/hooks/use-topic-detail';
 import { useTopicActions } from '@/shared/hooks/use-topic-actions';
 import { useReplyActions } from '@/shared/hooks/use-reply-actions';
 import type { CommunityPostDetail } from '@/modules/community/types';
+import { isAdminRole } from '@/shared/types';
 
 export default function CommunityPostDetailPage() {
   const params = useParams<{ id: string }>();
@@ -137,7 +138,7 @@ export default function CommunityPostDetailPage() {
   if (!topic) return null;
 
   const isAuthor = !!currentUser && currentUser.id === topic.authorId;
-  const isCurrentUserAdmin = !!currentUser && currentUser.role === 'admin';
+  const isCurrentUserAdmin = !!currentUser && isAdminRole(currentUser.role);
   const isLoggedIn = !!currentUser;
 
   return (

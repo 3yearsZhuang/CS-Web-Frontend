@@ -507,11 +507,11 @@
 | 单元测试双 dialect 覆盖 | ⬜ | vitest 注入 `DATABASE_DIALECT=mock-pg` 或用 `pg-mem` |
 | 集成测试 PG 真实连接 | ⬜ | CI 起 PG 容器 |
 
-### Phase 5：生产切换与回滚 ⬜（待办）
+### Phase 5：生产切换与回滚 ⬜（部分完成）
 
 | 项 | 状态 | 说明 |
 |----|------|------|
-| 数据迁移脚本（SQLite → PG 全量导出导入） | ⬜ | `tools/scripts/migrate-sqlite-to-pg.ts` |
+| 数据迁移脚本（SQLite → PG 全量导出导入） | ✅ 已完成 2026-08-05 | `tools/scripts/migrate-sqlite-to-pg.mjs`，用法/注意事项见 [Devdocs-pg-migration.md](Devdocs-pg-migration.md) |
 | 双写验证期（同时写 SQLite + PG，比对一致性） | ⬜ | 灰度期 |
 | 切换 `DATABASE_DIALECT=postgres`（停机窗口） | ⬜ | 见 [Devdocs-Ops.md](Devdocs-Ops.md) 回滚流程 |
 | 回滚预案（PG 故障切回 SQLite） | ⬜ | 保留 SQLite 实例 + 增量同步 |
@@ -524,7 +524,7 @@
 - [ ] Phase 3：替换全部 raw SQL 为 Drizzle query builder
 - [ ] Phase 3：事务 API 异步化（服务层 `async/await`）
 - [ ] Phase 4：`PostgresRepository` 实现 + 双 dialect 单测
-- [ ] Phase 5：SQLite → PG 数据迁移脚本
+- [x] Phase 5：SQLite → PG 数据迁移脚本（2026-08-05，见 [Devdocs-pg-migration.md](Devdocs-pg-migration.md)）
 - [ ] Phase 5：双写验证期 + 回滚预案
 - [ ] CI 集成：PG 容器跑集成测试（当前仅 SQLite 单测）
 
@@ -553,6 +553,7 @@
 | `drizzle.config.ts` | Drizzle 配置（dialect 切换）|
 | `src/shared/db/drizzle/` | 各模块 Drizzle/PG schema 定义（getXxxSchema 工厂） |
 | `src/shared/db/sqlite/` | 各模块 SQLite 建表脚本（initXxxSchema） |
+| `tools/scripts/migrate-sqlite-to-pg.mjs` | SQLite → PG 数据迁移脚本（UUID→Integer 重映射 + 依赖序导入 + 类型转换 + setval + 幂等）；用法见 [Devdocs-pg-migration.md](Devdocs-pg-migration.md) |
 
 ---
 

@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   if (adminId) params.set('admin_id', adminId);
   if (action) params.set('action', action);
 
-  const proxy = await proxyBackend(req, { path: `/admin/audit-logs?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/audit/logs?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({ actions: items.map(toAdminAction) });
@@ -34,10 +34,10 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: '缺少日期参数', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
+  // 后端批量清理：DELETE /audit/logs?before=<iso>（query 参数）
   const proxy = await proxyBackend(req, {
-    path: '/admin/audit-logs/cleanup',
+    path: `/audit/logs?before=${encodeURIComponent(body.before)}`,
     method: 'DELETE',
-    jsonBody: { before: body.before },
   });
 
   if (proxy.status !== 200) {

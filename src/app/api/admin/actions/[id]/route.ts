@@ -16,7 +16,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/audit-logs/${encodeURIComponent(id)}`,
+    path: `/audit/logs/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 

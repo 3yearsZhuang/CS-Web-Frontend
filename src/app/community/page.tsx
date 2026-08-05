@@ -17,7 +17,6 @@ import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip'
 import { AdminForumPanel } from '@/modules/community/ui/forum-admin-panel';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
-import { FilterBar } from '@/components/primitives/filter-bar';
 import type {
   FeedItem,
   FeedKind,
@@ -209,7 +208,7 @@ function CommunityPageContent() {
       .catch(() => {});
 
     // 活跃用户
-    fetch('/api/members?sort=active&limit=6')
+    fetch('/api/community/members?sort=active&limit=6')
       .then(async (res) => {
         if (!res.ok) return;
         const data = (await res.json()) as { members: MemberItem[] };
@@ -443,18 +442,8 @@ function CommunityPageContent() {
                 </div>
               </div>
 
-              {/* 类型 Tab 按钮组 — 桌面端复用 FilterBar（移动端由 FloatingCapsuleSidebar 的 SectionNav 承载，避免重复） */}
-              <FilterBar
-                options={TAB_OPTIONS.map((opt) => ({
-                  value: opt.key,
-                  label: opt.label.split(' / ')[0],
-                  num: opt.num,
-                }))}
-                value={activeTab}
-                onChange={handleTabChange}
-                showNumber
-                className="hidden md:block mb-8"
-              />
+              {/* 类型 Tab 已由 CollapsingHero 的胶囊统一承载（桌面悬浮胶囊 + 移动端 SectionNav），
+                  此处不再重复渲染 FilterBar，避免「01全部/03论坛/04博客」双份出现。 */}
 
               {/* 搜索条 */}
               <form onSubmit={handleSearchSubmit} className="mb-8">

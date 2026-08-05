@@ -45,6 +45,8 @@ export interface AdminAction {
   adminEmail: string | null;
   adminDisplayName: string | null;
   action: string;
+  resourceType: string | null;
+  resourceId: string | null;
   targetUserId: string | null;
   targetEmail: string | null;
   targetDisplayName: string | null;

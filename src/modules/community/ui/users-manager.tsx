@@ -14,7 +14,7 @@ interface AdminUserItem {
   id: string;
   displayName: string | null;
   email: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'root';
   isActive: boolean;
   createdAt: string;
 }
@@ -167,8 +167,8 @@ export function UsersManager() {
                   <span className="font-mono text-[12px] text-[var(--muted-foreground)] truncate block">{user.email}</span>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.role === 'admin' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
-                    {user.role === 'admin' ? 'ADMIN' : 'USER'}
+                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.role === 'root' ? 'border-[var(--destructive)] text-[var(--destructive)]' : user.role === 'admin' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
+                    {user.role === 'root' ? 'ROOT' : user.role === 'admin' ? 'ADMIN' : 'USER'}
                   </span>
                 </div>
                 <div className="lg:col-span-1">

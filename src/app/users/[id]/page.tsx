@@ -187,7 +187,10 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 {displayName}
               </h1>
               <p className="meta-mono text-[var(--muted-foreground)] mt-1">
-                {user.role === 'root' ? '超级管理员' : user.role === 'admin' ? '管理员' : '成员'} · 加入于 {new Date(user.createdAt).toLocaleDateString('zh-CN')}
+                <span className={user.role === 'root' ? 'text-[var(--destructive)]' : user.role === 'admin' ? 'text-[var(--primary)]' : undefined}>
+                  {user.role === 'root' ? '超级管理员' : user.role === 'admin' ? '管理员' : '成员'}
+                </span>
+                {' · '}加入于 {new Date(user.createdAt).toLocaleDateString('zh-CN')}
               </p>
             </div>
           </div>

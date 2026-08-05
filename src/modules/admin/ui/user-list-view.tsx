@@ -196,8 +196,8 @@ export function UserListView({
                         </div>
                       </td>
                       <td className="py-4 pr-4">
-                        <span className={`meta-mono ${u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}>
-                          {u.role === 'admin' ? '● Admin' : '○ User'}
+                        <span className={`meta-mono ${u.role === 'root' ? 'text-[var(--destructive)]' : u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}>
+                          {u.role === 'root' ? '● Root' : u.role === 'admin' ? '● Admin' : '○ User'}
                         </span>
                       </td>
                       <td className="py-4 pr-4">
@@ -266,7 +266,7 @@ export function UserListView({
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div>
                       <div className="meta-mono text-[var(--muted-foreground)]">角色 / Role</div>
-                      <div className={`meta-mono mt-1 ${u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>{roleLabel(u.role)}</div>
+                      <div className={`meta-mono mt-1 ${u.role === 'root' ? 'text-[var(--destructive)]' : u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>{roleLabel(u.role)}</div>
                     </div>
                     <div>
                       <div className="meta-mono text-[var(--muted-foreground)]">状态 / Status</div>

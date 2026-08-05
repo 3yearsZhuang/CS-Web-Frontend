@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+### Added
+
+#### 架构与工程质量
+- **数据迁移脚本** `tools/scripts/migrate-sqlite-to-pg.mjs`：SQLite → PostgreSQL 全量迁移（UUID→Integer 主键重映射 + 依赖序导入 + 类型转换 + 序列 setval + 幂等/RESET）；用法与注意事项见新增文档 `tools/docs/Devdocs-pg-migration.md`。
+- **迁移文档** `tools/docs/Devdocs-pg-migration.md`：迁移脚本唯一权威使用说明（用法/env 变量/迁移范围取舍/踩坑记录/静态资源复制/验证清单）。
+- 后端 `.gitignore` 追加 `data/`（运行时上传目录不入库）。
+
 ### Changed
 
 #### 架构与工程质量

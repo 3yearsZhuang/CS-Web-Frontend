@@ -84,14 +84,14 @@ export function resolvePrimaryRole(roles?: string[]): UserRole {
   return 'user';
 }
 
-/** 后端 UserOut → 前端 SafeUser（角色由 roles 解析；缺省按 is_superuser 兜底） */
+/** 后端 UserOut → 前端 SafeUser（is_superuser 视为 root；否则由 roles 解析） */
 export function toSafeUserFromBackend(user: BackendUser, roles?: string[]): SafeUser {
-  const role =
-    roles && roles.length > 0
-      ? resolvePrimaryRole(roles)
-      : user.is_superuser
-        ? 'root'
-        : 'user';
+  // SQLite→PG 迁移后超级用户被映射为 admin 角色 + is_superuser=true（不再有独立 root 角色）。
+  // is_superuser 在后端 RBAC 中拥有全部权限（rbac.py 旁路），语义等价 root，
+  // 因此优先于显式角色列表解析为 root，保证 root 专属 UI/端点对超级用户可见。
+  const role = user.is_superuser
+    ? 'root'
+    : resolvePrimaryRole(roles);
   return {
     id: String(user.id),
     email: user.email,
@@ -445,15 +445,32 @@ export interface AuditLogLike {
 
 /** 后端 AuditLogItem → 前端 AdminAction */
 export function toAdminAction(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
+  // 后端审计 detail 里可能携带被操作资源的身份信息（email/username/名称），
+  // 用于前端展示"被操作的用户/资源"；无则回落到 resource_id / resource_type。
+  let detailObj: Record<string, unknown> | null = null;
+  if (r.detail && typeof r.detail === 'object') {
+    detailObj = r.detail as Record<string, unknown>;
+  }
+  const targetEmail =
+    (detailObj && (detailObj.email as string | undefined)) ??
+    (detailObj && (detailObj.target_email as string | undefined)) ??
+    null;
+  const targetName =
+    (detailObj && (detailObj.username as string | undefined)) ??
+    (detailObj && (detailObj.display_name as string | undefined)) ??
+    (detailObj && (detailObj.name as string | undefined)) ??
+    null;
   return {
     id: String(r.id),
     adminId: r.actor_id != null ? String(r.actor_id) : null,
     adminEmail: r.actor_username ?? null,
     adminDisplayName: r.actor_username ?? null,
     action: r.action,
-    targetUserId: r.resource_type === 'user' && r.resource_id ? r.resource_id : null,
-    targetEmail: null,
-    targetDisplayName: null,
+    resourceType: r.resource_type ?? null,
+    resourceId: r.resource_id != null ? String(r.resource_id) : null,
+    targetUserId: r.resource_type === 'user' && r.resource_id ? String(r.resource_id) : null,
+    targetEmail: targetEmail ?? null,
+    targetDisplayName: targetName ?? null,
     details: r.detail ? JSON.stringify(r.detail) : null,
     ip: r.ip_address ?? null,
     userAgent: r.user_agent ?? null,
