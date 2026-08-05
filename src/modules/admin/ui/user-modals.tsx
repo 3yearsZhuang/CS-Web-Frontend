@@ -7,6 +7,7 @@
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
 import { Button } from '@/components';
+import { useTranslations } from 'next-intl';
 import { LIMITS, type UserRole } from '@/modules/admin/ui/types';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { roleLabel, type EditForm, type UserModal } from './users-panel-utils';
@@ -67,37 +68,38 @@ export function UserModals({
   onReject,
   onClose,
 }: UserModalsProps) {
+  const t = useTranslations('adminUsers');
   return (
     <>
       {/* ============ 模态框：编辑 ============ */}
       {modal.type === 'edit' && editForm && (
-        <ModalShell title="[ 编辑用户 / Edit User ]" onClose={onClose}>
+        <ModalShell title={t('editUser')} onClose={onClose}>
           <form onSubmit={onEditSubmit} className="space-y-6">
             <div className="meta-mono text-[var(--muted-foreground)] break-all">{modal.user.email}</div>
 
-            <Field label="Display Name" count={`${editForm.displayName.length}/${LIMITS.DISPLAY_NAME_MAX}`}>
+            <Field label={t('displayName')} count={`${editForm.displayName.length}/${LIMITS.DISPLAY_NAME_MAX}`}>
               <input
                 type="text"
                 value={editForm.displayName}
                 maxLength={LIMITS.DISPLAY_NAME_MAX}
                 onChange={(e) => setEditForm((f) => ({ ...f!, displayName: e.target.value }))}
                 className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
-                placeholder="如何称呼？"
+                placeholder={t('howToAddress')}
               />
             </Field>
 
-            <Field label="Bio" count={`${editForm.bio.length}/${LIMITS.BIO_MAX}`}>
+            <Field label={t('bio')} count={`${editForm.bio.length}/${LIMITS.BIO_MAX}`}>
               <textarea
                 value={editForm.bio}
                 maxLength={LIMITS.BIO_MAX}
                 rows={3}
                 onChange={(e) => setEditForm((f) => ({ ...f!, bio: e.target.value }))}
                 className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-                placeholder="一句话介绍"
+                placeholder={t('introOneLine')}
               />
             </Field>
 
-            <Field label="GitHub">
+            <Field label={t('github')}>
               <input
                 type="url"
                 value={editForm.githubUrl}
@@ -108,7 +110,7 @@ export function UserModals({
               />
             </Field>
 
-            <Field label="网站 / Website">
+            <Field label={t('website')}>
               <input
                 type="url"
                 value={editForm.websiteUrl}
@@ -120,7 +122,7 @@ export function UserModals({
             </Field>
 
             <div>
-              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 角色 / Role ]</div>
+              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('role')}</div>
               <div className="flex gap-1.5">
                 {(['user', 'admin'] as UserRole[]).map((r) => (
                   <button
@@ -140,7 +142,7 @@ export function UserModals({
             </div>
 
             <div>
-              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 状态 / Status ]</div>
+              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('status')}</div>
               <div className="flex gap-1.5">
                 <button
                   type="button"
@@ -151,7 +153,7 @@ export function UserModals({
                       : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                   }`}
                 >
-                  启用
+                  {t('enable')}
                 </button>
                 <button
                   type="button"
@@ -162,7 +164,7 @@ export function UserModals({
                       : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--destructive)]/60 hover:text-[var(--foreground)]'
                   }`}
                 >
-                  禁用
+                  {t('disable')}
                 </button>
               </div>
             </div>
@@ -175,14 +177,14 @@ export function UserModals({
 
             <div className="flex items-center gap-4 pt-2">
               <Button type="submit" loading={editSaving}>
-                {editSaving ? '保存中 / Saving...' : '保存更改 / Save Changes →'}
+                {editSaving ? t('saving') : t('saveChanges')}
               </Button>
               <button
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </form>
@@ -191,23 +193,23 @@ export function UserModals({
 
       {/* ============ 模态框：重置密码 ============ */}
       {modal.type === 'reset' && (
-        <ModalShell title="[ 重置密码 / Reset Password ]" onClose={onClose}>
+        <ModalShell title={t('resetPassword')} onClose={onClose}>
           <form onSubmit={onResetSubmit} className="space-y-6">
-            <div className="meta-mono text-[var(--muted-foreground)] break-all">目标用户：{modal.user.email}</div>
+            <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetUser', { email: modal.user.email })}</div>
 
-            <Field label="新密码 / New Password" count={`≥ ${LIMITS.PASSWORD_MIN}`}>
+            <Field label={t('newPassword')} count={`≥ ${LIMITS.PASSWORD_MIN}`}>
               <input
                 type="password"
                 value={resetPassword}
                 onChange={(e) => setResetPassword(e.target.value)}
                 autoFocus
                 className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
-                placeholder={`至少 ${LIMITS.PASSWORD_MIN} 位`}
+                placeholder={t('passwordMin', { min: LIMITS.PASSWORD_MIN })}
               />
             </Field>
 
             <div className="p-3 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[11px] font-mono leading-relaxed text-[var(--muted-foreground)]">
-              重置后该用户的所有登录会话将立即失效，需使用新密码重新登录。
+              {t('resetSessionNote')}
             </div>
 
             {resetError && (
@@ -218,14 +220,14 @@ export function UserModals({
 
             <div className="flex items-center gap-4 pt-2">
               <Button type="submit" loading={resetSaving}>
-                {resetSaving ? 'Resetting...' : 'Reset Password →'}
+                {resetSaving ? t('resetting') : t('resetPasswordBtn')}
               </Button>
               <button
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </form>
@@ -234,24 +236,24 @@ export function UserModals({
 
       {/* ============ 模态框：默认密码重置确认 ============ */}
       {modal.type === 'resetDefault' && (
-        <ModalShell title="[ 重置为默认密码 / Reset to Default ]" onClose={onClose}>
+        <ModalShell title={t('resetToDefault')} onClose={onClose}>
           <div className="space-y-6">
-            <div className="meta-mono text-[var(--muted-foreground)] break-all">目标用户：{modal.user.email}</div>
-            <p className="text-[14px] text-[var(--foreground)] leading-relaxed">确认将该用户密码重置为默认密码？</p>
+            <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetUser', { email: modal.user.email })}</div>
+            <p className="text-[14px] text-[var(--foreground)] leading-relaxed">{t('resetDefaultConfirm')}</p>
             <div className="p-3 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[11px] font-mono leading-relaxed text-[var(--muted-foreground)]">
-              重置后密码将变为 <span className="font-bold text-[var(--primary)]">FZTBU_CS</span>，该用户的所有登录会话将立即失效，需使用默认密码重新登录。
+              {t('resetDefaultDesc', { password: t('defaultPassword') })}
             </div>
 
             <div className="flex items-center gap-4 pt-2">
               <Button type="button" onClick={onResetDefault}>
-                确认重置 / Confirm →
+                {t('confirmReset')}
               </Button>
               <button
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -262,16 +264,16 @@ export function UserModals({
       {modal.type === 'delete' && (
         <ConfirmDialog
           open={true}
-          title="删除用户"
-          message="确认删除该用户？此操作不可撤销。"
+          title={t('deleteTitle')}
+          message={t('deleteMessage')}
           variant="danger"
-          confirmLabel={deleteSaving ? '删除中...' : '确认删除'}
+          confirmLabel={deleteSaving ? t('deleting') : t('confirmDelete')}
           loading={deleteSaving}
           onConfirm={onDelete}
           onCancel={onClose}
         >
           <div className="p-3 border border-[var(--border)] bg-[var(--muted)]/[0.3]">
-            <div className="text-[13px] font-mono text-[var(--foreground)] break-all">{modal.user.displayName || '未命名'}</div>
+            <div className="text-[13px] font-mono text-[var(--foreground)] break-all">{modal.user.displayName || t('unnamed')}</div>
             <div className="meta-mono mt-1 break-all">{modal.user.email}</div>
           </div>
           {deleteError && (
@@ -286,35 +288,35 @@ export function UserModals({
       {modal.type === 'disable' && (
         <ConfirmDialog
           open={true}
-          title={modal.user.isActive ? '禁用用户' : '启用用户'}
-          message={modal.user.isActive ? '确认禁用该用户？' : '确认启用该用户？'}
+          title={modal.user.isActive ? t('disableUser') : t('enableUser')}
+          message={modal.user.isActive ? t('confirmDisable') : t('confirmEnable')}
           variant={modal.user.isActive ? 'danger' : 'info'}
-          confirmLabel={modal.user.isActive ? '确认禁用' : '确认启用'}
+          confirmLabel={modal.user.isActive ? t('confirmDisable') : t('confirmEnable')}
           onConfirm={onToggleActive}
           onCancel={onClose}
         >
           <div className="p-3 border border-[var(--border)] bg-[var(--muted)]/[0.3]">
-            <div className="text-[13px] font-mono text-[var(--foreground)] break-all">{modal.user.displayName || '未命名'}</div>
+            <div className="text-[13px] font-mono text-[var(--foreground)] break-all">{modal.user.displayName || t('unnamed')}</div>
             <div className="meta-mono mt-1 break-all">{modal.user.email}</div>
           </div>
           {modal.user.isActive && (
             <div className="p-4 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--destructive)]">
-              <div className="mb-2 font-semibold">禁用后果 / Consequences：</div>
+              <div className="mb-2 font-semibold">{t('disableConsequences')}</div>
               <ul className="list-disc pl-4 space-y-1">
-                <li>该用户将无法登录系统</li>
-                <li>该用户将无法创建新帖或发表回复</li>
-                <li>该用户已发布的内容仍保留，不会删除</li>
-                <li>该用户的活动报名将保持有效</li>
+                <li>{t('disableC1')}</li>
+                <li>{t('disableC2')}</li>
+                <li>{t('disableC3')}</li>
+                <li>{t('disableC4')}</li>
               </ul>
             </div>
           )}
           {!modal.user.isActive && (
             <div className="p-4 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--primary)]">
-              <div className="mb-2 font-semibold">启用说明 / Notes：</div>
+              <div className="mb-2 font-semibold">{t('enableNotes')}</div>
               <ul className="list-disc pl-4 space-y-1">
-                <li>该用户将恢复登录权限</li>
-                <li>该用户将恢复发帖和回复权限</li>
-                <li>已发布的内容不会受影响</li>
+                <li>{t('enableN1')}</li>
+                <li>{t('enableN2')}</li>
+                <li>{t('enableN3')}</li>
               </ul>
             </div>
           )}
@@ -323,22 +325,22 @@ export function UserModals({
 
       {/* ============ 模态框：批准确认 ============ */}
       {modal.type === 'approve' && (
-        <ModalShell title="[ 批准并重置 / Approve & Reset ]" onClose={onClose}>
+        <ModalShell title={t('approveReset')} onClose={onClose}>
           <div className="space-y-6">
-            <div className="meta-mono text-[var(--muted-foreground)] break-all">目标申请：{modal.request.email}</div>
+            <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetRequest', { email: modal.request.email })}</div>
 
             <div className="p-4 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--primary)]">
-              批准后该用户密码将重置为 <span className="font-bold">FZTBU_CS</span>，用户可使用新密码登录。
+              {t('resetDefaultDesc', { password: t('defaultPassword') })}
             </div>
 
-            <Field label="管理员备注（可选）/ Admin Note">
+            <Field label={t('approveNoteLabel')}>
               <textarea
                 value={approveNote}
                 onChange={(e) => setApproveNote(e.target.value)}
                 rows={3}
                 maxLength={200}
                 className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-                placeholder="管理员备注（可选）"
+                placeholder={t('approveNotePlaceholder')}
               />
             </Field>
 
@@ -350,14 +352,14 @@ export function UserModals({
 
             <div className="flex items-center gap-4 pt-2">
               <Button type="button" loading={resetActionLoading} onClick={onApprove}>
-                {resetActionLoading ? 'Processing...' : 'Confirm Approve →'}
+                {resetActionLoading ? t('processing') : t('confirmApprove')}
               </Button>
               <button
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -366,18 +368,18 @@ export function UserModals({
 
       {/* ============ 模态框：拒绝备注 ============ */}
       {modal.type === 'reject' && (
-        <ModalShell title="[ 拒绝申请 / Reject Request ]" onClose={onClose}>
+        <ModalShell title={t('rejectRequest')} onClose={onClose}>
           <div className="space-y-6">
-            <div className="meta-mono text-[var(--muted-foreground)] break-all">目标申请：{modal.request.email}</div>
+            <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetRequest', { email: modal.request.email })}</div>
 
-            <Field label="拒绝备注（可选）/ Reject Note">
+            <Field label={t('rejectNoteLabel')}>
               <textarea
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 rows={3}
                 maxLength={200}
                 className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-                placeholder="拒绝备注（可选）"
+                placeholder={t('rejectNotePlaceholder')}
                 autoFocus
               />
             </Field>
@@ -390,14 +392,14 @@ export function UserModals({
 
             <div className="flex items-center gap-4 pt-2">
               <Button type="button" loading={resetActionLoading} variant="danger" onClick={onReject}>
-                {resetActionLoading ? 'Processing...' : 'Confirm Reject →'}
+                {resetActionLoading ? t('processing') : t('confirmReject')}
               </Button>
               <button
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </div>

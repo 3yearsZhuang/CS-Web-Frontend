@@ -6,6 +6,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -29,6 +30,7 @@ interface ExistingApplication {
 
 export default function JoinPage() {
   const router = useRouter();
+  const t = useTranslations('join');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -94,10 +96,10 @@ export default function JoinPage() {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (!form.applicantName.trim()) e.applicantName = '姓名不能为空';
-    if (!form.studentId.trim()) e.studentId = '学号不能为空';
-    if (!form.major.trim()) e.major = '专业不能为空';
-    if (!form.reason.trim()) e.reason = '申请理由不能为空';
+    if (!form.applicantName.trim()) e.applicantName = t('nameRequired');
+    if (!form.studentId.trim()) e.studentId = t('studentIdRequired');
+    if (!form.major.trim()) e.major = t('majorRequired');
+    if (!form.reason.trim()) e.reason = t('reasonRequired');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -126,15 +128,13 @@ export default function JoinPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMessage({ type: 'error', text: data.error || '提交失败，请稍后再试' });
+        setMessage({ type: 'error', text: data.error || t('submitFailed') });
         return;
       }
 
       setMessage({
         type: 'success',
-        text: loggedIn
-          ? '申请已提交，管理员审核后会通过站内通知告知你结果。'
-          : '申请已提交，管理员会通过你留下的联系方式与你沟通结果。建议注册账号以便后续跟踪申请状态。',
+        text: loggedIn ? t('submitSuccessLoggedIn') : t('submitSuccessGuest'),
       });
       // 将新申请加入已有列表
       if (data.application) {
@@ -150,7 +150,7 @@ export default function JoinPage() {
         contactPhone: '',
       });
     } catch {
-      setMessage({ type: 'error', text: '网络错误，请稍后再试' });
+      setMessage({ type: 'error', text: t('networkError') });
     } finally {
       setSubmitting(false);
     }
@@ -160,7 +160,7 @@ export default function JoinPage() {
   if (!authChecked) {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
-        <div className="meta-mono text-[var(--muted-foreground)]">Loading...</div>
+        <div className="meta-mono text-[var(--muted-foreground)]">{t('loading')}</div>
       </main>
     );
   }
@@ -184,8 +184,8 @@ export default function JoinPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            加入
-            <span className="text-[var(--primary)]">我们</span>
+            {t('heroTitle1')}
+            <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -193,7 +193,7 @@ export default function JoinPage() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / Join
+              {t('heroTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -208,8 +208,8 @@ export default function JoinPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              填写下方表单提交申请，管理员审核通过后
-              <span className="serif-italic text-[var(--foreground)">与你联系</span>
+              {t('heroDesc1')}
+              <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>
               。
             </p>
           </div>
@@ -225,9 +225,9 @@ export default function JoinPage() {
             </div>
             <div className="col-span-12 md:col-span-10">
               <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] leading-[1.05]">
-                申请
-                <span className="text-[var(--primary)]">表单</span>
-                <span className="text-[var(--muted-foreground)]"> / Application</span>
+                {t('sectionTitle1')}
+                <span className="text-[var(--primary)]">{t('sectionTitle2')}</span>
+                <span className="text-[var(--muted-foreground)]">{t('sectionTitleEn')}</span>
               </h2>
             </div>
           </div>
@@ -236,34 +236,34 @@ export default function JoinPage() {
             {/* 已有待审核申请 — 显示状态卡片 */}
             {pendingApp && message?.type !== 'success' ? (
               <div className="p-6 border-l-2 border-amber-500/60 bg-amber-500/[0.04]">
-                <div className="meta-mono text-amber-500 mb-2">[ 审核中 / Under Review ]</div>
+                <div className="meta-mono text-amber-500 mb-2">{t('underReview')}</div>
                 <p className="text-[14px] text-[var(--foreground)] leading-relaxed mb-4">
-                  你已有一个待审核的入社申请（提交于 {formatDate(pendingApp.createdAt)}），请耐心等待管理员审核。
+                  {t('pendingDesc', { date: formatDate(pendingApp.createdAt) })}
                 </p>
                 <Link
                   href="/profile?tab=join"
                   className="meta-mono text-[var(--primary)] underline-grow"
                 >
-                  在个人中心查看 →
+                  {t('viewInProfile')}
                 </Link>
               </div>
             ) : message?.type === 'success' ? (
               <div className="p-6 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04]">
-                <div className="meta-mono text-[var(--primary)] mb-2">[ 已提交 / Submitted ]</div>
+                <div className="meta-mono text-[var(--primary)] mb-2">{t('submitted')}</div>
                 <p className="text-[14px] text-[var(--foreground)] leading-relaxed">{message.text}</p>
                 {loggedIn ? (
                   <Link
                     href="/profile?tab=join"
                     className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
                   >
-                    在个人中心查看申请状态 →
+                    {t('viewStatusInProfile')}
                   </Link>
                 ) : (
                   <Link
                     href="/register"
                     className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
                   >
-                    注册账号 →
+                    {t('register')}
                   </Link>
                 )}
               </div>
@@ -272,7 +272,7 @@ export default function JoinPage() {
                 {/* 姓名 */}
                 <div>
                   <label htmlFor="applicantName" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                    [ 01 ] 姓名 *
+                    [ 01 ] {t('name')} *
                   </label>
                   <input
                     id="applicantName"
@@ -281,7 +281,7 @@ export default function JoinPage() {
                     onChange={(e) => setForm((f) => ({ ...f, applicantName: e.target.value }))}
                     maxLength={20}
                     className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                    placeholder="你的真实姓名"
+                    placeholder={t('namePlaceholder')}
                   />
                   {errors.applicantName && (
                     <div className="meta-mono text-[var(--destructive)] mt-1">{errors.applicantName}</div>
@@ -291,7 +291,7 @@ export default function JoinPage() {
                 {/* 学号 */}
                 <div>
                   <label htmlFor="studentId" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                    [ 02 ] 学号 *
+                    [ 02 ] {t('studentId')} *
                   </label>
                   <input
                     id="studentId"
@@ -300,7 +300,7 @@ export default function JoinPage() {
                     onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
                     maxLength={20}
                     className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                    placeholder="你的学号"
+                    placeholder={t('studentIdPlaceholder')}
                   />
                   {errors.studentId && (
                     <div className="meta-mono text-[var(--destructive)] mt-1">{errors.studentId}</div>
@@ -310,7 +310,7 @@ export default function JoinPage() {
                 {/* 专业 */}
                 <div>
                   <label htmlFor="major" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                    [ 03 ] 专业 *
+                    [ 03 ] {t('major')} *
                   </label>
                   <input
                     id="major"
@@ -319,7 +319,7 @@ export default function JoinPage() {
                     onChange={(e) => setForm((f) => ({ ...f, major: e.target.value }))}
                     maxLength={40}
                     className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                    placeholder="你的专业"
+                    placeholder={t('majorPlaceholder')}
                   />
                   {errors.major && (
                     <div className="meta-mono text-[var(--destructive)] mt-1">{errors.major}</div>
@@ -336,7 +336,7 @@ export default function JoinPage() {
                 {/* 申请理由 */}
                 <div>
                   <label htmlFor="reason" className="meta-mono mb-2 flex items-center justify-between text-[var(--muted-foreground)]">
-                    <span>[ 04 ] 申请理由 *</span>
+                    <span>[ 04 ] {t('reason')} *</span>
                     <span>{form.reason.length}/500</span>
                   </label>
                   <textarea
@@ -346,7 +346,7 @@ export default function JoinPage() {
                     maxLength={500}
                     rows={4}
                     className={`${INPUT_CLASS} px-4 py-3 text-[14px] resize-none`}
-                    placeholder="为什么想加入协会？对什么技术方向感兴趣？"
+                    placeholder={t('reasonPlaceholder')}
                   />
                   {errors.reason && (
                     <div className="meta-mono text-[var(--destructive)] mt-1">{errors.reason}</div>
@@ -357,7 +357,7 @@ export default function JoinPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="contactQq" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                      [ 05 ] QQ
+                      [ 05 ] {t('qq')}
                     </label>
                     <input
                       id="contactQq"
@@ -366,12 +366,12 @@ export default function JoinPage() {
                       onChange={(e) => setForm((f) => ({ ...f, contactQq: e.target.value }))}
                       maxLength={20}
                       className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                      placeholder="选填"
+                      placeholder={t('optional')}
                     />
                   </div>
                   <div>
                     <label htmlFor="contactPhone" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                      [ 06 ] 手机号
+                      [ 06 ] {t('phone')}
                     </label>
                     <input
                       id="contactPhone"
@@ -380,7 +380,7 @@ export default function JoinPage() {
                       onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
                       maxLength={20}
                       className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                      placeholder="选填"
+                      placeholder={t('optional')}
                     />
                   </div>
                 </div>
@@ -397,7 +397,7 @@ export default function JoinPage() {
                   type="submit"
                   disabled={submitting}
                 >
-                  {submitting ? '提交中...' : '提交申请 →'}
+                  {submitting ? t('submitting') : t('submit')}
                 </Button>
                 </div>
               </form>

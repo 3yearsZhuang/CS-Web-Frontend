@@ -16,6 +16,7 @@ import { useDebounce } from '@/shared/hooks/use-debounce';
 import type { EventItem } from '@/modules/events/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -25,17 +26,17 @@ type EventTab = 'timeline' | 'next' | 'admin';
 type TimelineViewMode = 'timeline' | 'calendar';
 
 /** 将活动列表按 year 降序分组 */
-function groupByYear(events: EventItem[]): YearGroup[] {
+function groupByYear(events: EventItem[], uncategorizedLabel: string): YearGroup[] {
   const map = new Map<string, EventItem[]>();
   for (const e of events) {
-    const y = e.year || '未分类';
+    const y = e.year || uncategorizedLabel;
     if (!map.has(y)) map.set(y, []);
     map.get(y)!.push(e);
   }
   // 按年份降序排列
   const sorted = Array.from(map.entries()).sort(([a], [b]) => {
-    if (a === '未分类') return -1;
-    if (b === '未分类') return 1;
+    if (a === uncategorizedLabel) return -1;
+    if (b === uncategorizedLabel) return 1;
     return b.localeCompare(a);
   });
   return sorted.map(([year, events]) => ({ year, events }));
@@ -43,6 +44,7 @@ function groupByYear(events: EventItem[]): YearGroup[] {
 
 export default function EventsPage() {
   const router = useRouter();
+  const t = useTranslations('events');
   const [activeTab, setActiveTab] = useState<EventTab>('timeline');
 
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
@@ -70,9 +72,9 @@ export default function EventsPage() {
 
   // 悬浮胶囊侧边栏 Tab 配置（管理员可见 [99]）
   const eventsTabs: CapsuleTab[] = [
-    { key: 'timeline', num: '01', label: '时间线 / Timeline' },
-    { key: 'next', num: '02', label: '下一步 / Next' },
-    ...(isAdmin ? [{ key: 'admin', num: '99', label: '管理 / Admin' }] : []),
+    { key: 'timeline', num: '01', label: t('tabTimeline') },
+    { key: 'next', num: '02', label: t('tabNext') },
+    ...(isAdmin ? [{ key: 'admin', num: '99', label: t('tabAdmin') }] : []),
   ];
 
   // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
@@ -105,10 +107,10 @@ export default function EventsPage() {
     if (statusFilter) params.set('status', statusFilter);
 
     const res = await fetch(`/api/events?${params.toString()}`);
-    if (!res.ok) throw new Error('加载失败');
+    if (!res.ok) throw new Error(t('loadFailed'));
     const data = await res.json();
     return data.events ?? [];
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,13 +122,13 @@ export default function EventsPage() {
         if (cancelled) return;
         setEvents(data);
         // 默认展开所有年份
-        const years = new Set<string>(data.map((e: EventItem) => e.year || '未分类'));
+        const years = new Set<string>(data.map((e: EventItem) => e.year || t('uncategorized')));
         setExpandedYears(years);
         setLoading(false);
       })
       .catch(() => {
         if (cancelled) return;
-        setError('加载失败，请稍后再试');
+        setError(t('loadFailed'));
         setLoading(false);
       });
 
@@ -137,11 +139,11 @@ export default function EventsPage() {
 
   // 按年份分组，分离未分类活动
   const { uncategorized, yearGroups } = useMemo(() => {
-    const allGroups = groupByYear(events);
-    const uncategorizedEvents = allGroups.find((g) => g.year === '未分类')?.events ?? [];
-    const categorizedGroups = allGroups.filter((g) => g.year !== '未分类');
+    const allGroups = groupByYear(events, t('uncategorized'));
+    const uncategorizedEvents = allGroups.find((g) => g.year === t('uncategorized'))?.events ?? [];
+    const categorizedGroups = allGroups.filter((g) => g.year !== t('uncategorized'));
     return { uncategorized: uncategorizedEvents, yearGroups: categorizedGroups };
-  }, [events]);
+  }, [events, t]);
 
   // 切换年份手风琴
   const toggleYear = (year: string) => {
@@ -170,7 +172,7 @@ export default function EventsPage() {
             onClick={() => window.location.reload()}
             className="meta-mono text-[var(--primary)] underline-grow"
           >
-            重试
+            {t('retry')}
           </button>
         </div>
       </main>
@@ -200,18 +202,9 @@ export default function EventsPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            一年的
-            <span className="text-[var(--primary)]">节奏</span>
-            ，
-            <span
-              className={`transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'inline opacity-100 ml-1'
-                  : 'block max-h-[1.5em] opacity-100'
-              } overflow-hidden`}
-            >
-              由活动串联。
-            </span>
+            {t('heroTitle1')}
+            <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
+            {t('heroTitle3')}
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -219,7 +212,7 @@ export default function EventsPage() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / Events
+              {t('heroTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -236,8 +229,8 @@ export default function EventsPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              从招新到换届，从内部技术分享到对外黑客松，
-              <span className="serif-italic text-[var(--foreground)]">每个节点都有它的意义</span>
+              {t('heroDesc1')}
+              <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>
               。
             </p>
           </div>
@@ -254,7 +247,10 @@ export default function EventsPage() {
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]">
-                    活动<span className="text-[var(--primary)]">{viewMode === 'calendar' ? '日历' : '时间轴'}</span>
+                    {t('sectionTitle1')}
+                    <span className="text-[var(--primary)]">
+                      {viewMode === 'calendar' ? t('calendarLabel') : t('sectionTitle2')}
+                    </span>
                   </h2>
                   {/* 视图切换 — 时间轴 / 日历 */}
                   <div className="flex gap-0">
@@ -267,7 +263,7 @@ export default function EventsPage() {
                           : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                       }`}
                     >
-                      Timeline
+                      {t('timelineLabel')}
                     </button>
                     <button
                       type="button"
@@ -278,7 +274,7 @@ export default function EventsPage() {
                           : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                       }`}
                     >
-                      Calendar
+                      {t('calendarLabel')}
                     </button>
                   </div>
                 </div>
@@ -310,19 +306,18 @@ export default function EventsPage() {
             {activeTab === 'next' && (
               <div>
                 <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                  想要
-                  <span className="text-[var(--primary)]">参与</span>
+                  {t('nextTitle1')}
+                  <span className="text-[var(--primary)]">{t('nextTitle2')}</span>
                   ？
                 </h2>
                 <div className="border-t border-[var(--border)] pt-10 sm:pt-16">
                   <p className="text-[15px] sm:text-[16px] text-[var(--muted-foreground)] leading-[1.8] max-w-2xl mb-8">
-                    我们欢迎每一位对技术充满热情的同学加入。无论你是编程新手还是资深开发者，
-                    在这里都能找到属于你的位置。
+                    {t('nextDesc')}
                   </p>
                   <Button
                     onClick={() => router.push('/about')}
                   >
-                    <span>加入我们</span>
+                    <span>{t('joinUs')}</span>
                     <span>→</span>
                   </Button>
                 </div>

@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   const proxy = await proxyBackend(req, {
     path: '/auth/2fa/verify',
     method: 'POST',
-    jsonBody: { mode: 'login', code, two_factor_token: twoFactorToken },
+    jsonBody: { mode: 'login', code, twoFactorToken },
     skipAuth: true,
   });
 
@@ -68,15 +68,15 @@ export async function POST(req: Request) {
     return res;
   }
 
-  const pairBody = proxy.body as { access_token?: string; refresh_token?: string };
-  const hasPair = Boolean(pairBody.access_token && pairBody.refresh_token);
+  const pairBody = proxy.body as { accessToken?: string; refreshToken?: string };
+  const hasPair = Boolean(pairBody.accessToken && pairBody.refreshToken);
   const me = hasPair
-    ? await fetchMeWithPair(pairBody as { access_token: string; refresh_token: string })
+    ? await fetchMeWithPair(pairBody as { accessToken: string; refreshToken: string })
     : null;
 
   const res = NextResponse.json({ user: me?.user ?? null });
   if (hasPair) {
-    setAuthCookies(res, pairBody as { access_token: string; refresh_token: string });
+    setAuthCookies(res, pairBody as { accessToken: string; refreshToken: string });
   } else {
     clearAuthCookies(res);
   }

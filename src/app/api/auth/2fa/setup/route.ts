@@ -19,13 +19,13 @@ export async function POST(req: Request) {
 
   const body = proxy.body as {
     secret: string;
-    otpauth_uri: string;
-    backup_codes: string[];
+    otpauthUri: string;
+    backupCodes: string[];
   };
   const res = NextResponse.json({
     secret: body.secret,
-    otpauthURI: body.otpauth_uri,
-    backupCodes: body.backup_codes,
+    otpauthURI: body.otpauthUri,
+    backupCodes: body.backupCodes,
   });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

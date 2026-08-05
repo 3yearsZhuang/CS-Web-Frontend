@@ -30,17 +30,6 @@ RUN pnpm tsup src/server.ts \
 # ============ Stage 2: Runner ============
 FROM node:20-slim AS runner
 
-# 安装 Litestream（SQLite 流式备份工具）
-# 版本锁定确保可复现构建
-ARG LITESTREAM_VERSION=0.3.13
-RUN apt-get update && apt-get install -y curl ca-certificates && \
-    curl -sSL https://github.com/benbjohnson/litestream/releases/download/v${LITESTREAM_VERSION}/litestream-v${LITESTREAM_VERSION}-linux-amd64.deb \
-      -o /tmp/litestream.deb && \
-    dpkg -i /tmp/litestream.deb && \
-    rm /tmp/litestream.deb && \
-    apt-get remove -y curl && apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN npm install -g pnpm@9.0.0
 
 WORKDIR /app
@@ -57,14 +46,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./
 COPY --from=builder /app/tsconfig.json ./
 
-# 复制 Litestream 配置与 entrypoint
-COPY tools/deploy/litestream.yml /etc/litestream.yml
+# 复制启动脚本（仅负责启动 Node 应用，数据持久化由后端 PostgreSQL 承载）
 COPY tools/deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-# 创建数据与备份目录
-# - data/: SQLite 数据库 + 用户上传文件
-# - backups/: Litestream 本地备份目标
+# 创建数据与备份目录（data/: 用户上传文件；backups/: 预留归档目录）
 RUN mkdir -p data backups
 
 EXPOSE 2333

@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FeedItemCard } from './feed-item-card';
-import { SectionLoading } from '@/components';
+import { EmptyState, SectionLoading } from '@/components';
 import type { FeedItem, CommunityPost, PostKind } from '@/modules/community/types';
 
 const PAGE_SIZE = 20;
@@ -76,14 +76,15 @@ export function CommunityPostList({
 
   if (items.length === 0) {
     return (
-      <div className="py-16 text-center meta-mono text-[var(--muted-foreground)]">
-        {emptyText}
-        <div className="mt-6">
+      <EmptyState
+        message={emptyText}
+        className="py-16"
+        action={
           <Link href="/community" className="meta-mono text-[var(--primary)] underline-grow">
             浏览全部内容 →
           </Link>
-        </div>
-      </div>
+        }
+      />
     );
   }
 

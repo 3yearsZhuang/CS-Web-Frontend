@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const status = url.searchParams.get('status') || undefined;
   const role = url.searchParams.get('role') || undefined;
 
-  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
   if (search) params.set('search', search);
   if (status) params.set('status', status);
   if (role) params.set('role', role);

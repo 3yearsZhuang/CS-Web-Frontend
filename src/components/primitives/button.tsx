@@ -33,7 +33,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={isDisabled}
-        className={`${variantClass[variant][size]} focus-amber ${isDisabled ? 'disabled:opacity-50 disabled:cursor-not-allowed' : ''} ${className}`}
+        className={`${variantClass[variant][size]} focus-amber ${className}`}
         {...props}
       >
         {loading && <Spinner variant="inverted" />}

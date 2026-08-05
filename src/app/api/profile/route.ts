@@ -46,11 +46,11 @@ export async function PUT(req: Request) {
     path: '/profile',
     method: 'PUT',
     jsonBody: {
-      display_name: body.displayName,
+      displayName: body.displayName,
       bio: body.bio,
-      github_url: body.githubUrl,
-      website_url: body.websiteUrl,
-      tech_tags: Array.isArray(body.techTags) ? body.techTags : undefined,
+      githubUrl: body.githubUrl,
+      websiteUrl: body.websiteUrl,
+      techTags: Array.isArray(body.techTags) ? body.techTags : undefined,
     },
   });
 

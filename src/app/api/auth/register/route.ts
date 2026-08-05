@@ -43,15 +43,15 @@ export async function POST(req: Request) {
     return NextResponse.json(err, { status: proxy.status });
   }
 
-  const body = proxy.body as { access_token?: string; refresh_token?: string };
-  const hasPair = Boolean(body.access_token && body.refresh_token);
+  const body = proxy.body as { accessToken?: string; refreshToken?: string };
+  const hasPair = Boolean(body.accessToken && body.refreshToken);
   const me = hasPair
-    ? await fetchMeWithPair(body as { access_token: string; refresh_token: string })
+    ? await fetchMeWithPair(body as { accessToken: string; refreshToken: string })
     : null;
 
   const res = NextResponse.json({ user: me?.user ?? null });
   if (hasPair) {
-    setAuthCookies(res, body as { access_token: string; refresh_token: string });
+    setAuthCookies(res, body as { accessToken: string; refreshToken: string });
   } else {
     clearAuthCookies(res);
   }

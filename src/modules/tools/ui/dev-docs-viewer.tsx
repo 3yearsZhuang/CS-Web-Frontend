@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { formatDate } from './tool-types';
 
 interface DevDoc {
   slug: string;
@@ -109,11 +110,6 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
     } finally {
       setSaving(false);
     }
-  };
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? '—' : d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   const formatSize = (bytes: number) => {

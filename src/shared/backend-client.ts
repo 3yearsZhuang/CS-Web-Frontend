@@ -27,41 +27,41 @@ export const REFRESH_COOKIE = `${HOST_PREFIX}fztbu_refresh`;
 const ACCESS_MAX_AGE = 15 * 60; // 与后端 ACCESS_TOKEN_EXPIRE_MINUTES 对齐
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60;
 
-/** 后端统一错误响应体（ErrorResponse） */
+/** 后端统一错误响应体（ErrorResponse，camelCase 传输契约） */
 export interface BackendErrorBody {
   success?: boolean;
-  error_code?: string;
+  errorCode?: string;
   message?: string;
-  status_code?: number;
+  statusCode?: number;
   details?: Record<string, unknown>;
-  traceback_id?: string;
+  tracebackId?: string;
 }
 
-/** 后端 TokenPair */
+/** 后端 TokenPair（camelCase 传输契约） */
 export interface BackendTokenPair {
-  access_token: string;
-  refresh_token: string;
-  token_type?: string;
-  expires_in?: number;
+  accessToken: string;
+  refreshToken: string;
+  tokenType?: string;
+  expiresIn?: number;
 }
 
-/** 后端 UserOut（snake_case） */
+/** 后端 UserOut（camelCase 传输契约，与后端 Pydantic alias 对齐） */
 export interface BackendUser {
   id: number;
   username: string;
   email: string;
-  full_name?: string | null;
-  display_name?: string | null;
+  fullName?: string | null;
+  displayName?: string | null;
   bio?: string | null;
-  avatar_url?: string | null;
-  avatar_type?: string;
-  github_url?: string | null;
-  website_url?: string | null;
-  tech_tags?: string[];
-  is_active?: boolean;
-  is_superuser?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  avatarUrl?: string | null;
+  avatarType?: string;
+  githubUrl?: string | null;
+  websiteUrl?: string | null;
+  techTags?: string[];
+  isActive?: boolean;
+  isSuperuser?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** 代理结果：body + 需要应用到响应的 cookie 操作 */
@@ -89,23 +89,23 @@ export function toSafeUserFromBackend(user: BackendUser, roles?: string[]): Safe
   // SQLite→PG 迁移后超级用户被映射为 admin 角色 + is_superuser=true（不再有独立 root 角色）。
   // is_superuser 在后端 RBAC 中拥有全部权限（rbac.py 旁路），语义等价 root，
   // 因此优先于显式角色列表解析为 root，保证 root 专属 UI/端点对超级用户可见。
-  const role = user.is_superuser
+  const role = user.isSuperuser
     ? 'root'
     : resolvePrimaryRole(roles);
   return {
     id: String(user.id),
     email: user.email,
-    displayName: user.display_name ?? null,
+    displayName: user.displayName ?? null,
     bio: user.bio ?? null,
-    avatarUrl: user.avatar_url ?? null,
-    avatarType: user.avatar_type ?? 'initial',
-    githubUrl: user.github_url ?? null,
-    websiteUrl: user.website_url ?? null,
-    techTags: Array.isArray(user.tech_tags) ? user.tech_tags : [],
+    avatarUrl: user.avatarUrl ?? null,
+    avatarType: user.avatarType ?? 'initial',
+    githubUrl: user.githubUrl ?? null,
+    websiteUrl: user.websiteUrl ?? null,
+    techTags: Array.isArray(user.techTags) ? user.techTags : [],
     role,
-    isActive: user.is_active !== false,
-    createdAt: user.created_at ?? '',
-    updatedAt: user.updated_at ?? '',
+    isActive: user.isActive !== false,
+    createdAt: user.createdAt ?? '',
+    updatedAt: user.updatedAt ?? '',
   };
 }
 
@@ -141,9 +141,9 @@ async function refreshPair(refreshToken: string): Promise<BackendTokenPair | nul
   const { status, body } = await requestJson('/auth/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken }),
+    body: JSON.stringify({ refreshToken: refreshToken }),
   });
-  if (status !== 200 || !body || typeof body !== 'object' || !('access_token' in body)) {
+  if (status !== 200 || !body || typeof body !== 'object' || !('accessToken' in body)) {
     return null;
   }
   return body as BackendTokenPair;
@@ -154,7 +154,7 @@ export async function fetchMeWithPair(
   pair: BackendTokenPair,
 ): Promise<{ user: SafeUser; roles: string[] } | null> {
   const { status, body } = await requestJson('/auth/me', {
-    headers: { Authorization: `Bearer ${pair.access_token}` },
+    headers: { Authorization: `Bearer ${pair.accessToken}` },
   });
   if (status !== 200 || !body || typeof body !== 'object') return null;
   const b = body as { user?: BackendUser; roles?: string[] };
@@ -229,7 +229,7 @@ export async function proxyBackend(
   if (first.status === 401 && !opts.skipAuth && refresh && !retried) {
     const pair = await refreshPair(refresh);
     if (pair) {
-      const retriedResult = await proxyBackend(req, opts, true, pair.access_token);
+      const retriedResult = await proxyBackend(req, opts, true, pair.accessToken);
       return { ...retriedResult, authPair: pair };
     }
     return { status: first.status, body: first.body, clearAuth: true };
@@ -240,14 +240,14 @@ export async function proxyBackend(
 
 /** 写回 JWT 对（登录成功 / 刷新轮换后调用） */
 export function setAuthCookies(res: NextResponse, pair: BackendTokenPair): void {
-  res.cookies.set(ACCESS_COOKIE, pair.access_token, {
+  res.cookies.set(ACCESS_COOKIE, pair.accessToken, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
     maxAge: ACCESS_MAX_AGE,
     secure: process.env.NODE_ENV === 'production',
   });
-  res.cookies.set(REFRESH_COOKIE, pair.refresh_token, {
+  res.cookies.set(REFRESH_COOKIE, pair.refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
@@ -267,7 +267,7 @@ export function normalizeError(body: unknown, fallback = '请求失败'): { erro
   const b = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
   return {
     error: typeof b.message === 'string' ? b.message : fallback,
-    code: typeof b.error_code === 'string' ? b.error_code : undefined,
+    code: typeof b.errorCode === 'string' ? b.errorCode : undefined,
   };
 }
 
@@ -374,8 +374,8 @@ export function toAdminUserList(b: unknown): Record<string, unknown> { const r =
     users: users.map((u) => toSafeUserFromBackend(u, u.roles)),
     total: Number(r.total ?? 0),
     page: Number(r.page ?? 1),
-    pageSize: Number(r.page_size ?? 50),
-    totalPages: Number(r.total_pages ?? 1),
+    pageSize: Number(r.pageSize ?? 50),
+    totalPages: Number(r.totalPages ?? 1),
   };
 }
 

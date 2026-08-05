@@ -8,18 +8,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationBell } from '@/components/notification-bell';
 import { UserMenu } from '@/components/user-menu';
+import { LanguageSwitcher } from '@/components/layout/language-switcher';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
+import type { NavMessageKey } from '@/i18n/types';
 
-const NAV_LINKS = [
-  { href: '/about', label: '关于', en: 'About' },
-  { href: '/events', label: '活动', en: 'Events' },
+const NAV_LINKS: Array<{ href: string; key: NavMessageKey; requireAuth?: boolean }> = [
+  { href: '/about', key: 'about' },
+  { href: '/events', key: 'events' },
   // 社区聚合入口 — 合并论坛 / 博客 / 成员三页为统一 Feed
-  { href: '/community', label: '社区', en: 'Community' },
-  { href: '/tools', label: '工具', en: 'Tools', requireAuth: true },
+  { href: '/community', key: 'community' },
+  { href: '/tools', key: 'tools', requireAuth: true },
 ];
 
 /** 全站导航栏 — 含公告横幅、用户菜单、通知铃、主题切换 */
@@ -27,6 +30,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isLoggedIn } = useAuth();
+  const t = useTranslations('nav');
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   const mobileDrawerRef = useFocusTrap<HTMLDivElement>({
@@ -63,7 +67,7 @@ export function Navbar() {
               <span className="text-[var(--primary)]"> Association</span>
             </span>
             <span className="meta-mono hidden lg:inline text-[var(--muted-foreground)]">
-              / 计算机协会
+              / {t('brand')}
             </span>
           </Link>
 
@@ -84,7 +88,7 @@ export function Navbar() {
                         : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                     }`}
                   >
-                    {link.label}
+                    {t(link.key)}
                     {isActive && (
                       <span className="absolute left-4 right-4 bottom-0 h-[1px] bg-[var(--primary)]" />
                     )}
@@ -93,6 +97,7 @@ export function Navbar() {
               })}
             </nav>
 
+            <LanguageSwitcher compact />
             <ThemeToggle />
             <NotificationBell />
             <span className="h-4 w-px bg-[var(--border)] mx-2" />
@@ -107,7 +112,7 @@ export function Navbar() {
               ref={hamburgerRef}
               onClick={() => setMobileOpen((v) => !v)}
               className="flex flex-col gap-[5px] p-2 min-w-[44px] min-h-[44px] items-center justify-center focus-amber"
-              aria-label="切换菜单"
+              aria-label={t('toggleMenu')}
               aria-expanded={mobileOpen}
             >
               <span
@@ -151,10 +156,10 @@ export function Navbar() {
                     0{idx + 1}
                   </span>
                   <span className="display-serif text-[44px] leading-none">
-                    {link.label}
+                    {t(link.key)}
                   </span>
                   <span className="meta-mono ml-auto text-[var(--muted-foreground)]">
-                    {link.en}
+                    {t(`${link.key}En` as NavMessageKey)}
                   </span>
                 </Link>
               );

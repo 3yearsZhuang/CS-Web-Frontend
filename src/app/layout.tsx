@@ -5,7 +5,9 @@
  */
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { preconnect } from 'react-dom';
 import Script from 'next/script';
+import { NextIntlClientProvider } from 'next-intl';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -120,15 +122,24 @@ export default async function RootLayout({
   // F2：读取 proxy.ts 注入的 per-request CSP nonce
   const nonce = (await headers()).get('x-nonce') ?? '';
 
+  // 字体加载优化 — 字体 CSS 由 globals.css 的 @import 引入（lint 允许），
+  // 此处用 ReactDOM preconnect 预连接 Google Fonts 两域，减少 DNS/TLS 往返，缓解渲染阻塞。
+  preconnect('https://fonts.googleapis.com');
+  preconnect('https://fonts.gstatic.com', { crossOrigin: 'anonymous' });
+
   return (
-    <html lang="zh_CN" data-scroll-behavior="smooth" className="dark" suppressHydrationWarning>
+    <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground">
         {/*
-          防闪烁策略：不使用内联脚本，依赖 <html className="dark"> SSR 硬编码。
-          深色用户（默认）首帧即深色，next-themes hydrate 后维持深色，零闪烁。
-          浅色用户首帧为 SSR 的深色，next-themes hydrate 后切浅色（约一帧）。
-          原生 <script nonce> 方案因 headers() 客户端返回空导致 nonce 水合不匹配，已移除。
+          防闪烁：SSR 默认深色，首帧由下方内联脚本按 next-themes 存储值校正主题类，
+          避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
         */}
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
+          }}
+        />
         <Script
           id="sw-register"
           strategy="afterInteractive"
@@ -137,14 +148,16 @@ export default async function RootLayout({
         />
         {/* 扫描线纹理叠加 — 极淡水平扫描线，增添工业终端质感 */}
         <div className="ark-scanline" aria-hidden="true" />
-        <ThemeProvider>
-          <ConfirmProvider>
-            <Navbar />
-            <AnnouncementBanner />
-            <PageTransition>{children}</PageTransition>
-            <Footer />
-          </ConfirmProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider>
+          <ThemeProvider>
+            <ConfirmProvider>
+              <Navbar />
+              <AnnouncementBanner />
+              <PageTransition>{children}</PageTransition>
+              <Footer />
+            </ConfirmProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

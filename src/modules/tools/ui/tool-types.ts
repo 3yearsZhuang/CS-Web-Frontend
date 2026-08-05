@@ -4,6 +4,8 @@
 
 export type ToolSubView = 'resources' | 'exams' | 'tasks';
 
+export { formatDateTime as formatDate } from '@/shared/utils';
+
 export const TASK_CATEGORY_LABELS: Record<string, string> = {
   general: '通用',
   documentation: '文档贡献',
@@ -71,10 +73,3 @@ export interface TaskClaim {
 export const RESOURCE_PAGE_SIZE = 10;
 export const EXAM_PAGE_SIZE = 10;
 export const TASK_PAGE_SIZE = 10;
-
-/** 格式化 ISO 时间为 yyyy-MM-dd HH:mm */
-export function formatDate(iso: string): string {
-  const d = new Date(iso + 'Z');
-  if (isNaN(d.getTime())) return '—';
-  return d.toISOString().slice(0, 16).replace('T', ' ');
-}

@@ -1,7 +1,11 @@
 /**
- * @file shared/utils 统一导出
+ * @file shared/utils 统一导出（同构模块）
  *
- * image-utils/mail 为 server-only 模块；utils/ui-constants/tech-tags/pagination/monitoring 为同构模块。
+ * ⚠️ image-utils / mail 为 server-only 模块（含 server-only 与 Node 原生依赖），
+ *    禁止使用本 barrel 导出或在客户端组件里从 `@/shared/utils` 引入，
+ *    服务端调用方请直接 import 子模块路径：
+ *      - import { validateImageMagicBytes } from '@/shared/utils/image-utils';
+ *      - import { sendVerificationCode } from '@/shared/utils/mail';
  */
 
 export { formatDate, formatDateTime, formatRelativeTime } from './utils';
@@ -11,8 +15,6 @@ export {
   computeTotalPages,
 } from './pagination';
 export type { PaginationInput, PaginationMeta } from './pagination';
-
-export { validateImageMagicBytes } from './image-utils';
 
 export {
   TECH_TAGS,
@@ -35,13 +37,8 @@ export {
   isMonitoringEnabled,
 } from './monitoring';
 
-export { sendVerificationCode } from './mail';
-
 export {
   maskEmail,
   maskPhone,
-  maskName,
-  maskStudentId,
-  maskString,
   maskSensitiveFields,
 } from './mask';

@@ -217,6 +217,7 @@ tools/tests/
 | [Markdown 编辑器](tools/docs/Devdocs-markdown-editor.md) | 编辑器使用指南 |
 | [入职指南 + 项目规则](tools/docs/Devdocs-onboarding-guide.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单 |
 | [PG 数据迁移](tools/docs/Devdocs-pg-migration.md) | SQLite → PostgreSQL 迁移脚本用法与注意事项（`migrate-sqlite-to-pg.mjs`） |
+| [国际化 i18n](tools/docs/Devdocs-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 
 ---

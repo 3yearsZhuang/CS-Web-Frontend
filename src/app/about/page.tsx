@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -14,144 +15,49 @@ import Link from 'next/link';
 
 type AboutTab = 'belief' | 'directions' | 'process';
 
-const BELIEFS = [
-  {
-    num: '01',
-    title: '技术驱动 — 在实践中学习',
-    desc: '我们不满足于纸上谈兵。从第一周开始，成员就会接触真实项目：Web 应用、算法竞赛、AI 模型训练、系统工具开发。每个项目都有明确的产出目标，学习在解决问题中发生，而不是在听完理论之后。',
-    tag: 'Project-First',
-  },
-  {
-    num: '02',
-    title: '开放社区 — 技术属于每个人',
-    desc: '不论你的专业、年级、性别或技术基础，只要你对技术怀有热情，这里就有你的位置。我们崇尚分享而非藏私、协作而非竞争、共同成长而非零和博弈。社区的边界由好奇心划定，而非背景。',
-    tag: 'Inclusive',
-  },
-  {
-    num: '03',
-    title: '成果导向 — 让作品说话',
-    desc: '成员在 ACM/ICPC 亚洲区域赛、蓝桥杯、CCF-CSP、各类黑客松中屡获佳绩；多个学生项目在校内外产生实际影响力，部分项目已开源并被社区采用。我们用作品证明自己。',
-    tag: 'Outcome-Driven',
-  },
+interface BeliefItem { num: string; titleKey: string; descKey: string; tag: string; }
+interface DirectionItem { num: string; nameKey: string; nameEn: string; tag: string; descKey: string; stack: string[]; }
+interface RequirementItem { num: string; titleKey: string; descKey: string; tag: string; }
+interface StepItem { num: string; titleKey: string; duration: string; descKey: string; details: string[]; }
+
+const BELIEFS: BeliefItem[] = [
+  { num: '01', titleKey: 'belief1Title', descKey: 'belief1Desc', tag: 'Project-First' },
+  { num: '02', titleKey: 'belief2Title', descKey: 'belief2Desc', tag: 'Inclusive' },
+  { num: '03', titleKey: 'belief3Title', descKey: 'belief3Desc', tag: 'Outcome-Driven' },
 ];
 
-const DIRECTIONS = [
-  {
-    num: '01',
-    name: 'Web 开发',
-    nameEn: 'Web Development',
-    tag: 'Frontend & Backend',
-    desc: '从静态页面到全栈应用，掌握现代 Web 开发完整链路：设计、构建、部署、运维。',
-    stack: ['React / Next.js', 'Vue / Nuxt', 'Node.js / Bun', 'PostgreSQL / Supabase'],
-  },
-  {
-    num: '02',
-    name: '算法竞赛',
-    nameEn: 'Competitive Programming',
-    tag: 'ACM / ICPC',
-    desc: '系统训练数据结构与算法，参与 ICPC、CCPC、蓝桥杯等高水平竞赛。',
-    stack: ['C++ / Rust', '动态规划', '图论 / 数论', 'Codeforces / AtCoder'],
-  },
-  {
-    num: '03',
-    name: '人工智能',
-    nameEn: 'AI & Machine Learning',
-    tag: 'ML / Deep Learning',
-    desc: '从经典机器学习到大模型微调，覆盖理论、工程与应用全栈。',
-    stack: ['PyTorch / JAX', 'Transformers', '计算机视觉', 'NLP / RAG'],
-  },
-  {
-    num: '04',
-    name: '系统与安全',
-    nameEn: 'Systems & Security',
-    tag: 'OS / Security',
-    desc: '深入操作系统内核，学习网络安全攻防，参与 CTF 竞赛。',
-    stack: ['Linux 内核', 'Rust / C', 'Pwn / Reverse', 'CTF / 渗透测试'],
-  },
-  {
-    num: '05',
-    name: '开源贡献',
-    nameEn: 'Open Source',
-    tag: 'Community',
-    desc: '学习开源协作流程，向知名项目提交 PR，建立个人技术影响力。',
-    stack: ['Git / GitHub', '代码审查', 'License / 治理', 'CNCF / Apache'],
-  },
-  {
-    num: '06',
-    name: '创意编程',
-    nameEn: 'Creative Coding',
-    tag: 'Generative Art',
-    desc: '用代码创造艺术：游戏开发、交互设计、生成艺术、WebGL 可视化。',
-    stack: ['p5.js / Three.js', 'WebGL / Shader', 'Unity / Godot', '生成艺术'],
-  },
+const DIRECTIONS: DirectionItem[] = [
+  { num: '01', nameKey: 'dir1Name', nameEn: 'Web Development', tag: 'Frontend & Backend', descKey: 'dir1Desc', stack: ['React / Next.js', 'Vue / Nuxt', 'Node.js / Bun', 'PostgreSQL / Supabase'] },
+  { num: '02', nameKey: 'dir2Name', nameEn: 'Competitive Programming', tag: 'ACM / ICPC', descKey: 'dir2Desc', stack: ['C++ / Rust', 'Dynamic Programming', 'Graph / Number Theory', 'Codeforces / AtCoder'] },
+  { num: '03', nameKey: 'dir3Name', nameEn: 'AI & Machine Learning', tag: 'ML / Deep Learning', descKey: 'dir3Desc', stack: ['PyTorch / JAX', 'Transformers', 'Computer Vision', 'NLP / RAG'] },
+  { num: '04', nameKey: 'dir4Name', nameEn: 'Systems & Security', tag: 'OS / Security', descKey: 'dir4Desc', stack: ['Linux Kernel', 'Rust / C', 'Pwn / Reverse', 'CTF / Pentest'] },
+  { num: '05', nameKey: 'dir5Name', nameEn: 'Open Source', tag: 'Community', descKey: 'dir5Desc', stack: ['Git / GitHub', 'Code Review', 'License / Governance', 'CNCF / Apache'] },
+  { num: '06', nameKey: 'dir6Name', nameEn: 'Creative Coding', tag: 'Generative Art', descKey: 'dir6Desc', stack: ['p5.js / Three.js', 'WebGL / Shader', 'Unity / Godot', 'Generative Art'] },
 ];
 
-const REQUIREMENTS = [
-  {
-    num: '01',
-    title: '对技术的真诚热情',
-    desc: '不需要你已经是高手，但需要你真的喜欢写代码、研究原理、解决问题。',
-    tag: 'Passion',
-  },
-  {
-    num: '02',
-    title: '主动学习与持续投入',
-    desc: '协会不是培训班，我们期待你主动提出问题、寻找答案，并长期投入。',
-    tag: 'Self-Driven',
-  },
-  {
-    num: '03',
-    title: '协作精神与开放心态',
-    desc: '愿意与他人分享、合作、互相 review 代码，接受不同观点的碰撞。',
-    tag: 'Collaborative',
-  },
-  {
-    num: '04',
-    title: '不限专业年级',
-    desc: '无论你是计算机、电子、机械、设计、文科或理科，都欢迎加入。',
-    tag: 'Inclusive',
-  },
+const REQUIREMENTS: RequirementItem[] = [
+  { num: '01', titleKey: 'req1Title', descKey: 'req1Desc', tag: 'Passion' },
+  { num: '02', titleKey: 'req2Title', descKey: 'req2Desc', tag: 'Self-Driven' },
+  { num: '03', titleKey: 'req3Title', descKey: 'req3Desc', tag: 'Collaborative' },
+  { num: '04', titleKey: 'req4Title', descKey: 'req4Desc', tag: 'Inclusive' },
 ];
 
-const STEPS = [
-  {
-    num: '01',
-    title: '注册账号',
-    duration: '5 min',
-    desc: '在协会官网注册一个账号，验证邮箱后即可登录。',
-    details: ['Email 验证', '设置密码', '完善基本信息'],
-  },
-  {
-    num: '02',
-    title: '填写报名表',
-    duration: '15 min',
-    desc: '填写简单的报名表，包括你的兴趣方向、技术背景与想加入的理由。',
-    details: ['兴趣方向选择', '技术背景自评', '个人陈述'],
-  },
-  {
-    num: '03',
-    title: '线上交流',
-    duration: '20 min',
-    desc: '与各组负责人进行简短的线上交流，互相了解，看是否契合。',
-    details: ['Zoom / 腾讯会议', '20 分钟一对一', '无技术考核'],
-  },
-  {
-    num: '04',
-    title: '正式加入',
-    duration: '1 day',
-    desc: '通过后即可加入协会，参与各组活动、项目与周会。',
-    details: ['加入协会实验室', '认识组内伙伴'],
-  },
+const STEPS: StepItem[] = [
+  { num: '01', titleKey: 'step1Title', duration: '5 min', descKey: 'step1Desc', details: ['Email Verify', 'Set Password', 'Profile'] },
+  { num: '02', titleKey: 'step2Title', duration: '15 min', descKey: 'step2Desc', details: ['Interest', 'Background', 'Statement'] },
+  { num: '03', titleKey: 'step3Title', duration: '20 min', descKey: 'step3Desc', details: ['Zoom / Tencent', '1:1 Chat', 'No Tech Test'] },
+  { num: '04', titleKey: 'step4Title', duration: '1 day', descKey: 'step4Desc', details: ['Join Lab', 'Meet Peers'] },
 ];
 
 export default function AboutPage() {
   const router = useRouter();
+  const t = useTranslations('about');
   const [activeTab, setActiveTab] = useState<AboutTab>('belief');
 
   const aboutTabs: CapsuleTab[] = [
-    { key: 'belief', num: '01', label: '关于 / About' },
-    { key: 'directions', num: '02', label: '方向 / Directions' },
-    { key: 'process', num: '03', label: '加入 / Join' },
+    { key: 'belief', num: '01', label: t('tabBelief') },
+    { key: 'directions', num: '02', label: t('tabDirections') },
+    { key: 'process', num: '03', label: t('tabProcess') },
   ];
 
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
@@ -187,18 +93,9 @@ export default function AboutPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            一群
-            <span className="text-[var(--primary)]">热爱</span>
-            技术的人，
-            <span
-              className={`transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'inline opacity-100 ml-1'
-                  : 'block max-h-[1.5em] opacity-100'
-              } overflow-hidden`}
-            >
-              聚在一起。
-            </span>
+            {t('heroTitle1')}
+            <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
+            {t('heroTitle3')}
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -206,7 +103,7 @@ export default function AboutPage() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / About &amp; Join
+              {t('heroTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -223,9 +120,9 @@ export default function AboutPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               } animate-fade-up`}
             >
-              计算机协会成立于 2017 年，是校园中最纯粹的技术社区。我们相信，
-              <span className="serif-italic text-[var(--foreground)]">代码不只是工具</span>
-              ，更是表达创意、解决问题、连接未来的语言。
+              {t('heroDesc1')}
+              <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>
+              {t('heroDesc3')}
             </p>
           </div>
         </RevealItem>
@@ -238,11 +135,11 @@ export default function AboutPage() {
             {activeTab === 'belief' && (
               <div>
                 <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                  我们期待<span className="text-[var(--primary)]">同频</span>的你！
+                  {t('beliefTitle1')}<span className="text-[var(--primary)]">{t('beliefTitle2')}</span>{t('beliefTitle3')}
                 </h2>
                 {/* 子区块 1：信念 */}
                 <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
-                  — 信念 / Belief
+                  {t('beliefSection')}
                 </h3>
                 <div className="border-t border-[var(--border)]">
                   {BELIEFS.map((b) => (
@@ -255,12 +152,12 @@ export default function AboutPage() {
                       </div>
                       <div className="col-span-10 md:col-span-4">
                         <h3 className="text-[16px] sm:text-[18px] text-[var(--foreground)] tracking-tight">
-                          {b.title}
+                          {t(b.titleKey as Parameters<typeof t>[0])}
                         </h3>
                       </div>
                       <div className="col-span-12 md:col-span-6">
                         <p className="text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
-                          {b.desc}
+                          {t(b.descKey as Parameters<typeof t>[0])}
                         </p>
                       </div>
                       <div className="col-span-12 md:col-span-1 text-right">
@@ -271,7 +168,7 @@ export default function AboutPage() {
                 </div>
                 {/* 子区块 2：期望 */}
                 <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 mt-16 sm:mt-20 uppercase tracking-widest">
-                  — 期望 / Expectation
+                  {t('expectationSection')}
                 </h3>
                 <div className="border-t border-[var(--border)]">
                   {REQUIREMENTS.map((req) => (
@@ -284,12 +181,12 @@ export default function AboutPage() {
                       </div>
                       <div className="col-span-10 md:col-span-4">
                         <h3 className="text-[16px] sm:text-[18px] text-[var(--foreground)] tracking-tight">
-                          {req.title}
+                          {t(req.titleKey as Parameters<typeof t>[0])}
                         </h3>
                       </div>
                       <div className="col-span-12 md:col-span-6">
                         <p className="text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
-                          {req.desc}
+                          {t(req.descKey as Parameters<typeof t>[0])}
                         </p>
                       </div>
                       <div className="col-span-12 md:col-span-1 text-right">
@@ -304,16 +201,15 @@ export default function AboutPage() {
               {activeTab === 'directions' && (
                 <div>
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                    六大方向，
+                    {t('directionsTitle1')}
                     <br />
-                    <span className="text-[var(--primary)]">覆盖</span>主流技术领域。
+                    <span className="text-[var(--primary)]">{t('directionsTitle2')}</span>{t('directionsTitle3')}
                   </h2>
                   <RevealItem>
                     <p className="mb-8 sm:mb-12 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
-                      从 Web 到 AI，从算法到系统，每个方向都有专人带领、固定周会、
-                      真实项目。成员可以
-                      <span className="serif-italic text-[var(--foreground)]"> 同时参与多个方向</span>
-                      ，探索自己的兴趣边界。
+                      {t('directionsDesc1')}
+                      <span className="serif-italic text-[var(--foreground)]"> {t('directionsDesc2')}</span>
+                      。
                     </p>
                   </RevealItem>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
@@ -331,13 +227,13 @@ export default function AboutPage() {
                           </div>
                         </div>
                         <h3 className="display-serif text-[clamp(18px,2vw,22px)] text-[var(--foreground)] mb-2">
-                          {d.name}
+                          {t(d.nameKey as Parameters<typeof t>[0])}
                         </h3>
                         <div className="meta-mono text-[var(--primary)] text-[11px] sm:text-[12px] mb-3">
                           {d.tag}
                         </div>
                         <p className="text-[13px] text-[var(--muted-foreground)] leading-[1.7] flex-1">
-                          {d.desc}
+                          {t(d.descKey as Parameters<typeof t>[0])}
                         </p>
                         {d.stack.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-1.5">
@@ -357,11 +253,11 @@ export default function AboutPage() {
               {activeTab === 'process' && (
                 <div>
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                    如何<span className="text-[var(--primary)]">加入</span>。
+                    {t('processTitle1')}<span className="text-[var(--primary)]">{t('processTitle2')}</span>。
                   </h2>
                   {/* 子区块 1：流程 */}
                   <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
-                    — 流程 / Process
+                    {t('processSection')}
                   </h3>
                   <div className="border-t border-[var(--border)]">
                     {STEPS.map((step, idx) => (
@@ -374,21 +270,21 @@ export default function AboutPage() {
                             {step.num}
                           </div>
                           <div className="meta-mono text-[var(--muted-foreground)]">
-                            Step {idx + 1} / {STEPS.length}
+                            {t('step', { current: idx + 1, total: STEPS.length })}
                           </div>
                         </div>
                         <div className="col-span-12 md:col-span-2 md:border-l md:border-r md:border-[var(--border)] md:pl-6 pb-4 md:pb-0 border-b md:border-b-0 border-[var(--border)]">
-                          <div className="meta-mono mb-2">Duration</div>
+                          <div className="meta-mono mb-2">{t('duration')}</div>
                           <div className="text-[13px] font-mono text-[var(--primary)]">
                             {step.duration}
                           </div>
                         </div>
                         <div className="col-span-12 md:col-span-6">
                           <h3 className="display-serif text-[clamp(22px,3vw,28px)] text-[var(--foreground)] mb-3">
-                            {step.title}
+                            {t(step.titleKey as Parameters<typeof t>[0])}
                           </h3>
                           <p className="text-[14px] text-[var(--muted-foreground)] leading-[1.7] max-w-xl">
-                            {step.desc}
+                            {t(step.descKey as Parameters<typeof t>[0])}
                           </p>
                           {step.details.length > 0 && (
                             <div className="mt-4 flex flex-wrap gap-2">
@@ -410,20 +306,19 @@ export default function AboutPage() {
                   </div>
                   {/* 子区块 2：加入 */}
                   <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 mt-16 sm:mt-20 uppercase tracking-widest">
-                    — 加入 / Join
+                    {t('joinSection')}
                   </h3>
                   <div className="border-t border-[var(--border)] pt-10 sm:pt-16">
                     <p className="text-[14px] sm:text-[15px] text-[var(--muted-foreground)] leading-[1.8] max-w-xl mb-8">
-                      报名通道全年开放。填写报名表，
-                      我们会在 3 个工作日内联系你。
+                      {t('processDesc')}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <Button onClick={() => router.push('/join')}>
-                        <span>填写报名表</span>
+                        <span>{t('fillForm')}</span>
                         <span>→</span>
                       </Button>
                       <Button variant="outline" onClick={() => router.push('/login')}>
-                        <span>登录</span>
+                        <span>{t('login')}</span>
                         <span>→</span>
                       </Button>
                     </div>

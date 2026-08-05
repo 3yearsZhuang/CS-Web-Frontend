@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     return res;
   }
 
-  const avatarUrl = (proxy.body as { avatar_url?: string })?.avatar_url ?? null;
+  const avatarUrl = (proxy.body as { avatarUrl?: string })?.avatarUrl ?? null;
   const res = NextResponse.json({ avatarUrl });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { MobiusRing } from '@/components/effects/mobius-ring';
 import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
@@ -83,6 +84,7 @@ export default function Home() {
   const breakpoint = useBreakpoint();
   const mobius = MOBIUS_CONFIGS[breakpoint];
   const { isLoggedIn } = useAuth();
+  const t = useTranslations('home');
 
   // ============ 彩蛋：全页点击触发头像 ============
   // 数据源：配置文件中的管理员角色 + 所有已注册用户
@@ -127,16 +129,18 @@ export default function Home() {
     }
   }, []);
 
-  /** 全页点击 — 在点击位置弹出随机头像，2秒后自动淡出 */
-  const handlePageClick = useCallback(
-    (e: React.MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('a, button')) return;
+  /** 在指定坐标弹出随机头像，2 秒后自动淡出（坐标钳制在视口内避免移动端溢出） */
+  const triggerEggAt = useCallback(
+    (x: number, y: number) => {
+      // 钳制到视口内，确保浮层不溢出边缘（fixed 定位 + translate(-50%,-50%) 时尤其需要）
+      const pad = 80;
+      const cx = Math.min(Math.max(x, pad), Math.max(window.innerWidth - pad, pad));
+      const cy = Math.min(Math.max(y, pad), Math.max(window.innerHeight - pad, pad));
 
       clearAutoHideTimer();
       setIsHiding(false);
       setCurrentPerson(pickRandomPerson());
-      setAvatarPos({ x: e.clientX, y: e.clientY });
+      setAvatarPos({ x: cx, y: cy });
       setShowAvatar(true);
 
       autoHideTimerRef.current = setTimeout(() => {
@@ -150,20 +154,45 @@ export default function Home() {
     [clearAutoHideTimer, pickRandomPerson],
   );
 
+  /** 全页点击 — 在点击位置弹出随机头像（跳过链接/按钮自身） */
+  const handlePageClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('a, button')) return;
+      triggerEggAt(e.clientX, e.clientY);
+    },
+    [triggerEggAt],
+  );
+
+  /** 键盘触发 — 为键盘用户提供可达的彩蛋入口（视觉隐藏，出现在视口中心） */
+  const handleEggKeyTrigger = useCallback(() => {
+    triggerEggAt(window.innerWidth / 2, window.innerHeight / 2);
+  }, [triggerEggAt]);
+
   useEffect(() => {
     return () => clearAutoHideTimer();
   }, [clearAutoHideTimer]);
 
   return (
     <main className="relative" onClick={handlePageClick}>
+      {/* 键盘可达的彩蛋入口 — 视觉隐藏，仅供屏幕阅读器与 Tab 键盘用户发现 */}
+      <button
+        type="button"
+        onClick={handleEggKeyTrigger}
+        className="sr-only focus:not-sr-only focus:fixed focus:bottom-4 focus:left-4 focus:z-[var(--z-toast)] focus:px-4 focus:py-2 focus:bg-background focus:border focus:border-[var(--primary)] focus:text-sm"
+        aria-label="彩蛋：召唤随机成员"
+      >
+        {t('titleExplore')}
+      </button>
+
       {/* ============ 顶部数字章节标记 + 元数据（固定） ============ */}
-      <div className="fixed top-16 left-0 right-0 z-10 pointer-events-none">
+      <div className="fixed top-16 left-0 right-0 z-[var(--z-base)] pointer-events-none">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 py-4 flex justify-between items-center text-[var(--muted-foreground)]">
           <span className="section-marker">[ 00 ] — Index</span>
           {/* ark-divider 的 display:inline-flex 会覆盖 Tailwind hidden，用外层包裹控制显隐 */}
           <div className="hidden md:block">
             <span className="ark-divider">
-              Computer Association / Est. 2017
+              {t('est')}
             </span>
           </div>
         </div>
@@ -222,15 +251,15 @@ export default function Home() {
         {/* 顶部右对齐元数据 — 季节 + 招新状态
          * pointer-events-none: 纯展示元素，不拦截莫比乌斯环点击 */}
         <motion.div
-          className="absolute top-28 sm:top-32 right-4 sm:right-6 md:right-8 hidden sm:block z-10 pointer-events-none"
+          className="absolute top-28 sm:top-32 right-4 sm:right-6 md:right-8 hidden sm:block z-[var(--z-base)] pointer-events-none"
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: EASE, delay: 0.6 }}
         >
-          <div className="meta-mono mb-2">2026 / Autumn</div>
+          <div className="meta-mono mb-2">{t('codeTagline')}</div>
           <div className="meta-mono text-[var(--primary)] flex items-center gap-2">
             <span className="ark-status-dot" />
-            <span>Recruiting</span>
+            <span>{t('recruiting')}</span>
           </div>
         </motion.div>
 
@@ -238,30 +267,31 @@ export default function Home() {
          * pointer-events-none: 让点击穿透到下层莫比乌斯环（z-auto），使环可点击
          * CTA 按钮单独 pointer-events-auto 恢复可点击 */}
         <StaggerContainer
-          className="relative max-w-[1600px] mx-auto w-full z-10 pointer-events-none"
+          className="relative max-w-[1600px] mx-auto w-full z-[var(--z-base)] pointer-events-none"
         >
           <div className="grid grid-cols-12 gap-0">
             <div className="col-span-12 md:col-span-9">
               <RevealItem className="ark-divider mb-6 sm:mb-8 md:mb-10" duration={0.9}>
-                A Community of Code, Curiosity &amp; Craft
+                {t('tagline')}
               </RevealItem>
 
               <RevealTitle
                 className="ark-corner-bracket inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] mb-0 leading-[1.05] tracking-tight"
                 duration={1.4}
               >
-                探索<span className="text-[var(--primary)]">技术</span>
+                {t('titleExplore')}
+                <span className="text-[var(--primary)]">{t('titleTech')}</span>
                 <br />
-                的无限可能
+                {t('titleRest')}
               </RevealTitle>
 
               <div className="mt-8 sm:mt-12 md:mt-16 grid grid-cols-12 gap-6 sm:gap-8 items-start">
                 <RevealItem className="col-span-12 md:col-span-6" duration={0.9}>
                   <p className="text-[var(--muted-foreground)] text-[clamp(14px,1.2vw,17px)] leading-[1.8] max-w-xl">
-                    我们是校园中最纯粹的技术社区。在这里，代码不只是工具，
+                    {t('introBefore')}
                     <span className="text-[var(--foreground)] font-medium">
                       {' '}
-                      而是表达创意、解决问题、连接未来的语言。
+                      {t('introHighlight')}
                     </span>
                   </p>
                 </RevealItem>
@@ -272,7 +302,7 @@ export default function Home() {
                     className="pointer-events-auto flex-1 md:flex-none md:max-w-[260px]"
                   >
                     <Button className="w-full">
-                      <span>立即加入</span>
+                      <span>{t('joinNow')}</span>
                       <span>→</span>
                     </Button>
                   </Link>
@@ -281,7 +311,7 @@ export default function Home() {
                     className="pointer-events-auto flex-1 md:flex-none md:max-w-[260px]"
                   >
                     <Button variant="outline" className="w-full">
-                      <span>了解更多</span>
+                      <span>{t('learnMore')}</span>
                       <span>→</span>
                     </Button>
                   </Link>
@@ -311,7 +341,7 @@ export default function Home() {
         {showAvatar && currentPerson && (
           <motion.div
             key="easter-egg-avatar"
-            className="fixed z-50 pointer-events-none flex flex-col items-center gap-3 px-6 py-4 backdrop-blur-xl border border-[var(--border)] shadow-2xl"
+            className="fixed z-[var(--z-header)] pointer-events-none flex flex-col items-center gap-3 px-6 py-4 backdrop-blur-xl border border-[var(--border)] shadow-2xl"
             style={{
               left: avatarPos.x,
               top: avatarPos.y,

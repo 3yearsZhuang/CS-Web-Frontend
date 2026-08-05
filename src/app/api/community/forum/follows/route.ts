@@ -10,10 +10,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const type = url.searchParams.get('type') ?? 'following';
   const page = Number(url.searchParams.get('page')) || 1;
-  const pageSize = Math.min(Number(url.searchParams.get('page_size')) || 20, 50);
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
   const proxy = await proxyBackend(req, {
-    path: `/community/follows?type=${type}&page=${page}&page_size=${pageSize}`,
+    path: `/community/follows?type=${type}&page=${page}&pageSize=${pageSize}`,
   });
 
   if (proxy.status !== 200) {

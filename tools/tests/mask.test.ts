@@ -2,16 +2,13 @@
  * @file 脱敏工具函数单元测试
  *
  * 覆盖 M7 敏感数据脱敏：
- *   - maskEmail / maskPhone / maskName / maskStudentId / maskString
- *   - maskSensitiveFields 递归脱敏
+ *   - maskEmail / maskPhone
+ *   - maskSensitiveFields 递归脱敏（内部使用 maskName / maskStudentId / maskString）
  */
 import { describe, it, expect } from 'vitest';
 import {
   maskEmail,
   maskPhone,
-  maskName,
-  maskStudentId,
-  maskString,
   maskSensitiveFields,
 } from '../../src/shared/utils/mask';
 
@@ -54,57 +51,6 @@ describe('maskPhone', () => {
   it('数字不足 7 位返回 ****', () => {
     expect(maskPhone('12345')).toBe('****');
     expect(maskPhone('123456')).toBe('****');
-  });
-});
-
-describe('maskName', () => {
-  it('保留姓氏首字，其余以 * 填充', () => {
-    expect(maskName('张三')).toBe('张*');
-    expect(maskName('欧阳修')).toBe('欧**');
-    expect(maskName('司马相如')).toBe('司***');
-  });
-
-  it('单字符姓名返回 *', () => {
-    expect(maskName('王')).toBe('*');
-  });
-
-  it('空值安全', () => {
-    expect(maskName(null)).toBeNull();
-    expect(maskName(undefined)).toBeUndefined();
-  });
-});
-
-describe('maskStudentId', () => {
-  it('保留前 2 位与后 2 位，中间以 **** 填充', () => {
-    expect(maskStudentId('20210101001')).toBe('20****01');
-    expect(maskStudentId('2024001')).toBe('20****01');
-  });
-
-  it('长度不足 4 位返回 ****', () => {
-    expect(maskStudentId('123')).toBe('****');
-    expect(maskStudentId('12')).toBe('****');
-  });
-
-  it('空值安全', () => {
-    expect(maskStudentId(null)).toBeNull();
-    expect(maskStudentId(undefined)).toBeUndefined();
-  });
-});
-
-describe('maskString', () => {
-  it('保留首尾各 1 字符，中间以 **** 填充', () => {
-    expect(maskString('12345678')).toBe('1****8');
-    expect(maskString('abcdef')).toBe('a****f');
-  });
-
-  it('长度不足 3 位返回 ****', () => {
-    expect(maskString('ab')).toBe('****');
-    expect(maskString('a')).toBe('****');
-  });
-
-  it('空值安全', () => {
-    expect(maskString(null)).toBeNull();
-    expect(maskString(undefined)).toBeUndefined();
   });
 });
 

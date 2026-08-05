@@ -456,6 +456,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ### 10.4 中文文本规则
 
+> 通用中文排版规则已提炼到根仓库 `../../docs/engineering-conventions.md` §九，此处保留项目内引用。
+
 - 汉字之间不留空格
 - 中英文之间留空格
 - 中文与数字之间留空格

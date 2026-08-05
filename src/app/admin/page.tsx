@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -22,19 +23,19 @@ import { type AdminTab, type SafeUser } from '@/modules/admin/ui/types';
 
 /* ============= 工具函数 ============= */
 
-/** 根据 activeTab 返回 Hero 大标题 */
-function tabTitle(tab: AdminTab): string {
+/** 根据 activeTab 返回 Hero 大标题翻译 key（组件内解析） */
+function tabTitleKey(tab: AdminTab): string {
   switch (tab) {
     case 'roles':
-      return '角色权限';
+      return 'tabTitleRoles';
     case 'users':
-      return '用户管理';
+      return 'tabTitleUsers';
     case 'messages':
-      return '消息管理';
+      return 'tabTitleMessages';
     case 'join':
-      return '入社申请';
+      return 'tabTitleJoin';
     case 'logs':
-      return '日志管理';
+      return 'tabTitleLogs';
   }
 }
 
@@ -42,6 +43,7 @@ function tabTitle(tab: AdminTab): string {
 
 export default function AdminPage() {
   const router = useRouter();
+  const t = useTranslations('admin');
 
   // 当前登录用户（管理员校验 + 自身 id）
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
@@ -106,11 +108,11 @@ export default function AdminPage() {
 
   // 悬浮胶囊侧边栏 Tab 配置（roles / logs 仅 root 可见）
   const adminTabs: CapsuleTab[] = [
-    ...(isRootAdmin ? [{ key: 'roles', num: '00', label: '角色权限 / Roles' }] : []),
-    { key: 'users', num: '01', label: '用户 / Users' },
-    { key: 'messages', num: '02', label: '消息 / Messages' },
-    { key: 'join', num: '03', label: '入社申请 / Join' },
-    ...(isRootAdmin ? [{ key: 'logs', num: '04', label: '日志 / Logs' }] : []),
+    ...(isRootAdmin ? [{ key: 'roles', num: '00', label: t('tabRoles') }] : []),
+    { key: 'users', num: '01', label: t('tabUsers') },
+    { key: 'messages', num: '02', label: t('tabMessages') },
+    { key: 'join', num: '03', label: t('tabJoin') },
+    ...(isRootAdmin ? [{ key: 'logs', num: '04', label: t('tabLogs') }] : []),
   ];
 
   /* ============= 渲染：加载中 ============= */
@@ -119,7 +121,7 @@ export default function AdminPage() {
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
           <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-          <span className="meta-mono text-[var(--muted-foreground)]">验证中 / Verifying...</span>
+          <span className="meta-mono text-[var(--muted-foreground)]">{t('verifying')}</span>
         </div>
       </main>
     );
@@ -130,12 +132,12 @@ export default function AdminPage() {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
-          <div className="meta-mono text-[var(--destructive)] mb-4">[ 拒绝访问 / Access Denied ]</div>
+          <div className="meta-mono text-[var(--destructive)] mb-4">{t('accessDenied')}</div>
           <p className="text-[14px] text-[var(--muted-foreground)] mb-8">
-            你没有访问该页面的权限。仅管理员可查看用户管理终端。
+            {t('noAccess')}
           </p>
           <Link href="/" className="meta-mono text-[var(--primary)] underline-grow">
-            ← Back to Home
+            {t('backHome')}
           </Link>
         </div>
       </main>
@@ -166,7 +168,7 @@ export default function AdminPage() {
               }`}
               onClick={hero.collapsed ? hero.onTitleClick : undefined}
             >
-              {tabTitle(activeTab)}
+              {t(tabTitleKey(activeTab) as Parameters<typeof t>[0])}
               <span
                 className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                   hero.collapsed
@@ -174,7 +176,7 @@ export default function AdminPage() {
                     : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
                 }`}
               >
-                / Admin
+                {t('adminEn')}
               </span>
             </h1>
           </RevealTitle>
@@ -186,7 +188,7 @@ export default function AdminPage() {
             <RevealItem>
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 meta-mono text-[12px] text-[var(--muted-foreground)]">
                 <span className="ark-divider">3yearsZ Design</span>
-                <span>当前管理员 {currentUser.email}</span>
+                <span>{t('currentAdmin', { email: currentUser.email })}</span>
               </div>
             </RevealItem>
           </div>

@@ -7,6 +7,7 @@
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
 import { SectionLoading } from '@/components';
+import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
 import { roleLabel } from './users-panel-utils';
@@ -62,6 +63,7 @@ export function UserListView({
   onDelete,
   onDisable,
 }: UserListViewProps) {
+  const t = useTranslations('userList');
   return (
     <>
       {/* 工具栏 */}
@@ -70,7 +72,7 @@ export function UserListView({
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-5">
               <label htmlFor="admin-search" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                [ 搜索 / Search ]
+                {t('search')}
               </label>
               <input
                 id="admin-search"
@@ -78,12 +80,12 @@ export function UserListView({
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full px-4 py-2.5 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[13px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
-                placeholder="搜索 email 或显示名..."
+                placeholder={t('searchPlaceholder')}
               />
             </div>
 
             <div className="col-span-6 md:col-span-3">
-              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 角色 / Role ]</div>
+              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('role')}</div>
               <div className="flex gap-1.5">
                 {(['all', 'admin', 'user'] as RoleFilter[]).map((r) => (
                   <button
@@ -96,21 +98,21 @@ export function UserListView({
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                     }`}
                   >
-                    {r === 'all' ? '全部' : r === 'admin' ? '管理员' : '用户'}
+                    {r === 'all' ? t('all') : r === 'admin' ? t('admin') : t('user')}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="col-span-6 md:col-span-3">
-              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 状态 / Status ]</div>
+              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('status')}</div>
               <div className="flex gap-1.5">
                 {(
                   [
-                    { v: 'all', label: '全部' },
-                    { v: 'active', label: '启用' },
-                    { v: 'inactive', label: '禁用' },
-                  ] as { v: ActiveFilter; label: string }[]
+                    { v: 'all', labelKey: 'all' },
+                    { v: 'active', labelKey: 'active' },
+                    { v: 'inactive', labelKey: 'inactive' },
+                  ] as Array<{ v: ActiveFilter; labelKey: 'all' | 'active' | 'inactive' }>
                 ).map((s) => (
                   <button
                     key={s.v}
@@ -122,7 +124,7 @@ export function UserListView({
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                     }`}
                   >
-                    {s.label}
+                    {t(s.labelKey)}
                   </button>
                 ))}
               </div>
@@ -135,7 +137,7 @@ export function UserListView({
                 disabled={listLoading}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30"
               >
-                {listLoading ? 'Loading' : 'Refresh'}
+                {listLoading ? t('loading') : t('refresh')}
               </button>
             </div>
           </div>
@@ -148,21 +150,21 @@ export function UserListView({
           <div className="p-4 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--destructive)]">
             [ Error ] {listError}
             <button type="button" onClick={() => onFetch()} className="focus-amber ml-3 underline hover:opacity-80">
-              重试
+              {t('retry')}
             </button>
           </div>
         )}
 
         {listLoading && users.length === 0 && (
           <div className="py-20 flex items-center justify-center">
-            <SectionLoading label="加载用户中 / Loading..." />
+            <SectionLoading label={t('loadingUsers')} />
           </div>
         )}
 
         {!listLoading && !listError && users.length === 0 && (
           <div className="py-20 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无记录 / No Record ]</div>
-            <p className="text-[14px] text-[var(--muted-foreground)]">没有符合条件的用户。</p>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noRecord')}</div>
+            <p className="text-[14px] text-[var(--muted-foreground)]">{t('noUsers')}</p>
           </div>
         )}
 
@@ -172,11 +174,11 @@ export function UserListView({
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="text-left meta-mono py-3 pr-4 w-[34%]">用户 / User</th>
-                  <th className="text-left meta-mono py-3 pr-4">角色 / Role</th>
-                  <th className="text-left meta-mono py-3 pr-4">状态 / Status</th>
-                  <th className="text-left meta-mono py-3 pr-4">创建 / Created</th>
-                  <th className="text-right meta-mono py-3 pl-4">操作 / Actions</th>
+                  <th className="text-left meta-mono py-3 pr-4 w-[34%]">{t('colUser')}</th>
+                  <th className="text-left meta-mono py-3 pr-4">{t('colRole')}</th>
+                  <th className="text-left meta-mono py-3 pr-4">{t('colStatus')}</th>
+                  <th className="text-left meta-mono py-3 pr-4">{t('colCreated')}</th>
+                  <th className="text-right meta-mono py-3 pl-4">{t('colActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,7 +191,7 @@ export function UserListView({
                           <Avatar email={u.email} displayName={u.displayName} avatarUrl={u.avatarUrl} avatarType={u.avatarType} size={36} />
                           <div className="min-w-0">
                             <div className="text-[14px] text-[var(--foreground)] truncate font-mono">
-                              {u.displayName || <span className="text-[var(--muted-foreground)]">未命名</span>}
+                              {u.displayName || <span className="text-[var(--muted-foreground)]">{t('unnamed')}</span>}
                             </div>
                             <div className="meta-mono mt-0.5 truncate">{u.email}</div>
                           </div>
@@ -197,43 +199,43 @@ export function UserListView({
                       </td>
                       <td className="py-4 pr-4">
                         <span className={`meta-mono ${u.role === 'root' ? 'text-[var(--destructive)]' : u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'}`}>
-                          {u.role === 'root' ? '● Root' : u.role === 'admin' ? '● Admin' : '○ User'}
+                          {u.role === 'root' ? t('root') : u.role === 'admin' ? '● Admin' : '○ User'}
                         </span>
                       </td>
                       <td className="py-4 pr-4">
                         <span className={`meta-mono ${u.isActive ? 'text-[var(--foreground)]' : 'text-[var(--destructive)]'}`}>
-                          {u.isActive ? '● Active' : '● Disabled'}
+                          {u.isActive ? t('activeLabel') : t('disabledLabel')}
                         </span>
                       </td>
                       <td className="py-4 pr-4 meta-mono">{formatDate(u.createdAt)}</td>
                       <td className="py-4 pl-4">
                         <div className="flex items-center justify-end gap-3">
                           {isRootTarget(u) ? (
-                            <span className="meta-mono text-[var(--muted-foreground)]">— 不可操作 —</span>
+                            <span className="meta-mono text-[var(--muted-foreground)]">{t('notOperable')}</span>
                           ) : isRootAdmin ? (
                             <>
-                              <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? '不能编辑自己' : '编辑（仅超级管理员）'}>
-                                编辑
+                              <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? t('cantEditSelf') : t('editRootOnly')}>
+                                {t('edit')}
                               </button>
-                              <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title="自定义重置密码（仅超级管理员）">
-                                重置密码
+                              <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title={t('resetRootOnly')}>
+                                {t('resetPassword')}
                               </button>
-                              <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? '不能删除自己' : '硬删除（仅超级管理员）'}>
-                                删除
+                              <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? t('cantDeleteSelf') : t('deleteRootOnly')}>
+                                {t('delete')}
                               </button>
-                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? '不能禁用自己' : u.isActive ? '禁用' : '启用'}>
-                                {u.isActive ? '禁用' : '启用'}
+                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
+                                {u.isActive ? t('disable') : t('enable')}
                               </button>
                             </>
                           ) : isForbiddenForAdmin(u) ? (
-                            <span className="meta-mono text-[var(--muted-foreground)]">— 不可操作 —</span>
+                            <span className="meta-mono text-[var(--muted-foreground)]">{t('notOperable')}</span>
                           ) : (
                             <>
-                              <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title="重置为默认密码 FZTBU_CS">
-                                重置密码
+                              <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title={t('resetDefault')}>
+                                {t('resetPassword')}
                               </button>
-                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? '不能禁用自己' : u.isActive ? '禁用' : '启用'}>
-                                {u.isActive ? '禁用' : '启用'}
+                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
+                                {u.isActive ? t('disable') : t('enable')}
                               </button>
                             </>
                           )}
@@ -258,41 +260,41 @@ export function UserListView({
                     <Avatar email={u.email} displayName={u.displayName} avatarUrl={u.avatarUrl} avatarType={u.avatarType} size={40} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] text-[var(--foreground)] truncate font-mono">
-                        {u.displayName || <span className="text-[var(--muted-foreground)]">未命名</span>}
+                        {u.displayName || <span className="text-[var(--muted-foreground)]">{t('unnamed')}</span>}
                       </div>
                       <div className="meta-mono mt-0.5 truncate">{u.email}</div>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div>
-                      <div className="meta-mono text-[var(--muted-foreground)]">角色 / Role</div>
+                      <div className="meta-mono text-[var(--muted-foreground)]">{t('colRole')}</div>
                       <div className={`meta-mono mt-1 ${u.role === 'root' ? 'text-[var(--destructive)]' : u.role === 'admin' ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>{roleLabel(u.role)}</div>
                     </div>
                     <div>
-                      <div className="meta-mono text-[var(--muted-foreground)]">状态 / Status</div>
-                      <div className={`meta-mono mt-1 ${u.isActive ? 'text-[var(--foreground)]' : 'text-[var(--destructive)]'}`}>{u.isActive ? '启用' : '禁用'}</div>
+                      <div className="meta-mono text-[var(--muted-foreground)]">{t('colStatus')}</div>
+                      <div className={`meta-mono mt-1 ${u.isActive ? 'text-[var(--foreground)]' : 'text-[var(--destructive)]'}`}>{u.isActive ? t('enable') : t('disable')}</div>
                     </div>
                     <div>
-                      <div className="meta-mono text-[var(--muted-foreground)]">创建 / Created</div>
+                      <div className="meta-mono text-[var(--muted-foreground)]">{t('colCreated')}</div>
                       <div className="meta-mono mt-1 text-[var(--foreground)]">{formatDate(u.createdAt)}</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-4">
                     {isRootTarget(u) ? (
-                      <span className="meta-mono text-[var(--muted-foreground)] ml-auto">— 不可操作 —</span>
+                      <span className="meta-mono text-[var(--muted-foreground)] ml-auto">{t('notOperable')}</span>
                     ) : isRootAdmin ? (
                       <>
-                        <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">编辑</button>
-                        <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">重置密码</button>
-                        <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">删除</button>
-                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? '禁用' : '启用'}</button>
+                        <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">{t('edit')}</button>
+                        <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">{t('resetPassword')}</button>
+                        <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">{t('delete')}</button>
+                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? t('disable') : t('enable')}</button>
                       </>
                     ) : isForbiddenForAdmin(u) ? (
-                      <span className="meta-mono text-[var(--muted-foreground)] ml-auto">— 不可操作 —</span>
+                      <span className="meta-mono text-[var(--muted-foreground)] ml-auto">{t('notOperable')}</span>
                     ) : (
                       <>
-                        <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">重置密码</button>
-                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? '禁用' : '启用'}</button>
+                        <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">{t('resetPassword')}</button>
+                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? t('disable') : t('enable')}</button>
                       </>
                     )}
                   </div>
@@ -306,7 +308,7 @@ export function UserListView({
         {!listError && users.length > 0 && (
           <div className="mt-6 flex items-center justify-between border-t border-[var(--border)] pt-5">
             <div className="meta-mono text-[var(--muted-foreground)]">
-              共 {total} 条 · 第 {page} / {Math.max(1, totalPages)} 页
+              {t('totalPages', { total, page, pages: Math.max(1, totalPages) })}
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -315,7 +317,7 @@ export function UserListView({
                 onClick={() => onFetch({ page: page - 1 })}
                 className="focus-amber meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                ← 上一页
+                {t('prevPage')}
               </button>
               <button
                 type="button"
@@ -323,7 +325,7 @@ export function UserListView({
                 onClick={() => onFetch({ page: page + 1 })}
                 className="focus-amber meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                下一页 →
+                {t('nextPage')}
               </button>
             </div>
           </div>

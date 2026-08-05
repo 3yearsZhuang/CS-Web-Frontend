@@ -341,7 +341,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                       <Link
                         key={topic.id}
                         href={`/community/forum/${topic.category?.slug || 'general'}/${topic.id}`}
-                        className="card-minimal card-hover block p-4 group"
+                        className="card-minimal block p-4 group"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">

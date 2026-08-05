@@ -3,9 +3,13 @@
  */
 import Link from 'next/link';
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 
 /** 全站页脚 */
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations('nav');
+  const tc = await getTranslations('footer');
+
   return (
     <footer className="border-t border-[var(--border)] py-14 px-6">
       <div className="max-w-[1600px] mx-auto">
@@ -14,14 +18,14 @@ export function Footer() {
             <div className="w-7 h-7 rounded-lg overflow-hidden">
               <Image
                 src="/logo.png"
-                alt="计算机协会 Logo"
+                alt={t('brand')}
                 width={28}
                 height={28}
                 className="w-full h-full object-cover"
               />
             </div>
             <span className="text-[13px] text-[var(--muted-foreground)]">
-              计算机协会 &copy; {new Date().getFullYear()}
+              {t('brand')} &copy; {new Date().getFullYear()}
             </span>
           </div>
 
@@ -30,20 +34,20 @@ export function Footer() {
               href="/about"
               className="text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-300"
             >
-              关于我们 & 加入
+              {tc('aboutJoin')}
             </Link>
             <Link
               href="/events"
               className="text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors duration-300"
             >
-              活动
+              {t('events')}
             </Link>
           </div>
         </div>
 
         <div className="mt-10 text-center">
           <p className="text-[11px] text-[var(--muted-foreground)] tracking-wide">
-            Made with passion by Computer Association
+            {tc('madeWith')}
           </p>
         </div>
       </div>

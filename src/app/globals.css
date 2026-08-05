@@ -19,6 +19,15 @@
  * - Noto Sans SC — 中文正文（思源黑体，跨平台一致，比系统字体更有设计感）
  * - JetBrains Mono — 等宽元数据
  */
+/* 字体策略（编辑式技术极简）：CSS @import 应用字体（lint 允许 @import），
+ * 配合 layout.tsx 中的 ReactDOM preconnect 预连接 fonts.gstatic.com，
+ * 减少 DNS/TLS 往返、缓解渲染阻塞。
+ * - Fraunces (variable serif) — 英文展示衬线
+ * - Noto Serif SC — 中文展示衬线
+ * - Manrope — 英文正文
+ * - Noto Sans SC — 中文正文
+ * - JetBrains Mono — 等宽元数据
+ */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300..800&family=Noto+Serif+SC:wght@200..900&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -46,6 +55,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -122,6 +132,7 @@
   --accent: #e8ecf5; /* 淡蓝灰 */
   --accent-foreground: #1e1233;
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
   --border: rgba(30, 18, 51, 0.08); /* 紫调发丝线 */
   --input: rgba(30, 18, 51, 0.1);
   --ring: #1e40af;
@@ -154,6 +165,7 @@
   --accent: #1a1a1a;
   --accent-foreground: #f5f5f4;
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.06);
   --input: rgba(255, 255, 255, 0.08);
   --ring: #d4a574;
@@ -376,27 +388,21 @@ body {
   background-color: var(--hover-overlay);
 }
 
-/* 焦点状态 — 琥珀色外描边 */
+/* 焦点状态 — 琥珀色外描边
+ * 全局兜底：所有可交互元素统一可见焦点环（键盘可达性基线）。
+ * .focus-amber 用于定制样式，全局 a/button 等提供基础兜底，二者不冲突。
+ */
 .focus-amber:focus-visible {
   outline: 1px solid var(--primary);
   outline-offset: 2px;
 }
 
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* ============= 保留的旧工具类（向后兼容） ============= */
-
-/* 渐变文字 — 仅在极少数场合使用 */
-.gradient-text {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 300;
-  color: var(--primary);
-  letter-spacing: -0.02em;
-}
-
-/* 旧 glow-blob 保留但默认隐藏（避免误用） */
-.glow-blob {
-  display: none;
-}
 
 /* 噪点纹理 — 大幅降低强度，仅作微妙质感 */
 .noise-overlay {
@@ -446,19 +452,10 @@ body {
 .animate-delay-600 { animation-delay: 600ms; }
 .animate-delay-700 { animation-delay: 700ms; }
 
-/* 旧 card-hover — 保留但收敛效果 */
-.card-hover {
-  transition: border-color 0.3s ease, background-color 0.3s ease;
-}
-.card-hover:hover {
-  border-color: var(--primary);
-  background-color: var(--hover-overlay);
-}
-
 /* 旧 tag-badge — 替换为更编辑化的样式 */
 .tag-badge {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.15em;
   padding: 3px 8px;
   border: 1px solid var(--border);
@@ -624,12 +621,46 @@ body {
   margin: 3rem 0;
 }
 
-/* 动效守卫 — 尊重用户减少动态偏好 */
-/* 第三方 prose 覆盖 · 已审批 · 仅限 .prose-ark（GENERAL 2.5 例外项，须集中） */
+/* 动效守卫 — 尊重用户减少动态偏好（全局统一收敛，覆盖全站动效类） */
 @media (prefers-reduced-motion: reduce) {
+  /* 第三方 prose 覆盖 · 已审批（GENERAL 2.5 例外项，须集中） */
   .prose-ark a,
   .prose-ark * {
     transition: none !important;
+  }
+
+  /* 全站 CSS 动画类统一降级：入场/揭示/脉冲动画 → 立即定格完成态 */
+  .char-reveal,
+  .wipe-right,
+  .line-expand,
+  .animate-fade-up,
+  .animate-fade-in,
+  .ark-cinematic-reveal,
+  .ark-wipe-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+  }
+
+  /* 状态圆点脉冲 — 降级为静态 */
+  .ark-status-dot::after {
+    animation: none !important;
+    opacity: 0;
+  }
+
+  /* 下划线滑出 — 直接显示，避免 hover 动画 */
+  .underline-grow::after {
+    transition: none !important;
+  }
+  .underline-grow:hover::after {
+    width: 100%;
+  }
+
+  /* 全局滚动行为 */
+  html {
+    scroll-behavior: auto !important;
   }
 }
 
@@ -660,8 +691,7 @@ html {
 }
 body,
 .bg-themed,
-.card-minimal,
-.card-hover {
+.card-minimal {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
@@ -738,13 +768,16 @@ body,
   border-right: 1px solid;
 }
 
-/* 扫描线纹理 — 极淡的水平扫描线，叠加在背景上 */
+/* 扫描线纹理 — 极淡的水平扫描线，叠加在背景上
+ * 移除 mix-blend-mode: overlay（会降低文字对比度并触发额外合成层），
+ * 改用普通叠加并调低透明度，兼顾质感与可读性/性能。
+ */
 .ark-scanline {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: var(--z-overlay);
-  opacity: 0.04;
+  opacity: 0.025;
   background-image: repeating-linear-gradient(
     0deg,
     transparent 0px,
@@ -753,7 +786,13 @@ body,
     currentColor 3px
   );
   color: var(--foreground);
-  mix-blend-mode: overlay;
+}
+
+/* 减少动态偏好下禁用扫描线 */
+@media (prefers-reduced-motion: reduce) {
+  .ark-scanline {
+    opacity: 0;
+  }
 }
 
 /* 状态圆点 — 呼吸脉冲，用于活动状态标记 */
@@ -917,7 +956,7 @@ body,
   gap: 0.75rem;
   padding: 0.75rem 1.5rem;
   background: var(--destructive);
-  color: var(--primary-foreground);
+  color: var(--destructive-foreground);
   font-family: var(--font-mono);
   font-size: 12px;
   text-transform: uppercase;
@@ -963,7 +1002,7 @@ body,
   background: transparent;
   color: var(--foreground);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border: 1px solid var(--border);

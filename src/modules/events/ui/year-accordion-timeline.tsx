@@ -6,7 +6,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { isPastDate } from '@/shared/utils/event-date';
-import { SectionLoading } from '@/components';
+import { EmptyState, SectionLoading } from '@/components';
 import { EventCard } from './event-card';
 import { EventStatusDot } from './event-status-badge';
 import type { EventItem } from '@/modules/events/types';
@@ -41,9 +41,7 @@ export function YearAccordionTimeline({
       {loading ? (
         <SectionLoading label="Loading..." />
       ) : uncategorized.length === 0 && yearGroups.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">
-          暂无活动
-        </div>
+        <EmptyState message="暂无活动" className="py-12" />
       ) : (
         <>
           {/* 未分类活动 — 直接平铺在最上方，不包裹年份手风琴 */}

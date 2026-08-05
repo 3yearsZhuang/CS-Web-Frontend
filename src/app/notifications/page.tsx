@@ -11,7 +11,7 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { formatDateTime } from '@/shared/utils/utils';
-import { SectionLoading } from '@/components';
+import { EmptyState, SectionLoading } from '@/components';
 
 type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
 type FilterType = 'all' | 'unread' | NotificationType;
@@ -432,14 +432,7 @@ function NotificationsContent() {
               {loading && notifications.length === 0 ? (
                 <SectionLoading label="加载更多..." />
               ) : notifications.length === 0 ? (
-                <div className="py-20 text-center">
-                  <div className="meta-mono text-[var(--muted-foreground)] text-[14px] mb-2">
-                    {'// EMPTY'}
-                  </div>
-                  <div className="meta-mono text-[var(--muted-foreground)] text-[12px]">
-                    暂无通知
-                  </div>
-                </div>
+                <EmptyState label="// EMPTY" message="暂无通知" />
               ) : (
                 <div>
                   {notifications.map((notification) => {

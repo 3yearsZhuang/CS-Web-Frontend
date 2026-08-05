@@ -58,6 +58,8 @@ export {
 export { ToastProvider, useToast } from './feedback/toast';
 export type { Toast } from './feedback/toast';
 export { LoadingFallback, ErrorFallback, GlobalErrorFallback } from './feedback/fallback';
+export { EmptyState } from './feedback/empty-state';
+export type { EmptyStateProps } from './feedback/empty-state';
 export { AnnouncementBanner } from './feedback/announcement-banner';
 
 // ---- 根级通用组件 ----

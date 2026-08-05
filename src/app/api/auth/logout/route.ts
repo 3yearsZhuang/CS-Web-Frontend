@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   await proxyBackend(req, {
     path: '/auth/logout',
     method: 'POST',
-    jsonBody: refreshToken ? { refresh_token: refreshToken } : undefined,
+    jsonBody: refreshToken ? { refreshToken } : undefined,
     skipAuth: true,
   }).catch(() => null);
 

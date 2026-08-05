@@ -30,6 +30,10 @@
  *     — 页面与 API 路由的 CSP 由 proxy.ts 注入 nonce（F2），此处不适用
  */
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+/** next-intl 无 i18n 路由模式：仅用于解析 src/i18n/request.ts，不注入 locale 路由中间件 */
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /**
  * 从 ALLOWED_ORIGINS 环境变量构建 allowedDevOrigins
@@ -165,4 +169,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

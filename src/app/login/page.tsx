@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Button } from '@/components';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useRef, useEffect, Suspense } from 'react';
+import { useTranslations } from 'next-intl';
 import { EMAIL_REGEX } from '@/modules/auth/types/constants';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import { Github } from 'lucide-react';
@@ -20,54 +21,35 @@ type PasswordStrength = {
   color: string;
 };
 
-/** 计算密码强度 */
-function getPasswordStrength(password: string): PasswordStrength {
-  if (!password) return { score: 0, label: '', color: 'transparent' };
+/** 计算密码强度（label 由调用方通过翻译解析） */
+function getPasswordStrength(password: string): Omit<PasswordStrength, 'label'> {
+  if (!password) return { score: 0, color: 'transparent' };
   let score = 0;
   if (password.length >= PASSWORD_MIN_LENGTH) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
   if (/\d/.test(password) && /[^a-zA-Z\d]/.test(password)) score++;
 
-  const levels = [
-    { label: '弱', color: 'var(--destructive)' },
-    { label: '一般', color: 'var(--chart-3)' },
-    { label: '中等', color: 'var(--chart-1)' },
-    { label: '强', color: 'var(--chart-2)' },
+  const colors = [
+    'var(--destructive)',
+    'var(--chart-3)',
+    'var(--chart-1)',
+    'var(--chart-2)',
   ];
-  const level = levels[Math.max(0, score - 1)];
   return {
     score: score as 0 | 1 | 2 | 3 | 4,
-    label: score === 0 ? '' : level.label,
-    color: score === 0 ? 'transparent' : level.color,
+    color: score === 0 ? 'transparent' : colors[Math.max(0, score - 1)],
   };
 }
 
-/** OAuth 错误消息映射 */
-const OAUTH_ERROR_MESSAGES: Record<string, string> = {
-  oauth_state: '授权状态验证失败，请重试',
-  oauth_failed: 'GitHub 登录失败，请稍后重试',
-  oauth_unknown: '登录失败，请稍后重试',
-  disabled: '该账号已被禁用，请联系管理员',
-  github_email_conflict: '该邮箱已注册，请用密码登录后在个人设置中绑定 GitHub',
+/** OAuth 错误码 → 翻译 key（在组件内解析） */
+const OAUTH_ERROR_KEYS: Record<string, string> = {
+  oauth_state: 'oauthStateError',
+  oauth_failed: 'oauthFailed',
+  oauth_unknown: 'oauthUnknown',
+  disabled: 'accountDisabled',
+  github_email_conflict: 'githubEmailConflict',
 };
-
-/**
- * 根据 fetch 错误与 HTTP 响应推断前端错误文案
- */
-async function resolveErrorMessage(res: Response | null, fallback: string): Promise<string> {
-  if (!res) {
-    // 网络错误
-    return '网络错误，请检查网络后重试';
-  }
-  try {
-    const data = (await res.json().catch(() => null)) as { error?: string } | null;
-    if (data?.error) return data.error;
-  } catch {
-    // 忽略 JSON 解析失败
-  }
-  return fallback;
-}
 
 /**
  * 登录/注册页面组件
@@ -78,9 +60,27 @@ async function resolveErrorMessage(res: Response | null, fallback: string): Prom
 // 动态渲染：用户特定页面，无需静态预生成
 export const dynamic = 'force-dynamic';
 
+/**
+ * 根据 fetch 错误与 HTTP 响应推断前端错误文案
+ */
+async function resolveErrorMessage(res: Response | null, fallback: string, networkError: string): Promise<string> {
+  if (!res) return networkError;
+  try {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (data?.error) return data.error;
+  } catch {
+    // 忽略 JSON 解析失败
+  }
+  return fallback;
+}
+
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('auth');
+  // 密码强度标签（score 0..4 → 翻译 key）
+  const STRENGTH_LABEL_KEYS: Array<Parameters<typeof t>[0] | ''> = ['', 'passwordStrengthWeak', 'passwordStrengthFair', 'passwordStrengthMedium', 'passwordStrengthStrong'];
+  const strengthLabel = (score: number) => (score > 0 && STRENGTH_LABEL_KEYS[score] ? t(STRENGTH_LABEL_KEYS[score] as Parameters<typeof t>[0]) : '');
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -107,8 +107,8 @@ function LoginContent() {
 
   useEffect(() => {
     const oauthError = searchParams.get('error');
-    if (oauthError && OAUTH_ERROR_MESSAGES[oauthError]) {
-      setError(OAUTH_ERROR_MESSAGES[oauthError]);
+    if (oauthError && OAUTH_ERROR_KEYS[oauthError]) {
+      setError(t(OAUTH_ERROR_KEYS[oauthError] as Parameters<typeof t>[0]));
     }
     // OAuth 登录但目标账号已启用 2FA — 复用密码登录的 2FA 验证 UI
     // 安全：URL 仅作标识（oauth_2fa=1），2FA 预认证 token 通过 HttpOnly cookie 传递，
@@ -130,7 +130,7 @@ function LoginContent() {
   /** 发送验证码 */
   const handleSendCode = async () => {
     if (!email || !EMAIL_REGEX.test(email)) {
-      setError('请先填写正确的邮箱地址');
+      setError(t('emailRequired'));
       return;
     }
 
@@ -145,7 +145,7 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        const msg = await resolveErrorMessage(res, '验证码发送失败');
+        const msg = await resolveErrorMessage(res, t('sendCodeFailed'), t('networkError'));
         setError(msg);
         return;
       }
@@ -164,7 +164,7 @@ function LoginContent() {
       }, 1000);
     } catch (err) {
       console.error('[Auth] 发送验证码失败:', err instanceof Error ? err.message : err);
-      setError('验证码发送失败，请稍后再试');
+      setError(t('sendCodeFailedRetry'));
     } finally {
       setSendingCode(false);
     }
@@ -174,7 +174,7 @@ function LoginContent() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail || !EMAIL_REGEX.test(forgotEmail)) {
-      setError('请填写正确的邮箱地址');
+      setError(t('emailInvalid'));
       return;
     }
 
@@ -189,7 +189,7 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        const msg = await resolveErrorMessage(res, '申请提交失败');
+        const msg = await resolveErrorMessage(res, t('submitFailed'), t('networkError'));
         setError(msg);
         return;
       }
@@ -197,7 +197,7 @@ function LoginContent() {
       setForgotSuccess(true);
     } catch (err) {
       console.error('[Auth] 忘记密码申请失败:', err instanceof Error ? err.message : err);
-      setError('申请提交失败，请稍后再试');
+      setError(t('requestFailed'));
     } finally {
       setForgotLoading(false);
     }
@@ -216,25 +216,25 @@ function LoginContent() {
 
     // 客户端校验
     if (!email || !password) {
-      setError('请填写邮箱与密码');
+      setError(t('emailRequired'));
       return;
     }
     if (!EMAIL_REGEX.test(email)) {
-      setError('邮箱格式不正确');
+      setError(t('invalidEmail'));
       return;
     }
     if (password.length < PASSWORD_MIN_LENGTH) {
-      setError(`密码长度至少为 ${PASSWORD_MIN_LENGTH} 位`);
+      setError(t('passwordTooShort', { min: PASSWORD_MIN_LENGTH }));
       return;
     }
 
     if (!isLogin) {
       if (password !== confirmPassword) {
-        setError('两次输入的密码不一致');
+        setError(t('passwordMismatch'));
         return;
       }
       if (!verificationCode) {
-        setError('请输入验证码');
+        setError(t('codeRequired'));
         return;
       }
     }
@@ -242,7 +242,7 @@ function LoginContent() {
     setLoading(true);
 
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const fallbackMsg = isLogin ? '邮箱或密码错误' : '请求失败，请稍后再试';
+    const fallbackMsg = isLogin ? t('credentialsInvalid') : t('requestFailed');
 
     try {
       const body: Record<string, string> = { email, password };
@@ -257,7 +257,7 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        const msg = await resolveErrorMessage(res, fallbackMsg);
+        const msg = await resolveErrorMessage(res, fallbackMsg, t('networkError'));
         setError(msg);
         // 注册时邮箱已存在，自动切回登录模式
         if (!isLogin && res.status === 409) {
@@ -278,7 +278,7 @@ function LoginContent() {
       router.push('/profile');
     } catch (err) {
       console.error('[Auth] 请求失败:', err instanceof Error ? err.message : err);
-      const msg = await resolveErrorMessage(null, '请求失败，请稍后再试');
+      const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
       setError(msg);
     } finally {
       setLoading(false);
@@ -293,7 +293,7 @@ function LoginContent() {
     setError(null);
 
     if (!twoFactorCode || twoFactorCode.length !== 6) {
-      setError('请输入 6 位验证码');
+      setError(t('enter2FACode'));
       return;
     }
 
@@ -313,7 +313,7 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        const msg = await resolveErrorMessage(res, '验证码错误');
+        const msg = await resolveErrorMessage(res, t('enter2FACode'), t('networkError'));
         setError(msg);
         return;
       }
@@ -321,7 +321,7 @@ function LoginContent() {
       router.push('/profile');
     } catch (err) {
       console.error('[Auth] 2FA 验证失败:', err instanceof Error ? err.message : err);
-      const msg = await resolveErrorMessage(null, '请求失败，请稍后再试');
+      const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
       setError(msg);
     } finally {
       setLoading(false);
@@ -339,21 +339,15 @@ function LoginContent() {
               <h1 className="display-serif text-[clamp(36px,8vw,64px)] text-[var(--foreground)] leading-[1.05] sm:leading-[0.95]">
                 {in2FAFlow ? (
                   <>
-                    两步
-                    <span className="text-[var(--primary)]"> 验证</span>
+                    {t('twoFactorTitle')}
                   </>
                 ) : isLogin ? (
                   <>
-                    欢迎
-                    <span className="text-[var(--primary)]"> 回来</span>
-                    。
+                    {t('welcomeBack')}
                   </>
                 ) : (
                   <>
-                    创建
-                    <br />
-                    <span className="text-[var(--primary)]">新账号</span>
-                    。
+                    {t('createAccount')}
                   </>
                 )}
               </h1>
@@ -361,10 +355,10 @@ function LoginContent() {
             <RevealItem>
               <p className="mt-4 text-[13px] text-[var(--muted-foreground)]">
                 {in2FAFlow
-                  ? '请输入身份验证器中的 6 位验证码'
+                  ? t('twoFactorSubtitle')
                   : isLogin
-                    ? '登录你的账号继续探索'
-                    : '只需邮箱与密码，30 秒完成注册'}
+                    ? t('loginSubtitle')
+                    : t('registerSubtitle')}
               </p>
             </RevealItem>
           </div>
@@ -378,7 +372,7 @@ function LoginContent() {
                 htmlFor="twoFactorCode"
                 className="meta-mono mb-2 block text-[var(--muted-foreground)]"
               >
-                [ 01 ] Verify Code
+                [ 01 ] {t('verifyCodeLabel')}
               </label>
               <input
                 id="twoFactorCode"
@@ -390,7 +384,7 @@ function LoginContent() {
                 maxLength={6}
                 autoFocus
                 className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono tracking-[0.5em] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors text-center"
-                placeholder="000000"
+                placeholder={t('codePlaceholder')}
               />
             </div>
 
@@ -406,7 +400,7 @@ function LoginContent() {
               loading={loading}
               className="w-full py-4"
             >
-              {loading ? 'Verifying...' : 'Verify →'}
+              {loading ? t('verifying') : t('verify')}
             </Button>
 
             <div className="mt-4 text-center">
@@ -419,7 +413,7 @@ function LoginContent() {
                 }}
                 className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow"
               >
-                ← Back to Login
+                {t('backToLogin')}
               </button>
             </div>
           </form>
@@ -433,7 +427,7 @@ function LoginContent() {
               htmlFor="email"
               className="meta-mono mb-2 block text-[var(--muted-foreground)]"
             >
-              [ 01 ] Email
+              [ 01 ] {t('emailLabel')}
             </label>
             <div className="flex gap-2">
               <input
@@ -448,7 +442,7 @@ function LoginContent() {
                     ? 'border-[var(--destructive)]'
                     : 'border-[var(--border)]'
                 }`}
-                placeholder="your@email.com"
+                placeholder={t('emailPlaceholder')}
               />
               {/* 发送验证码按钮 — 仅注册模式 */}
               {!isLogin && (
@@ -458,18 +452,18 @@ function LoginContent() {
                   disabled={sendingCode || codeCountdown > 0 || !emailValid}
                   className="px-4 py-3 whitespace-nowrap border border-[var(--border)] text-[12px] font-mono text-[var(--primary)] hover:border-[var(--primary)] hover:bg-[var(--primary)]/[0.08] transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-amber"
                 >
-                  {sendingCode ? '...' : codeCountdown > 0 ? `${codeCountdown}s` : 'Send Code'}
+                  {sendingCode ? '...' : codeCountdown > 0 ? `${codeCountdown}s` : t('sendCode')}
                 </button>
               )}
             </div>
             {emailValid === false && (
               <div className="mt-1 text-[11px] font-mono text-[var(--destructive)]">
-                邮箱格式不正确
+                {t('invalidEmail')}
               </div>
             )}
             {codeSent && !isLogin && (
               <div className="mt-1 text-[11px] font-mono text-[var(--primary)]">
-                验证码已发送至该邮箱（开发环境请查看服务器控制台）
+                {t('codeSent')}
               </div>
             )}
           </div>
@@ -480,7 +474,7 @@ function LoginContent() {
               htmlFor="password"
               className="meta-mono mb-2 block text-[var(--muted-foreground)]"
             >
-              [ 02 ] Password
+              [ 02 ] {t('passwordLabel')}
             </label>
             <div className="relative">
               <input
@@ -491,14 +485,14 @@ function LoginContent() {
                 required
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
                 className="w-full px-4 py-3 pr-16 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
-                placeholder="至少 8 位，含大小写+数字+符号"
+                placeholder={t('passwordPlaceholder')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
               >
-                {showPassword ? 'HIDE' : 'SHOW'}
+                {showPassword ? t('hide') : t('show')}
               </button>
             </div>
             {/* 密码强度指示器 — 仅注册模式显示 */}
@@ -517,7 +511,7 @@ function LoginContent() {
                   className="meta-mono"
                   style={{ color: passwordStrength.color === 'transparent' ? 'var(--muted-foreground)' : passwordStrength.color }}
                 >
-                  {passwordStrength.label}
+                  {strengthLabel(passwordStrength.score)}
                 </span>
               </div>
             )}
@@ -530,7 +524,7 @@ function LoginContent() {
                 htmlFor="confirmPassword"
                 className="meta-mono mb-2 block text-[var(--muted-foreground)]"
               >
-                [ 03 ] Confirm
+                [ 03 ] {t('confirmLabel')}
               </label>
               <div className="relative">
                 <input
@@ -545,19 +539,19 @@ function LoginContent() {
                       ? 'border-[var(--destructive)]'
                       : 'border-[var(--border)]'
                   }`}
-                  placeholder="再次输入密码"
+                  placeholder={t('confirmPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
                 >
-                  {showConfirmPassword ? 'HIDE' : 'SHOW'}
+                  {showConfirmPassword ? t('hide') : t('show')}
                 </button>
               </div>
               {confirmPassword && password !== confirmPassword && (
                 <div className="mt-1 text-[11px] font-mono text-[var(--destructive)]">
-                  两次密码不一致
+                  {t('passwordMismatch')}
                 </div>
               )}
             </div>
@@ -570,7 +564,7 @@ function LoginContent() {
                 htmlFor="verificationCode"
                 className="meta-mono mb-2 block text-[var(--muted-foreground)]"
               >
-                [ 04 ] Verify Code
+                [ 04 ] {t('verifyCodeLabel')}
               </label>
               <input
                 id="verificationCode"
@@ -581,7 +575,7 @@ function LoginContent() {
                 inputMode="numeric"
                 maxLength={6}
                 className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono tracking-[0.5em] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors text-center"
-                placeholder="000000"
+                placeholder={t('codePlaceholder')}
               />
             </div>
           )}
@@ -601,16 +595,16 @@ function LoginContent() {
             className="w-full py-4"
           >
             {loading
-              ? 'Processing...'
+              ? t('processing')
               : isLogin
-                ? 'Sign In →'
-                : 'Create Account →'}
+                ? t('signIn')
+                : t('createAccountBtn')}
           </Button>
 
           {/* OR 分隔线 */}
           <div className="flex items-center gap-4">
             <div className="flex-1 h-px bg-[var(--border)]" />
-            <span className="meta-mono text-[var(--muted-foreground)] text-[12px]">— OR —</span>
+            <span className="meta-mono text-[var(--muted-foreground)] text-[12px]">{t('or')}</span>
             <div className="flex-1 h-px bg-[var(--border)]" />
           </div>
 
@@ -620,14 +614,14 @@ function LoginContent() {
             className="flex items-center justify-center gap-3 w-full py-4 border border-[var(--border)] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-[13px] font-mono hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
           >
             <Github className="w-5 h-5" />
-            使用 GitHub 登录
+            {t('githubLogin')}
           </Link>
         </form>
 
         {/* Toggle login/register */}
         <div className="mt-8 pt-6 border-t border-[var(--border)] flex items-center justify-between">
           <span className="meta-mono text-[var(--muted-foreground)]">
-            {isLogin ? 'No account?' : 'Have account?'}
+            {isLogin ? t('noAccount') : t('haveAccount')}
           </span>
           <button
             type="button"
@@ -640,7 +634,7 @@ function LoginContent() {
             }}
             className="meta-mono text-[var(--primary)] underline-grow"
           >
-            {isLogin ? 'Register →' : 'Sign In →'}
+            {isLogin ? t('register') : t('signIn')}
           </button>
         </div>
 
@@ -655,7 +649,7 @@ function LoginContent() {
               }}
               className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow"
             >
-              Forgot Password?
+              {t('forgotPassword')}
             </button>
           </div>
         )}
@@ -664,7 +658,7 @@ function LoginContent() {
         {showForgotPassword && (
           <div className="mt-6 p-6 border border-[var(--border)] bg-[var(--card)] space-y-4">
             <div className="flex items-center justify-between">
-              <span className="meta-mono text-[var(--primary)]">[ Reset Request ]</span>
+              <span className="meta-mono text-[var(--primary)]">{t('resetRequest')}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -682,10 +676,10 @@ function LoginContent() {
             {forgotSuccess ? (
               <div className="space-y-3">
                 <p className="text-[13px] text-[var(--foreground)] leading-relaxed">
-                  您的密码重置申请已提交，请等待管理员审批。
+                  {t('forgotSuccessTitle')}
                 </p>
                 <p className="text-[11px] font-mono text-[var(--muted-foreground)] leading-relaxed">
-                  管理员批准后，您的密码将被重置为默认密码，届时可使用默认密码登录后修改。
+                  {t('forgotSuccessDesc')}
                 </p>
                 <button
                   type="button"
@@ -696,13 +690,13 @@ function LoginContent() {
                   }}
                   className="meta-mono text-[var(--primary)] underline-grow"
                 >
-                  ← Back to Login
+                  {t('backToLogin')}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">
-                  输入您的注册邮箱，提交密码重置申请。管理员审批后，密码将重置为默认密码。
+                  {t('forgotDesc')}
                 </p>
                 <input
                   type="email"
@@ -711,14 +705,14 @@ function LoginContent() {
                   required
                   autoComplete="email"
                   className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
-                  placeholder="your@email.com"
+                  placeholder={t('emailPlaceholder')}
                 />
                 <Button
                   type="submit"
                   disabled={forgotLoading}
                   className="w-full"
                 >
-                  {forgotLoading ? 'Submitting...' : 'Submit Request →'}
+                  {forgotLoading ? t('processing') : t('submitRequest')}
                 </Button>
               </form>
             )}
@@ -731,7 +725,7 @@ function LoginContent() {
             href="/"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
           >
-            ← Back to Home
+            {t('backToHome')}
           </Link>
         </div>
       </>

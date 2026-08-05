@@ -36,26 +36,26 @@ export async function POST(req: Request) {
   }
 
   const body = proxy.body as {
-    requires_2fa?: boolean;
-    two_factor_token?: string | null;
-    access_token?: string;
-    refresh_token?: string;
+    requires2fa?: boolean;
+    twoFactorToken?: string | null;
+    accessToken?: string;
+    refreshToken?: string;
   };
 
-  if (body.requires_2fa) {
-    const res = NextResponse.json({ requires2FA: true, twoFactorToken: body.two_factor_token ?? null });
+  if (body.requires2fa) {
+    const res = NextResponse.json({ requires2FA: true, twoFactorToken: body.twoFactorToken ?? null });
     clearAuthCookies(res);
     return res;
   }
 
-  const hasPair = Boolean(body.access_token && body.refresh_token);
+  const hasPair = Boolean(body.accessToken && body.refreshToken);
   const me = hasPair
-    ? await fetchMeWithPair(body as { access_token: string; refresh_token: string })
+    ? await fetchMeWithPair(body as { accessToken: string; refreshToken: string })
     : null;
 
   const res = NextResponse.json({ user: me?.user ?? null });
   if (hasPair) {
-    setAuthCookies(res, body as { access_token: string; refresh_token: string });
+    setAuthCookies(res, body as { accessToken: string; refreshToken: string });
   } else {
     clearAuthCookies(res);
   }

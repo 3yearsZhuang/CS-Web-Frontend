@@ -8,6 +8,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { FeedItemCard } from '@/modules/community/ui/feed-item-card';
@@ -40,18 +41,14 @@ const PAGE_SIZE = 20;
 const SEARCH_MIN_LEN = 2;
 const SEARCH_MAX_LEN = 80;
 
-const TAB_OPTIONS: { key: TabKey; num: string; label: string }[] = [
-  { key: 'all', num: '01', label: '全部 / All' },
-  { key: 'following', num: '02', label: '关注流 / Following' },
-  { key: 'topic', num: '03', label: '论坛 / Forum' },
-  { key: 'post', num: '04', label: '博客 / Blog' },
-  { key: 'member', num: '05', label: '成员 / Members' },
+const TAB_OPTIONS: { key: TabKey; num: string; labelKey: string }[] = [
+  { key: 'all', num: '01', labelKey: 'tabAll' },
+  { key: 'following', num: '02', labelKey: 'tabFollowing' },
+  { key: 'member', num: '03', labelKey: 'tabMember' },
 ];
 
-const TAB_TO_KIND: Record<Exclude<TabKey, 'admin' | 'following'>, FeedKind | undefined> = {
+const TAB_TO_KIND: Partial<Record<Exclude<TabKey, 'admin' | 'following'>, FeedKind | undefined>> = {
   all: undefined,
-  topic: 'topic',
-  post: 'post',
   member: 'member',
 };
 
@@ -72,6 +69,7 @@ export default function CommunityPage() {
 function CommunityPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('community');
 
   const initialSearchQuery = searchParams.get('q') ?? '';
   const initialTab = (searchParams.get('tab') as TabKey) ?? 'all';
@@ -120,12 +118,12 @@ function CommunityPageContent() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
   const communityTabs = [
-    ...TAB_OPTIONS.map((t) => ({
-      key: t.key,
-      num: t.num,
-      label: t.label,
+    ...TAB_OPTIONS.map((opt) => ({
+      key: opt.key,
+      num: opt.num,
+      label: t(opt.labelKey as Parameters<typeof t>[0]),
     })),
-    ...(isAdmin ? [{ key: 'admin' as TabKey, num: '99', label: '管理 / Admin' }] : []),
+    ...(isAdmin ? [{ key: 'admin' as TabKey, num: '99', label: t('tabAdmin') }] : []),
   ];
 
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -361,7 +359,8 @@ function CommunityPageContent() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            汇聚<span className="text-[var(--primary)]">技术</span>
+            {t('heroTitle1')}
+            <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             <span
               className={`transition-all hero-reveal ${
                 hero.collapsed
@@ -369,7 +368,7 @@ function CommunityPageContent() {
                   : 'block max-h-[1.5em] opacity-100'
               } overflow-hidden`}
             >
-              的每一份声音。
+              {t('heroTitle3')}
             </span>
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
@@ -378,7 +377,7 @@ function CommunityPageContent() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / Community
+              {t('heroTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -395,9 +394,9 @@ function CommunityPageContent() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              论坛主题、博客文章、社区成员，一站浏览。
+              {t('heroDesc1')}
               <span className="serif-italic text-[var(--foreground)]">
-                让每个声音被听见，每篇文章被阅读，每位成员被看见
+                {t('heroDesc2')}
               </span>
               。
             </p>
@@ -420,7 +419,7 @@ function CommunityPageContent() {
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
                 <div>
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
-                    {hasSearch ? '搜索结果' : '社区动态'}
+                    {hasSearch ? t('searchResults') : t('communityFeed')}
                     {hasSearch && searchQuery.trim() && (
                       <span className="text-[var(--primary)] ml-2">「{searchQuery.trim()}」</span>
                     )}
@@ -431,13 +430,13 @@ function CommunityPageContent() {
                   <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px]">
                     {hasSearch
                       ? loading
-                        ? '// 搜索中...'
+                        ? '// Searching...'
                         : error
                           ? `// ${error}`
-                          : `// 找到 ${total} 条结果`
+                          : t('searchCount', { count: total })
                       : stats
-                        ? `// ${stats.topicCount} 主题 · ${stats.postCount} 文章 · ${stats.memberCount} 成员`
-                        : '// 聚合论坛、博客、成员的最新动态'}
+                        ? t('statsLine', { topics: stats.topicCount, posts: stats.postCount, members: stats.memberCount })
+                        : t('feedDefaultDesc')}
                   </p>
                 </div>
               </div>
@@ -458,15 +457,15 @@ function CommunityPageContent() {
                         setPage(1);
                       }}
                       maxLength={SEARCH_MAX_LEN}
-                      placeholder="搜索主题 / 文章 / 成员..."
-                      aria-label="搜索社区"
+                      placeholder={t('searchPlaceholderFull')}
+                      aria-label={t('searchPlaceholderFull')}
                       className="w-full px-4 py-4 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[16px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors pr-12"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={handleClearSearch}
-                        aria-label="清空搜索"
+                        aria-label={t('clearSearch')}
                         className="absolute right-3 top-1/2 -translate-y-1/2 meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber w-6 h-6 flex items-center justify-center"
                       >
                         ✕
@@ -478,21 +477,21 @@ function CommunityPageContent() {
                     disabled={loading || searchQuery.trim().length < SEARCH_MIN_LEN}
                     className="disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    {loading ? 'Searching...' : 'Search →'}
+                    {loading ? t('searching') : t('search')}
                   </Button>
                   <Link href="/community/new" className="shrink-0">
-                    <Button className="whitespace-nowrap">发布内容 →</Button>
+                    <Button className="whitespace-nowrap">{t('publish')}</Button>
                   </Link>
                 </div>
                 {searchQuery.length > 0 && (
                   <div className="mt-2 meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">
-                    {searchQuery.length} / {SEARCH_MAX_LEN} chars
+                    {searchQuery.length} / {SEARCH_MAX_LEN} {t('chars')}
                   </div>
                 )}
               </form>
 
-              {/* 精选/置顶横滑区 — 仅在 all 或 topic Tab 且无搜索时显示 */}
-              {!hasSearch && (activeTab === 'all' || activeTab === 'topic') && featuredTopics.length > 0 && (
+              {/* 精选/置顶横滑区 — 仅在 all Tab 且无搜索时显示 */}
+              {!hasSearch && activeTab === 'all' && featuredTopics.length > 0 && (
                 <FeaturedTopicStrip topics={featuredTopics} className="mb-8" />
               )}
 
@@ -500,7 +499,7 @@ function CommunityPageContent() {
               {tags.length > 0 && !selectedTag && (
                 <div className="mb-8">
                   <div className="meta-mono text-[11px] mb-3">
-                    {'// 热门标签 — '}
+                    {t('hotTags')}
                     <span className="text-[var(--primary)] tabular-nums">{tags.length}</span>
                     {' tags'}
                   </div>
@@ -524,7 +523,7 @@ function CommunityPageContent() {
               {selectedTag && (
                 <div className="mb-8 flex items-center gap-3">
                   <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {'// 已选标签:'}
+                    {t('selectedTag')}
                   </span>
                   <button
                     onClick={() => handleTagClick(selectedTag)}
@@ -539,18 +538,16 @@ function CommunityPageContent() {
               {(activeTab === 'member' || activeTab === 'following') && authChecked && !isLoggedIn ? (
                 <div className="py-20 text-center border-t border-[var(--border)]">
                   <div className="meta-mono text-[var(--muted-foreground)] text-[14px] mb-3">
-                    {'// LOGIN REQUIRED'}
+                    {t('loginRequired')}
                   </div>
                   <div className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] mb-2">
-                    {activeTab === 'following' ? '关注流仅对登录用户开放' : '成员列表仅对登录用户开放'}
+                    {activeTab === 'following' ? t('followingRequiresLogin') : t('memberRequiresLogin')}
                   </div>
                   <div className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-8">
-                    {activeTab === 'following'
-                      ? '登录后查看你关注的人的最新动态'
-                      : '登录后查看社区成员的技术标签与活跃动态'}
+                    {activeTab === 'following' ? t('followingLoginDesc') : t('memberLoginDesc')}
                   </div>
                   <Button onClick={() => router.push(`/login?redirect=/community?tab=${activeTab}`)}>
-                    登录 / Login →
+                    {t('login')}
                   </Button>
                 </div>
               ) : loading ? (
@@ -562,20 +559,20 @@ function CommunityPageContent() {
                     onClick={() => window.location.reload()}
                     className="meta-mono text-[var(--primary)] underline-grow"
                   >
-                    重试
+                    {t('retry')}
                   </button>
                 </div>
               ) : items.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="meta-mono text-[var(--muted-foreground)] mb-6">
-                    {hasSearch ? '// 没有找到匹配的内容' : '// 社区暂无内容'}
+                    {hasSearch ? t('noMatch') : t('noContent')}
                   </div>
                   {hasSearch && (
                     <button
                       onClick={handleClearSearch}
                       className="meta-mono text-[var(--primary)] underline-grow"
                     >
-                      清空筛选 ←
+                      {t('clearFilter')}
                     </button>
                   )}
                 </div>

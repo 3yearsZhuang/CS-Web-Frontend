@@ -18,22 +18,22 @@ export async function GET(req: Request) {
   );
 
   const body = (await res.json().catch(() => ({}))) as {
-    requires_2fa?: boolean;
-    two_factor_token?: string | null;
-    access_token?: string;
-    refresh_token?: string;
-    error_code?: string;
+    requires2fa?: boolean;
+    twoFactorToken?: string | null;
+    accessToken?: string;
+    refreshToken?: string;
+    errorCode?: string;
   };
 
   if (res.status !== 200) {
     let errorParam = 'oauth_unknown';
-    if (body.error_code === 'OAUTH_STATE_INVALID' || body.error_code === 'OAUTH_STATE_EXPIRED') {
+    if (body.errorCode === 'OAUTH_STATE_INVALID' || body.errorCode === 'OAUTH_STATE_EXPIRED') {
       errorParam = 'oauth_state';
-    } else if (body.error_code === 'OAUTH_ERROR' || body.error_code === 'OAUTH_NOT_CONFIGURED') {
+    } else if (body.errorCode === 'OAUTH_ERROR' || body.errorCode === 'OAUTH_NOT_CONFIGURED') {
       errorParam = 'oauth_failed';
-    } else if (body.error_code === 'USER_NOT_ACTIVE') {
+    } else if (body.errorCode === 'USER_NOT_ACTIVE') {
       errorParam = 'disabled';
-    } else if (body.error_code === 'GITHUB_EMAIL_CONFLICT') {
+    } else if (body.errorCode === 'GITHUB_EMAIL_CONFLICT') {
       errorParam = 'github_email_conflict';
     }
     const redirectUrl = new URL('/login', req.url);
@@ -41,11 +41,11 @@ export async function GET(req: Request) {
     return NextResponse.redirect(redirectUrl, { status: 302 });
   }
 
-  if (body.requires_2fa && body.two_factor_token) {
+  if (body.requires2fa && body.twoFactorToken) {
     const loginUrl = new URL('/login', req.url);
     loginUrl.searchParams.set('oauth_2fa', '1');
     const res2 = NextResponse.redirect(loginUrl, { status: 302 });
-    res2.cookies.set(OAUTH_2FA_COOKIE_NAME, body.two_factor_token, {
+    res2.cookies.set(OAUTH_2FA_COOKIE_NAME, body.twoFactorToken, {
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
@@ -57,8 +57,8 @@ export async function GET(req: Request) {
 
   const profileUrl = new URL('/profile', req.url);
   const res2 = NextResponse.redirect(profileUrl, { status: 302 });
-  if (body.access_token && body.refresh_token) {
-    setAuthCookies(res2, { access_token: body.access_token, refresh_token: body.refresh_token });
+  if (body.accessToken && body.refreshToken) {
+    setAuthCookies(res2, { accessToken: body.accessToken, refreshToken: body.refreshToken });
   }
   return res2;
 }

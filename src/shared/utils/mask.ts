@@ -24,22 +24,22 @@ export function maskPhone(phone: string | null | undefined): string | null | und
   return digits.slice(0, 3) + '****' + digits.slice(-4);
 }
 
-/** 姓名脱敏：保留姓氏首字，其余 * 填充 */
-export function maskName(name: string | null | undefined): string | null | undefined {
+/** 姓名脱敏：保留姓氏首字，其余 * 填充（仅 maskSensitiveFields 内部使用） */
+function maskName(name: string | null | undefined): string | null | undefined {
   if (!name) return name === undefined ? undefined : null;
   if (name.length === 1) return '*';
   return name[0] + '*'.repeat(name.length - 1);
 }
 
-/** 学号脱敏：保留前 2 位与后 2 位 */
-export function maskStudentId(id: string | null | undefined): string | null | undefined {
+/** 学号脱敏：保留前 2 位与后 2 位（仅 maskSensitiveFields 内部使用） */
+function maskStudentId(id: string | null | undefined): string | null | undefined {
   if (!id) return id === undefined ? undefined : null;
   if (id.length <= 4) return '****';
   return id.slice(0, 2) + '****' + id.slice(-2);
 }
 
-/** 通用字符串脱敏：保留首尾各 1 字符（QQ 号等无固定格式标识符） */
-export function maskString(value: string | null | undefined): string | null | undefined {
+/** 通用字符串脱敏：保留首尾各 1 字符（QQ 号等无固定格式标识符，仅 maskSensitiveFields 内部使用） */
+function maskString(value: string | null | undefined): string | null | undefined {
   if (!value) return value === undefined ? undefined : null;
   if (value.length <= 2) return '****';
   return value[0] + '****' + value[value.length - 1];

@@ -48,11 +48,11 @@ export async function PUT(
     path: `/admin/users/${encodeURIComponent(id)}`,
     method: 'PUT',
     jsonBody: {
-      display_name: body.displayName,
+      displayName: body.displayName,
       bio: body.bio,
-      tech_tags: Array.isArray(body.techTags) ? body.techTags : undefined,
-      github_url: body.githubUrl,
-      website_url: body.websiteUrl,
+      techTags: Array.isArray(body.techTags) ? body.techTags : undefined,
+      githubUrl: body.githubUrl,
+      websiteUrl: body.websiteUrl,
     },
   });
 

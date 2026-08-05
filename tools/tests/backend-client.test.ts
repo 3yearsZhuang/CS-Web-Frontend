@@ -13,7 +13,7 @@ const mockFetch = vi.fn(async (input: string | URL | Request, init?: RequestInit
     refreshCalls.push({ body: String(init?.body ?? '') });
     if (refreshCalls.length === 1) {
       return new Response(
-        JSON.stringify({ access_token: 'new-access', refresh_token: 'new-refresh' }),
+        JSON.stringify({ accessToken: 'new-access', refreshToken: 'new-refresh' }),
         { status: 200 },
       );
     }
@@ -27,17 +27,17 @@ const mockFetch = vi.fn(async (input: string | URL | Request, init?: RequestInit
           id: 1,
           username: 'tester',
           email: 't@test.dev',
-          display_name: 'Tester',
+          displayName: 'Tester',
           bio: null,
-          avatar_url: null,
-          avatar_type: 'initial',
-          github_url: null,
-          website_url: null,
-          tech_tags: ['web'],
-          is_active: true,
-          is_superuser: false,
-          created_at: '2026-01-01T00:00:00Z',
-          updated_at: '2026-01-01T00:00:00Z',
+          avatarUrl: null,
+          avatarType: 'initial',
+          githubUrl: null,
+          websiteUrl: null,
+          techTags: ['web'],
+          isActive: true,
+          isSuperuser: false,
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
         },
         roles: ['user'],
       }),
@@ -112,7 +112,7 @@ describe('proxyBackend', () => {
     const req = makeRequest({ fztbu_access: 'expired-access', fztbu_refresh: 'valid-refresh' });
     const result = await proxyBackend(req, { path: '/protected' });
     expect(result.status).toBe(200);
-    expect(result.authPair?.access_token).toBe('new-access');
+    expect(result.authPair?.accessToken).toBe('new-access');
     expect(refreshCalls).toHaveLength(1);
   });
 
@@ -127,7 +127,7 @@ describe('proxyBackend', () => {
 
 describe('fetchMeWithPair', () => {
   it('用 JWT 对换取用户信息与角色', async () => {
-    const me = await fetchMeWithPair({ access_token: 'x', refresh_token: 'y' });
+    const me = await fetchMeWithPair({ accessToken: 'x', refreshToken: 'y' });
     expect(me?.user.email).toBe('t@test.dev');
     expect(me?.roles).toEqual(['user']);
     expect(me?.user.id).toBe('1');
@@ -147,7 +147,7 @@ describe('角色解析', () => {
     const user = toSafeUserFromBackend({ id: 2, username: 'r', email: 'r@t.dev' }, []);
     expect(user.role).toBe('user');
     const superUser = toSafeUserFromBackend(
-      { id: 3, username: 's', email: 's@t.dev', is_superuser: true },
+      { id: 3, username: 's', email: 's@t.dev', isSuperuser: true },
       [],
     );
     expect(superUser.role).toBe('root');

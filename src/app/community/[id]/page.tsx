@@ -14,6 +14,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type HeroState } from '@/components/layout/collapsing-hero';
 import { SectionLoading } from '@/components';
 import { TopicHero } from '@/modules/community/ui/forum-topic-hero';
@@ -30,6 +31,7 @@ import { isAdminRole } from '@/shared/types';
 export default function CommunityPostDetailPage() {
   const params = useParams<{ id: string }>();
   const postId = params?.id ?? '';
+  const t = useTranslations('communityDetail');
 
   // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
   const { collapsed: heroCollapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
@@ -114,7 +116,7 @@ export default function CommunityPostDetailPage() {
   if (loading && !topic) {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
-        <SectionLoading label="Loading..." />
+        <SectionLoading label={t('loading')} />
       </main>
     );
   }
@@ -128,7 +130,7 @@ export default function CommunityPostDetailPage() {
             href="/community"
             className="meta-mono text-[var(--primary)] underline-grow"
           >
-            ← 返回社区
+            {t('backToCommunity')}
           </Link>
         </div>
       </main>
