@@ -20,6 +20,16 @@ export interface AppMessages {
     back: string;
     submit: string;
     more: string;
+    processing: string;
+    loadingDefault: string;
+    irreversible: string;
+  };
+  fallback: {
+    errorTitle: string;
+    globalErrorTitle: string;
+    errorDesc: string;
+    globalErrorDesc: string;
+    errorId: string;
   };
   nav: {
     home: string;

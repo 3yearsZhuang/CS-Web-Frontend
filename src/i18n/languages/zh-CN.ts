@@ -23,6 +23,16 @@ export const zhCN: AppMessages = {
     back: '返回',
     submit: '提交',
     more: '更多',
+    processing: '处理中...',
+    loadingDefault: '加载中...',
+    irreversible: '此操作不可撤销，请谨慎操作。',
+  },
+  fallback: {
+    errorTitle: '页面出错了',
+    globalErrorTitle: '出错了',
+    errorDesc: '此页面遇到了一个错误。错误已自动上报，请尝试重试。',
+    globalErrorDesc: '页面遇到了一个意外错误。错误已自动上报，请尝试重新加载。',
+    errorId: 'Error ID',
   },
   nav: {
     home: '首页',

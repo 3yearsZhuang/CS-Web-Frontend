@@ -1,4 +1,4 @@
-# 前端项目 · 通用内容设计规范与目录设计艺术by3yearsZ
+# 前端项目 · 通用内容设计规范与目录设计艺术 by 3yearsZ
 
 > 形成一套适用于**任意前端项目**的架构与目录准则。
 > 覆盖：React / Vue / Svelte / Astro / Next.js / Nuxt / Vite 等。

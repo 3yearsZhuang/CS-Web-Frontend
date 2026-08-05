@@ -6,6 +6,7 @@
 
 import { Spinner } from './spinner';
 import type { SpinnerProps } from './spinner';
+import { t } from '@/i18n';
 
 /* ============================================================
  * LoadingOverlay — 全屏加载遮罩（入场/退场动画序列）
@@ -64,7 +65,7 @@ export function LoadingOverlay({
           [ {label} ]
         </div>
         <div className="display-serif text-[clamp(20px,4vw,32px)] text-[var(--muted-foreground)] animate-pulse">
-          加载中...
+          {t('common.loadingDefault')}
         </div>
         <div className="flex items-center justify-center gap-1.5 mt-6">
           <span className="inline-block w-1.5 h-1.5 bg-[var(--primary)] rounded-full animate-loader-dot [animation-delay:0ms]" />
@@ -175,7 +176,7 @@ export interface LoadingProps {
   label?: string;
 }
 
-export function Loading({ label = '加载中...' }: LoadingProps) {
+export function Loading({ label = t('common.loadingDefault') }: LoadingProps) {
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center space-y-4">

@@ -16,6 +16,7 @@ import {
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
 import { Button } from '@/components/primitives/button';
+import { t } from '@/i18n';
 
 /* ============= 类型定义 ============= */
 
@@ -79,8 +80,8 @@ export function ConfirmDialog({
   title,
   message,
   variant = 'danger',
-  confirmLabel = '确认',
-  cancelLabel = '取消',
+  confirmLabel = t('common.confirm'),
+  cancelLabel = t('common.cancel'),
   loading = false,
   children,
   onConfirm,
@@ -131,7 +132,7 @@ export function ConfirmDialog({
           <div className={`p-3 border-l-2 ${styles.border} ${styles.bg}`}>
             <p className={`meta-mono text-[11px] ${styles.text}`}>
               {variant === 'danger'
-                ? '此操作不可撤销，请谨慎操作。'
+                ? t('common.irreversible')
                 : variant === 'warning'
                   ? '此操作可能影响系统状态，请确认后再继续。'
                   : '请确认以上信息后再继续操作。'}
@@ -149,7 +150,7 @@ export function ConfirmDialog({
               loading={loading}
               onClick={onConfirm}
             >
-              {loading ? '处理中...' : confirmLabel}
+              {loading ? t('common.processing') : confirmLabel}
             </Button>
             <button
               type="button"
@@ -216,8 +217,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           title={state.options.title}
           message={state.options.message}
           variant={state.options.variant ?? 'danger'}
-          confirmLabel={state.options.confirmLabel ?? '确认'}
-          cancelLabel={state.options.cancelLabel ?? '取消'}
+          confirmLabel={state.options.confirmLabel ?? t('common.confirm')}
+          cancelLabel={state.options.cancelLabel ?? t('common.cancel')}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />

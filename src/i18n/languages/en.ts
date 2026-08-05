@@ -21,6 +21,16 @@ export const en: AppMessages = {
     back: 'Back',
     submit: 'Submit',
     more: 'More',
+    processing: 'Processing...',
+    loadingDefault: 'Loading...',
+    irreversible: 'This action is irreversible. Please proceed with caution.',
+  },
+  fallback: {
+    errorTitle: 'Page error',
+    globalErrorTitle: 'Unexpected error',
+    errorDesc: 'An error occurred on this page. It has been reported automatically. Please try again.',
+    globalErrorDesc: 'An unexpected error occurred. It has been reported. Please reload the page.',
+    errorId: 'Error ID',
   },
   nav: {
     home: 'Home',

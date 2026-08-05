@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { captureErrorSync } from '@/shared/utils/monitoring';
 import { Button } from '@/components/primitives/button';
 import { Loading } from '@/components/primitives/loading';
+import { t } from '@/i18n';
 
 /**
  * 路由级加载骨架屏
@@ -42,18 +43,18 @@ export function ErrorFallback({
       <div className="max-w-md w-full text-center space-y-6">
         <div className="meta-mono text-[var(--muted-foreground)] text-[11px]">[ ERROR ]</div>
         <h1 className="display-serif text-[clamp(24px,5vw,40px)] text-[var(--foreground)]">
-          页面出错了
+          {t('fallback.errorTitle')}
         </h1>
         <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
-          此页面遇到了一个错误。错误已自动上报，请尝试重试。
+          {t('fallback.errorDesc')}
         </p>
         {error.digest && (
           <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-            Error ID: {error.digest}
+            {t('fallback.errorId')}: {error.digest}
           </p>
         )}
         <Button onClick={reset}>
-          重试
+          {t('common.retry')}
         </Button>
       </div>
     </main>
@@ -84,20 +85,18 @@ export function GlobalErrorFallback({
       <div className="max-w-md w-full text-center space-y-6">
         <div className="meta-mono text-[var(--muted-foreground)] text-[11px]">[ ERROR ]</div>
         <h1 className="display-serif text-[clamp(28px,5vw,48px)] text-[var(--foreground)]">
-          出错了
+          {t('fallback.globalErrorTitle')}
         </h1>
         <p className="text-[14px] text-[var(--muted-foreground)] leading-relaxed">
-          页面遇到了一个意外错误。错误已自动上报，请尝试重新加载。
+          {t('fallback.globalErrorDesc')}
         </p>
         {error.digest && (
           <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-            Error ID: {error.digest}
+            {t('fallback.errorId')}: {error.digest}
           </p>
         )}
-        <Button
-          onClick={reset}
-        >
-          重试
+        <Button onClick={reset}>
+          {t('common.retry')}
         </Button>
       </div>
     </main>
