@@ -14,6 +14,10 @@
 
 详见根目录 `项目演变历史.md`（2026-08-05 起的条目）。
 
+## [0.9.5] - 2026-08-06
+
+详见根目录 `项目演变历史.md`（2026-08-06 起条目）。
+
 ## [0.9.1] - 2026-07-31
 
 详见根目录 `项目演变历史.md`（2026-07-31 0.9.1 预发布条目：SLO + alerting + load test + restore drill + runbook + rollback + CI 加固 + EX-1 风险接受 + ADR-018）。
@@ -28,4 +32,5 @@
 
 ## 链接
 
+[0.9.5]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.5
 [0.9.1]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.1
