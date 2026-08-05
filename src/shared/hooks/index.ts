@@ -13,3 +13,5 @@ export { useTopicActions } from './use-topic-actions';
 export type { TopicActions } from './use-topic-actions';
 export { useReplyActions } from './use-reply-actions';
 export type { ReplyActions } from './use-reply-actions';
+export { useBreakpoint } from './use-breakpoint';
+export type { Breakpoint } from './use-breakpoint';

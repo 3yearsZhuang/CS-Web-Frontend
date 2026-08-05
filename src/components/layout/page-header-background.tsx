@@ -64,7 +64,7 @@ export function PageHeaderBackground({
         aria-hidden="true"
         style={{
           backgroundImage:
-            'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            'linear-gradient(to right, var(--grid-line) 1px, transparent 1px)',
           backgroundSize: 'calc(100% / 12) 100%',
         }}
       />

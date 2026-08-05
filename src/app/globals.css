@@ -133,6 +133,8 @@
 
   /* 主题切换 token — 用于卡片悬停的细微叠加色 */
   --hover-overlay: rgba(0, 0, 0, 0.015);
+  /* 装饰网格线 — 白色半透明发丝网格（叠加在深色背景装饰区），GENERAL 2.5 精确值令牌化 */
+  --grid-line: rgba(255, 255, 255, 0.03);
 }
 
 /* 深色主题（通过 .dark 类激活） */
@@ -162,6 +164,8 @@
   --chart-5: #8b9dc3;
 
   --hover-overlay: rgba(255, 255, 255, 0.02);
+  /* 装饰网格线 — 深色主题略亮以保证可见度 */
+  --grid-line: rgba(255, 255, 255, 0.06);
 }
 
 /* z-index 层级 token — 集中管理全站层级，消除 ad-hoc 与注释维护依赖
@@ -621,6 +625,7 @@ body {
 }
 
 /* 动效守卫 — 尊重用户减少动态偏好 */
+/* 第三方 prose 覆盖 · 已审批 · 仅限 .prose-ark（GENERAL 2.5 例外项，须集中） */
 @media (prefers-reduced-motion: reduce) {
   .prose-ark a,
   .prose-ark * {

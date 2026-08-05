@@ -14,13 +14,13 @@ import { EASE } from '@/shared/utils/ui-constants';
 import { Button } from '@/components';
 import { RevealItem, RevealTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
+import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
 import type { MemberItem } from '@/modules/community/types';
 
 /** 莫比乌斯环响应式配置 — 按断点分级
  *
  * 性能要点：只渲染 1 个 MobiusRing 实例（之前 4 个同时挂载导致 4 个 RAF + 12 个全局监听器）。
  * 通过 matchMedia 检测断点，动态切换 particleCount/radius/width 和定位样式。 */
-type Breakpoint = 'mobile' | 'tablet' | 'desktop' | 'large';
 
 interface MobiusConfig {
   particleCount: number;
@@ -77,32 +77,6 @@ const MOBIUS_CONFIGS: Record<Breakpoint, MobiusConfig> = {
     sizeStyle: { width: '700px', height: '700px' },
   },
 };
-
-/** 检测当前断点 — SSR 安全（默认 large，hydrate 后立即校正） */
-function useBreakpoint(): Breakpoint {
-  const [bp, setBp] = useState<Breakpoint>('large');
-  useEffect(() => {
-    const mobile = window.matchMedia('(max-width: 639px)');
-    const tablet = window.matchMedia('(min-width: 640px) and (max-width: 767px)');
-    const desktop = window.matchMedia('(min-width: 768px) and (max-width: 1023px)');
-    const update = () => {
-      if (mobile.matches) setBp('mobile');
-      else if (tablet.matches) setBp('tablet');
-      else if (desktop.matches) setBp('desktop');
-      else setBp('large');
-    };
-    update();
-    mobile.addEventListener('change', update);
-    tablet.addEventListener('change', update);
-    desktop.addEventListener('change', update);
-    return () => {
-      mobile.removeEventListener('change', update);
-      tablet.removeEventListener('change', update);
-      desktop.removeEventListener('change', update);
-    };
-  }, []);
-  return bp;
-}
 
 /** 首页组件 — 极简单屏 Hero */
 export default function Home() {
@@ -202,7 +176,7 @@ export default function Home() {
           className="absolute inset-0 opacity-50 pointer-events-none"
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px)',
+              'linear-gradient(to right, var(--grid-line) 1px, transparent 1px)',
             backgroundSize: 'calc(100% / 12) 100%',
           }}
         />

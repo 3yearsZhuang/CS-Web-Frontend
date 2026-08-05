@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { EASE } from '@/shared/utils/ui-constants';
+import { LOGO_PALETTE_MINI } from '@/shared/constants/logo-colors';
 
 /** 首次加载动画时长（秒） */
 const FIRST_LOAD_DURATION = 1.0;
@@ -29,7 +30,7 @@ function MiniMobiusRing({ size = 120 }: { size?: number }) {
     canvas.height = size * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const PALETTE = ['#a0d0f0', '#80a0f0', '#5080e0', '#f0b0c0', '#f0c0d0'];
+    const PALETTE = LOGO_PALETTE_MINI;
     const particleCount = 400;
     const radius = size * 0.32;
     const ringWidth = size * 0.1;

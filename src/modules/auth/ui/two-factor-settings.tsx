@@ -1,23 +1,11 @@
 /**
- * @file 双因素认证 (2FA) 设置组件
+ * @file 双因素认证 (2FA) 设置组件 — 渲染层
  *
- * 用途：在个人设置页（/profile → 安全 Tab）管理 2FA。
- *
- * 功能流：
- *   1. 加载时 GET /api/auth/2fa 查询状态 { enabled, required }
- *   2. 未启用：
- *      - 点击「启用双因素认证」→ POST /api/auth/2fa/setup
- *        返回 { secret, otpauthURI, qrCode, backupCodes }
- *      - 展示 QR / secret / 8 个备用码
- *      - 输入 6 位验证码 → POST /api/auth/2fa/verify { code, mode: 'setup' }
- *   3. 已启用：
- *      - 重新生成备用码 → POST /api/auth/2fa/backup-codes { code }
- *      - 禁用 2FA → POST /api/auth/2fa/disable { code }
- *   4. 管理员强制提示：required && !enabled → 显示警告
+ * 逻辑已抽离至 `useTwoFA` Hook（GENERAL 2.2 展示/容器分离），本文件仅负责渲染。
+ * 功能流见 Hook 文件头注释。
  */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import {
   Shield,
   ShieldCheck,
@@ -30,23 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Button } from '@/components';
-
-/** 2FA 状态 */
-interface TwoFAStatus {
-  enabled: boolean;
-  required: boolean;
-}
-
-/** setup 接口返回 */
-interface SetupData {
-  secret: string;
-  otpauthURI: string;
-  qrCode: string;
-  backupCodes: string[];
-}
-
-/** 当前操作模式 */
-type ActionMode = 'idle' | 'setup' | 'disable' | 'regenerate';
+import { useTwoFA } from './use-two-fa';
 
 /** 验证码输入框样式（题目指定） */
 const CODE_INPUT_CLASS =
@@ -58,192 +30,34 @@ const OUTLINE_BTN_CLASS =
 
 /** 双因素认证 (2FA) 设置组件 — 支持启用/禁用/重新生成备用码 */
 export function TwoFactorSettings() {
-  // ===== 状态 =====
-  const [status, setStatus] = useState<TwoFAStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  // setup 流程
-  const [setupData, setSetupData] = useState<SetupData | null>(null);
-  const [setupLoading, setSetupLoading] = useState(false);
-  const [verifyCode, setVerifyCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
-
-  // 已启用态的操作模式（disable / regenerate）
-  const [actionMode, setActionMode] = useState<ActionMode>('idle');
-  const [actionCode, setActionCode] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
-  const [regeneratedCodes, setRegeneratedCodes] = useState<string[] | null>(null);
-
-  // 复制反馈
-  const [copiedSecret, setCopiedSecret] = useState(false);
-
-  /** 拉取 2FA 状态 */
-  const fetchStatus = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch('/api/auth/2fa');
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || '加载 2FA 状态失败');
-      }
-      const data = (await res.json()) as TwoFAStatus;
-      setStatus(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载 2FA 状态失败');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
-
-  /** 清空成功提示（3s 自动消失） */
-  const showSuccess = useCallback((msg: string) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(null), 3000);
-  }, []);
-
-  /** 启动 setup 流程 */
-  const handleStartSetup = async () => {
-    setSetupLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/2fa/setup', { method: 'POST' });
-      const data = (await res.json().catch(() => null)) as SetupData | { error?: string } | null;
-      if (!res.ok) {
-        throw new Error((data as { error?: string })?.error || '初始化 2FA 失败');
-      }
-      setSetupData(data as SetupData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '初始化 2FA 失败');
-    } finally {
-      setSetupLoading(false);
-    }
-  };
-
-  /** 取消 setup 流程 */
-  const handleCancelSetup = () => {
-    setSetupData(null);
-    setVerifyCode('');
-    setError(null);
-  };
-
-  /** 确认启用 — 提交验证码 */
-  const handleVerifySetup = async () => {
-    const code = verifyCode.trim();
-    if (!/^\d{6}$/.test(code)) {
-      setError('请输入 6 位数字验证码');
-      return;
-    }
-    setVerifying(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/2fa/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, mode: 'setup' }),
-      });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || '验证失败');
-      }
-      // 成功 — 刷新状态
-      setSetupData(null);
-      setVerifyCode('');
-      showSuccess('双因素认证已启用');
-      await fetchStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '验证失败');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  /** 禁用 2FA */
-  const handleDisable = async () => {
-    const code = actionCode.trim();
-    if (!/^\d{6}$/.test(code)) {
-      setError('请输入 6 位数字验证码');
-      return;
-    }
-    setActionLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/2fa/disable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || '禁用失败');
-      }
-      setActionMode('idle');
-      setActionCode('');
-      showSuccess('2FA 已禁用');
-      await fetchStatus();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '禁用失败');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /** 重新生成备用码 */
-  const handleRegenerate = async () => {
-    const code = actionCode.trim();
-    if (!/^\d{6}$/.test(code)) {
-      setError('请输入 6 位数字验证码');
-      return;
-    }
-    setActionLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/2fa/backup-codes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { codes?: string[]; error?: string }
-        | null;
-      if (!res.ok || !data?.codes) {
-        throw new Error(data?.error || '重新生成失败');
-      }
-      setRegeneratedCodes(data.codes);
-      setActionCode('');
-      setActionMode('idle');
-      showSuccess('备用码已重新生成');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '重新生成失败');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /** 复制 secret 到剪贴板 */
-  const handleCopySecret = async () => {
-    if (!setupData?.secret) return;
-    try {
-      await navigator.clipboard.writeText(setupData.secret);
-      setCopiedSecret(true);
-      setTimeout(() => setCopiedSecret(false), 2000);
-    } catch {
-      setError('复制失败，请手动选择文本复制');
-    }
-  };
-
-  /** 取消 disable / regenerate 操作 */
-  const handleCancelAction = () => {
-    setActionMode('idle');
-    setActionCode('');
-    setError(null);
-  };
+  const {
+    status,
+    loading,
+    error,
+    success,
+    setupData,
+    setupLoading,
+    verifyCode,
+    setVerifyCode,
+    verifying,
+    actionMode,
+    setActionMode,
+    actionCode,
+    setActionCode,
+    actionLoading,
+    regeneratedCodes,
+    setRegeneratedCodes,
+    copiedSecret,
+    fetchStatus,
+    setError,
+    handleStartSetup,
+    handleCancelSetup,
+    handleVerifySetup,
+    handleDisable,
+    handleRegenerate,
+    handleCopySecret,
+    handleCancelAction,
+  } = useTwoFA();
 
   // ===== 渲染 =====
 
@@ -288,10 +102,7 @@ export function TwoFactorSettings() {
       {/* ---- 管理员强制提示 ---- */}
       {status.required && !status.enabled && (
         <div className="flex items-start gap-3 p-4 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.06]">
-          <AlertTriangle
-            size={16}
-            className="text-[var(--destructive)] shrink-0 mt-0.5"
-          />
+          <AlertTriangle size={16} className="text-[var(--destructive)] shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-[13px] text-[var(--destructive)] leading-relaxed font-medium">
               管理员账号需要启用 2FA
@@ -307,10 +118,7 @@ export function TwoFactorSettings() {
       {error && (
         <div className="flex items-start gap-2 p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
           <span>{error}</span>
-          <button
-            onClick={() => setError(null)}
-            className="ml-auto underline shrink-0"
-          >
+          <button onClick={() => setError(null)} className="ml-auto underline shrink-0">
             关闭
           </button>
         </div>
@@ -325,17 +133,10 @@ export function TwoFactorSettings() {
       {!status.enabled && !setupData && (
         <div className="space-y-5">
           <div className="flex items-start gap-4 p-5 border border-[var(--border)]">
-            <Shield
-              size={28}
-              className="text-[var(--muted-foreground)] shrink-0 mt-0.5"
-            />
+            <Shield size={28} className="text-[var(--muted-foreground)] shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-1">
-                [ Status ] · Disabled
-              </div>
-              <p className="text-[14px] text-[var(--foreground)] leading-relaxed">
-                双因素认证未启用
-              </p>
+              <div className="meta-mono text-[var(--muted-foreground)] mb-1">[ Status ] · Disabled</div>
+              <p className="text-[14px] text-[var(--foreground)] leading-relaxed">双因素认证未启用</p>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-2 leading-relaxed">
                 启用后，登录时除密码外还需输入由认证 App（如 Google Authenticator、1Password）生成的 6 位验证码，显著提升账号安全性。
               </p>
@@ -357,9 +158,7 @@ export function TwoFactorSettings() {
         <div className="space-y-6 p-5 border border-[var(--border)]">
           {/* 顶部标题 + 取消 */}
           <div className="flex items-center justify-between">
-            <div className="meta-mono text-[var(--muted-foreground)]">
-              [ Setup ] · Scan & Verify
-            </div>
+            <div className="meta-mono text-[var(--muted-foreground)]">[ Setup ] · Scan & Verify</div>
             <button
               onClick={handleCancelSetup}
               className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber"
@@ -433,10 +232,7 @@ export function TwoFactorSettings() {
 
           {/* 验证码输入 */}
           <div>
-            <label
-              htmlFor="2fa-verify-code"
-              className="meta-mono text-[var(--muted-foreground)] mb-2 block"
-            >
+            <label htmlFor="2fa-verify-code" className="meta-mono text-[var(--muted-foreground)] mb-2 block">
               [ 04 ] Verification Code (6 digits)
             </label>
             <input
@@ -463,11 +259,7 @@ export function TwoFactorSettings() {
             >
               {verifying ? 'Verifying...' : '确认启用 →'}
             </Button>
-            <button
-              onClick={handleCancelSetup}
-              disabled={verifying}
-              className={OUTLINE_BTN_CLASS}
-            >
+            <button onClick={handleCancelSetup} disabled={verifying} className={OUTLINE_BTN_CLASS}>
               取消
             </button>
           </div>
@@ -479,20 +271,12 @@ export function TwoFactorSettings() {
         <div className="space-y-6">
           {/* 已启用标识 */}
           <div className="flex items-start gap-4 p-5 border border-[var(--border)]">
-            <ShieldCheck
-              size={28}
-              className="text-green-600 dark:text-green-400 shrink-0 mt-0.5"
-            />
+            <ShieldCheck size={28} className="text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-1">
-                [ Status ] · Enabled
-              </div>
+              <div className="meta-mono text-[var(--muted-foreground)] mb-1">[ Status ] · Enabled</div>
               <p className="text-[14px] text-[var(--foreground)] leading-relaxed flex items-center gap-2">
                 2FA 已启用
-                <Check
-                  size={16}
-                  className="text-green-600 dark:text-green-400"
-                />
+                <Check size={16} className="text-green-600 dark:text-green-400" />
               </p>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-2 leading-relaxed">
                 登录时需要输入由认证 App 生成的 6 位验证码。

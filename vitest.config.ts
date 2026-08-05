@@ -15,5 +15,7 @@ export default defineConfig({
     include: ['{src,tools/tests}/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['tools/tests/e2e/**', 'node_modules/**', '.build/**'],
     passWithNoTests: true,
+    // 组件测试（.tsx）在文件顶部用 `// @vitest-environment jsdom` 指定 DOM 环境
+    setupFiles: ['./tools/tests/setup-dom.ts'],
   },
 });

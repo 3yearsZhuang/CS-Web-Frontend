@@ -31,9 +31,9 @@ function getPasswordStrength(password: string): PasswordStrength {
 
   const levels = [
     { label: '弱', color: 'var(--destructive)' },
-    { label: '一般', color: '#e88565' },
-    { label: '中等', color: '#d4a574' },
-    { label: '强', color: '#5bc9c5' },
+    { label: '一般', color: 'var(--chart-3)' },
+    { label: '中等', color: 'var(--chart-1)' },
+    { label: '强', color: 'var(--chart-2)' },
   ];
   const level = levels[Math.max(0, score - 1)];
   return {

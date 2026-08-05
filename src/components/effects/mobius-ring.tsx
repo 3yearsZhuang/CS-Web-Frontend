@@ -4,17 +4,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { LOGO_PALETTE } from '@/shared/constants/logo-colors';
 
-/** logo 调色板 — 粉蓝渐变 */
-const PALETTE = [
-  '#a0d0f0',
-  '#90d0f0',
-  '#80a0f0',
-  '#5080e0',
-  '#4070e0',
-  '#f0b0c0',
-  '#f0c0d0',
-];
+/** logo 调色板 — 粉蓝渐变（集中定义于 shared/constants/logo-colors，GENERAL 6.3.2） */
+const PALETTE = LOGO_PALETTE;
 
 interface Particle {
   u: number;
