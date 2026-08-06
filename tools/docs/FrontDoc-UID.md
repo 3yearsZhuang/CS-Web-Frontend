@@ -3,8 +3,8 @@
 > 文档定位：前端视觉与交互设计规范（reference）
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
-> 关联：组件清单见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；新页面接入见 [FrontDoc-Onboard.md](FrontDoc-Onboard.md)
-> 最后更新：2026-08-01（同步组件目录重构 + 修复 community 路径重复）
+> 关联：组件清单见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 最后更新：2026-08-06（规范收口迭代：圆角/阴影 token 化 + 胶囊可发现性增强 + next/font 字体自托管 + §5 组件清单/四态规范补全）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -65,6 +65,8 @@
 | 展示衬线 | Fraunces + Noto Serif SC | 大标题、Hero、章节标题 |
 | 正文无衬线 | Manrope + Noto Sans SC | 正文、表单、UI |
 | 等宽 | JetBrains Mono | 元数据、数字、代码 |
+
+> 字体加载（2026-08-06 起）：5 个字体族均由 `src/app/layout.tsx` 的 `next/font/google` 自托管引入——build 时下载并本地子集化，Latin 子集预载 + CJK 中文按 unicode-range 按需加载，`display: swap` 不阻塞首屏。各字体以 `--font-*` 变量挂载到 `<body>`，本文件的 `--font-sans/mono/serif` 组合栈引用它们。**禁止再以 CSS `@import` 拉取 Google Fonts。**
 
 ### 工具类
 
@@ -169,6 +171,42 @@
 | `/community/forum/[category]/[topicId]` | `/community/forum/[category]` | `← 返回` |
 | `/tools/exam/[id]` | `/tools/exam` | `← 返回` |
 
+### 3.5 全局 Token 速查表
+
+定义于 `src/app/globals.css`，集中管理、禁止 ad-hoc 硬编码。
+
+**z-index 层级**：
+
+| Token | 值 | 用途 |
+|-------|-----|------|
+| `--z-base` | 10 | 页面主要内容 |
+| `--z-sticky` | 30 | 粘性 hero-acrylic / section-nav / 悬浮胶囊 |
+| `--z-banner` | 40 | 公告横幅 |
+| `--z-header` | 50 | 顶部导航 / 下拉 / Modal |
+| `--z-toast` | 60 | Toast |
+| `--z-transition` | 70 | 页面过渡遮罩 |
+| `--z-overlay` | 9998 | 扫描线 / 噪点 |
+
+**动效时长与缓动**：
+
+| Token | 值 | 用途 |
+|-------|-----|------|
+| `--duration-fast` | 200ms | hover 过渡、微交互 |
+| `--duration-base` | 300ms | 标准过渡 |
+| `--duration-cinematic` | 800ms | Hero 折叠 / 焦点拉近 |
+| `--duration-epic` | 1400ms | 首页莫比乌斯环入场 |
+| `--ease-ark` | `cubic-bezier(0.16, 1, 0.3, 1)` | 全站统一缓动 |
+
+**圆角 / 阴影**（例外白名单见 §11）：
+
+| Token | 值 | 用途 |
+|-------|-----|------|
+| `--radius` | 0.25rem | 输入框、行内代码、图片 |
+| `--radius-capsule` | 28px | 悬浮胶囊容器 |
+| `--radius-capsule-item` | 22px | 胶囊内 Tab 项 |
+| `--shadow-popover` | `0 4px 24px rgba(0,0,0,0.04)` | 下拉浮层 / hero-acrylic |
+| `--shadow-modal` | `0 8px 40px rgba(0,0,0,0.08)` | Modal / 抽屉 |
+
 ---
 
 ## 4. 悬浮折叠胶囊（Floating Capsule Sidebar）
@@ -177,7 +215,7 @@
 
 ### 4.1 概述
 
-项目中 [01] [02] … 编号式导航统一升级为悬浮折叠胶囊（Floating Capsule Sidebar）。胶囊以独立形态固定在内容区左侧，完全脱离文档流，折叠时仅显示编号 + active 圆点指示器，hover 时平滑展开显示完整标签。
+项目中 [01] [02] … 编号式导航统一升级为悬浮折叠胶囊（Floating Capsule Sidebar）。胶囊以独立形态固定在内容区左侧，完全脱离文档流，折叠时仅显示编号 + active 圆点指示器，hover / 键盘 focus / 首次访问演示时平滑展开显示完整标签（见 §4.5 交互补充）。
 
 核心设计理念：
 - 最大化内容宽度 - 胶囊脱离文档流，不占用 12 栏栅格中的任何一栏
@@ -188,7 +226,7 @@
 
 | 特性 | 折叠态 | 展开态（hover） |
 |------|--------|----------------|
-| 容器圆角 | `rounded-[28px]` | `rounded-[16px]` |
+| 容器圆角 | `rounded-[var(--radius-capsule)]`（28px） | `rounded-[16px]` |
 | 标签宽度 | `max-w-0 opacity-0` | `max-w-[140px] opacity-100` |
 | 编号 | 11px 等宽，始终可见 | 同左 |
 | active 指示 | 顶部 5px 圆点（primary 色） | `primary-dim` 背景（`rgba(212,167,116,0.12)`） |
@@ -234,6 +272,11 @@ interface FloatingCapsuleSidebarProps {
 }
 ```
 
+> 交互补充（2026-08-06）：
+> - 展开判定三源合一：`expanded = hovered || focused || peeking`。容器 `onFocus/onBlur` 使**键盘用户（Tab 导航）同样可以展开**，纯键盘可达，不再依赖 hover。
+> - **首次访问 peek 演示**：桌面端（`md+`）且非 `prefers-reduced-motion` 时，胶囊首次出现自动播放一次"展开→回落"演示（约 2.6s），帮助用户发现折叠态承载完整标签；`localStorage['capsule-peek-seen']` 记忆，仅一次。
+> - 内层 Tab 按钮焦点类使用 `focus-ring`（`focus-amber` 语义别名，见 §9）。
+
 ### 4.6 与 useCollapsingHero 的协作
 
 所有带 Hero 区域的页面中，胶囊的显示/隐藏与 Hero 折叠态联动：
@@ -250,8 +293,8 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 4.7 移动端降级
 
-- 桌面端（`md+`）：悬浮胶囊固定在左侧
-- 移动端（`<md`）：自动退化为水平滚动的 section-marker 风格 Tab 条，固定在页面顶部
+- 桌面端（`md+`）：悬浮胶囊固定在左侧，`hidden md:block`
+- 移动端（`<md`）：自动降级为 `SectionNav` 编号 Tab 条（`md:hidden`），位于内容区顶部（Hero 下方），flex 自动换行（`flex-wrap`），**始终可见，不受 `visible` 控制**
 
 ### 4.8 各页面 Tab 配置
 
@@ -291,7 +334,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 5.2 按钮
 
-6 种统一按钮类，定义在 `src/app/globals.css`：
+5 种统一按钮类，定义在 `src/app/globals.css`：
 
 ```css
 .btn-primary          /* 主按钮 - primary 纯色背景 */
@@ -301,15 +344,17 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 .btn-outline-sm       /* 描边按钮（小号）- 行内次要操作 */
 ```
 
-规格：`font-mono text-[12px] uppercase tracking-wider`，大按钮 `py-3 px-6`，小按钮 `py-1.5 px-3`，`transition-opacity/colors`，`disabled:opacity-30`，必须追加 `focus-amber`
+规格：`font-mono text-[12px] uppercase tracking-wider`，大按钮 `py-3 px-6`，小按钮 `py-1.5 px-3`，`transition-opacity/colors`，`disabled:opacity-30`，必须追加 `focus-ring`
 
 ```tsx
-<button className="btn-primary focus-amber">Save Changes -></button>
-<button className="btn-primary-sm focus-amber">+ New Event</button>
-<button className="btn-danger focus-amber">Delete</button>
-<button className="btn-outline focus-amber">Cancel</button>
-<button className="btn-outline-sm focus-amber">Pin</button>
+<button className="btn-primary focus-ring">Save Changes -></button>
+<button className="btn-primary-sm focus-ring">+ New Event</button>
+<button className="btn-danger focus-ring">Delete</button>
+<button className="btn-outline focus-ring">Cancel</button>
+<button className="btn-outline-sm focus-ring">Pin</button>
 ```
+
+推荐经 `src/components/primitives/button.tsx` 封装使用（自动附加 `focus-ring` 并处理 loading 态）。
 
 不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、分页按钮、筛选标签、悬浮胶囊 Tab 保持原有设计。
 
@@ -317,7 +362,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ```tsx
 const INPUT_CLASS =
-  'w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors';
+  'w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-ring transition-colors';
 ```
 
 ### 5.4 头像
@@ -330,6 +375,42 @@ const INPUT_CLASS =
 
 - 暗色背景 + 发丝线边框 + 交错展开动画
 - 菜单项格式：`[序号] 标签 -> 英文`
+
+### 5.6 四态规范（加载 / 空 / 错误 / 成功）
+
+所有列表与表单必须显式处理以下四种状态，禁止"无状态裸渲染"：
+
+| 状态 | 规范 | 组件 |
+|------|------|------|
+| 加载 | 等宽细点动画或 spinner，禁止整页白屏 | `primitives/loading.tsx`、`primitives/spinner.tsx` |
+| 空 | 有教育意义的引导文案 + 建议动作（如"创建第一个活动 ->"），禁止只写"暂无数据" | `feedback/empty-state.tsx` |
+| 错误 | 非指责语气 + 可执行的恢复路径（重试/返回），禁止裸 500 文本 | `feedback/fallback.tsx`（ErrorBoundary） |
+| 成功 | 明确确认 + 下一步指引；破坏性操作需先经确认弹窗 | `primitives/confirm-dialog.tsx`、`feedback/toast.tsx` |
+
+补充约定：
+- 所有可交互控件（按钮/链接/输入/开关）必须可见焦点环（`focus-ring`）
+- 表单提交中 `disabled` + 文案变"提交中..."；提交失败保留用户输入
+- 页面级错误由 `feedback/fallback.tsx` 兜底；组件级局部错误就地展示 + 重试按钮
+
+### 5.7 组件全清单
+
+与 `src/components/` 目录一一对应（新增组件须同步更新本清单，Stale 信号见文档头）。
+
+| 分类 | 组件 | 说明 |
+|------|------|------|
+| 根级 | `avatar` | 方形头像，首字母回退 |
+| 根级 | `user-menu` / `notification-bell` | 用户下拉 / 通知铃铛（浮层阴影走 `--shadow-popover`） |
+| 根级 | `theme-toggle` / `theme-provider` | 主题切换（`.dark` 类） |
+| 根级 | `tech-tag-selector` / `swr-provider` | 标签选择 / SWR 全局配置 |
+| effects | `motion-primitives` | StaggerContainer / RevealTitle / RevealItem |
+| effects | `mobius-ring` / `page-transition` / `scroll-indicator` | 首页粒子 / 路由过渡 / 横向滚动提示 |
+| layout | `navbar` / `footer` | 全局导航 / 页脚 |
+| layout | `collapsing-hero` / `floating-capsule-sidebar` / `use-collapsing-hero` | 折叠 Hero / 悬浮胶囊 / 联动 hook |
+| layout | `language-switcher` / `page-header-background` | 语言切换 / 页头背景装饰 |
+| primitives | `button` / `input` / `spinner` / `loading` | 基础控件封装 |
+| primitives | `section-nav` / `inline-tabs` / `filter-bar` | 编号导航 / 内联 Tab / 筛选条 |
+| primitives | `confirm-dialog` | 确认弹窗（Modal） |
+| feedback | `announcement-banner` / `toast` / `empty-state` / `fallback` | 四态与提示 |
 
 ---
 
@@ -403,7 +484,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `md:` ≥768px | 平板/桌面端分界（Navbar 切换、栅格切换） |
 | `lg:` ≥1024px | 桌面端 |
 
-规则：Navbar `<md` 显示汉堡按钮；栅格 `<md` 单列堆叠；字号全部 `clamp()`；触控区 ≥40px
+规则：Navbar `<md` 显示汉堡按钮；栅格 `<md` 单列堆叠；字号全部 `clamp()`；触控区 ≥44px（WCAG 2.5.5，navbar 移动端抽屉已实测 44×44）
 
 ---
 
@@ -413,7 +494,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - 普通链接 hover：用 `underline-grow` 或 `ark-link`
 - 下拉/浮层：点击外部关闭 + Esc 键关闭
 - 表单提交中显示 `disabled` + 文字变"提交中..."
-- 所有可交互元素必须有 `focus-amber` 类
+- 所有可交互元素必须有 `focus-ring` 类（语义焦点环；`focus-amber` 为历史别名，行为一致，新代码禁用）
 
 ---
 
@@ -443,6 +524,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
  */
 ```
 
+补充约定：`'use client'` 指令位于文件头 JSDoc 之后（注释允许出现在指令之前，指令仍被正确识别）；禁止 `'use client'` 出现在 import 语句之后。
+
 ### 10.2 样式实现
 
 - 必须用 Tailwind 工具类，禁止内联 `style`（动态计算例外）
@@ -466,8 +549,9 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 禁止 | 原因 |
 |------|------|
 | 硬编码颜色十六进制值 | 破坏主题切换 |
-| `shadow-lg` / `hover:shadow-xl` | 违背极简原则 |
-| `rounded-xl` / `rounded-full`（头像例外） | 编辑式风格用直角 |
+| 默认阴影 `shadow-lg` / `shadow-2xl` / `hover:shadow-*` | 浮层阴影必须走 `--shadow-popover` / `--shadow-modal` token |
+| 发光阴影（`0 0 12px` 类） | 违背"不发光"原则，改用 ring 描边（`0 0 0 Npx`） |
+| 白名单外圆角（`rounded-xl` / `rounded-2xl` 等） | 编辑式风格用直角 |
 | `ease-in-out` / spring 弹跳动画 | 统一用慢出缓动 |
 | `hover:-translate-y-1` 浮起 | 卡片只有边框变色 |
 | 渐变背景（logo 装饰例外） | 违背极简原则 |
@@ -475,9 +559,18 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `console.log` 留在生产代码 | 用专门日志或删除 |
 | 中文之间加空格 | 排版规范 |
 | 不写文件头 JSDoc | 工程规范 |
+| CSS `@import` 拉取 Google Fonts | 字体必须走 next/font 自托管 |
 | 用 `.sh` 脚本 | 用 `.mjs` Node 脚本 |
 | 引入 react-dev-inspector | 与 Turbopack 不兼容 |
 | 引入 Vite 依赖 | 使用 Next.js + Turbopack |
+
+**圆角例外白名单**（仅限以下语义，新增须评审）：
+
+| 元素 | 允许值 |
+|------|--------|
+| 输入框 / 行内代码 / 长文图片 | `--radius`（0.25rem） |
+| 悬浮胶囊容器 / 胶囊内 Tab 项 | `--radius-capsule`（28px）/ `--radius-capsule-item`（22px） |
+| 圆形元素：头像、状态点、spinner、角标徽章、胶囊 active 指示点 | `rounded-full` |
 
 ---
 
@@ -491,8 +584,11 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - [ ] 所有颜色用 `var(--xxx)`
 - [ ] 所有标题用 `clamp()` 自适应
 - [ ] 所有动效用 `cubic-bezier(0.16, 1, 0.3, 1)`
-- [ ] 文件头 JSDoc 完整
-- [ ] 移动端 `<md` 单列堆叠，触控区 ≥40px
+- [ ] 文件头 JSDoc 完整，`'use client'` 在 JSDoc 之后
+- [ ] 所有可交互元素挂 `focus-ring`
+- [ ] 圆角/阴影只走 §3.5 / §11 白名单 token
+- [ ] 列表/表单四态显式处理（加载/空/错误/成功，见 §5.6）
+- [ ] 移动端 `<md` 单列堆叠，触控区 ≥44px
 - [ ] `tsc --noEmit` + `eslint` 0 错误
 - [ ] 如需 Tab 切换，使用 `FloatingCapsuleSidebar` 组件
 - [ ] 如有 Hero，胶囊与 `useCollapsingHero` 联动
@@ -504,9 +600,11 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 文件 | 内容 |
 |------|------|
-| `src/app/globals.css` | 颜色变量、字体、工具类、动画 keyframes |
+| `src/app/globals.css` | 颜色变量、字体组合栈、工具类、token（z-index/时长/圆角/阴影）、动画 keyframes |
+| `src/app/layout.tsx` | 根布局 + next/font/google 字体自托管声明（--font-* 变量） |
 | `src/components/effects/motion-primitives.tsx` | StaggerContainer / RevealTitle / RevealItem |
-| `src/components/layout/floating-capsule-sidebar.tsx` | 悬浮胶囊侧边栏组件 |
+| `src/components/layout/floating-capsule-sidebar.tsx` | 悬浮胶囊侧边栏组件（focus 展开 + 首次 peek 演示） |
+| `src/components/primitives/section-nav.tsx` | 胶囊移动端降级 Tab 条 |
 | `src/shared/hooks/use-collapsing-hero.ts` | Hero 折叠 hook |
 | `src/components/layout/navbar.tsx` | 全局导航 |
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
@@ -533,4 +631,9 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ---
 
+## 变更记录
+
+| 日期 | 变更 |
+|------|------|
+| 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

@@ -75,7 +75,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
 
       {/* 抽屉主体 — 右侧滑出 */}
       <aside
-        className="fixed top-0 right-0 z-50 h-full w-full max-w-[480px] bg-[var(--background)] border-l border-[var(--border)] shadow-2xl flex flex-col"
+        className="fixed top-0 right-0 z-50 h-full w-full max-w-[480px] bg-[var(--background)] border-l border-[var(--border)] shadow-[var(--shadow-modal)] flex flex-col"
         style={{
           animation: 'drawer-slide-in 300ms var(--ease-ark)',
         }}

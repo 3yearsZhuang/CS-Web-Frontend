@@ -4,7 +4,7 @@
 > 更新人：3yearsZ
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：**前端 BFF 层**的运维操作、SLO 阈值、回滚流程的唯一权威位置
-> 关联：**全栈部署/编排权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)**；后端 PG/备份/运维端点见 [CS-Web-Backend/docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md)；架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；演进与 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)；工程规则见 [FrontDoc-Onboard.md](FrontDoc-Onboard.md)
+> 关联：**全栈部署/编排权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)**；后端 PG/备份/运维端点见 [CS-Web-Backend/docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md)；架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；演进与 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 变更触发：BFF 部署架构变更 / SLO 阈值调整 / 新增故障场景 / 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行 / 仍引用 SQLite/Litestream（应为后端职责）
 
@@ -73,7 +73,7 @@ docker compose up -d
 - 应用容器：运行 `pnpm start`
 - **无本地业务数据卷**：前端为 BFF，业务数据由后端 PostgreSQL 承载（`data/` 仅遗留脚本/上传文件，非运行时数据源）
 
-首次部署后创建管理员：⚠️ `pnpm create-user` 为**迁移前遗留脚本，仍直连本地 SQLite**，写入的 `data/app.db` 并非运行时数据源。生产环境请通过**后端 CLI / Swagger** 创建管理员，见后端 `docs/BackDoc-Onboard.md`。
+首次部署后创建管理员：⚠️ `pnpm create-user` 为**迁移前遗留脚本，仍直连本地 SQLite**，写入的 `data/app.db` 并非运行时数据源。生产环境请通过**后端 CLI / Swagger** 创建管理员，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
 
 ### 方式二：直接运行
 
@@ -500,7 +500,7 @@ df -h                                            # 磁盘问题
 
 ### 1. 创建管理员
 
-> ⚠️ `pnpm create-user` 与 `pnpm seed` 为**迁移前遗留脚本，仍直连本地 SQLite**（`better-sqlite3`），写入的 `data/app.db` 并非运行时数据源（后端 PostgreSQL）。**生产环境请通过后端 CLI / Swagger 创建管理员**，见后端 `docs/BackDoc-Onboard.md`。
+> ⚠️ `pnpm create-user` 与 `pnpm seed` 为**迁移前遗留脚本，仍直连本地 SQLite**（`better-sqlite3`），写入的 `data/app.db` 并非运行时数据源（后端 PostgreSQL）。**生产环境请通过后端 CLI / Swagger 创建管理员**，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
 
 ```bash
 # 遗留脚本（仅开发/种子用途，非生产数据源）
@@ -522,7 +522,7 @@ pnpm create-user --role admin
 
 - 本文档 Part B — SLO 阈值与 error budget 规则｜Part A — 部署配置与环境变量
 - [FrontDoc-Evo.md](FrontDoc-Evo.md) — ADR 记录（回滚事件需新增 ADR）
-- [FrontDoc-Onboard.md](FrontDoc-Onboard.md#88-反复出现的错误与防再犯清单explanation) — 防再犯清单
+- 根 [docs/Onboarding.md](../../../docs/Onboarding.md#a7-防再犯清单explanation) — 防再犯清单
 - 根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md) — 全栈部署/编排权威
 - 后端 [docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md) — 后端运维端点 / PG / Redis / OTel
 - 后端 [docs/BackDoc-MigV.md](../../CS-Web-Backend/docs/BackDoc-MigV.md) — Alembic 迁移与回滚验证

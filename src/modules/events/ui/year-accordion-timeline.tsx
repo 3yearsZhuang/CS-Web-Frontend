@@ -80,7 +80,7 @@ export function YearAccordionTimeline({
                   {/* 铁路线上的菱形节点 */}
                   <div className={`absolute left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 motion-reduce:transition-none ${
                     isExpanded
-                      ? 'bg-[var(--primary)] border-[var(--primary)] shadow-[0_0_12px_var(--primary)]/30'
+                      ? 'bg-[var(--primary)] border-[var(--primary)] shadow-[0_0_0_3px_var(--primary)]/15'
                       : 'bg-[var(--background)] border-[var(--border)] group-hover:border-[var(--primary)]/50'
                   }`} aria-hidden="true" />
 

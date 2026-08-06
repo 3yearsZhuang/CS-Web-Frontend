@@ -5,7 +5,7 @@
 > 文档定位：**前端 BFF 层**的架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
 > Source of truth：**BFF 层**的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、状态码、事件总线、依赖矩阵
-> 关联：**后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/docs/BackDoc-Arch.md](../../CS-Web-Backend/docs/BackDoc-Arch.md)**；安全与权限设计见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)；工程规则见 [FrontDoc-Onboard.md](FrontDoc-Onboard.md#八项目规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
+> 关联：**后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/docs/BackDoc-Arch.md](../../CS-Web-Backend/docs/BackDoc-Arch.md)**；安全与权限设计见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
 > 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任）
 > 更新人：3yearsZ
 > 变更触发：BFF 目录结构调整 / 新增模块 / 依赖矩阵变更 / 新增或修改 BFF API / 后端转发契约变更
@@ -561,7 +561,7 @@ community/
 ## 十五、事件总线接口
 
 > ⚠️ **遗留机制**：进程内通信（非 HTTP），迁移后业务通知由后端承载。新增通知场景应直接走 BFF→后端转发，不再新增前端事件监听器。
-> 对应 [FrontDoc-Onboard.md](FrontDoc-Onboard.md#83-模块化开发规范) 模块协作规范、[FrontDoc-Evo.md](FrontDoc-Evo.md) ADR-013/014。
+> 对应根级 [docs/Onboarding.md](../../../docs/Onboarding.md#a3-模块化开发规范) 模块协作规范、[FrontDoc-Evo.md](FrontDoc-Evo.md) ADR-013/014。
 
 **15.1 API**
 

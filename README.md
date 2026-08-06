@@ -212,7 +212,7 @@ tools/tests/
 | [运维文档](tools/docs/FrontDoc-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
 | [演进与 ADR](tools/docs/FrontDoc-Evo.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/FrontDoc-MDE.md) | 编辑器使用指南 |
-| [入职指南 + 项目规则](tools/docs/FrontDoc-Onboard.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单 |
+| [入职指南 + 项目规则](../../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
 | [PG 数据迁移](tools/docs/FrontDoc-PGMig.md) | SQLite → PostgreSQL 迁移脚本用法与注意事项（`migrate-sqlite-to-pg.mjs`） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |

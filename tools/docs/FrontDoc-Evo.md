@@ -5,7 +5,7 @@
 > 文档定位：演进规划与迁移实施权威文档（reference + how-to）
 > 受众：架构师 / 技术负责人 / 后端迁移实施者 / oncall / 发布决策者
 > Source of truth：功能规划、架构决策（ADR）、迁移路径的唯一权威位置
-> 关联：架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；工程规则见 [FrontDoc-Onboard.md](FrontDoc-Onboard.md#八项目规则)
+> 关联：架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 最后更新：2026-08-05（精简空桩节、修正与 BFF 现状矛盾的单体架构描述；合并原 Devdocs-roadmap.md + Devdocs-migration-guide.md；内联 ADR-009-impl.md 实施手册，同步 ADR-009 全量迁移收官状态。迁移脚本 `migrate-sqlite-to-pg.mjs` 的用法权威仍为独立的 [FrontDoc-PGMig.md](FrontDoc-PGMig.md)，本文 Part B 只承载高层演进叙事）
 > 更新人：3yearsZ
 

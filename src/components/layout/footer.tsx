@@ -15,7 +15,7 @@ export async function Footer() {
       <div className="max-w-[1600px] mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg overflow-hidden">
+            <div className="w-7 h-7 overflow-hidden">
               <Image
                 src="/logo.png"
                 alt={t('brand')}

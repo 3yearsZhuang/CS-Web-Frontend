@@ -1,7 +1,7 @@
-'use client'
 /**
  * @file 关于页面
  */
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
