@@ -52,7 +52,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
-    "@types/pg": "^8.20.0",
+    "@types/pg": "^8.20.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",
