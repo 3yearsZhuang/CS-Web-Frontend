@@ -134,7 +134,7 @@ export function AnnouncementBanner() {
         return (
           <div
             key={a.id}
-            className={`relative flex items-start gap-3 rounded-lg border px-4 py-2.5 text-sm ${config.bg} ${config.border} ${config.text}`}
+            className={`relative flex items-start gap-3 border px-4 py-2.5 text-sm ${config.bg} ${config.border} ${config.text}`}
           >
             <Icon className={`mt-0.5 h-4 w-4 flex-shrink-0 ${config.iconColor}`} size={16} />
             <div className="flex-1 min-w-0">

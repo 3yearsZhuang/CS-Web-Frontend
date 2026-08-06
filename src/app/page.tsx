@@ -341,7 +341,7 @@ export default function Home() {
         {showAvatar && currentPerson && (
           <motion.div
             key="easter-egg-avatar"
-            className="fixed z-[var(--z-header)] pointer-events-none flex flex-col items-center gap-3 px-6 py-4 backdrop-blur-xl border border-[var(--border)] shadow-2xl"
+            className="fixed z-[var(--z-header)] pointer-events-none flex flex-col items-center gap-3 px-6 py-4 backdrop-blur-xl border border-[var(--border)] shadow-[var(--shadow-modal)]"
             style={{
               left: avatarPos.x,
               top: avatarPos.y,

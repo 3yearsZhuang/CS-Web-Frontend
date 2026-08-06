@@ -22,13 +22,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -36,4 +36,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: pnpm audit
-        run: pnpm audit --audit-level=high
+        # 显式指定官方 registry：.npmrc 的 npmmirror 无审计端点，否则 job 会以
+        # ERR_PNPM_AUDIT_ENDPOINT_NOT_EXISTS 失败（而非真实漏洞检出）。
+        run: pnpm audit --audit-level=high --registry https://registry.npmjs.org/

@@ -5,7 +5,6 @@
  */
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { preconnect } from 'react-dom';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
@@ -123,14 +122,11 @@ export default async function RootLayout({
   // F2：读取 proxy.ts 注入的 per-request CSP nonce
   const nonce = (await headers()).get('x-nonce') ?? '';
 
-  // 字体加载优化 — 字体 CSS 由 globals.css 的 @import 引入（lint 允许），
-  // 此处用 ReactDOM preconnect 预连接 Google Fonts 两域，减少 DNS/TLS 往返，缓解渲染阻塞。
-  preconnect('https://fonts.googleapis.com');
-  preconnect('https://fonts.gstatic.com', { crossOrigin: 'anonymous' });
-
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground">
+      <body
+        className="antialiased bg-background text-foreground"
+      >
         {/*
          * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
          * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。

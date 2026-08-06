@@ -182,7 +182,7 @@ export function EventModals({
           onClick={onClose}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[var(--background)] border border-[var(--border)] shadow-2xl"
+            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)] shrink-0">

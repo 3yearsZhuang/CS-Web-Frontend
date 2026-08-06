@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -47,13 +47,13 @@ jobs:
     needs: validate
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -70,7 +70,7 @@ jobs:
           PASSWORD_RESET_DEFAULT: CI_BUILD_PLACEHOLDER
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: success()
         with:
           name: build-output
@@ -83,13 +83,13 @@ jobs:
     needs: validate
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -97,7 +97,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Audit (production deps, blocking on moderate+)
-        run: pnpm audit --prod --audit-level=moderate
+        # 显式指定官方 registry：.npmrc 的 npmmirror 无审计端点，否则 job 会以
+        # ERR_PNPM_AUDIT_ENDPOINT_NOT_EXISTS 失败（而非真实漏洞检出）。
+        run: pnpm audit --prod --audit-level=moderate --registry https://registry.npmjs.org/
         # 1.0 GA 门禁（G1）：中危及以上漏洞强制阻断发布，杜绝"带洞上线"。
         # 误报可用 `pnpm audit` 给出的豁免方式处理；不应再通过 continue-on-error 放行。
 
@@ -115,13 +117,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.run_e2e
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         with:
           version: 9.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -149,7 +151,7 @@ jobs:
 
       - name: Upload E2E report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/

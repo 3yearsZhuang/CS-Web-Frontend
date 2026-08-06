@@ -205,7 +205,7 @@ export function UserMenu({ size = 32 }: UserMenuProps = {}) {
             animate="visible"
             exit="exit"
             variants={listVariants}
-            className="absolute right-0 bottom-[calc(100%+8px)] md:bottom-auto md:top-[calc(100%+8px)] z-50 min-w-[200px] sm:min-w-[240px] border border-[var(--border)] bg-[var(--background)] shadow-lg"
+            className="absolute right-0 bottom-[calc(100%+8px)] md:bottom-auto md:top-[calc(100%+8px)] z-50 min-w-[200px] sm:min-w-[240px] border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
           >
             {/* 用户信息头部 */}
             <motion.div

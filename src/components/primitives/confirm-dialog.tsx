@@ -103,7 +103,7 @@ export function ConfirmDialog({
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-md my-8 bg-[var(--background)] border border-[var(--border)] shadow-2xl"
+        className="relative w-full max-w-md my-8 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 标题栏 */}

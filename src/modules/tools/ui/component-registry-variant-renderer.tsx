@@ -105,7 +105,7 @@ export function VariantCell({ slug, size, color, state }: VariantCellProps) {
 function ConfirmDialogPreview({ size, color, state }: { size: VariantSize; color: VariantColor; state: VariantState }) {
   const w = size === 'sm' ? 'w-28' : size === 'md' ? 'w-36' : 'w-44';
   return (
-    <div className={`${w} ${SIZE_CLASS[size]} ${STATE_CLASS[state]} border border-[var(--border)] bg-[var(--background)] shadow-md`}>
+    <div className={`${w} ${SIZE_CLASS[size]} ${STATE_CLASS[state]} border border-[var(--border)] bg-[var(--background)]`}>
       <div className={`px-2 py-1 border-b border-[var(--border)] meta-mono text-[9px] ${COLOR_TEXT[color]}`}>
         [ 确认操作 ]
       </div>
@@ -131,15 +131,15 @@ function ModalShellPreview({ size, color, state }: { size: VariantSize; color: V
   const w = size === 'sm' ? 'w-28' : size === 'md' ? 'w-36' : 'w-44';
   return (
     <div className={`relative ${w} ${SIZE_CLASS[size]} ${STATE_CLASS[state]}`}>
-      <div className="absolute inset-0 bg-black/40 rounded-sm" />
-      <div className="relative border border-[var(--border)] bg-[var(--background)] shadow-xl">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative border border-[var(--border)] bg-[var(--background)]">
         <div className={`flex items-center justify-between px-2 py-1 border-b border-[var(--border)]`}>
           <span className={`meta-mono text-[9px] ${COLOR_TEXT[color]}`}>Modal</span>
           <span className="text-[9px] text-[var(--muted-foreground)]">✕</span>
         </div>
         <div className="px-2 py-2">
-          <div className="h-1.5 bg-[var(--muted)]/30 rounded-sm mb-1" />
-          <div className="h-1.5 bg-[var(--muted)]/20 rounded-sm w-2/3" />
+          <div className="h-1.5 bg-[var(--muted)]/30 mb-1" />
+          <div className="h-1.5 bg-[var(--muted)]/20 w-2/3" />
         </div>
       </div>
     </div>
