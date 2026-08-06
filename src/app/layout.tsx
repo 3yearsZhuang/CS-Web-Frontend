@@ -8,6 +8,7 @@ import { headers } from 'next/headers';
 import { preconnect } from 'react-dom';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
+import { SWRProvider } from '@/components/swr-provider';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -131,6 +132,11 @@ export default async function RootLayout({
     <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground">
         {/*
+         * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
+         * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
+         */}
+        <SWRProvider>
+        {/*
           防闪烁：SSR 默认深色，首帧由下方内联脚本按 next-themes 存储值校正主题类，
           避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
 
@@ -164,6 +170,7 @@ export default async function RootLayout({
             </ConfirmProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
+        </SWRProvider>
       </body>
     </html>
   );

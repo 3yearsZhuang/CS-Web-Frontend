@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { EMAIL_REGEX } from '@/modules/auth/types/constants';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
+import { logger } from '@/shared/logger';
 
 /** OAuth 错误码 → 翻译 key */
 export const OAUTH_ERROR_KEYS: Record<string, string> = {
@@ -160,7 +161,7 @@ export function useAuthForm() {
         });
       }, 1000);
     } catch (err) {
-      console.error('[Auth] 发送验证码失败:', err instanceof Error ? err.message : err);
+      logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 发送验证码失败');
       setError(t('sendCodeFailedRetry'));
     } finally {
       setSendingCode(false);
@@ -193,7 +194,7 @@ export function useAuthForm() {
 
       setForgotSuccess(true);
     } catch (err) {
-      console.error('[Auth] 忘记密码申请失败:', err instanceof Error ? err.message : err);
+      logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 忘记密码申请失败');
       setError(t('requestFailed'));
     } finally {
       setForgotLoading(false);
@@ -267,7 +268,7 @@ export function useAuthForm() {
 
       router.push('/profile');
     } catch (err) {
-      console.error('[Auth] 请求失败:', err instanceof Error ? err.message : err);
+      logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 请求失败');
       const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
       setError(msg);
     } finally {
@@ -306,7 +307,7 @@ export function useAuthForm() {
 
       router.push('/profile');
     } catch (err) {
-      console.error('[Auth] 2FA 验证失败:', err instanceof Error ? err.message : err);
+      logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 2FA 验证失败');
       const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
       setError(msg);
     } finally {

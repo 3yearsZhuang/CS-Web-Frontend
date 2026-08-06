@@ -5,6 +5,13 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  # 手动触发：用于运行 E2E 测试等需要完整环境的验证
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: '运行 Playwright E2E 测试'
+        type: boolean
+        default: true
 
 jobs:
   validate:
@@ -99,3 +106,51 @@ jobs:
         run: |
           echo "## Dependency Audit" >> $GITHUB_STEP_SUMMARY
           echo "生产依赖审计（moderate+ 阻断）。出现中危以上漏洞时 CI 已失败，须修复或经团队评审豁免后方可合并。" >> $GITHUB_STEP_SUMMARY
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: validate
+    # 仅手动触发时运行（E2E 需要完整环境，不在常规 push/PR 中执行）
+    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm run build
+        env:
+          AUTH_SESSION_SECRET: ci-e2e-placeholder-secret-32bytes-minimum
+          NEXT_PUBLIC_SITE_URL: http://localhost:2333
+          ALLOWED_ORIGINS: http://localhost:2333
+          PASSWORD_RESET_DEFAULT: CI_E2E_PLACEHOLDER
+
+      - name: Run E2E tests
+        run: pnpm test:e2e --project=chromium
+        env:
+          AUTH_SESSION_SECRET: ci-e2e-placeholder-secret-32bytes-minimum
+          NEXT_PUBLIC_SITE_URL: http://localhost:2333
+          ALLOWED_ORIGINS: http://localhost:2333
+          PASSWORD_RESET_DEFAULT: CI_E2E_PLACEHOLDER
+
+      - name: Upload E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
