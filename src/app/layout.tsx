@@ -5,8 +5,14 @@
  */
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { preconnect } from 'react-dom';
 import Script from 'next/script';
+import {
+  Fraunces,
+  Manrope,
+  JetBrains_Mono,
+  Noto_Sans_SC,
+  Noto_Serif_SC,
+} from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
 import { Navbar } from '@/components/layout/navbar';
@@ -16,6 +22,44 @@ import { PageTransition } from '@/components/effects/page-transition';
 import { AnnouncementBanner } from '@/components/feedback/announcement-banner';
 import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
 import './globals.css';
+
+/* 字体 — next/font/google 自托管（build 时下载并本地子集化）
+ *
+ * - Fraunces     英文展示衬线（variable，wght + opsz 轴）
+ * - Manrope      英文正文（variable）
+ * - JetBrains Mono 等宽元数据（variable）
+ * - Noto Serif SC / Noto Sans SC  中文衬线/黑体（latin 子集预载，
+ *   CJK 中文按 unicode-range 按需加载，避免首屏拉取整包 CJK）
+ *
+ * 通过 variable 属性注册为 --font-* CSS 变量并挂到 <body>，
+ * globals.css 的 --font-sans/mono/serif 组合栈引用它们。
+ * display: swap 保证字体加载期间不阻塞首屏渲染。
+ */
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+});
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
+const notoSansSC = Noto_Sans_SC({
+  subsets: ['latin'],
+  variable: '--font-noto-sans-sc',
+  display: 'swap',
+});
+const notoSerifSC = Noto_Serif_SC({
+  subsets: ['latin'],
+  variable: '--font-noto-serif-sc',
+  display: 'swap',
+});
 
 /** 全局 SEO 元数据 */
 export const metadata: Metadata = {
@@ -123,14 +167,11 @@ export default async function RootLayout({
   // F2：读取 proxy.ts 注入的 per-request CSP nonce
   const nonce = (await headers()).get('x-nonce') ?? '';
 
-  // 字体加载优化 — 字体 CSS 由 globals.css 的 @import 引入（lint 允许），
-  // 此处用 ReactDOM preconnect 预连接 Google Fonts 两域，减少 DNS/TLS 往返，缓解渲染阻塞。
-  preconnect('https://fonts.googleapis.com');
-  preconnect('https://fonts.gstatic.com', { crossOrigin: 'anonymous' });
-
   return (
     <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground">
+      <body
+        className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable} ${notoSansSC.variable} ${notoSerifSC.variable} antialiased bg-background text-foreground`}
+      >
         {/*
          * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
          * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
