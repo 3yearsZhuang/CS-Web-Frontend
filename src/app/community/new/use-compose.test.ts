@@ -70,7 +70,7 @@ describe('useCompose', () => {
     expect(ok).toBe(false);
     expect(result.current.fieldErrors.title).toBeDefined();
     // 校验失败时不应调用发布接口（仅 loadInitial 的两次 fetch）
-    const postCalls = fetchMock.mock.calls.filter((c) => c[0].includes('/api/community/forum/topics'));
+    const postCalls = fetchMock.mock.calls.filter((c) => c[0].includes('/api/community/topics'));
     expect(postCalls.length).toBe(0);
   });
 
@@ -79,7 +79,7 @@ describe('useCompose', () => {
       if (input.includes('/api/auth/me')) {
         return Promise.resolve({ ok: true, status: 200, json: async () => ({ user: { id: 'u1', role: 'user' } }) });
       }
-      if (input.includes('/api/community/forum/categories')) {
+      if (input.includes('/api/community/categories')) {
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -110,7 +110,7 @@ describe('useCompose', () => {
       if (input.includes('/api/auth/me')) {
         return Promise.resolve({ ok: true, status: 200, json: async () => ({ user: { id: 'u1', role: 'user' } }) });
       }
-      if (input.includes('/api/community/forum/categories')) {
+      if (input.includes('/api/community/categories')) {
         return Promise.resolve({
           ok: true,
           status: 200,

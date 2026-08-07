@@ -25,7 +25,7 @@ export async function Footer() {
               />
             </div>
             <span className="text-[13px] text-[var(--muted-foreground)]">
-              {t('brand')} &copy; {new Date().getFullYear()}
+              {t('brand')}官网(ver.0.9.8) &copy; {new Date().getFullYear()}
             </span>
           </div>
 

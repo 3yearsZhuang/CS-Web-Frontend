@@ -18,7 +18,7 @@ export function CommunitySidebarNav({
   activeSection,
   className = '',
 }: CommunitySidebarNavProps) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   return (
     <aside className={`space-y-6 ${className}`}>
       {/* 版块导航 */}
@@ -66,13 +66,13 @@ export function CommunitySidebarNav({
             href="/community?tab=topic"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            {t('linkForumHome')}
+            {t('linkCommunityHome')}
           </Link>
           <Link
             href="/community?tab=post"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            {t('linkBlog')}
+            {t('linkCommunity')}
           </Link>
           <Link
             href="/members"

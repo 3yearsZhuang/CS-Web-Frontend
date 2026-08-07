@@ -289,7 +289,9 @@ export function MobiusRing({
     };
 
     const handleWindowMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
+      const canvasEl = canvasRef.current;
+      if (!canvasEl) return;
+      const rect = canvasEl.getBoundingClientRect();
       if (
         e.clientX >= rect.left &&
         e.clientX <= rect.right &&
@@ -308,7 +310,9 @@ export function MobiusRing({
     };
     const handleWindowTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 0) return;
-      const rect = canvas.getBoundingClientRect();
+      const canvasEl = canvasRef.current;
+      if (!canvasEl) return;
+      const rect = canvasEl.getBoundingClientRect();
       const touch = e.touches[0];
       if (
         touch.clientX >= rect.left &&

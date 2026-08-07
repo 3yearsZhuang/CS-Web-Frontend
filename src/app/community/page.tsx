@@ -16,9 +16,10 @@ import { FeedItemCard } from '@/modules/community/ui/feed-item-card';
 import { CommunitySidebarNav } from '@/modules/community/ui/community-sidebar-nav';
 import { CommunitySidebarTrending } from '@/modules/community/ui/community-sidebar-trending';
 import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip';
-import { AdminForumPanel } from '@/modules/community/ui/forum-admin-panel';
+import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
+import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
 import { Button, SectionLoading } from '@/components';
-import { useCommunityFeed, type CommunityFeedState } from './use-community-feed';
+import { useCommunityFeed } from './use-community-feed';
 
 export default function CommunityPage() {
   return (
@@ -40,9 +41,9 @@ function CommunityPageContent() {
     t,
     router,
     currentUser,
+    currentUserId,
     isLoggedIn,
     authChecked,
-    isAdmin,
     activeTab,
     communityTabs,
     items,
@@ -94,7 +95,7 @@ function CommunityPageContent() {
         index="00"
         label="Community"
         hero={hero}
-        pageKey="forum"
+        pageKey="community"
         capsule={{
           tabs: communityTabs,
           activeKey: activeTab,
@@ -183,6 +184,8 @@ function CommunityPageContent() {
               </div>
 
               {/* 搜索条 */}
+              {activeTab !== 'mine' && (
+              <>
               <form onSubmit={handleSearchSubmit} className="mb-8">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
@@ -353,10 +356,18 @@ function CommunityPageContent() {
                 </div>
               )}
 
-              {/* Tab 99 — 论坛管理（仅管理员） */}
+              </>
+              )}
+
+              {/* 「我的」标签页 — 我的主题 / 回复 / 收藏（入口由个人主页迁移至此） */}
+              {activeTab === 'mine' && currentUserId && (
+                <ProfileCommunityTab userId={currentUserId} />
+              )}
+
+              {/* Tab 99 — 社区管理（仅管理员） */}
               {activeTab === 'admin' && currentUser && (
                 <div>
-                  <AdminForumPanel />
+                  <AdminCommunityPanel />
                 </div>
               )}
             </div>

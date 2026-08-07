@@ -70,9 +70,8 @@ export interface UserMessages {
   },
   profile: {
     tabProfile: string;
-    tabSecurity: string;
     tabActivity: string;
-    tabForum: string;
+    tabCommunity: string;
     tabJoin: string;
     identityLabel: string;
     identityEn: string;
@@ -84,12 +83,11 @@ export interface UserMessages {
     profileTitle: string;
     securityTitle: string;
     activityTitle: string;
-    forumTitle: string;
+    communityTitle: string;
     joinTitle: string;
     profileEn: string;
-    securityEn: string;
     activityEn: string;
-    forumEn: string;
+    communityEn: string;
     joinEn: string;
     userPanel: string;
     githubBoundTitle: string;
@@ -128,6 +126,11 @@ export interface UserMessages {
     noSessions: string;
     unknownDevice: string;
     logout: string;
+    logoutAll: string;
+    logoutAllTitle: string;
+    logoutAllConfirm: string;
+    logoutAllConfirmLabel: string;
+    cancel: string;
     loadingSessions: string;
     loading: string;
     noApplication: string;
@@ -320,7 +323,7 @@ export interface UserMessages {
     website: string;
     noGithub: string;
     noWebsite: string;
-    forumActivity: string;
+    communityActivity: string;
     statTopic: string;
     statReply: string;
     examTitle: string;
@@ -443,10 +446,9 @@ export const zhCN: UserMessages = {
     submitRequest: 'Submit Request →',
   },
   profile: {
-    tabProfile: '资料 / Profile',
-    tabSecurity: '安全 / Security',
+    tabProfile: '资料与安全 / Account',
     tabActivity: '活动 / Activity',
-    tabForum: '论坛 / Forum',
+    tabCommunity: '社区 / Community',
     tabJoin: '入社申请 / Join',
     identityLabel: '身份信息',
     identityEn: '/ Identity',
@@ -455,15 +457,14 @@ export const zhCN: UserMessages = {
     joined: 'Joined {date}',
     errorTitle: '[ 错误 / Error ]',
     backHome: '← Back to Home',
-    profileTitle: '资料与头像',
+    profileTitle: '资料与安全',
     securityTitle: '账号安全',
     activityTitle: '活动记录',
-    forumTitle: '论坛活动',
+    communityTitle: '社区活动',
     joinTitle: '入社申请',
-    profileEn: 'Profile & Avatar',
-    securityEn: 'Security',
+    profileEn: 'Account',
     activityEn: 'Activity',
-    forumEn: 'Forum',
+    communityEn: 'Community',
     joinEn: 'Join',
     userPanel: 'USER PANEL',
     githubBoundTitle: 'GitHub 账号已自动绑定到你的现有账号（邮箱匹配）。',
@@ -502,6 +503,11 @@ export const zhCN: UserMessages = {
     noSessions: '没有活跃会话',
     unknownDevice: '未知设备',
     logout: '登出',
+    logoutAll: '登出全部设备',
+    logoutAllTitle: '登出全部设备',
+    logoutAllConfirm: '此操作将注销你所有设备上的登录状态（包括当前设备），需要重新登录。确定继续吗？',
+    logoutAllConfirmLabel: '确认登出全部',
+    cancel: '取消',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',
     noApplication: '[ No Application ]',
@@ -694,7 +700,7 @@ export const zhCN: UserMessages = {
     website: 'Website',
     noGithub: '未设置 GitHub',
     noWebsite: '未设置个人网站',
-    forumActivity: '论坛活跃度',
+    communityActivity: '社区活跃度',
     statTopic: '主题',
     statReply: '回复',
     examTitle: '考试统计',
@@ -817,10 +823,9 @@ export const en: UserMessages = {
     submitRequest: 'Submit Request →',
   },
   profile: {
-    tabProfile: 'Profile / 资料',
-    tabSecurity: 'Security / 安全',
+    tabProfile: 'Account / 资料与安全',
     tabActivity: 'Activity / 活动',
-    tabForum: 'Forum / 论坛',
+    tabCommunity: 'Community / 社区',
     tabJoin: 'Join / 入社申请',
     identityLabel: 'Identity',
     identityEn: '/ Identity',
@@ -829,15 +834,14 @@ export const en: UserMessages = {
     joined: 'Joined {date}',
     errorTitle: '[ Error / 错误 ]',
     backHome: '← Back to Home',
-    profileTitle: 'Profile & Avatar',
+    profileTitle: 'Account',
     securityTitle: 'Account Security',
     activityTitle: 'Activity',
-    forumTitle: 'Forum',
+    communityTitle: 'Community',
     joinTitle: 'Join Request',
-    profileEn: 'Profile & Avatar',
-    securityEn: 'Security',
+    profileEn: 'Account',
     activityEn: 'Activity',
-    forumEn: 'Forum',
+    communityEn: 'Community',
     joinEn: 'Join',
     userPanel: 'USER PANEL',
     githubBoundTitle: 'Your GitHub account has been automatically linked to your existing account (email matched).',
@@ -876,6 +880,11 @@ export const en: UserMessages = {
     noSessions: 'No active sessions',
     unknownDevice: 'Unknown device',
     logout: 'Log out',
+    logoutAll: 'Log out all devices',
+    logoutAllTitle: 'Log out all devices',
+    logoutAllConfirm: 'This will sign you out on all devices (including the current one). You will need to sign in again. Continue?',
+    logoutAllConfirmLabel: 'Log out all',
+    cancel: 'Cancel',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',
     noApplication: '[ No Application ]',
@@ -1068,7 +1077,7 @@ export const en: UserMessages = {
     website: 'Website',
     noGithub: 'GitHub not set',
     noWebsite: 'Website not set',
-    forumActivity: 'Forum Activity',
+    communityActivity: 'Community Activity',
     statTopic: 'Topics',
     statReply: 'Replies',
     examTitle: 'Exam Stats',

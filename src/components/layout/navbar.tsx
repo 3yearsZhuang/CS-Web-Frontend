@@ -18,7 +18,7 @@ import type { NavMessageKey } from '@/i18n/types';
 const NAV_LINKS: Array<{ href: string; key: NavMessageKey; requireAuth?: boolean }> = [
   { href: '/about', key: 'about' },
   { href: '/events', key: 'events' },
-  // 社区聚合入口 — 合并论坛 / 博客 / 成员三页为统一 Feed
+  // 社区聚合入口 — 合并社区 / 社区 / 成员三页为统一 Feed
   { href: '/community', key: 'community' },
   { href: '/tools', key: 'tools', requireAuth: true },
 ];

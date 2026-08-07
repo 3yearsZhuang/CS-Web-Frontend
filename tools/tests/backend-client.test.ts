@@ -189,21 +189,21 @@ describe('翻译助手', () => {
   });
 
   it('权限 key 双向映射', () => {
-    expect(frontendKeyToBackendName('forum.topic.hide')).toBe('forum_topic:hide');
-    expect(backendNameToFrontendKey('forum_topic:hide')).toBe('forum.topic.hide');
+    expect(frontendKeyToBackendName('community.topic.hide')).toBe('community_topic:hide');
+    expect(backendNameToFrontendKey('community_topic:hide')).toBe('community.topic.hide');
   });
 
   it('toAdminRole 过滤未知权限点', () => {
-    const known = new Set(['forum.topic.hide', 'exam.create']);
+    const known = new Set(['community.topic.hide', 'exam.create']);
     const role = toAdminRole(
       {
         name: 'moderator',
         display_name: '版主',
-        permissions: ['forum_topic:hide', 'some_future:thing'],
+        permissions: ['community_topic:hide', 'some_future:thing'],
       },
       known,
     );
     expect(role.key).toBe('moderator');
-    expect(role.permissions).toEqual(['forum.topic.hide']);
+    expect(role.permissions).toEqual(['community.topic.hide']);
   });
 });

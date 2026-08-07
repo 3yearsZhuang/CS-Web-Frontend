@@ -1,5 +1,5 @@
 /**
- * @file 数据看板子面板 — 从 forum-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * @file 数据看板子面板 — 从 community-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
  */
 'use client';
 
@@ -11,7 +11,7 @@ interface DashboardStats {
   totalUsers: number;
   totalTopics: number;
   totalReplies: number;
-  totalBlogPosts: number;
+  totalCommunityPosts: number;
   totalCategories: number;
   totalAnnouncements: number;
   onlineUsers: number;
@@ -29,14 +29,14 @@ export function DashboardManager() {
       fetch('/api/admin/users?pageSize=1').then((r) => r.json()),
       fetch('/api/community/feed?stats=1').then((r) => r.json()),
       fetch('/api/admin/announcements').then((r) => r.json()),
-      fetch('/api/admin/community/forum/categories').then((r) => r.json()),
+      fetch('/api/admin/community/community/categories').then((r) => r.json()),
     ])
       .then(([usersData, feedStats, announcementsData, categoriesData]) => {
         setStats({
           totalUsers: usersData.total ?? 0,
           totalTopics: feedStats.topicCount ?? 0,
           totalReplies: (feedStats.topicCount ?? 0) + (feedStats.postCount ?? 0),
-          totalBlogPosts: feedStats.postCount ?? 0,
+          totalCommunityPosts: feedStats.postCount ?? 0,
           totalCategories: (categoriesData.items ?? []).length,
           totalAnnouncements: announcementsData.total ?? 0,
           onlineUsers: 0,
@@ -52,7 +52,7 @@ export function DashboardManager() {
     { label: t('statTotalUsers'), value: stats.totalUsers, color: 'var(--primary)' },
     { label: t('statTopics'), value: stats.totalTopics, color: 'var(--chart-2)' },
     { label: t('statReplies'), value: stats.totalReplies, color: 'var(--chart-1)' },
-    { label: t('statPosts'), value: stats.totalBlogPosts, color: 'var(--chart-5)' },
+    { label: t('statPosts'), value: stats.totalCommunityPosts, color: 'var(--chart-5)' },
     { label: t('statCategories'), value: stats.totalCategories, color: 'var(--chart-3)' },
     { label: t('statAnnouncements'), value: stats.totalAnnouncements, color: 'var(--destructive)' },
   ] : [];

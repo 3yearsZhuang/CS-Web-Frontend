@@ -44,6 +44,7 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Build artifacts:
     'server.js',
+    'dist/**',
     // Script files (CommonJS):
     'tools/scripts/**/*.js',
   ]),

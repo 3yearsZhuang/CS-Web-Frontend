@@ -32,7 +32,7 @@ interface SectionNavProps {
 /**
  * 章节式导航 Tab
  *
- * 统一替代 FloatingCapsuleSidebar 移动端 tab 条、ProfileForumTab sub-tab 等编号导航实现。
+ * 统一替代 FloatingCapsuleSidebar 移动端 tab 条、ProfileCommunityTab sub-tab 等编号导航实现。
  * 每项以 section-marker 编号 + meta-mono 标签呈现，opacity 指示激活态。
  */
 export function SectionNav({

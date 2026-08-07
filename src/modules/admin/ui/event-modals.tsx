@@ -7,8 +7,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
-import { MarkdownEditorBase } from '@/modules/community/ui/forum-markdown-editor-base';
-import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
 import type { EventForm, EventItem, RegistrationRecord } from '@/modules/admin/ui/types';

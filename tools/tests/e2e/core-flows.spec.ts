@@ -2,7 +2,7 @@
  * @file E2E 核心用户流程测试
  *
  * 覆盖主要页面的加载与基本交互：
- *   - 首页 / 登录 / 注册 / 活动 / 论坛 / 工具 / 成员 / 入社 / 关于
+ *   - 首页 / 登录 / 注册 / 活动 / 社区 / 工具 / 成员 / 入社 / 关于
  *   - 导航栏可见性
  *   - 主题切换不破坏页面
  */
@@ -34,8 +34,8 @@ test.describe('Core User Flows', () => {
     await expect(page.getByRole('main').first()).toBeVisible();
   });
 
-  test('Forum page loads', async ({ page }) => {
-    await page.goto('/community/forum');
+  test('Community page loads', async ({ page }) => {
+    await page.goto('/community/community');
     await expect(page.getByRole('main').first()).toBeVisible();
   });
 

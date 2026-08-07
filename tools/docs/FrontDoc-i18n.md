@@ -3,7 +3,7 @@
 > 文档定位：前端国际化（i18n）迁移的当前状态、标准迁移流程、剩余待办清单（status + runbook）
 > 受众：前端维护者 / 后续执行迁移的开发者
 > Source of truth：`src/i18n/` 语言包 + 各组件 `useTranslations` 使用情况；本文与代码同步更新
-> 关联：next-intl 官方文档（App Router，无 i18n 路由模式）；架构见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；UI 规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
+> 关联：next-intl 官方文档（App Router，无 i18n 路由模式）；架构见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；UI 规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
 > 最后更新：2026-08-05（统一 FrontDoc 命名）
 > 更新人：3yearsZ
 > 变更触发：新增/修改语言包 key、迁移组件文案、调整语言切换机制
@@ -43,7 +43,7 @@
 
 ## 三、已完成迁移（累计）
 
-> ℹ️ 已完成迁移记录已迁移至根目录 `项目演变历史.md`。
+> ℹ️ 已完成迁移记录已迁移至 `docs/项目演变历史.md`。
 
 ---
 
@@ -69,7 +69,7 @@
 
 ## 五、剩余待迁移清单（后续迭代）
 
-> ℹ️ 剩余待迁移清单（后续迭代）已迁移至根目录 `项目待办事项.md`。
+> ℹ️ 剩余待迁移清单（后续迭代）已迁移至 `docs/项目待办事项.md`。
 
 ---
 
@@ -83,4 +83,4 @@
 
 ## 七、下一步建议
 
-> ℹ️ 下一步建议已迁移至根目录 `项目待办事项.md`。
+> ℹ️ 下一步建议已迁移至 `docs/项目待办事项.md`。

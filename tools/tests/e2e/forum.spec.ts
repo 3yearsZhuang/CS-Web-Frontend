@@ -1,5 +1,5 @@
 /**
- * @file 论坛发帖业务流程 E2E 断言
+ * @file 社区发帖业务流程 E2E 断言
  *
  * 覆盖核心链路：
  *   - 已登录用户进入发帖页，表单可见
@@ -13,12 +13,12 @@
 import { test, expect } from '@playwright/test';
 import { STORAGE_STATE_PATH } from './global-setup';
 
-test.describe('论坛发帖业务流程', () => {
+test.describe('社区发帖业务流程', () => {
   test.use({ storageState: STORAGE_STATE_PATH });
 
   test('发帖成功并跳转到主题详情页', async ({ page }) => {
     // 1. 进入发帖页
-    await page.goto('/community/forum/new');
+    await page.goto('/community/community/new');
     await expect(page.getByRole('main').first()).toBeVisible({ timeout: 10000 });
 
     // 2. 等待版块下拉加载
@@ -60,8 +60,8 @@ test.describe('论坛发帖业务流程', () => {
     const submitButton = page.getByRole('button', { name: /发布主题/ });
     await submitButton.click();
 
-    // 6. 验证跳转到主题详情页（URL 含 /community/forum/）
-    await expect(page).toHaveURL(/\/community\/forum\//, { timeout: 15000 });
+    // 6. 验证跳转到主题详情页（URL 含 /community/community/）
+    await expect(page).toHaveURL(/\/community\/community\//, { timeout: 15000 });
     await expect(page.getByRole('main').first()).toBeVisible();
 
     // 7. 验证主题详情页显示刚发布的标题
@@ -69,7 +69,7 @@ test.describe('论坛发帖业务流程', () => {
   });
 
   test('标题过短时前端校验拦截提交', async ({ page }) => {
-    await page.goto('/community/forum/new');
+    await page.goto('/community/community/new');
     await expect(page.getByRole('main').first()).toBeVisible({ timeout: 10000 });
 
     const categorySelect = page.locator('#category-select');
@@ -103,11 +103,11 @@ test.describe('论坛发帖业务流程', () => {
     await submitButton.click();
 
     // 应停留在发帖页
-    await expect(page).toHaveURL(/\/community\/forum\/new/, { timeout: 5000 });
+    await expect(page).toHaveURL(/\/community\/community\/new/, { timeout: 5000 });
   });
 
   test('未填写正文时无法提交', async ({ page }) => {
-    await page.goto('/community/forum/new');
+    await page.goto('/community/community/new');
     await expect(page.getByRole('main').first()).toBeVisible({ timeout: 10000 });
 
     const categorySelect = page.locator('#category-select');
@@ -140,6 +140,6 @@ test.describe('论坛发帖业务流程', () => {
     await submitButton.click();
 
     // 应停留在发帖页
-    await expect(page).toHaveURL(/\/community\/forum\/new/, { timeout: 5000 });
+    await expect(page).toHaveURL(/\/community\/community\/new/, { timeout: 5000 });
   });
 });

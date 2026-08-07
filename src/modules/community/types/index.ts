@@ -1,5 +1,5 @@
 /**
- * @file 社区模块 — 统一共享类型（合并原 forum + blog）
+ * @file 社区模块 — 统一共享类型（合并原 community + community）
  *
  * 统一内容模型：CommunityPost（kind='topic'|'post'）判别联合。
  * FeedItem 仍保留 kind 区分（topic/post/member）以兼容聚合展示。
@@ -59,7 +59,7 @@ export interface CommunityPost {
   title: string;
   contentMarkdown: string;
   status: PostStatus;
-  // 论坛独有
+  // 社区独有
   isPinned: boolean;
   isFeatured: boolean;
   replyCount: number;
@@ -69,7 +69,7 @@ export interface CommunityPost {
   hiddenBy: string | null;
   hiddenAt: string | null;
   hiddenReason: string | null;
-  // 博客独有
+  // 社区独有
   slug: string | null;
   excerpt: string | null;
   coverImage: string | null;
@@ -81,7 +81,7 @@ export interface CommunityPost {
   viewCount: number;
   likeCount: number;
   author: AuthorSummary | null;
-  /** 兼容旧 BlogPost.authorName（阶段二移除） */
+  /** 兼容旧 CommunityPost.authorName（阶段二移除） */
   authorName: string | null;
   category: CategorySummary | null;
   createdAt: string;
@@ -180,9 +180,9 @@ export interface CurrentUser {
   role: 'user' | 'admin';
 }
 
-// ============= 博客系列（保留） =============
+// ============= 社区系列（保留） =============
 
-export interface BlogSeries {
+export interface CommunitySeries {
   id: string;
   title: string;
   description: string | null;
@@ -192,7 +192,7 @@ export interface BlogSeries {
   postCount: number;
 }
 
-export interface BlogSeriesInput {
+export interface CommunitySeriesInput {
   title: string;
   description?: string;
 }
@@ -292,10 +292,9 @@ export interface FeedTag {
 }
 
 // ============= 阶段一兼容别名（保留有语义差异的部分，纯别名已合并到规范名） =============
-export type BlogPost = CommunityPost;
-export type BlogPostStatus = PostStatus;
-export type BlogPostInput = PostInput;
-export type BlogListOptions = {
+export type CommunityPostStatus = PostStatus;
+export type CommunityPostInput = PostInput;
+export type CommunityListOptions = {
   status?: PostStatus;
   category?: string;
   authorId?: string;

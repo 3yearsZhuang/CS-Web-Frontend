@@ -1,5 +1,5 @@
 /**
- * @file 个人主页 — 资料 / 安全 / 活动 / 论坛 / 入社，左侧 tab 导航 + 右侧内容区
+ * @file 个人主页 — 资料 / 安全 / 活动 / 社区 / 入社，左侧 tab 导航 + 右侧内容区
  *
  * 装配层（GENERAL 2.2 展示/容器分离、2.4「组件 > 500 行拆分」）：
  * 仅负责 tab 状态、Hero、侧边栏与子组件编排；数据获取与业务逻辑下放到
@@ -16,7 +16,6 @@ import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/
 import { FloatingCapsuleSidebar, type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
-import { ProfileForumTab } from '@/modules/community/ui/forum-profile-tab';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
 import { formatDate } from '@/shared/utils/utils';
@@ -26,7 +25,7 @@ import { SecurityTab } from './security-tab';
 import { ActivityTab } from './activity-tab';
 import { JoinTab } from './join-tab';
 
-type ProfileTabKey = 'profile' | 'security' | 'activity' | 'forum' | 'join';
+type ProfileTabKey = 'profile' | 'activity' | 'join';
 
 /** 子组件装配（读取 URL ?tab= 参数、GitHub 绑定提示、Hero、侧边栏） */
 function ProfileContent() {
@@ -34,16 +33,14 @@ function ProfileContent() {
   const searchParams = useSearchParams();
   const t = useTranslations('profile');
 
-  // Tab 切换（资料 / 安全 / 活动 / 论坛 / 入社）
+  // Tab 切换（资料与安全 / 活动 / 社区 / 入社）
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('profile');
 
   // 悬浮胶囊侧边栏 Tab 配置
   const profileTabs: CapsuleTab[] = [
     { key: 'profile', num: '01', label: t('tabProfile') },
-    { key: 'security', num: '02', label: t('tabSecurity') },
-    { key: 'activity', num: '03', label: t('tabActivity') },
-    { key: 'forum', num: '04', label: t('tabForum') },
-    { key: 'join', num: '05', label: t('tabJoin') },
+    { key: 'activity', num: '02', label: t('tabActivity') },
+    { key: 'join', num: '03', label: t('tabJoin') },
   ];
 
   // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
@@ -66,7 +63,7 @@ function ProfileContent() {
   // 初始 URL 参数处理：?tab= / ?github_bound=（仅挂载时执行一次）
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['profile', 'security', 'activity', 'forum', 'join'].includes(tabParam)) {
+    if (tabParam && ['profile', 'activity', 'join'].includes(tabParam)) {
       setActiveTab(tabParam as ProfileTabKey);
     }
     if (searchParams.get('github_bound') === '1') {
@@ -189,36 +186,28 @@ function ProfileContent() {
         </div>
       </CollapsingHero>
 
-      {/* ============ Tab 区域 ============ */}
-      <section data-section-nav="01|资料" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+      {/* ============ Tab 区域（紧凑） ============ */}
+      <section data-section-nav="01|资料与安全" className="px-4 sm:px-6 md:px-8 py-10 sm:py-14 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <StaggerContainer>
             {/* 标题 + 悬浮胶囊侧边栏 */}
-            <div className="grid grid-cols-12 gap-0 items-end mb-10 sm:mb-16">
+            <div className="grid grid-cols-12 gap-0 items-end mb-8 sm:mb-12">
               <div className="col-span-12">
                 <RevealTitle>
-                  <h1 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] leading-[1.05] sm:leading-[0.95]">
+                  <h1 className="display-serif text-[clamp(26px,4.5vw,48px)] text-[var(--foreground)] leading-[1.1] sm:leading-[1]">
                     {activeTab === 'profile'
                       ? t('profileTitle')
-                      : activeTab === 'security'
-                        ? t('securityTitle')
-                        : activeTab === 'activity'
-                          ? t('activityTitle')
-                          : activeTab === 'forum'
-                            ? t('forumTitle')
-                            : t('joinTitle')}
+                      : activeTab === 'activity'
+                        ? t('activityTitle')
+                        : t('joinTitle')}
                     <span className="text-[var(--muted-foreground)]">
                       {' '}
                       /{' '}
                       {activeTab === 'profile'
                         ? t('profileEn')
-                        : activeTab === 'security'
-                          ? t('securityEn')
-                          : activeTab === 'activity'
-                            ? t('activityEn')
-                            : activeTab === 'forum'
-                              ? t('forumEn')
-                              : t('joinEn')}
+                        : activeTab === 'activity'
+                          ? t('activityEn')
+                          : t('joinEn')}
                     </span>
                   </h1>
                 </RevealTitle>
@@ -261,19 +250,18 @@ function ProfileContent() {
             </div>
           )}
 
-          {/* ============ Tab 01 — 资料与头像 ============ */}
-          {activeTab === 'profile' && <ProfileTab {...profile} />}
+          {/* ============ Tab 01 — 资料与安全（合并） ============ */}
+          {activeTab === 'profile' && (
+            <>
+              <ProfileTab {...profile} />
+              <SecurityTab />
+            </>
+          )}
 
-          {/* ============ Tab 02 — 账号安全 ============ */}
-          {activeTab === 'security' && <SecurityTab />}
-
-          {/* ============ Tab 03 — 活动记录 ============ */}
+          {/* ============ Tab 02 — 活动记录 ============ */}
           {activeTab === 'activity' && <ActivityTab activities={activities} />}
 
-          {/* ============ Tab 04 — 论坛活动（我的主题 / 回复 / 收藏） ============ */}
-          {activeTab === 'forum' && <ProfileForumTab userId={user.id} />}
-
-          {/* ============ Tab 05 — 入社申请（我的申请列表） ============ */}
+          {/* ============ Tab 03 — 入社申请（我的申请列表） ============ */}
           {activeTab === 'join' && <JoinTab />}
         </div>
       </section>

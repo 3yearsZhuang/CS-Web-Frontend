@@ -28,16 +28,17 @@ interface FeedStats {
   memberCount: number;
 }
 
-type TabKey = 'all' | 'following' | FeedKind | 'admin';
+type TabKey = 'all' | 'following' | FeedKind | 'mine' | 'admin';
 
 const PAGE_SIZE = 20;
 export const SEARCH_MIN_LEN = 2;
 export const SEARCH_MAX_LEN = 80;
 
-const TAB_OPTIONS: { key: TabKey; num: string; labelKey: string }[] = [
+const TAB_OPTIONS: { key: TabKey; num: string; labelKey: string; requiresLogin?: boolean }[] = [
   { key: 'all', num: '01', labelKey: 'tabAll' },
   { key: 'following', num: '02', labelKey: 'tabFollowing' },
   { key: 'member', num: '03', labelKey: 'tabMember' },
+  { key: 'mine', num: '04', labelKey: 'tabMine', requiresLogin: true },
 ];
 
 const TAB_TO_KIND: Partial<Record<Exclude<TabKey, 'admin' | 'following'>, FeedKind | undefined>> = {
@@ -54,6 +55,7 @@ export function useCommunityFeed() {
   const initialTab = (searchParams.get('tab') as TabKey) ?? 'all';
 
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -70,6 +72,7 @@ export function useCommunityFeed() {
         if (data) {
           setIsLoggedIn(true);
           const user = data.user;
+          setCurrentUserId(user.id);
           if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
             setCurrentUser(user);
           }
@@ -91,7 +94,7 @@ export function useCommunityFeed() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
 
   const communityTabs = [
-    ...TAB_OPTIONS.map((opt) => ({
+    ...TAB_OPTIONS.filter((opt) => !opt.requiresLogin || isLoggedIn).map((opt) => ({
       key: opt.key,
       num: opt.num,
       label: t(opt.labelKey as Parameters<typeof t>[0]),
@@ -157,7 +160,7 @@ export function useCommunityFeed() {
 
   /** 加载侧边栏数据（版块 + 热榜 + 活跃用户 + 精选） */
   useEffect(() => {
-    fetch('/api/community/forum/categories')
+    fetch('/api/community/categories')
       .then(async (res) => {
         if (!res.ok) return;
         const data = (await res.json()) as { items: CommunityCategory[] };
@@ -168,7 +171,7 @@ export function useCommunityFeed() {
     const hotParams = new URLSearchParams();
     hotParams.set('sort', 'hot');
     hotParams.set('page_size', '8');
-    fetch(`/api/community/forum/topics?${hotParams.toString()}`)
+    fetch(`/api/community/topics?${hotParams.toString()}`)
       .then(async (res) => {
         if (!res.ok) return;
         const data = (await res.json()) as { items: CommunityPost[] };
@@ -187,7 +190,7 @@ export function useCommunityFeed() {
     const featParams = new URLSearchParams();
     featParams.set('page_size', '8');
     featParams.set('sort', 'latest');
-    fetch(`/api/community/forum/topics?${featParams.toString()}`)
+    fetch(`/api/community/topics?${featParams.toString()}`)
       .then(async (res) => {
         if (!res.ok) return;
         const data = (await res.json()) as { items: CommunityPost[] };
@@ -199,6 +202,11 @@ export function useCommunityFeed() {
 
   /** 加载 Feed */
   const loadFeed = useCallback(async () => {
+    if (activeTab === 'mine') {
+      // 「我的」标签页由 ProfileCommunityTab 自行加载数据，Feed 区不渲染列表
+      setLoading(false);
+      return;
+    }
     if (activeTab === 'member' || activeTab === 'following') {
       if (!authChecked) return;
       if (!isLoggedIn) {
@@ -297,6 +305,7 @@ export function useCommunityFeed() {
     t,
     router,
     currentUser,
+    currentUserId,
     isLoggedIn,
     authChecked,
     isAdmin,

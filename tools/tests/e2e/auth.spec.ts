@@ -74,7 +74,7 @@ test.describe('认证业务流程', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    await page.goto('/community/forum/new');
+    await page.goto('/community/community/new');
 
     await expect(page.getByRole('main').first()).toBeVisible({ timeout: 10000 });
 

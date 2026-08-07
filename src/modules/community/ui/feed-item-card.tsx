@@ -1,7 +1,7 @@
 /**
  * @file FeedItemCard — 聚合 Feed 统一卡片（topic/post 合并为同一内容卡片，member 单独）
  *
- * 合并说明：原论坛主题(topic)与博客文章(post)采用不同卡片样式与 FORUM/BLOG 徽章，
+ * 合并说明：原社区主题(topic)与社区文章(post)采用不同卡片样式与 COMMUNITY/BLOG 徽章，
  * 现统一为单一内容卡片，不再做 kind 的 UI 区分（detail 数据层已统一为 CommunityPost）。
  */
 
@@ -34,18 +34,18 @@ export function FeedItemCard({ item, index }: FeedItemCardProps) {
 // ============= 统一内容卡片（topic + post 合并） =============
 
 function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 'post' }>; num: string | null }) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   const router = useRouter();
   const post = item.data;
   const href = `/community/${post.id}`;
 
-  // 中部摘要：论坛优先社交动态文案，博客优先 excerpt
+  // 中部摘要：社区优先社交动态文案，社区优先 excerpt
   const summary = post.excerpt ?? topicSocialCopy(post, t);
 
   return (
     <Link href={href} className="block group focus-amber" aria-label={t('feedViewContentAria', { title: post.title })}>
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
-        {/* 左侧 — 编号 + 状态标记（仅保留置顶/精选，不展示 FORUM/BLOG） */}
+        {/* 左侧 — 编号 + 状态标记（仅保留置顶/精选，不展示 COMMUNITY/BLOG） */}
         <div className="col-span-12 sm:col-span-2 flex sm:flex-col items-start gap-2 sm:gap-1.5">
           {num && <div className="section-marker">[ {num} ]</div>}
           <div className="flex flex-wrap gap-1.5">
@@ -138,7 +138,7 @@ function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 
 // ============= 成员卡片 =============
 
 function MemberCard({ item, num }: { item: Extract<FeedItem, { kind: 'member' }>; num: string | null }) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   const member = item.data;
 
   return (

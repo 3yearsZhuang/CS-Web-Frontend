@@ -14,6 +14,7 @@ export interface CommunityMessages {
     tabAll: string;
     tabFollowing: string;
     tabMember: string;
+    tabMine: string;
     tabAdmin: string;
     searchResults: string;
     communityFeed: string;
@@ -140,7 +141,6 @@ export interface CommunityMessages {
     nestedReply: string;
     noTopicsDesc: string;
     noFavoritesDesc: string;
-    browseForum: string;
   },
   communityNew: {
     loginRequiredTitle1: string;
@@ -227,12 +227,13 @@ export const zhCN: CommunityMessages = {
     tabAll: '全部 / All',
     tabFollowing: '关注流 / Following',
     tabMember: '成员 / Members',
+    tabMine: '我的 / Mine',
     tabAdmin: '管理 / Admin',
     searchResults: '搜索结果',
     communityFeed: '社区动态',
     searchCount: '// 找到 {count} 条结果',
     statsLine: '// {topics} 主题 · {posts} 文章 · {members} 成员',
-    feedDefaultDesc: '// 聚合论坛、博客、成员的最新动态',
+    feedDefaultDesc: '// 聚合社区、社区、成员的最新动态',
     searchPlaceholderFull: '搜索主题 / 文章 / 成员...',
     clearSearch: '清空搜索',
     searching: 'Searching...',
@@ -255,7 +256,7 @@ export const zhCN: CommunityMessages = {
     heroTitle2: '技术',
     heroTitle3: '的每一份声音。',
     heroTitleEn: '/ Community',
-    heroDesc1: '论坛主题、博客文章、社区成员，一站浏览。',
+    heroDesc1: '社区主题、社区文章、社区成员，一站浏览。',
     heroDesc2: '让每个声音被听见，每篇文章被阅读，每位成员被看见',
   },
   communityAdmin: {
@@ -353,7 +354,6 @@ export const zhCN: CommunityMessages = {
     nestedReply: '楼中楼',
     noTopicsDesc: '你还没有发布过主题。',
     noFavoritesDesc: '你还没有收藏过主题。',
-    browseForum: '浏览论坛 →',
   },
   communityNew: {
     loginRequiredTitle1: '请先 ',
@@ -440,12 +440,13 @@ export const en: CommunityMessages = {
     tabAll: 'All / 全部',
     tabFollowing: 'Following / 关注流',
     tabMember: 'Members / 成员',
+    tabMine: 'Mine / 我的',
     tabAdmin: 'Admin / 管理',
     searchResults: 'Search results',
     communityFeed: 'Community Feed',
     searchCount: '// {count} results found',
     statsLine: '// {topics} topics · {posts} posts · {members} members',
-    feedDefaultDesc: '// Aggregate the latest from forum, blog, and members',
+    feedDefaultDesc: '// Aggregate the latest from topics, posts, and members',
     searchPlaceholderFull: 'Search topics / posts / members...',
     clearSearch: 'Clear search',
     searching: 'Searching...',
@@ -468,7 +469,7 @@ export const en: CommunityMessages = {
     heroTitle2: 'in tech',
     heroTitle3: ', gathered here.',
     heroTitleEn: '/ Community',
-    heroDesc1: 'Forum topics, blog posts, and community members — all in one place.',
+    heroDesc1: 'Community topics, community posts, and community members — all in one place.',
     heroDesc2: 'Let every voice be heard, every post be read, every member be seen',
   },
   communityAdmin: {
@@ -566,7 +567,6 @@ export const en: CommunityMessages = {
     nestedReply: 'Nested reply',
     noTopicsDesc: 'You have not posted any topics yet.',
     noFavoritesDesc: 'You have not favorited any topics yet.',
-    browseForum: 'Browse forum →',
   },
   communityNew: {
     loginRequiredTitle1: 'Please ',

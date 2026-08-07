@@ -60,7 +60,7 @@ export function useReplyActions({
         }),
       );
       try {
-        const res = await fetch('/api/community/forum/like', {
+        const res = await fetch('/api/community/like', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ targetType, targetId }),
@@ -85,14 +85,14 @@ export function useReplyActions({
     setReplyParentId(null);
     setReplyContent(content);
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('forum_editing_reply_id', replyId);
+      sessionStorage.setItem('community_editing_reply_id', replyId);
     }
   }, []);
 
   const handleDeleteReply = useCallback(
     async (replyId: string) => {
       try {
-        const res = await fetch(`/api/community/forum/replies/${replyId}`, {
+        const res = await fetch(`/api/community/replies/${replyId}`, {
           method: 'DELETE',
         });
         if (!res.ok) {
@@ -118,12 +118,12 @@ export function useReplyActions({
 
     const editingReplyId =
       typeof window !== 'undefined'
-        ? sessionStorage.getItem('forum_editing_reply_id')
+        ? sessionStorage.getItem('community_editing_reply_id')
         : null;
 
     try {
       if (editingReplyId) {
-        const res = await fetch(`/api/community/forum/replies/${editingReplyId}`, {
+        const res = await fetch(`/api/community/replies/${editingReplyId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contentMarkdown: replyContent }),
@@ -132,9 +132,9 @@ export function useReplyActions({
           const data = (await res.json().catch(() => null)) as { error?: string } | null;
           throw new Error(data?.error ?? '编辑失败');
         }
-        sessionStorage.removeItem('forum_editing_reply_id');
+        sessionStorage.removeItem('community_editing_reply_id');
       } else {
-        const res = await fetch(`/api/community/forum/topics/${topic.id}/replies`, {
+        const res = await fetch(`/api/community/topics/${topic.id}/replies`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -162,7 +162,7 @@ export function useReplyActions({
     setReplyParentId(null);
     setReplyError(null);
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('forum_editing_reply_id');
+      sessionStorage.removeItem('community_editing_reply_id');
     }
   }, []);
 
@@ -170,7 +170,7 @@ export function useReplyActions({
     setReplyParentId(parentReplyId);
     setReplyContent('');
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('forum_editing_reply_id');
+      sessionStorage.removeItem('community_editing_reply_id');
     }
   }, []);
 

@@ -26,7 +26,7 @@ export function CommunitySidebarTrending({
   stats,
   className = '',
 }: CommunitySidebarTrendingProps) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   return (
     <aside className={`space-y-8 ${className}`}>
       {/* 社区仪表盘 */}

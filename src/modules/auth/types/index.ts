@@ -35,13 +35,13 @@ export interface LoginHistoryEntry {
 
 /** 管理模块类型 — 与 PERMISSION_MODULES 的 key 对齐，细粒度角色仅能访问授权模块 */
 export type AdminModule =
-  | 'forum' | 'exam' | 'task' | 'event' | 'blog'
+  | 'community' | 'exam' | 'task' | 'event' | 'community'
   | 'resource' | 'notification' | 'join' | 'user'
   | 'audit' | 'role' | 'password';
 
-/** 细粒度角色 → 可访问模块映射（content_moderator 仅 forum，其余模块仅 admin/root 可访问） */
+/** 细粒度角色 → 可访问模块映射（content_moderator 仅 community，其余模块仅 admin/root 可访问） */
 const ROLE_MODULE_MAP: Record<string, readonly AdminModule[]> = {
-  content_moderator: ['forum'],
+  content_moderator: ['community'],
   exam_admin: ['exam'],
   task_publisher: ['task'],
 };

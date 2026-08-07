@@ -381,7 +381,7 @@ export function toAdminUserList(b: unknown): Record<string, unknown> { const r =
 
 /**
  * 前端权限 key（module.resource.action）→ 后端权限名（resource:action）。
- * 例：forum.topic.hide → forum_topic:hide
+ * 例：community.topic.hide → community_topic:hide
  */
 export function frontendKeyToBackendName(key: string): string {
   const parts = key.split('.');
@@ -561,7 +561,7 @@ export function toEventCheckin(b: unknown): Record<string, unknown> { const r = 
 }
 
 /** 后端 CategoryOut → 前端 CommunityCategory */
-export function toForumCategory(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
+export function toCommunityCategory(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
     id: String(r.id),
     slug: r.slug,

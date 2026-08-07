@@ -37,7 +37,23 @@ export async function DELETE(req: Request) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const body = (await req.json().catch(() => ({}))) as { sessionId?: string };
+  const body = (await req.json().catch(() => ({}))) as { sessionId?: string; all?: boolean };
+
+  // 一键登出全部设备：撤销当前用户所有 refresh token（含当前设备）
+  if (body.all === true || body.sessionId === 'all') {
+    const proxy = await proxyBackend(req, { path: '/auth/sessions/all', method: 'DELETE' });
+    if (proxy.status !== 200) {
+      const err = normalizeError(proxy.body, '操作失败');
+      const res = NextResponse.json(err, { status: proxy.status });
+      if (proxy.clearAuth) clearAuthCookies(res);
+      return res;
+    }
+    const res = NextResponse.json({ ok: true });
+    // 全部撤销后当前设备也失效，清除本地 auth cookie
+    clearAuthCookies(res);
+    return res;
+  }
+
   if (!body.sessionId) {
     return NextResponse.json({ error: '缺少会话 ID', code: 'VALIDATION_FAILED' }, { status: 400 });
   }

@@ -1,5 +1,5 @@
 /**
- * @file 用户管理子面板 — 从 forum-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * @file 用户管理子面板 — 从 community-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
  */
 'use client';
 
@@ -9,7 +9,7 @@ import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
-import { getError } from './forum-admin-utils';
+import { getError } from './community-admin-utils';
 
 interface AdminUserItem {
   id: string;

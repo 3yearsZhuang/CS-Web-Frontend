@@ -8,6 +8,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { setLocaleCookie } from '@/shared/utils/locale';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 
@@ -27,11 +28,11 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   /** 切换语言：写 cookie 后刷新以重新服务端渲染 */
   const switchLocale = (next: string) => {
     if (next === locale || isPending) return;
-    startTransition(() => {
-      document.cookie = `locale=${encodeURIComponent(next)}; path=/; max-age=31536000; samesite=lax`;
-      // 全页刷新以让 getRequestConfig 读取新 cookie 重新渲染
-      window.location.reload();
-    });
+      startTransition(() => {
+        setLocaleCookie(next);
+        // 全页刷新以让 getRequestConfig 读取新 cookie 重新渲染
+        window.location.reload();
+      });
   };
 
   return (

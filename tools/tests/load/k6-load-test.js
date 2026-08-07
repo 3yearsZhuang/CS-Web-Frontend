@@ -110,7 +110,7 @@ export function publicRead() {
     errorRate.add(!ok);
   });
 
-  group('论坛主题列表', () => {
+  group('社区主题列表', () => {
     const res = http.get(`${BASE_URL}/api/community/forum/topics?page=1&pageSize=20`);
     forumDuration.add(res.timings.duration);
     const ok = check(res, {

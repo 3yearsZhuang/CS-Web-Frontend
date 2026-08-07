@@ -1,5 +1,5 @@
 /**
- * @file 社区内容详情 /community/[id] — 统一详情页（合并原论坛主题与博客文章）
+ * @file 社区内容详情 /community/[id] — 统一详情页（合并原社区主题与社区文章）
  *
  * 数据流：
  *   - 数据加载 → useTopicDetail（post + replies + currentUser + relatedPosts）
@@ -17,10 +17,10 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type HeroState } from '@/components/layout/collapsing-hero';
 import { SectionLoading } from '@/components';
-import { TopicHero } from '@/modules/community/ui/forum-topic-hero';
-import { TopicContent } from '@/modules/community/ui/forum-topic-content';
-import { TopicReplySection } from '@/modules/community/ui/forum-topic-reply-section';
-import { type ReplySortMode } from '@/modules/community/ui/forum-reply-sort-bar';
+import { TopicHero } from '@/modules/community/ui/community-topic-hero';
+import { TopicContent } from '@/modules/community/ui/community-topic-content';
+import { TopicReplySection } from '@/modules/community/ui/community-topic-reply-section';
+import { type ReplySortMode } from '@/modules/community/ui/community-reply-sort-bar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTopicDetail } from '@/shared/hooks/use-topic-detail';
 import { useTopicActions } from '@/shared/hooks/use-topic-actions';
