@@ -1,6 +1,10 @@
 ﻿# ============ Stage 1: Builder ============
 FROM node:20-slim AS builder
 
+# Next.js 生产构建需要 Origin 白名单；由 Compose build.args 注入
+ARG ALLOWED_ORIGINS
+ENV ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
 # 中国境内 Debian 镜像源（可通过 --build-arg 覆盖）
 ARG APT_MIRROR=http://mirrors.aliyun.com/debian
 ARG APT_SECURITY_MIRROR=http://mirrors.aliyun.com/debian-security
