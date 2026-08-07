@@ -8,6 +8,7 @@ import { RevealItem } from '@/components/effects/motion-primitives';
 import { MarkdownEditor } from './forum-markdown-editor';
 import { Button } from '@/components';
 import type { CommunityPostDetail } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface TopicEditFormProps {
   topic: CommunityPostDetail;
@@ -16,6 +17,7 @@ interface TopicEditFormProps {
 }
 
 export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) {
+  const t = useTranslations('forum');
   const [editTitle, setEditTitle] = useState(topic.title);
   const [editContent, setEditContent] = useState(topic.contentMarkdown);
   const [savingTopic, setSavingTopic] = useState(false);
@@ -35,12 +37,12 @@ export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) 
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? '保存失败');
+        throw new Error(data?.error ?? t('saveFailed'));
       }
       const data = (await res.json()) as { topic: CommunityPostDetail };
       onSaved(data.topic);
     } catch (err) {
-      setTopicEditError(err instanceof Error ? err.message : '保存失败');
+      setTopicEditError(err instanceof Error ? err.message : t('saveFailed'));
     } finally {
       setSavingTopic(false);
     }

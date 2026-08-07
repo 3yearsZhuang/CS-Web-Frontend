@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { ScrollIndicator } from '@/components/effects/scroll-indicator';
 import { Avatar } from '@/components/avatar';
 import type { CommunityPost } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
+
+type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 interface FeaturedTopicStripProps {
   topics: CommunityPost[];
@@ -14,12 +17,13 @@ interface FeaturedTopicStripProps {
 }
 
 export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStripProps) {
+  const t = useTranslations('forum');
   if (topics.length === 0) return null;
 
   return (
     <div className={className}>
       <div className="meta-mono text-[11px] mb-4">
-        {'// 精选与置顶 — '}
+        {t('featuredHeadingPrefix')}
         <span className="text-[var(--primary)] tabular-nums">{topics.length}</span>
         {' featured'}
       </div>
@@ -60,7 +64,7 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
 
                   {/* 社交动态文案 — 基于数据自动生成 */}
                   <p className="text-[12px] text-[var(--muted-foreground)] leading-[1.6] line-clamp-2 mb-3 flex-1">
-                    {generateSocialCopy(topic)}
+                    {generateSocialCopy(topic, t)}
                   </p>
 
                   {/* 底部作者 + 统计 */}
@@ -74,7 +78,7 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
                         size={20}
                       />
                       <span className="meta-mono text-[11px] text-[var(--muted-foreground)] truncate">
-                        {author?.displayName ?? '匿名'}
+                        {author?.displayName ?? t('anonymous')}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
@@ -102,29 +106,29 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
  * 根据帖子是否有回复、点赞等状态生成自然的描述性文案，
  * 提升 Feed 的社交感。
  */
-function generateSocialCopy(topic: CommunityPost): string {
+function generateSocialCopy(topic: CommunityPost, t: TFn): string {
   const parts: string[] = [];
 
   if (topic.replyCount > 0) {
     if (topic.replyCount >= 20) {
-      parts.push('讨论热烈');
+      parts.push(t('socialHotDiscussion'));
     } else if (topic.replyCount >= 5) {
-      parts.push('多人参与讨论');
+      parts.push(t('socialManyParticipants'));
     } else {
-      parts.push('已有回复');
+      parts.push(t('socialHasReply'));
     }
   } else {
-    parts.push('期待你的参与');
+    parts.push(t('socialExpectParticipation'));
   }
 
   if (topic.likeCount > 0) {
     if (topic.likeCount >= 10) {
-      parts.push(`${topic.likeCount} 人点赞`);
+      parts.push(t('socialLikeCount', { count: topic.likeCount }));
     }
   }
 
   if (topic.viewCount > 100) {
-    parts.push('热门浏览');
+    parts.push(t('socialPopularView'));
   }
 
   return parts.join(' · ') + (parts.length > 0 ? '。' : '');

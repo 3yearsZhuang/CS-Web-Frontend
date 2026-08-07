@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { FeedItemCard } from './feed-item-card';
 import { EmptyState, SectionLoading } from '@/components';
 import type { FeedItem, CommunityPost, PostKind } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 const PAGE_SIZE = 20;
 
@@ -27,6 +28,7 @@ export function CommunityPostList({
   emptyText = '// 暂无内容',
   sortAtField = 'updatedAt',
 }: CommunityPostListProps) {
+  const t = useTranslations('forum');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function CommunityPostList({
     setError(null);
     fetch(`${endpoint}${endpoint.includes('?') ? '&' : '?'}page=${page}&pageSize=${PAGE_SIZE}`, { cache: 'no-store' })
       .then(async (res) => {
-        if (!res.ok) throw new Error('加载失败');
+        if (!res.ok) throw new Error(t('postListLoadFailed'));
         const json = await res.json();
         const list: CommunityPost[] =
           Array.isArray(json.items) ? json.items
@@ -56,7 +58,7 @@ export function CommunityPostList({
         setTotalPages(tPages);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : '加载失败');
+        if (!cancelled) setError(err instanceof Error ? err.message : t('postListLoadFailed'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -81,7 +83,7 @@ export function CommunityPostList({
         className="py-16"
         action={
           <Link href="/community" className="meta-mono text-[var(--primary)] underline-grow">
-            浏览全部内容 →
+            {t('postListBrowseAll')}
           </Link>
         }
       />

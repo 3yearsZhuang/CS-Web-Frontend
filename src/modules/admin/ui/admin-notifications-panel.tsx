@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { Button, SectionLoading } from '@/components';
@@ -39,6 +40,7 @@ interface AdminNotificationsPanelProps {
 /** 管理员群发通知面板 — 发送通知给所有活跃用户，查看群发历史 */
 export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanelProps) {
   const router = useRouter();
+  const t = useTranslations('adminNotifications');
   const { pushToast } = useToast();
 
   // 群发表单
@@ -94,15 +96,15 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
   const handleNotifSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!notifForm.title.trim()) {
-      setNotifError('标题不能为空');
+      setNotifError(t('titleEmpty'));
       return;
     }
     if (notifForm.title.length > NOTIF_TITLE_MAX) {
-      setNotifError('标题不能超过 120 字符');
+      setNotifError(t('titleTooLong'));
       return;
     }
     if (notifForm.content.length > NOTIF_CONTENT_MAX) {
-      setNotifError('内容不能超过 500 字符');
+      setNotifError(t('contentTooLong'));
       return;
     }
 
@@ -123,15 +125,15 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
         error?: string;
       } | null;
       if (!res.ok || !data?.ok) {
-        setNotifError(data?.error || '发送失败，请稍后再试');
+        setNotifError(data?.error || t('sendFailed'));
         return;
       }
-      pushToast('success', `已群发通知给 ${data.count ?? 0} 位用户`);
+      pushToast('success', t('sendSuccess', { count: data.count ?? 0 }));
       setNotifForm({ title: '', content: '' });
       setNotifError(null);
       fetchNotifHistory();
     } catch {
-      setNotifError('网络错误，请稍后再试');
+      setNotifError(t('networkError'));
     } finally {
       setNotifSaving(false);
     }
@@ -146,11 +148,11 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
         <div className="border-t border-[var(--border)] border-b border-[var(--border)] py-5 sm:py-6 mb-0">
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-8">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-2">[ 群发 / Broadcast ]</div>
+              <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('panelLabel')}</div>
               <p className="text-[13px] sm:text-[14px] text-[var(--foreground)] leading-[1.7]">
-                群发通知会即时推送给所有
-                <span className="text-[var(--primary)] meta-mono"> 活跃用户 </span>
-                （未禁用）。新活动发布时也会自动生成一条活动通知，无需手动触发。
+                {t('panelDescBefore')}
+                <span className="text-[var(--primary)] meta-mono">{t('panelDescHighlight')}</span>
+                {t('panelDescAfter')}
               </p>
             </div>
             <div className="col-span-12 md:col-span-4 flex md:justify-end">
@@ -161,7 +163,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
                 onClick={() => fetchNotifHistory()}
                 disabled={notifHistoryLoading}
               >
-                {notifHistoryLoading ? '刷新中...' : '刷新历史 / Refresh'}
+                {notifHistoryLoading ? t('refreshing') : t('refreshHistoryBtn')}
               </Button>
             </div>
           </div>
@@ -176,7 +178,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
         >
           <div>
             <div className="meta-mono mb-2 text-[var(--muted-foreground)]">
-              [ 标题 / Title ]
+              {t('fieldTitle')}
             </div>
             <input
               type="text"
@@ -193,7 +195,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
 
           <div>
             <div className="meta-mono mb-2 text-[var(--muted-foreground)]">
-              [ 正文 / Content ]
+              {t('fieldContent')}
             </div>
             <textarea
               value={notifForm.content}
@@ -201,7 +203,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
               rows={5}
               onChange={(e) => setNotifForm((f) => ({ ...f, content: e.target.value }))}
               className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-              placeholder="通知正文（可选，最多 500 字符，支持纯文本）"
+              placeholder={t('contentPlaceholder')}
             />
             <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">
               {notifForm.content.length}/{NOTIF_CONTENT_MAX}
@@ -216,7 +218,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
 
           <div className="flex items-center gap-4">
             <Button type="submit" disabled={notifSaving} loading={notifSaving}>
-              {notifSaving ? '发送中 / Sending...' : '群发 / Broadcast →'}
+              {notifSaving ? t('sending') : t('broadcastBtn')}
             </Button>
             <button
               type="button"
@@ -226,7 +228,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
               }}
               className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
             >
-              清空
+              {t('clearBtn')}
             </button>
           </div>
         </form>
@@ -238,7 +240,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
           <div className="flex items-center justify-between mb-6">
             <div className="meta-mono text-[var(--muted-foreground)]">[ Recent Broadcasts ]</div>
             <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-              {notifHistory.length} 条记录
+              {t('recordsCount', { count: notifHistory.length })}
             </div>
           </div>
 
@@ -246,7 +248,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
             <SectionLoading label="Loading..." />
           ) : notifHistory.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">暂无群发记录</p>
+              <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">{t('noHistory')}</p>
             </div>
           ) : (
             <div className="border-t border-[var(--border)]">
@@ -271,7 +273,7 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
                     )}
                   </div>
                   <div className="col-span-6 md:col-span-2 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {h.recipientCount} 收件人
+                    {t('recipientsCount', { count: h.recipientCount })}
                   </div>
                   <div className="col-span-6 md:col-span-2 meta-mono text-[11px] text-[var(--muted-foreground)] text-right">
                     {formatDate(h.createdAt)}

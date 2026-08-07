@@ -8,6 +8,7 @@
  */
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { Button } from '@/components';
@@ -15,6 +16,7 @@ import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { ComposeState } from './use-compose';
 
 export function ComposeForm(props: ComposeState) {
+  const t = useTranslations('communityNew');
   const {
     categories,
     categoryId,
@@ -40,7 +42,7 @@ export function ComposeForm(props: ComposeState) {
       {/* 左侧章节标记 */}
       <div className="col-span-12 md:col-span-2 mb-6 md:mb-0">
         <div className="section-marker">[ 01 ]</div>
-        <div className="meta-mono mt-2">表单 / Form</div>
+        <div className="meta-mono mt-2">{t('formLabel')}</div>
       </div>
 
       {/* 右侧表单 */}
@@ -62,7 +64,7 @@ export function ComposeForm(props: ComposeState) {
               disabled={categories.length === 0}
             >
               {categories.length === 0 ? (
-                <option value="">无可用版块</option>
+                <option value="">{t('noCategories')}</option>
               ) : (
                 categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
@@ -104,7 +106,7 @@ export function ComposeForm(props: ComposeState) {
               setFieldErrors((f) => ({ ...f, title: undefined }));
             }}
             maxLength={LIMITS.TITLE_MAX}
-            placeholder="简明扼要地描述主题..."
+            placeholder={t('titlePlaceholder')}
             className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
           />
           <div className="flex items-center justify-between mt-2">
@@ -128,7 +130,7 @@ export function ComposeForm(props: ComposeState) {
               setContent(v);
               setFieldErrors((f) => ({ ...f, content: undefined }));
             }}
-            placeholder="在此输入正文...（支持 Markdown 语法，可上传图片）"
+            placeholder={t('contentPlaceholder')}
             minHeight={360}
           />
           <div className="flex items-center justify-between mt-2">
@@ -151,7 +153,7 @@ export function ComposeForm(props: ComposeState) {
         {/* 操作按钮 */}
         <div className="flex flex-wrap gap-3 pt-4 border-t border-[var(--border)]">
           <Button type="submit" disabled={submitting} className="px-8 py-3 font-mono uppercase tracking-wider text-[12px]">
-            {submitting ? 'Posting...' : '发布内容 →'}
+            {submitting ? t('posting') : t('submit')}
           </Button>
           <Button
             variant="outline"
@@ -163,22 +165,22 @@ export function ComposeForm(props: ComposeState) {
                 return;
               }
               const confirmed = await confirm({
-                title: '清空内容',
-                message: '确定要清空所有内容吗？',
+                title: t('clearTitle'),
+                message: t('clearMessage'),
                 variant: 'warning',
-                confirmLabel: '确认清空',
+                confirmLabel: t('clearConfirm'),
               });
               if (confirmed) clearForm();
             }}
             disabled={submitting}
           >
-            清空
+            {t('clearBtn')}
           </Button>
           <Link
             href="/community"
             className="px-6 py-3 border border-[var(--border)] text-[var(--muted-foreground)] font-mono uppercase tracking-wider text-[12px] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber flex items-center"
           >
-            取消
+            {t('cancelBtn')}
           </Link>
         </div>
       </div>

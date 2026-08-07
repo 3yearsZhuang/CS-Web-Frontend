@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bell } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
@@ -97,6 +98,7 @@ const itemVariants = {
 
 /** 通知铃铛组件 — 轮询获取未读通知数，点击打开通知面板 */
 export function NotificationBell() {
+  const t = useTranslations('notifications');
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -237,9 +239,9 @@ export function NotificationBell() {
         type="button"
         onClick={handleToggle}
         className="relative flex items-center justify-center w-8 h-8 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
-        aria-label="通知"
+        aria-label={t('ariaLabel')}
         aria-expanded={open}
-        title="通知"
+        title={t('ariaLabel')}
       >
         <Bell className="w-3.5 h-3.5" strokeWidth={1.5} />
         {unreadCount > 0 && (
@@ -266,7 +268,7 @@ export function NotificationBell() {
                 [ Notifications ]
               </div>
               <span className="meta-mono text-[10px] text-[var(--primary)]">
-                {unreadCount} 未读
+                {t('unread', { count: unreadCount })}
               </span>
             </motion.div>
 
@@ -276,14 +278,14 @@ export function NotificationBell() {
                   variants={itemVariants}
                   className="px-4 py-8 text-center text-[var(--muted-foreground)] text-[12px]"
                 >
-                  加载中...
+                  {t('loading')}
                 </motion.div>
               ) : notifications.length === 0 ? (
                 <motion.div
                   variants={itemVariants}
                   className="px-4 py-8 text-center text-[var(--muted-foreground)] text-[12px]"
                 >
-                  暂无通知
+                  {t('empty')}
                 </motion.div>
               ) : (
                 notifications.map((notification) => {
@@ -330,7 +332,7 @@ export function NotificationBell() {
                 className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
                 onClick={() => setOpen(false)}
               >
-                查看全部 →
+                {t('viewAll')}
               </Link>
               <button
                 type="button"
@@ -338,7 +340,7 @@ export function NotificationBell() {
                 disabled={unreadCount === 0}
                 className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                全部已读
+                {t('markAllRead')}
               </button>
             </motion.div>
           </motion.div>

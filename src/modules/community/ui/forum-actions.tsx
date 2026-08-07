@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
+import { useTranslations } from 'next-intl';
 import { ReportButton } from './report-button';
 
 type TargetType = 'topic' | 'reply';
@@ -72,6 +73,7 @@ export function ForumActions({
   showReport = false,
   className = '',
 }: ForumActionsProps) {
+  const t = useTranslations('forum');
   const [likeBusy, setLikeBusy] = useState(false);
   const [favBusy, setFavBusy] = useState(false);
   const [editBusy, setEditBusy] = useState(false);
@@ -118,10 +120,10 @@ export function ForumActions({
   const handleDelete = async () => {
     if (!canEdit || deleteBusy) return;
     const confirmed = await confirm({
-      title: '删除',
-      message: '确认删除？此操作不可恢复。',
+      title: t('confirmDeleteTitle'),
+      message: t('confirmDeleteMessage'),
       variant: 'danger',
-      confirmLabel: '确认删除',
+      confirmLabel: t('confirmDeleteLabel'),
     });
     if (!confirmed) return;
     setDeleteBusy(true);
@@ -140,7 +142,7 @@ export function ForumActions({
     <div
       className={`flex flex-wrap items-center gap-2 ${className}`}
       role="toolbar"
-      aria-label="论坛内容操作"
+      aria-label={t('contentActions')}
     >
       {/* 点赞 */}
       <Button
@@ -153,7 +155,7 @@ export function ForumActions({
             ? 'border-[var(--primary)] !text-[var(--primary)] bg-[var(--primary)]/5'
             : ''
         }`}
-        title={isLoggedIn ? (isLikedByMe ? '取消点赞' : '点赞') : '请先登录'}
+        title={isLoggedIn ? (isLikedByMe ? t('unlike') : t('like')) : t('pleaseLoginTitle')}
       >
         <span aria-hidden="true">{isLikedByMe ? '♥' : '♡'}</span>
         <span className="tabular-nums">{likeCount}</span>
@@ -171,7 +173,7 @@ export function ForumActions({
               ? 'border-[var(--primary)] !text-[var(--primary)] bg-[var(--primary)]/5'
               : ''
           }`}
-          title={isLoggedIn ? (isFavoritedByMe ? '取消收藏' : '收藏') : '请先登录'}
+          title={isLoggedIn ? (isFavoritedByMe ? t('unfavorite') : t('favorite')) : t('pleaseLoginTitle')}
         >
           <span aria-hidden="true">{isFavoritedByMe ? '★' : '☆'}</span>
           <span className="tabular-nums">{favoriteCount}</span>
@@ -190,7 +192,7 @@ export function ForumActions({
           onClick={onReply}
           disabled={!isLoggedIn}
           className={`flex items-center font-mono uppercase tracking-wider ${btnCls}`}
-          title={isLoggedIn ? '回复' : '请先登录'}
+          title={isLoggedIn ? t('replyListTitle') : t('pleaseLoginTitle')}
         >
           Reply
         </Button>
@@ -216,7 +218,7 @@ export function ForumActions({
           onClick={handleDelete}
           disabled={deleteBusy}
           className={`flex items-center font-mono uppercase tracking-wider ${btnCls}`}
-          title="删除"
+          title={t('confirmDeleteTitle')}
         >
           {deleteBusy ? '...' : 'Del'}
         </Button>

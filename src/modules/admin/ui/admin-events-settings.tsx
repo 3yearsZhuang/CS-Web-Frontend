@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
@@ -33,18 +34,18 @@ interface SettingField {
 }
 
 const FIELDS: SettingField[] = [
-  { key: 'title_max', label: '标题最大长度', desc: '活动标题字符上限' },
-  { key: 'desc_max', label: '描述最大长度', desc: '活动简介字符上限' },
-  { key: 'month_max', label: '月份最大长度', desc: '月份字段字符上限' },
-  { key: 'date_max', label: '日期最大长度', desc: '日期字段字符上限' },
-  { key: 'year_max', label: '年份最大长度', desc: '年份字段字符上限' },
-  { key: 'tag_max', label: '标签最大长度', desc: '单个标签字符上限' },
-  { key: 'tags_max', label: '标签最大数量', desc: '每活动标签数上限' },
-  { key: 'content_max', label: '内容最大长度', desc: 'Markdown 详情字符上限' },
-  { key: 'default_capacity', label: '默认容量', desc: '新建活动默认容量 (0=不限)' },
-  { key: 'max_capacity', label: '最大容量', desc: '单活动最大容量限制' },
-  { key: 'default_page_size', label: '默认每页数量', desc: '活动列表默认每页条数' },
-  { key: 'max_page_size', label: '最大每页数量', desc: '活动列表每页最大条数' },
+  { key: 'title_max', label: 'settingTitleMax', desc: 'settingTitleMaxDesc' },
+  { key: 'desc_max', label: 'settingDescMax', desc: 'settingDescMaxDesc' },
+  { key: 'month_max', label: 'settingMonthMax', desc: 'settingMonthMaxDesc' },
+  { key: 'date_max', label: 'settingDateMax', desc: 'settingDateMaxDesc' },
+  { key: 'year_max', label: 'settingYearMax', desc: 'settingYearMaxDesc' },
+  { key: 'tag_max', label: 'settingTagMax', desc: 'settingTagMaxDesc' },
+  { key: 'tags_max', label: 'settingTagsMax', desc: 'settingTagsMaxDesc' },
+  { key: 'content_max', label: 'settingContentMax', desc: 'settingContentMaxDesc' },
+  { key: 'default_capacity', label: 'settingDefaultCapacity', desc: 'settingDefaultCapacityDesc' },
+  { key: 'max_capacity', label: 'settingMaxCapacity', desc: 'settingMaxCapacityDesc' },
+  { key: 'default_page_size', label: 'settingDefaultPageSize', desc: 'settingDefaultPageSizeDesc' },
+  { key: 'max_page_size', label: 'settingMaxPageSize', desc: 'settingMaxPageSizeDesc' },
 ];
 
 /** 活动模块设置面板 Props */
@@ -58,6 +59,7 @@ export interface AdminEventsSettingsProps {
 /** 活动模块设置面板 — 内联可折叠，支持逐项设置活动字段长度/容量/分页等参数 */
 export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps) {
   const router = useRouter();
+  const t = useTranslations('adminEvents');
 
   const [settings, setSettings] = useState<EventSettings | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,13 +85,13 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
       }
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || '加载失败');
+        throw new Error(data?.error || t('loadFailed'));
       }
       const data = (await res.json()) as { settings: EventSettings };
       setSettings(data.settings);
       setEditValues({});
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -142,7 +144,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
         | { settings: EventSettings; error?: string }
         | null;
       if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || '保存失败');
+        throw new Error(data?.error || t('saveFailed'));
       }
       setSettings(data.settings);
       setEditValues((prev) => {
@@ -150,9 +152,9 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
         delete next[key];
         return next;
       });
-      showSuccess('已保存');
+      showSuccess(t('saved'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存失败');
+      setError(err instanceof Error ? err.message : t('saveFailed'));
     } finally {
       setSaving(null);
     }
@@ -169,7 +171,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
         | { settings: EventSettings; error?: string }
         | null;
       if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || '重置失败');
+        throw new Error(data?.error || t('resetFailed'));
       }
       setSettings(data.settings);
       setEditValues((prev) => {
@@ -177,9 +179,9 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
         delete next[key];
         return next;
       });
-      showSuccess('已重置为默认值');
+      showSuccess(t('resetToDefault'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '重置失败');
+      setError(err instanceof Error ? err.message : t('resetFailed'));
     } finally {
       setSaving(null);
     }
@@ -205,13 +207,13 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
         | { settings: EventSettings; error?: string }
         | null;
       if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || '保存失败');
+        throw new Error(data?.error || t('saveFailed'));
       }
       setSettings(data.settings);
       setEditValues({});
-      showSuccess('全部设置已保存');
+      showSuccess(t('allSaved'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存失败');
+      setError(err instanceof Error ? err.message : t('saveFailed'));
     } finally {
       setSaving(null);
     }
@@ -236,7 +238,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                   <div className="flex items-center gap-3">
                     <div className="section-marker">[ 99 ]</div>
                     <h3 className="display-serif text-[clamp(18px,2.5vw,24px)] text-[var(--foreground)] leading-[1.1]">
-                      活动设置
+                      {t('settingsTitle')}
                       <span className="display-serif italic text-[var(--muted-foreground)] ml-2 text-[clamp(12px,1.4vw,16px)]">
                         / Event Settings
                       </span>
@@ -251,14 +253,14 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                         disabled={saving === '__all__'}
                         loading={saving === '__all__'}
                       >
-                        {saving === '__all__' ? 'Saving...' : `保存全部 (${dirtyCount}) →`}
+                        {saving === '__all__' ? 'Saving...' : t('saveAll', { count: dirtyCount })}
                       </Button>
                     )}
                     <button
                       type="button"
                       onClick={onClose}
                       className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[14px] leading-none"
-                      aria-label="关闭设置"
+                      aria-label={t('closeSettings')}
                     >
                       ✕
                     </button>
@@ -269,7 +271,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                   <div className="py-12 flex items-center justify-center">
                     <div className="flex items-center gap-3">
                       <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-                      <span className="meta-mono text-[var(--muted-foreground)]">加载设置中...</span>
+                      <span className="meta-mono text-[var(--muted-foreground)]">{t('loadingSettings')}</span>
                     </div>
                   </div>
                 )}
@@ -282,7 +284,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                       onClick={() => setError(null)}
                       className="focus-amber ml-3 underline"
                     >
-                      关闭
+                      {t('close')}
                     </button>
                   </div>
                 )}
@@ -310,10 +312,10 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                             <div className="sm:col-span-4">
                               <div className="meta-mono text-[var(--muted-foreground)] text-[11px]">
-                                {field.label}
+                                {t(field.label)}
                               </div>
                               <div className="text-[10px] font-mono text-[var(--muted-foreground)]/60 mt-0.5">
-                                {field.desc}
+                                {t(field.desc)}
                               </div>
                             </div>
                             <div className="sm:col-span-3">

@@ -4,6 +4,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { EASE } from '@/shared/utils/ui-constants';
 import { isPastDate } from '@/shared/utils/event-date';
 import { EmptyState, SectionLoading } from '@/components';
@@ -33,6 +34,7 @@ export function YearAccordionTimeline({
   loading,
   onToggleYear,
 }: YearAccordionTimelineProps) {
+  const t = useTranslations('eventsAdmin');
   return (
     <div className="relative">
       {/* 垂直铁路线 — 桌面端居中，移动端左侧 */}
@@ -41,7 +43,7 @@ export function YearAccordionTimeline({
       {loading ? (
         <SectionLoading label="Loading..." />
       ) : uncategorized.length === 0 && yearGroups.length === 0 ? (
-        <EmptyState message="暂无活动" className="py-12" />
+        <EmptyState message={t('noEvents')} className="py-12" />
       ) : (
         <>
           {/* 未分类活动 — 直接平铺在最上方，不包裹年份手风琴 */}
@@ -118,7 +120,7 @@ export function YearAccordionTimeline({
                   {/* 移动端统计 */}
                   <div className="md:hidden flex items-center gap-2 pl-12">
                     <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                      {group.events.length} 活动
+                      {t('eventsCountMobile', { count: group.events.length })}
                     </span>
                     <span className={`meta-mono text-[10px] transition-transform duration-300 ${
                       isExpanded ? 'rotate-180' : ''

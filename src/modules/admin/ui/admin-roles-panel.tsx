@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { RolePermissionMatrix } from './role-permission-matrix';
@@ -23,6 +24,7 @@ interface AdminRolesPanelProps {
 export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
   const router = useRouter();
   const { pushToast } = useToast();
+  const t = useTranslations('adminRoles');
 
   // 数据
   const [roles, setRoles] = useState<RoleRecord[]>([]);
@@ -67,7 +69,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '加载失败');
+        throw new Error(data.error || t('loadFailed'));
       }
       const data = (await res.json()) as { roles: RoleRecord[] };
       setRoles(data.roles);
@@ -79,7 +81,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
         setDirty(false);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载失败');
+      setError(e instanceof Error ? e.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -144,16 +146,16 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '保存失败');
+        throw new Error(data.error || t('saveFailed'));
       }
       const data = (await res.json()) as { role: RoleRecord };
       setRoles((prev) =>
         prev.map((r) => (r.key === data.role.key ? data.role : r)),
       );
       setDirty(false);
-      pushToast('success', '权限已更新');
+      pushToast('success', t('permissionsUpdated'));
     } catch (e) {
-      pushToast('error', e instanceof Error ? e.message : '保存失败');
+      pushToast('error', e instanceof Error ? e.message : t('saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -177,7 +179,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
   const handleCreate = async () => {
     setCreateError(null);
     if (!createForm.key.trim() || !createForm.displayName.trim()) {
-      setCreateError('角色 key 与名称必填');
+      setCreateError(t('keyAndNameRequired'));
       return;
     }
     setCreateSaving(true);
@@ -194,15 +196,15 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '创建失败');
+        throw new Error(data.error || t('createFailed'));
       }
       const data = (await res.json()) as { role: RoleRecord };
       setRoles((prev) => [...prev, data.role]);
       setSelectedRoleKey(data.role.key);
       setModal({ type: 'none' });
-      pushToast('success', `角色 ${data.role.displayName} 已创建`);
+      pushToast('success', t('roleCreated', { name: data.role.displayName }));
     } catch (e) {
-      setCreateError(e instanceof Error ? e.message : '创建失败');
+      setCreateError(e instanceof Error ? e.message : t('createFailed'));
     } finally {
       setCreateSaving(false);
     }
@@ -234,16 +236,16 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '更新失败');
+        throw new Error(data.error || t('updateFailed'));
       }
       const data = (await res.json()) as { role: RoleRecord };
       setRoles((prev) =>
         prev.map((r) => (r.key === data.role.key ? data.role : r)),
       );
       setModal({ type: 'none' });
-      pushToast('success', '角色已更新');
+      pushToast('success', t('roleUpdated'));
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : '更新失败');
+      setEditError(e instanceof Error ? e.message : t('updateFailed'));
     } finally {
       setEditSaving(false);
     }
@@ -261,16 +263,16 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '删除失败');
+        throw new Error(data.error || t('deleteFailed'));
       }
       setRoles((prev) => prev.filter((r) => r.key !== modal.role.key));
       if (selectedRoleKey === modal.role.key) {
         setSelectedRoleKey(null);
       }
       setModal({ type: 'none' });
-      pushToast('success', '角色已删除');
+      pushToast('success', t('roleDeleted'));
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : '删除失败');
+      setEditError(e instanceof Error ? e.message : t('deleteFailed'));
     } finally {
       setEditSaving(false);
     }
@@ -284,7 +286,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
         <div className="flex items-center gap-3 py-12">
           <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
           <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">
-            加载角色数据 / Loading roles...
+            {t('loadingRoles')}
           </span>
         </div>
       </RevealItem>
@@ -296,7 +298,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
       <RevealItem>
         <div className="py-12 text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">
-            [ 加载失败 / Load Error ]
+            {t('loadErrorTitle')}
           </div>
           <p className="text-[13px] text-[var(--muted-foreground)] mb-6">{error}</p>
           <button
@@ -308,7 +310,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
             }}
             className="meta-mono text-[12px] text-[var(--primary)] underline-grow"
           >
-            重试 / Retry
+            {t('retry')}
           </button>
         </div>
       </RevealItem>
@@ -324,11 +326,10 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="meta-mono text-[12px] text-[var(--muted-foreground)] mb-2">
-              [ 00 / Roles & Permissions ]
+              {t('sectionLabel')}
             </div>
             <p className="text-[13px] text-[var(--muted-foreground)] max-w-2xl">
-              管理系统所有角色的权限组合。内置角色（root/admin/user 等）的权限规则不可修改，
-              但可创建自定义角色并精确分配权限点，为后续扩展提供基础。
+              {t('panelDesc')}
             </p>
           </div>
           <button
@@ -336,7 +337,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
             onClick={openCreateModal}
             className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors focus-amber"
           >
-            + 创建角色 / New Role
+            {t('createRoleBtn')}
           </button>
         </div>
 
@@ -344,7 +345,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
           {/* 左侧：角色列表 */}
           <aside className="space-y-2">
             <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-3">
-              角色列表 ({roles.length})
+              {t('rolesList', { count: roles.length })}
             </div>
             {roles.map((role) => {
               const isActive = role.key === selectedRoleKey;
@@ -372,11 +373,11 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
                   <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex items-center gap-3">
                     <span>{role.key}</span>
                     <span>·</span>
-                    <span>{role.permissions.length} 项权限</span>
+                    <span>{t('permissionsCount', { count: role.permissions.length })}</span>
                     {role.userCount !== undefined && role.userCount > 0 && (
                       <>
                         <span>·</span>
-                        <span>{role.userCount} 用户</span>
+                        <span>{t('usersCount', { count: role.userCount })}</span>
                       </>
                     )}
                   </div>
@@ -403,7 +404,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
             ) : (
               <div className="border border-dashed border-[var(--border)] py-16 text-center">
                 <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">
-                  选择左侧角色查看权限配置 / Select a role
+                  {t('selectRoleHint')}
                 </p>
               </div>
             )}

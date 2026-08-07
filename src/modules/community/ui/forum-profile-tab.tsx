@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ForumTopicItem } from './forum-topic-item';
 import { formatDateTime } from '@/shared/utils/utils';
 import { SectionLoading } from '@/components';
@@ -41,6 +42,7 @@ function truncateContent(content: string, maxLen = 140): string {
 }
 
 export function ProfileForumTab({ userId }: ProfileForumTabProps) {
+  const t = useTranslations('communityProfile');
   const [activeSubTab, setActiveSubTab] = useState<ForumSubTab>('topics');
 
   // 主题列表（topics / favorites 共用）
@@ -73,7 +75,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
 
       const res = await fetch(url);
       if (!res.ok) {
-        throw new Error('加载失败');
+        throw new Error(t('loadFailed'));
       }
 
       if (activeSubTab === 'replies') {
@@ -90,7 +92,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
         setTotalPages(data.totalPages ?? 0);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
       setTopics([]);
       setReplies([]);
       setTotal(0);
@@ -141,23 +143,23 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
         <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-[var(--border)]">
           <div className="meta-mono text-[var(--muted-foreground)]">
             {loading ? (
-              <span>{'// 加载中...'}</span>
+              <span>{t('loading')}</span>
             ) : error ? (
               <span className="text-[var(--destructive)]">{'// '}{error}</span>
             ) : total === 0 ? (
               <span>
                 {'// '}{activeSubTab === 'topics'
-                  ? '暂无发布的主题'
+                  ? t('noTopics')
                   : activeSubTab === 'replies'
-                    ? '暂无发布的回复'
-                    : '暂无收藏的主题'}
+                    ? t('noReplies')
+                    : t('noFavorites')}
               </span>
             ) : (
               <span>
-                {'// 共 '}<span className="text-[var(--foreground)] tabular-nums">
+                {t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">
                   {total}
                 </span>{' '}
-                条{activeSubTab === 'topics' ? '主题' : activeSubTab === 'replies' ? '回复' : '收藏'}
+                {t('countUnit')}{activeSubTab === 'topics' ? t('unitTopics') : activeSubTab === 'replies' ? t('unitReplies') : t('unitFavorites')}
               </span>
             )}
           </div>
@@ -166,7 +168,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
               href="/community/new"
               className="meta-mono text-[var(--primary)] underline-grow shrink-0 ml-4"
             >
-              发新主题 →
+              {t('newTopicLink')}
             </Link>
           )}
           {activeSubTab === 'favorites' && (
@@ -174,7 +176,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
               href="/community"
               className="meta-mono text-[var(--primary)] underline-grow shrink-0 ml-4"
             >
-              浏览版块 →
+              {t('browseCategories')}
             </Link>
           )}
         </div>
@@ -194,14 +196,14 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
               </div>
               <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
                 {activeSubTab === 'replies'
-                  ? '你还没有发布过回复。'
-                  : '暂无内容。'}
+                  ? t('noRepliesDesc')
+                  : t('noContentDesc')}
               </p>
               <Link
                 href="/community"
                 className="meta-mono text-[var(--primary)] underline-grow"
               >
-                浏览社区 →
+                {t('browseCommunity')}
               </Link>
             </div>
           ) : (
@@ -226,7 +228,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
                         href={topicHref}
                         className="display-serif text-[16px] sm:text-[18px] text-[var(--foreground)] hover:text-[var(--primary)] transition-colors line-clamp-1 flex-1 min-w-0"
                       >
-                        {reply.topic?.title ?? '（主题已删除）'}
+                        {reply.topic?.title ?? t('topicDeleted')}
                       </Link>
                       {/* 时间 */}
                       <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px] shrink-0">
@@ -252,7 +254,7 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
                       {reply.parentReplyId && (
                         <>
                           <span>·</span>
-                          <span>楼中楼</span>
+                          <span>{t('nestedReply')}</span>
                         </>
                       )}
                     </div>
@@ -268,14 +270,14 @@ export function ProfileForumTab({ userId }: ProfileForumTabProps) {
             </div>
             <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
               {activeSubTab === 'topics'
-                ? '你还没有发布过主题。'
-                : '你还没有收藏过主题。'}
+                ? t('noTopicsDesc')
+                : t('noFavoritesDesc')}
             </p>
             <Link
               href="/community"
               className="meta-mono text-[var(--primary)] underline-grow"
             >
-              浏览论坛 →
+              {t('browseForum')}
             </Link>
           </div>
         ) : (

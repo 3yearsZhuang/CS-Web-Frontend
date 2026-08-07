@@ -5,6 +5,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 /** 头像组件 Props */
 export interface AvatarProps {
@@ -46,6 +47,8 @@ export function Avatar({
   className = '',
 }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
+  const t = useTranslations('common');
+  const tu = useTranslations('userMenu');
   const showImage = avatarUrl && avatarType !== 'initial' && !imgError;
   const initial = getInitial(displayName || '', email);
 
@@ -66,12 +69,12 @@ export function Avatar({
         style={baseStyle}
         onClick={onClick}
         role={clickable ? 'button' : undefined}
-        aria-label={clickable ? '用户菜单' : undefined}
+        aria-label={clickable ? tu('menuAria') : undefined}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- 头像 URL 为用户上传，next/image 需配置 remotePatterns */}
         <img
           src={avatarUrl}
-          alt="头像"
+          alt={t('avatarAlt')}
           className="w-full h-full object-cover"
           onError={() => setImgError(true)}
         />
@@ -89,7 +92,7 @@ export function Avatar({
       }}
       onClick={onClick}
       role={clickable ? 'button' : undefined}
-      aria-label={clickable ? '用户菜单' : undefined}
+      aria-label={clickable ? tu('menuAria') : undefined}
     >
       {initial}
     </div>

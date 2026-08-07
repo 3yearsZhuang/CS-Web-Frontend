@@ -6,25 +6,26 @@
 
 import { useRef, useState, useCallback } from 'react';
 import { MarkdownEditorBase, type MarkdownEditorBaseProps } from './forum-markdown-editor-base';
+import { useTranslations } from 'next-intl';
 
 /** 工具栏按钮配置 */
 interface ToolbarButton {
-  title: string;
+  titleKey: string;
   label: string;
   wrap: [string, string];
 }
 
 const TOOLBAR_BUTTONS: ToolbarButton[] = [
-  { title: '加粗', label: 'B', wrap: ['**', '**'] },
-  { title: '斜体', label: 'I', wrap: ['*', '*'] },
-  { title: '删除线', label: 'S', wrap: ['~~', '~~'] },
-  { title: '标题', label: 'H', wrap: ['## ', ''] },
-  { title: '链接', label: '🔗', wrap: ['[', '](https://)'] },
-  { title: '行内代码', label: '</>', wrap: ['`', '`'] },
-  { title: '代码块', label: '{ }', wrap: ['\n```\n', '\n```\n'] },
-  { title: '引用', label: '❝', wrap: ['\n> ', ''] },
-  { title: '列表', label: '•', wrap: ['\n- ', ''] },
-  { title: '有序列表', label: '1.', wrap: ['\n1. ', ''] },
+  { titleKey: 'editorBold', label: 'B', wrap: ['**', '**'] },
+  { titleKey: 'editorItalic', label: 'I', wrap: ['*', '*'] },
+  { titleKey: 'editorStrikethrough', label: 'S', wrap: ['~~', '~~'] },
+  { titleKey: 'editorHeading', label: 'H', wrap: ['## ', ''] },
+  { titleKey: 'editorLink', label: '🔗', wrap: ['[', '](https://)'] },
+  { titleKey: 'editorInlineCode', label: '</>', wrap: ['`', '`'] },
+  { titleKey: 'editorCodeBlock', label: '{ }', wrap: ['\n```\n', '\n```\n'] },
+  { titleKey: 'editorQuote', label: '❝', wrap: ['\n> ', ''] },
+  { titleKey: 'editorList', label: '•', wrap: ['\n- ', ''] },
+  { titleKey: 'editorOrderedList', label: '1.', wrap: ['\n1. ', ''] },
 ];
 
 interface MarkdownEditorProps extends Omit<MarkdownEditorBaseProps, 'rows' | 'textareaClassName'> {
@@ -38,6 +39,7 @@ export function MarkdownEditor({
   minHeight = 240,
   className = '',
 }: MarkdownEditorProps) {
+  const t = useTranslations('forum');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function MarkdownEditor({
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || '上传失败');
+        throw new Error(data.error || t('editorUploadFailed'));
       }
       const ta = document.activeElement as HTMLTextAreaElement | null;
       const insertText = `\n![${file.name}](${data.url})\n`;
@@ -101,7 +103,7 @@ export function MarkdownEditor({
         onChange(value + insertText);
       }
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : '上传失败');
+      setUploadError(err instanceof Error ? err.message : t('editorUploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -122,9 +124,9 @@ export function MarkdownEditor({
       <div className="flex items-center gap-1 px-2 sm:px-4 py-2 overflow-x-auto border-b border-[var(--border)]">
         {TOOLBAR_BUTTONS.map((btn) => (
           <button
-            key={btn.title}
+            key={btn.titleKey}
             type="button"
-            title={btn.title}
+            title={t(btn.titleKey)}
             onClick={() => handleToolbar(btn)}
             className="shrink-0 w-8 h-8 flex items-center justify-center text-[12px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber"
           >
@@ -134,12 +136,12 @@ export function MarkdownEditor({
         {/* 图片上传按钮 */}
         <button
           type="button"
-          title="上传图片"
+          title={t('editorUploadImage')}
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           className="shrink-0 w-8 h-8 flex items-center justify-center text-[14px] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber disabled:opacity-50"
         >
-          {uploading ? '···' : '🖼'}
+          {uploading ? t('editorUploading') : '🖼'}
         </button>
         <input
           ref={fileInputRef}

@@ -12,6 +12,9 @@ import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/avatar';
 import { formatDateTime, formatDate, formatRelativeTime } from '@/shared/utils/utils';
 import type { FeedItem } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
+
+type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 interface FeedItemCardProps {
   item: FeedItem;
@@ -31,15 +34,16 @@ export function FeedItemCard({ item, index }: FeedItemCardProps) {
 // ============= 统一内容卡片（topic + post 合并） =============
 
 function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 'post' }>; num: string | null }) {
+  const t = useTranslations('forum');
   const router = useRouter();
   const post = item.data;
   const href = `/community/${post.id}`;
 
   // 中部摘要：论坛优先社交动态文案，博客优先 excerpt
-  const summary = post.excerpt ?? topicSocialCopy(post);
+  const summary = post.excerpt ?? topicSocialCopy(post, t);
 
   return (
-    <Link href={href} className="block group focus-amber" aria-label={`查看内容 ${post.title}`}>
+    <Link href={href} className="block group focus-amber" aria-label={t('feedViewContentAria', { title: post.title })}>
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
         {/* 左侧 — 编号 + 状态标记（仅保留置顶/精选，不展示 FORUM/BLOG） */}
         <div className="col-span-12 sm:col-span-2 flex sm:flex-col items-start gap-2 sm:gap-1.5">
@@ -94,7 +98,7 @@ function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 
                 size={18}
               />
               <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors">
-                {post.author?.displayName ?? post.authorName ?? '匿名'}
+                {post.author?.displayName ?? post.authorName ?? t('feedAnonymous')}
               </span>
             </span>
             <span className="meta-mono">·</span>
@@ -134,13 +138,14 @@ function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 
 // ============= 成员卡片 =============
 
 function MemberCard({ item, num }: { item: Extract<FeedItem, { kind: 'member' }>; num: string | null }) {
+  const t = useTranslations('forum');
   const member = item.data;
 
   return (
     <Link
       href={`/users/${member.id}`}
       className="block group focus-amber"
-      aria-label={`查看成员 ${member.displayName ?? '未命名用户'}`}
+      aria-label={t('feedViewMemberAria', { name: member.displayName ?? t('feedUnnamedMember') })}
     >
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
         {/* 左侧 — 编号 */}
@@ -159,7 +164,7 @@ function MemberCard({ item, num }: { item: Extract<FeedItem, { kind: 'member' }>
               size={32}
             />
             <h3 className="display-serif text-[clamp(16px,2vw,20px)] text-[var(--foreground)] leading-[1.3] group-hover:text-[var(--primary)] transition-colors truncate">
-              {member.displayName ?? '未命名用户'}
+              {member.displayName ?? t('feedUnnamedMember')}
             </h3>
           </div>
           {member.bio && (
@@ -169,7 +174,7 @@ function MemberCard({ item, num }: { item: Extract<FeedItem, { kind: 'member' }>
           )}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              加入于 {formatDate(member.joinedAt)}
+              {t('feedJoinedAt', { date: formatDate(member.joinedAt) })}
             </span>
             {member.githubUrl && (
               <>
@@ -225,31 +230,31 @@ function topicSocialCopy(topic: {
   likeCount: number;
   viewCount: number;
   lastReplyAt: string | null;
-}): string {
+}, t: TFn): string {
   const parts: string[] = [];
 
   if (topic.replyCount > 0) {
     if (topic.replyCount >= 20) {
-      parts.push('讨论热烈');
+      parts.push(t('socialHotDiscussion'));
     } else if (topic.replyCount >= 5) {
-      parts.push(`${topic.replyCount} 人参与讨论`);
+      parts.push(t('socialParticipantCount', { count: topic.replyCount }));
     } else {
-      parts.push(`${topic.replyCount} 条回复`);
+      parts.push(t('socialReplyCount', { count: topic.replyCount }));
     }
   } else {
-    parts.push('期待你的参与');
+    parts.push(t('socialExpectParticipation'));
   }
 
   if (topic.likeCount >= 10) {
-    parts.push(`${topic.likeCount} 人点赞`);
+    parts.push(t('socialLikeCount', { count: topic.likeCount }));
   }
 
   if (topic.viewCount > 100) {
-    parts.push('热门浏览');
+    parts.push(t('socialPopularView'));
   }
 
   if (topic.lastReplyAt) {
-    parts.push(`最近回复 ${formatRelativeTime(topic.lastReplyAt)}`);
+    parts.push(t('socialLastReply', { time: formatRelativeTime(topic.lastReplyAt) }));
   }
 
   return parts.join(' · ');

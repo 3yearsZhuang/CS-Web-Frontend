@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
@@ -26,6 +27,7 @@ interface AdminLogsPanelProps {
 /** 管理员审计日志面板（仅 root）— 按操作类型筛选日志，支持单条删除和批量删除 */
 export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
   const router = useRouter();
+  const t = useTranslations('adminLogs');
   const { pushToast } = useToast();
 
   // 列表
@@ -65,12 +67,12 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
         }
         if (!res.ok) {
           const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
+          throw new Error(data?.error || t('loadFailed'));
         }
         const data = (await res.json()) as { actions?: AdminAction[] };
         setLogs(data.actions ?? []);
       } catch (err) {
-        setLogsError(err instanceof Error ? err.message : '加载失败');
+        setLogsError(err instanceof Error ? err.message : t('loadFailed'));
       } finally {
         setLogsLoading(false);
       }
@@ -105,14 +107,14 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
       const res = await fetch(`/api/admin/actions/${target.id}`, { method: 'DELETE' });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!res.ok || !data?.ok) {
-        setLogDeleteError(data?.error || '删除失败，请稍后再试');
+        setLogDeleteError(data?.error || t('deleteFailed'));
         return;
       }
-      pushToast('success', '已删除日志');
+      pushToast('success', t('logDeleted'));
       setLogs((prev) => prev.filter((x) => x.id !== target.id));
       closeModal();
     } catch {
-      setLogDeleteError('网络错误，请稍后再试');
+      setLogDeleteError(t('networkError'));
     } finally {
       setLogDeleteSaving(false);
     }
@@ -125,7 +127,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
     try {
       const days = parseInt(batchDeleteDays, 10);
       if (!Number.isFinite(days) || days <= 0) {
-        setLogDeleteError('请输入有效的天数');
+        setLogDeleteError(t('invalidDays'));
         return;
       }
       const before = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -138,14 +140,14 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
         | { ok?: boolean; count?: number; error?: string }
         | null;
       if (!res.ok || !data?.ok) {
-        setLogDeleteError(data?.error || '批量删除失败，请稍后再试');
+        setLogDeleteError(data?.error || t('batchDeleteFailed'));
         return;
       }
-      pushToast('success', `已批量删除 ${data.count ?? 0} 条日志`);
+      pushToast('success', t('batchDeleted', { count: data.count ?? 0 }));
       closeModal();
       fetchLogs(logsActionFilter);
     } catch {
-      setLogDeleteError('网络错误，请稍后再试');
+      setLogDeleteError(t('networkError'));
     } finally {
       setLogDeleteSaving(false);
     }
@@ -161,7 +163,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-7">
               <div className="meta-mono mb-2 text-[var(--muted-foreground)]">
-                [ 操作类型筛选 / Action Filter ]
+                {t('actionFilterLabel')}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {ACTION_FILTERS.map((s) => (
@@ -197,7 +199,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                 onClick={() => setModal({ type: 'logDeleteBatch' })}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow"
               >
-                批量删除
+                {t('batchDeleteBtn')}
               </button>
             </div>
           </div>
@@ -214,15 +216,15 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
         {/* 加载中 */}
         {logsLoading && logs.length === 0 && (
           <div className="py-20 flex items-center justify-center">
-            <SectionLoading label="加载日志中 / Loading..." />
+            <SectionLoading label={t('loadingLogsLabel')} />
           </div>
         )}
 
         {/* 空状态 */}
         {!logsLoading && !logsError && logs.length === 0 && (
           <div className="py-20 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无日志 / No Logs ]</div>
-            <p className="text-[14px] text-[var(--muted-foreground)]">没有符合条件的审计日志记录。</p>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noLogs')}</div>
+            <p className="text-[14px] text-[var(--muted-foreground)]">{t('noLogsDesc')}</p>
           </div>
         )}
 
@@ -232,10 +234,10 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="text-left meta-mono py-3 pr-4 w-[18%]">时间 / Time</th>
-                  <th className="text-left meta-mono py-3 pr-4 w-[44%]">操作描述 / Description</th>
-                  <th className="text-left meta-mono py-3 pr-4 w-[20%]">操作者 / Admin</th>
-                  <th className="text-right meta-mono py-3 pl-4 w-[8%]">操作</th>
+                  <th className="text-left meta-mono py-3 pr-4 w-[18%]">{t('colTime')}</th>
+                  <th className="text-left meta-mono py-3 pr-4 w-[44%]">{t('colDescription')}</th>
+                  <th className="text-left meta-mono py-3 pr-4 w-[20%]">{t('colAdmin')}</th>
+                  <th className="text-right meta-mono py-3 pl-4 w-[8%]">{t('colActions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -272,7 +274,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                         onClick={() => setModal({ type: 'logDelete', action: log })}
                         className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow"
                       >
-                        删除
+                        {t('deleteBtn')}
                       </button>
                     </td>
                   </tr>
@@ -310,7 +312,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                     onClick={() => setModal({ type: 'logDelete', action: log })}
                     className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow"
                   >
-                    删除
+                    {t('deleteBtn')}
                   </button>
                 </div>
               </div>
@@ -322,10 +324,10 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
       {/* ============ 模态框：删除单条日志 ============ */}
       <ConfirmDialog
         open={modal.type === 'logDelete'}
-        title="删除日志"
-        message="确认删除该条审计日志？此操作不可撤销。"
+        title={t('deleteTitle')}
+        message={t('deleteMessage')}
         variant="danger"
-        confirmLabel={logDeleteSaving ? '删除中...' : '确认删除'}
+        confirmLabel={logDeleteSaving ? t('deleting') : t('confirmDelete')}
         loading={logDeleteSaving}
         onConfirm={handleLogDelete}
         onCancel={closeModal}
@@ -356,12 +358,12 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
 
       {/* ============ 模态框：批量删除日志 ============ */}
       {modal.type === 'logDeleteBatch' && (
-        <ModalShell title="[ 批量删除日志 / Batch Delete ]" onClose={closeModal}>
+        <ModalShell title={t('batchDeleteTitle')} onClose={closeModal}>
           <div className="space-y-6">
             <p className="text-[14px] text-[var(--foreground)] leading-relaxed">
-              删除早于指定天数的审计日志。
+              {t('batchDeleteDesc')}
             </p>
-            <Field label="保留最近 N 天的日志 / Keep logs within N days">
+            <Field label={t('keepDaysLabel')}>
               <input
                 type="number"
                 min={1}
@@ -372,8 +374,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
               />
             </Field>
             <div className="p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[11px] font-mono leading-relaxed text-[var(--destructive)]">
-              此操作将删除 {batchDeleteDays || '30'} 天前的所有审计日志，且不可撤销。
-              批量删除本身也会记录一条审计日志。
+              {t('batchDeleteWarning', { days: batchDeleteDays || '30' })}
             </div>
 
             {logDeleteError && (
@@ -390,14 +391,14 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                 loading={logDeleteSaving}
                 onClick={handleLogBatchDelete}
               >
-                {logDeleteSaving ? '删除中 / Deleting...' : '确认批量删除 / Confirm →'}
+                {logDeleteSaving ? t('deletingLabel') : t('confirmBatchDelete')}
               </Button>
               <button
                 type="button"
                 onClick={closeModal}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
               >
-                取消
+                {t('cancel')}
               </button>
             </div>
           </div>

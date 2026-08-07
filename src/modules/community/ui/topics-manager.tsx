@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Avatar } from '@/components/avatar';
 import { Button, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
@@ -26,6 +27,7 @@ interface CategoriesResponse {
 
 /** 主题审核 — 搜索/筛选/置顶/加精/隐藏/硬删除 */
 export function TopicsManager() {
+  const t = useTranslations('communityAdmin');
   const [topics, setTopics] = useState<CommunityPost[]>([]);
   const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,14 +83,14 @@ export function TopicsManager() {
       const res = await fetch(`/api/admin/community/forum/topics?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '加载失败'));
+        throw new Error(getError(data, t('loadFailed')));
       }
       const data = (await res.json()) as PaginatedPosts;
       setTopics(data.items ?? []);
       setTotal(data.total ?? 0);
       setTotalPages(data.totalPages ?? 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
       setTopics([]);
     } finally {
       setLoading(false);
@@ -111,11 +113,11 @@ export function TopicsManager() {
       const res = await action();
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(getError(data, '操作失败'));
+        throw new Error(getError(data, t('actionFailed')));
       }
       await loadTopics();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '操作失败');
+      setActionError(err instanceof Error ? err.message : t('actionFailed'));
     } finally {
       setBusyIds((s) => {
         const next = new Set(s);
@@ -127,7 +129,7 @@ export function TopicsManager() {
 
   /** 隐藏主题 */
   const handleHide = (topic: CommunityPost) => {
-    const reason = window.prompt(`隐藏主题「${topic.title}」\n请输入隐藏原因（可选）：`) ?? '';
+    const reason = window.prompt(t('hidePrompt', { title: topic.title })) ?? '';
     void doAction(topic.id, () =>
       fetch(`/api/admin/community/forum/topics/${topic.id}/hide`, {
         method: 'POST',
@@ -170,10 +172,10 @@ export function TopicsManager() {
   const handleHardDelete = (topic: CommunityPost) => {
     void (async () => {
       const confirmed = await confirm({
-        title: '硬删除主题',
-        message: `硬删除主题「${topic.title}」？\n该操作不可恢复，将级联删除所有回复、点赞、收藏。`,
+        title: t('hardDeleteTitle'),
+        message: t('hardDeleteMessage', { title: topic.title }),
         variant: 'danger',
-        confirmLabel: '确认删除',
+        confirmLabel: t('confirmDelete'),
       });
       if (!confirmed) return;
       doAction(topic.id, () =>
@@ -205,7 +207,7 @@ export function TopicsManager() {
       <div className="border border-[var(--border)] p-4 sm:p-6 space-y-4">
         {/* 搜索 */}
         <div>
-          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">搜索 / Search</label>
+          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('searchLabel')}</label>
           <input
             type="text"
             value={search}
@@ -213,7 +215,7 @@ export function TopicsManager() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="搜索标题或正文..."
+            placeholder={t('searchPlaceholder')}
             maxLength={80}
             className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
           />
@@ -221,7 +223,7 @@ export function TopicsManager() {
         <div className="flex flex-col sm:flex-row gap-4">
           {/* 状态筛选 */}
           <div className="flex-shrink-0">
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">状态 / Status</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('statusLabel')}</label>
             <div className="flex gap-0">
               {STATUS_OPTIONS.map((opt) => (
                 <button
@@ -243,7 +245,7 @@ export function TopicsManager() {
           </div>
           {/* 版块筛选 */}
           <div className="flex-shrink-0">
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">分类 / Category</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('categoryLabel')}</label>
             <select
               value={categoryFilter}
               onChange={(e) => {
@@ -252,7 +254,7 @@ export function TopicsManager() {
               }}
               className={`${INPUT_CLASS} appearance-none pr-8 cursor-pointer`}
             >
-              <option value="">全部 / All</option>
+              <option value="">{t('allOption')}</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
@@ -260,7 +262,7 @@ export function TopicsManager() {
           </div>
           {/* 排序 */}
           <div className="flex-shrink-0 sm:ml-auto">
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">排序 / Sort</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortLabel')}</label>
             <div className="flex gap-0">
               {SORT_OPTIONS.map((opt) => (
                 <button
@@ -286,12 +288,12 @@ export function TopicsManager() {
       {/* 统计 */}
       <div className="meta-mono text-[var(--muted-foreground)]">
         {loading ? (
-          '// 加载中...'
+          t('loading')
         ) : error ? (
           <span className="text-[var(--destructive)]">{'// '}{error}</span>
         ) : (
           <>
-            {'// 共 '}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{' 条主题'}
+            {t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{t('countSuffix')}
           </>
         )}
       </div>
@@ -302,16 +304,16 @@ export function TopicsManager() {
       ) : error ? (
         <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
       ) : topics.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// 暂无主题'}</div>
+        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{t('noTopics')}</div>
       ) : (
         <div className="border-t border-[var(--border)]">
           {/* 表头 */}
           <div className="hidden lg:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">
-            <div className="col-span-5">标题 / 作者 / Title / Author</div>
-            <div className="col-span-1">状态 / Status</div>
-            <div className="col-span-1">统计 / Stats</div>
-            <div className="col-span-1">创建 / Created</div>
-            <div className="col-span-4 text-right">操作 / Actions</div>
+            <div className="col-span-5">{t('colTitleAuthor')}</div>
+            <div className="col-span-1">{t('colStatus')}</div>
+            <div className="col-span-1">{t('colStats')}</div>
+            <div className="col-span-1">{t('colCreated')}</div>
+            <div className="col-span-4 text-right">{t('colActions')}</div>
           </div>
           {topics.map((topic) => {
             const busy = busyIds.has(topic.id);
@@ -334,7 +336,7 @@ export function TopicsManager() {
                   </Link>
                   <div className="flex items-center gap-2 mt-1.5">
                     <Avatar email={topic.author?.email ?? 'anonymous'} displayName={topic.author?.displayName} avatarUrl={topic.author?.avatarUrl} avatarType={topic.author?.avatarType} size={16} />
-                    <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">{topic.author?.displayName ?? '匿名'}</span>
+                    <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">{topic.author?.displayName ?? t('anonymous')}</span>
                     {topic.category && (
                       <>
                         <span className="meta-mono text-[var(--muted-foreground)] text-[10px]">·</span>
@@ -346,7 +348,7 @@ export function TopicsManager() {
 
                 {/* 状态 */}
                 <div className="lg:col-span-1">
-                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)] lg:hidden mr-2">状态:</span>
+                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)] lg:hidden mr-2">{t('statusMobile')}</span>
                   <span className={`meta-mono text-[10px] px-2 py-0.5 border ${topic.status === 'hidden' ? 'border-[var(--destructive)] text-[var(--destructive)]' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
                     {topic.status === 'hidden' ? 'HIDDEN' : 'PUBLISHED'}
                   </span>
@@ -370,19 +372,19 @@ export function TopicsManager() {
 
                 {/* 操作 */}
                 <div className="lg:col-span-4 flex flex-wrap gap-1.5 lg:justify-end">
-                  <Button variant="outline" size="sm" type="button" onClick={() => handleTogglePin(topic)} disabled={busy} className={topic.isPinned ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isPinned ? '取消置顶' : '置顶'}>
-                    {topic.isPinned ? '取消置顶 / Unpin' : '置顶 / Pin'}
+                  <Button variant="outline" size="sm" type="button" onClick={() => handleTogglePin(topic)} disabled={busy} className={topic.isPinned ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isPinned ? t('unpinTitle') : t('pinTitle')}>
+                    {topic.isPinned ? t('unpinBtn') : t('pinBtn')}
                   </Button>
-                  <Button variant="outline" size="sm" type="button" onClick={() => handleToggleFeature(topic)} disabled={busy} className={topic.isFeatured ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isFeatured ? '取消加精' : '加精'}>
-                    {topic.isFeatured ? '取消加精 / Unfeat' : '加精 / Feat'}
+                  <Button variant="outline" size="sm" type="button" onClick={() => handleToggleFeature(topic)} disabled={busy} className={topic.isFeatured ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isFeatured ? t('unfeatTitle') : t('featTitle')}>
+                    {topic.isFeatured ? t('unfeatBtn') : t('featBtn')}
                   </Button>
                   {topic.status === 'published' ? (
                     <Button variant="outline" size="sm" type="button" onClick={() => handleHide(topic)} disabled={busy} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]">
-                      隐藏 / Hide
+                      {t('hideBtn')}
                     </Button>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => handleRestore(topic)} disabled={busy}>
-                      恢复 / Restore
+                      {t('restoreBtn')}
                     </Button>
                   )}
                   <button
@@ -391,7 +393,7 @@ export function TopicsManager() {
                     disabled={busy}
                     className="px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber disabled:opacity-50"
                   >
-                    删除 / Del
+                    {t('deleteBtn')}
                   </button>
                 </div>
               </div>

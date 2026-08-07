@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ResourceReviewPanel } from './tool-resource-review';
 import { ExamManagePanel } from './tool-exam-manage';
 import { TaskManagePanel } from './tool-task-manage';
@@ -13,6 +14,7 @@ import type { ToolSubView } from './tool-types';
 
 /** 管理员工具集面板（资源审核 + 考试管理 + 任务管理） */
 export function AdminToolsPanel() {
+  const t = useTranslations('toolsAdmin');
   const [subView, setSubView] = useState<ToolSubView>('resources');
 
   return (
@@ -26,7 +28,7 @@ export function AdminToolsPanel() {
             subView === 'resources' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           }`}
         >
-          [ 资源审核 / Review ]
+          {t('tabResources')}
         </button>
         <button
           type="button"
@@ -35,7 +37,7 @@ export function AdminToolsPanel() {
             subView === 'exams' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           }`}
         >
-          [ 考试管理 / Exams ]
+          {t('tabExams')}
         </button>
         <button
           type="button"
@@ -44,7 +46,7 @@ export function AdminToolsPanel() {
             subView === 'tasks' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
           }`}
         >
-          [ 任务管理 / Tasks ]
+          {t('tabTasks')}
         </button>
       </div>
 

@@ -7,9 +7,11 @@
  * 仅负责渲染；状态与逻辑由父页面注入的 `ExamState` 提供（GENERAL 2.2）。
  */
 
+import { useTranslations } from 'next-intl';
 import type { ExamState } from './use-exam';
 
 export function QuestionList(props: ExamState) {
+  const t = useTranslations('toolsExam');
   const { questions, answers, results, currentQuestionIdx, setCurrentQuestionIdx, sidebarOpen, setSidebarOpen } = props;
 
   return (
@@ -24,11 +26,11 @@ export function QuestionList(props: ExamState) {
           onClick={() => setSidebarOpen(false)}
           className="absolute top-20 right-4 meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] lg:hidden"
         >
-          ✕ 关闭
+          ✕ {t('closeList')}
         </button>
       )}
       <div className="p-4">
-        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-4">题目列表 ({questions.length})</div>
+        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-4">{t('listTitle')} ({questions.length})</div>
         <div className="space-y-1">
           {questions.map((q, idx) => {
             const hasAnswer = answers[q.id] !== undefined;

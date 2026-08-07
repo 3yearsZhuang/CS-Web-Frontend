@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
@@ -47,6 +48,8 @@ export function AnnouncementsManager() {
   const [createError, setCreateError] = useState<string | null>(null);
 
   const { confirm } = useConfirm();
+  const t = useTranslations('announcementsAdmin');
+  const tc = useTranslations('common');
 
   const loadAnnouncements = useCallback(async () => {
     setLoading(true);
@@ -55,12 +58,12 @@ export function AnnouncementsManager() {
       const res = await fetch('/api/admin/announcements');
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '加载失败'));
+        throw new Error(getError(data, t('loadFailed')));
       }
       const data = (await res.json()) as AnnouncementsResponse;
       setAnnouncements(data.items ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -74,10 +77,10 @@ export function AnnouncementsManager() {
     try {
       const res = await action();
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, '操作失败'));
+      if (!res.ok) throw new Error(getError(data, t('actionFailed')));
       await loadAnnouncements();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '操作失败');
+      setActionError(err instanceof Error ? err.message : t('actionFailed'));
     } finally {
       setBusyIds((s) => {
         const next = new Set(s);
@@ -100,10 +103,10 @@ export function AnnouncementsManager() {
   const handleDelete = (item: AnnouncementItem) => {
     void (async () => {
       const confirmed = await confirm({
-        title: '删除公告',
-        message: `确认删除公告「${item.title}」？`,
+        title: t('deleteTitle'),
+        message: t('deleteMessage', { title: item.title }),
         variant: 'danger',
-        confirmLabel: '确认删除',
+        confirmLabel: t('confirmDelete'),
       });
       if (!confirmed) return;
       doAction(item.id, () =>
@@ -115,7 +118,7 @@ export function AnnouncementsManager() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.title.trim()) {
-      setCreateError('标题不能为空');
+      setCreateError(t('titleEmpty'));
       return;
     }
     setCreating(true);
@@ -126,12 +129,12 @@ export function AnnouncementsManager() {
         body: JSON.stringify(createForm),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, '创建失败'));
+      if (!res.ok) throw new Error(getError(data, t('createFailed')));
       setShowCreate(false);
       setCreateForm({ title: '', content: '', level: 'info', priority: 0 });
       await loadAnnouncements();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : '创建失败');
+      setCreateError(err instanceof Error ? err.message : t('createFailed'));
     } finally {
       setCreating(false);
     }
@@ -147,10 +150,10 @@ export function AnnouncementsManager() {
 
       <div className="flex items-center justify-between">
         <div className="meta-mono text-[var(--muted-foreground)]">
-          {'// 共 '}<span className="text-[var(--foreground)] tabular-nums">{announcements.length}</span>{' 条公告'}
+          {t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">{announcements.length}</span>{t('countLabel', { count: announcements.length })}
         </div>
         <Button size="sm" type="button" onClick={() => setShowCreate(!showCreate)}>
-          {showCreate ? '取消 / Cancel' : '新建公告 / New'}
+          {showCreate ? tc('cancel') + ' / Cancel' : t('newBtn') + ' / New'}
         </Button>
       </div>
 
@@ -158,19 +161,19 @@ export function AnnouncementsManager() {
         <form onSubmit={handleCreate} className="border border-[var(--border)] p-4 sm:p-6 space-y-4">
           <div className="meta-mono text-[var(--foreground)] mb-2">
             <span className="ark-divider mr-2">{'//'}</span>
-            新建公告
+            {t('createTitle')}
           </div>
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">标题 / Title</label>
-            <input type="text" value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} placeholder="公告标题..." maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldTitle')}</label>
+            <input type="text" value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} placeholder={t('titlePlaceholder')} maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">内容 / Content</label>
-            <textarea value={createForm.content} onChange={(e) => setCreateForm((f) => ({ ...f, content: e.target.value }))} placeholder="公告内容（支持 Markdown）..." maxLength={5000} rows={4} className={`${INPUT_CLASS} px-3 py-2 text-[13px] resize-y`} />
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldContent')}</label>
+            <textarea value={createForm.content} onChange={(e) => setCreateForm((f) => ({ ...f, content: e.target.value }))} placeholder={t('contentPlaceholder')} maxLength={5000} rows={4} className={`${INPUT_CLASS} px-3 py-2 text-[13px] resize-y`} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">级别 / Level</label>
+              <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldLevel')}</label>
               <select value={createForm.level} onChange={(e) => setCreateForm((f) => ({ ...f, level: e.target.value as AnnouncementItem['level'] }))} className={`${INPUT_CLASS} appearance-none pr-8 cursor-pointer`}>
                 {LEVEL_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -178,30 +181,30 @@ export function AnnouncementsManager() {
               </select>
             </div>
             <div>
-              <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">优先级 / Priority</label>
+              <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldPriority')}</label>
               <input type="number" value={createForm.priority} onChange={(e) => setCreateForm((f) => ({ ...f, priority: Number(e.target.value) || 0 }))} min={0} max={100} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
             </div>
           </div>
           {createError && <div className="meta-mono text-[var(--destructive)]">{createError}</div>}
-          <Button size="sm" type="submit" disabled={creating}>{creating ? '创建中...' : '创建 / Create'}</Button>
+          <Button size="sm" type="submit" disabled={creating}>{creating ? t('creating') : t('createBtn')}</Button>
         </form>
       )}
 
       {loading ? (
-        <SectionLoading label="Loading..." />
+        <SectionLoading label={t('loading')} />
       ) : error ? (
         <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
       ) : announcements.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// 暂无公告'}</div>
+        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// '}{t('noAnnouncements')}</div>
       ) : (
         <div className="border-t border-[var(--border)]">
           <div className="hidden lg:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">
-            <div className="col-span-4">标题 / Title</div>
-            <div className="col-span-1">级别 / Level</div>
-            <div className="col-span-1">状态 / Status</div>
-            <div className="col-span-1">优先级 / Priority</div>
-            <div className="col-span-3">创建 / Created</div>
-            <div className="col-span-2 text-right">操作 / Actions</div>
+            <div className="col-span-4">{t('colTitle')} / Title</div>
+            <div className="col-span-1">{t('colLevel')} / Level</div>
+            <div className="col-span-1">{t('colStatus')} / Status</div>
+            <div className="col-span-1">{t('colPriority')} / Priority</div>
+            <div className="col-span-3">{t('colCreated')} / Created</div>
+            <div className="col-span-2 text-right">{t('colAction')} / Actions</div>
           </div>
           {announcements.map((item) => {
             const busy = busyIds.has(item.id);
@@ -228,7 +231,7 @@ export function AnnouncementsManager() {
                 <div className="lg:col-span-3 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(item.createdAt)}</div>
                 <div className="lg:col-span-2 flex flex-wrap gap-1.5 lg:justify-end">
                   <Button variant="outline" size="sm" type="button" onClick={() => handleToggleActive(item)} disabled={busy}>
-                    {item.isActive ? '停用' : '启用'}
+                    {item.isActive ? t('disable') : t('enable')}
                   </Button>
                   <button type="button" onClick={() => handleDelete(item)} disabled={busy} className="px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber disabled:opacity-50">
                     Del

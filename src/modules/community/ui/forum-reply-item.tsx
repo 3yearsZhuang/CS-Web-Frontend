@@ -11,6 +11,7 @@ import { MarkdownRenderer } from './forum-markdown-renderer';
 import { ForumActions } from './forum-actions';
 import { formatDateTime } from '@/shared/utils/utils';
 import type { CommunityCommentDetail, NestedCommentsResult } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface ForumReplyItemProps {
   /** 主回复数据 */
@@ -50,6 +51,7 @@ export function ForumReplyItem({
   onLike,
   className = '',
 }: ForumReplyItemProps) {
+  const t = useTranslations('forum');
   const [nested, setNested] = useState<CommunityCommentDetail[]>([]);
   const [nestedTotal, setNestedTotal] = useState(reply.replyCount);
   const [nestedLoading, setNestedLoading] = useState(false);
@@ -71,7 +73,7 @@ export function ForumReplyItem({
         setNestedExpanded(true);
       }
     } catch {
-      setNestedError('加载楼中楼失败');
+      setNestedError(t('loadNestedFailed'));
     } finally {
       setNestedLoading(false);
     }
@@ -150,7 +152,7 @@ export function ForumReplyItem({
           />
           <div className="flex flex-col gap-0.5">
             <span className="font-mono text-[13px] text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
-              {reply.author?.displayName ?? '匿名'}
+              {reply.author?.displayName ?? t('anonymous')}
             </span>
             <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
               {formatDateTime(reply.createdAt)}
@@ -191,10 +193,10 @@ export function ForumReplyItem({
             className="meta-mono text-[var(--primary)] hover:opacity-70 transition-opacity focus-amber disabled:opacity-50 py-2 min-h-[44px]"
           >
             {nestedLoading
-              ? '加载中...'
+              ? t('loading')
               : nestedExpanded
-                ? `// 收起楼中楼 (${nestedTotal})`
-                : `// 展开楼中楼 (${nestedTotal})`}
+                ? t('collapseNested', { count: nestedTotal })
+                : t('expandNested', { count: nestedTotal })}
           </button>
 
           {/* 楼中楼列表 */}
@@ -208,7 +210,7 @@ export function ForumReplyItem({
                     onClick={loadNested}
                     className="ml-3 underline hover:text-[var(--foreground)] transition-colors"
                   >
-                    重试
+                    {t('retry')}
                   </button>
                 </div>
               )}
@@ -233,7 +235,7 @@ export function ForumReplyItem({
                           size={24}
                         />
                         <span className="font-mono text-[12px] text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors">
-                          {nr.author?.displayName ?? '匿名'}
+                          {nr.author?.displayName ?? t('anonymous')}
                         </span>
                       </Link>
                       <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
@@ -267,7 +269,7 @@ export function ForumReplyItem({
                   disabled={nestedLoading}
                   className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
                 >
-                  {'// 加载更多 '}{hiddenNestedCount}{' 条'}
+                  {t('loadMoreNested', { count: hiddenNestedCount })}
                 </button>
               )}
             </div>

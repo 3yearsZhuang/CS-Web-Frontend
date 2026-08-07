@@ -8,6 +8,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -18,6 +19,7 @@ import { ComponentRegistryShell } from '@/modules/tools/ui/component-registry-sh
 type DevTab = 'docs' | 'registry';
 
 export default function DevCenterPage() {
+  const t = useTranslations('toolsDevCenter');
   const {
     collapsed: heroCollapsed,
     capsuleVisible,
@@ -61,7 +63,7 @@ export default function DevCenterPage() {
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
-        label="开发者中心"
+        label={t('heroLabel')}
         hero={hero}
         pageKey="dev-center"
         minHeight="50vh"
@@ -75,7 +77,7 @@ export default function DevCenterPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            开发者中心
+            {t('heroTitle')}
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -100,11 +102,10 @@ export default function DevCenterPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              开发文档 · 组件注册表
+              {t('heroDesc1')}
               <span className="serif-italic text-[var(--foreground)]">
-                。项目文档与组件管理的统一入口
+                {t('heroDesc2')}
               </span>
-              。
             </p>
           </div>
         </RevealItem>
@@ -124,7 +125,7 @@ export default function DevCenterPage() {
                   : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
-              [ 开发文档 / Docs ]
+              [ {t('tabDocs')} ]
             </button>
             {isRoot && (
               <button
@@ -136,9 +137,9 @@ export default function DevCenterPage() {
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                 }`}
               >
-                [ 组件注册表 / Registry ]
+                [ {t('tabRegistry')} ]
                 <span className="ml-2 text-[9px] px-1.5 py-0.5 border border-amber-500/40 text-amber-500">
-                  ROOT
+                  {t('rootBadge')}
                 </span>
               </button>
             )}

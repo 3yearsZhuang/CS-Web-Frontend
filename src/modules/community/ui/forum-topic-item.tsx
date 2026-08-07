@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
 import { formatDateTime } from '@/shared/utils/utils';
 import type { CommunityPost } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface ForumTopicItemProps {
   /** 主题数据 */
@@ -27,6 +28,7 @@ export function ForumTopicItem({
   index,
   className = '',
 }: ForumTopicItemProps) {
+  const t = useTranslations('forum');
   const router = useRouter();
   const href = `/community/${topic.id}`;
 
@@ -37,7 +39,7 @@ export function ForumTopicItem({
     <Link
       href={href}
       className={`block group focus-amber ${className}`}
-      aria-label={`查看主题 ${topic.title}`}
+      aria-label={`${t('viewTopic')} ${topic.title}`}
     >
       <article className="grid grid-cols-12 gap-3 sm:gap-4 py-5 sm:py-6 border-b border-[var(--border)] card-minimal px-2 sm:px-4">
         {/* 左侧 — 编号 + 状态标记 */}
@@ -88,7 +90,7 @@ export function ForumTopicItem({
                 size={18}
               />
               <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors">
-                {topic.author?.displayName ?? '匿名'}
+                {topic.author?.displayName ?? t('anonymous')}
               </span>
             </span>
             <span className="meta-mono">·</span>

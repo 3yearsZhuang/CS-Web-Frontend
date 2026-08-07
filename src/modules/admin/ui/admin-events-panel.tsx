@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
 import { useToast } from '@/components/feedback/toast';
@@ -33,6 +34,7 @@ interface AdminEventsPanelProps {
 /** 管理员活动管理面板 — 按年份分组管理活动，支持创建/编辑/删除/报名管理/CSV 导出 */
 export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   const router = useRouter();
+  const t = useTranslations('adminEvents');
 
   const [events, setEvents] = useState<EventItem[]>([]);
   const [eventListLoading, setEventListLoading] = useState(false);
@@ -69,12 +71,12 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
       }
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || '加载失败');
+        throw new Error(data?.error || t('loadFailed'));
       }
       const data = (await res.json()) as { events: EventItem[] };
       setEvents(data.events ?? []);
     } catch (err) {
-      setEventListError(err instanceof Error ? err.message : '加载失败');
+      setEventListError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setEventListLoading(false);
     }
@@ -101,7 +103,7 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
     setRegistrationsLoading(true);
     try {
       const res = await fetch(`/api/admin/events/${eventId}/registrations`);
-      if (!res.ok) throw new Error('加载失败');
+      if (!res.ok) throw new Error(t('loadFailed'));
       const data = await res.json();
       setRegistrations(data.registrations ?? []);
     } catch {
@@ -208,11 +210,11 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '操作失败');
+        throw new Error(data.error || t('operationFailed'));
       }
       await fetchRegistrations(eventId);
     } catch (err) {
-      alert(err instanceof Error ? err.message : '操作失败');
+      alert(err instanceof Error ? err.message : t('operationFailed'));
     } finally {
       setRegManageSaving(null);
     }
@@ -256,41 +258,41 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
     if (!eventForm) return;
 
     if (!eventForm.title.trim()) {
-      setEventError('标题不能为空');
+      setEventError(t('titleEmpty'));
       return;
     }
     if (eventForm.title.length > 120) {
-      setEventError('标题不能超过 120 字符');
+      setEventError(t('titleTooLong'));
       return;
     }
     if (eventForm.description.length > 500) {
-      setEventError('描述不能超过 500 字符');
+      setEventError(t('descTooLong'));
       return;
     }
     if (eventForm.month.length > 8) {
-      setEventError('月份不能超过 8 字符');
+      setEventError(t('monthTooLong'));
       return;
     }
     if (eventForm.date.length > 32) {
-      setEventError('日期不能超过 32 字符');
+      setEventError(t('dateTooLong'));
       return;
     }
     if (eventForm.year.length > 8) {
-      setEventError('年份不能超过 8 字符');
+      setEventError(t('yearTooLong'));
       return;
     }
     const topics = splitTags(eventForm.topicsStr);
     const tags = splitTags(eventForm.tagsStr);
     if (topics.length > 10) {
-      setEventError('主题数量不能超过 10');
+      setEventError(t('topicsTooMany'));
       return;
     }
     if (tags.length > 10) {
-      setEventError('标签数量不能超过 10');
+      setEventError(t('tagsTooMany'));
       return;
     }
     if (topics.some((t) => t.length > 40) || tags.some((t) => t.length > 40)) {
-      setEventError('单个主题 / 标签不能超过 40 字符');
+      setEventError(t('tagTooLong'));
       return;
     }
 
@@ -327,7 +329,7 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
         error?: string;
       } | null;
       if (!res.ok || !data?.event) {
-        setEventError(data?.error || '保存失败，请稍后再试');
+        setEventError(data?.error || t('saveFailed'));
         return;
       }
       setEvents((prev) => {
@@ -339,11 +341,11 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
       });
       pushToast(
         'success',
-        modal.type === 'eventCreate' ? `已创建活动「${data.event.title}」` : `已更新活动「${data.event.title}」`,
+        modal.type === 'eventCreate' ? t('eventCreated', { title: data.event.title }) : t('eventUpdated', { title: data.event.title }),
       );
       closeModal();
     } catch {
-      setEventError('网络错误，请稍后再试');
+      setEventError(t('networkError'));
     } finally {
       setEventSaving(false);
     }
@@ -358,14 +360,14 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
       const res = await fetch(`/api/admin/events/${target.id}`, { method: 'DELETE' });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (!res.ok || !data?.ok) {
-        setEventError(data?.error || '删除失败，请稍后再试');
+        setEventError(data?.error || t('deleteFailed'));
         return;
       }
       setEvents((prev) => prev.filter((it) => it.id !== target.id));
-      pushToast('success', `已删除活动「${target.title}」`);
+      pushToast('success', t('eventDeleted', { title: target.title }));
       closeModal();
     } catch {
-      setEventError('网络错误，请稍后再试');
+      setEventError(t('networkError'));
     } finally {
       setEventDeleteSaving(false);
     }
@@ -388,9 +390,9 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
         <div className="border-t border-[var(--border)] border-b border-[var(--border)] py-5 sm:py-6 mb-0">
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-7">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-2">[ 活动管理 / Events ]</div>
+              <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('panelLabel')}</div>
               <p className="text-[13px] text-[var(--foreground)] leading-[1.7]">
-                按年份分组管理活动 · 已结束的计划将自动归档
+                {t('panelDesc')}
               </p>
             </div>
             <div className="col-span-12 md:col-span-5 flex items-center md:justify-end gap-4">
@@ -425,22 +427,22 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
               onClick={() => fetchEvents()}
               className="focus-amber ml-3 underline hover:opacity-80"
             >
-              重试
+              {t('retry')}
             </button>
           </div>
         )}
 
         {eventListLoading && events.length === 0 && (
           <div className="py-20 flex items-center justify-center">
-            <SectionLoading label="加载活动中 / Loading..." />
+            <SectionLoading label={t('loadingEvents')} />
           </div>
         )}
 
         {!eventListLoading && !eventListError && events.length === 0 && (
           <div className="py-20 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无活动 / No Event ]</div>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noEvents')}</div>
             <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
-              还没有任何活动，点击下方按钮创建第一条。
+              {t('noEventsDesc')}
             </p>
             <Button
               type="button"

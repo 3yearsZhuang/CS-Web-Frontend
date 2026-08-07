@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
@@ -39,6 +40,7 @@ export function UsersManager() {
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
 
   const { confirm } = useConfirm();
+  const t = useTranslations('userList');
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -49,14 +51,14 @@ export function UsersManager() {
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '加载失败'));
+        throw new Error(getError(data, t('loadFailed')));
       }
       const data = (await res.json()) as UsersResponse;
       setUsers(data.users ?? []);
       setTotal(data.total ?? 0);
       setTotalPages(data.totalPages ?? 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -70,10 +72,10 @@ export function UsersManager() {
     try {
       const res = await action();
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, '操作失败'));
+      if (!res.ok) throw new Error(getError(data, t('actionFailed')));
       await loadUsers();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '操作失败');
+      setActionError(err instanceof Error ? err.message : t('actionFailed'));
     } finally {
       setBusyIds((s) => {
         const next = new Set(s);
@@ -86,10 +88,10 @@ export function UsersManager() {
   const handleDisable = (user: AdminUserItem) => {
     void (async () => {
       const confirmed = await confirm({
-        title: '禁言用户',
-        message: `确认禁言「${user.displayName ?? user.email}」吗？\n禁言后该用户将无法发帖和回复。`,
+        title: t('muteTitle'),
+        message: t('muteMessage', { name: user.displayName ?? user.email }),
         variant: 'danger',
-        confirmLabel: '确认禁言',
+        confirmLabel: t('muteConfirm'),
       });
       if (!confirmed) return;
       doUserAction(user.id, () =>
@@ -124,12 +126,12 @@ export function UsersManager() {
 
       <div className="border border-[var(--border)] p-4 sm:p-6 space-y-4">
         <div>
-          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">搜索 / Search</label>
+          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('search')}</label>
           <input
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="搜索用户名或邮箱..."
+            placeholder={t('searchPlaceholder')}
             maxLength={80}
             className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
           />
@@ -137,7 +139,7 @@ export function UsersManager() {
       </div>
 
       <div className="meta-mono text-[var(--muted-foreground)]">
-        {loading ? '// 加载中...' : error ? <span className="text-[var(--destructive)]">{'// '}{error}</span> : <>{'// 共 '}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{' 位用户'}</>}
+        {loading ? t('loading') : error ? <span className="text-[var(--destructive)]">{'// '}{error}</span> : <>{t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{t('countSuffix')}</>}
       </div>
 
       {loading ? (
@@ -145,23 +147,23 @@ export function UsersManager() {
       ) : error ? (
         <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
       ) : users.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// 暂无用户'}</div>
+        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// '}{t('noUsers')}</div>
       ) : (
         <div className="border-t border-[var(--border)]">
           <div className="hidden lg:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">
-            <div className="col-span-3">用户 / User</div>
-            <div className="col-span-2">邮箱 / Email</div>
-            <div className="col-span-1">角色 / Role</div>
-            <div className="col-span-1">状态 / Status</div>
-            <div className="col-span-2">注册 / Created</div>
-            <div className="col-span-3 text-right">操作 / Actions</div>
+            <div className="col-span-3">{t('colUser')} / User</div>
+            <div className="col-span-2">{t('colEmail')} / Email</div>
+            <div className="col-span-1">{t('colRole')} / Role</div>
+            <div className="col-span-1">{t('colStatus')} / Status</div>
+            <div className="col-span-2">{t('colCreated')} / Created</div>
+            <div className="col-span-3 text-right">{t('colActions')} / Actions</div>
           </div>
           {users.map((user) => {
             const busy = busyIds.has(user.id);
             return (
               <div key={user.id} className="grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-3 py-4 border-b border-[var(--border)] items-center">
                 <div className="lg:col-span-3">
-                  <span className="font-mono text-[13px] text-[var(--foreground)]">{user.displayName ?? '未命名用户'}</span>
+                  <span className="font-mono text-[13px] text-[var(--foreground)]">{user.displayName ?? t('unnamed')}</span>
                 </div>
                 <div className="lg:col-span-2">
                   <span className="font-mono text-[12px] text-[var(--muted-foreground)] truncate block">{user.email}</span>
@@ -180,11 +182,11 @@ export function UsersManager() {
                 <div className="lg:col-span-3 flex flex-wrap gap-1.5 lg:justify-end">
                   {user.isActive ? (
                     <Button variant="outline" size="sm" type="button" onClick={() => handleDisable(user)} disabled={busy} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]">
-                      禁言 / Mute
+                      {t('mute')} / Mute
                     </Button>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => handleEnable(user)} disabled={busy}>
-                      解禁 / Enable
+                      {t('enable')} / Enable
                     </Button>
                   )}
                 </div>

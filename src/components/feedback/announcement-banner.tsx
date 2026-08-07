@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { X, AlertTriangle, Info, CheckCircle, AlertCircle } from 'lucide-react';
 
 type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
@@ -75,6 +76,7 @@ const levelConfig: Record<AnnouncementLevel, {
 
 /** 全站公告横幅 — 在 Navbar 下方展示当前生效的公告 */
 export function AnnouncementBanner() {
+  const t = useTranslations('feedback');
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [visible, setVisible] = useState<Record<string, boolean>>({});
   const [hasAny, setHasAny] = useState(false);
@@ -147,7 +149,7 @@ export function AnnouncementBanner() {
               <button
                 onClick={() => dismiss(a.id)}
                 className="ml-2 flex-shrink-0 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100"
-                aria-label="关闭公告"
+                aria-label={t('closeAnnouncement')}
               >
                 <X size={14} />
               </button>

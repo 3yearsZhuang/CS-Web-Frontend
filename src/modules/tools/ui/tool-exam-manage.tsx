@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
@@ -27,6 +28,8 @@ const EMPTY_EXAM_FORM = {
 
 /** 考试管理子面板 — 考试列表 + 新建考试模态框 */
 export function ExamManagePanel() {
+  const t = useTranslations('toolsAdmin');
+  const tc = useTranslations('common');
   const { pushToast } = useToast();
 
   const [exams, setExams] = useState<Exam[]>([]);
@@ -76,16 +79,16 @@ export function ExamManagePanel() {
     setExamFormError(null);
 
     if (!examForm.title.trim()) {
-      setExamFormError('标题不能为空');
+      setExamFormError(t('examTitleEmpty'));
       return;
     }
     if (!examForm.startTime || !examForm.endTime) {
-      setExamFormError('开始时间和结束时间不能为空');
+      setExamFormError(t('examTimeRequired'));
       return;
     }
     const duration = parseInt(examForm.durationMinutes, 10);
     if (!Number.isFinite(duration) || duration < 1 || duration > 1440) {
-      setExamFormError('考试时长需在 1-1440 分钟之间');
+      setExamFormError(t('examDurationRange'));
       return;
     }
 
@@ -106,16 +109,16 @@ export function ExamManagePanel() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setExamFormError(data.error || '创建失败');
+        setExamFormError(data.error || t('examCreateFailed'));
         return;
       }
 
-      pushToast('success', '考试已创建（草稿状态）');
+      pushToast('success', t('examCreated'));
       closeExamModal();
       fetchExams(1);
       setExamPage(1);
     } catch {
-      setExamFormError('网络错误，请稍后再试');
+      setExamFormError(t('examNetworkRetry'));
     } finally {
       setExamCreating(false);
     }
@@ -126,14 +129,14 @@ export function ExamManagePanel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">共 {examTotal} 场考试</span>
+        <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('examCount', { count: examTotal })}</span>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setExamModalOpen(true)}
             className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
           >
-            + 新建考试
+            {t('newExam')}
           </button>
           <button
             type="button"
@@ -141,7 +144,7 @@ export function ExamManagePanel() {
             disabled={examLoading}
             className="focus-amber meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30"
           >
-            {examLoading ? 'Loading' : 'Refresh'}
+            {examLoading ? tc('loading') : tc('refresh')}
           </button>
         </div>
       </div>
@@ -153,13 +156,13 @@ export function ExamManagePanel() {
       )}
 
       {examLoading && exams.length === 0 && (
-        <div className="py-20 text-center meta-mono text-[var(--muted-foreground)]">加载中...</div>
+        <div className="py-20 text-center meta-mono text-[var(--muted-foreground)]">{t('loading')}</div>
       )}
 
       {!examLoading && !examError && exams.length === 0 && (
         <div className="py-20 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无考试 / No Exams ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">尚未创建任何考试。</p>
+          <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noExams')}</div>
+          <p className="text-[14px] text-[var(--muted-foreground)]">{t('noExamsDesc')}</p>
         </div>
       )}
 
@@ -168,11 +171,11 @@ export function ExamManagePanel() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left meta-mono py-3 pr-4">考试 / Exam</th>
-                <th className="text-left meta-mono py-3 pr-4">状态 / Status</th>
-                <th className="text-left meta-mono py-3 pr-4">时间 / Time</th>
-                <th className="text-left meta-mono py-3 pr-4">时长 / Duration</th>
-                <th className="text-left meta-mono py-3">创建 / Created</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colExam')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colStatus')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colTime')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colDuration')}</th>
+                <th className="text-left meta-mono py-3">{t('colCreated')}</th>
               </tr>
             </thead>
             <tbody>
@@ -193,16 +196,16 @@ export function ExamManagePanel() {
                       exam.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
                       'border-[var(--border)] text-[var(--muted-foreground)]'
                     }`}>
-                      {exam.status === 'published' ? '已发布' :
-                       exam.status === 'draft' ? '草稿' :
-                       exam.status === 'ended' ? '已结束' : exam.status}
+                      {exam.status === 'published' ? t('statusPublished') :
+                       exam.status === 'draft' ? t('statusDraft') :
+                       exam.status === 'ended' ? t('statusEnded') : exam.status}
                     </span>
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
                     {exam.start_time ? new Date(exam.start_time + 'Z').toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {exam.duration_minutes > 0 ? `${exam.duration_minutes} min` : '不限'}
+                    {exam.duration_minutes > 0 ? `${exam.duration_minutes} min` : t('durationUnlimited')}
                   </td>
                   <td className="py-3 meta-mono text-[11px] text-[var(--muted-foreground)]">{formatDate(exam.created_at)}</td>
                 </tr>
@@ -263,32 +266,32 @@ export function ExamManagePanel() {
 
       {/* 考试创建模态框 */}
       {examModalOpen && (
-        <ModalShell title="新建考试 / New Exam" onClose={closeExamModal}>
+        <ModalShell title={t('examModalTitle')} onClose={closeExamModal}>
           <div className="space-y-5">
-            <Field label="标题" count={`${examForm.title.length}/200`}>
+            <Field label={t('fieldTitle')} count={`${examForm.title.length}/200`}>
               <input
                 type="text"
                 value={examForm.title}
                 onChange={(e) => setExamForm((f) => ({ ...f, title: e.target.value.slice(0, 200) }))}
                 maxLength={200}
                 className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
-                placeholder="例如：2026 春季算法周赛"
+                placeholder={t('examTitlePlaceholder')}
               />
             </Field>
 
-            <Field label="描述" count={`${examForm.description.length}/2000`}>
+            <Field label={t('fieldDesc')} count={`${examForm.description.length}/2000`}>
               <textarea
                 value={examForm.description}
                 onChange={(e) => setExamForm((f) => ({ ...f, description: e.target.value.slice(0, 2000) }))}
                 maxLength={2000}
                 rows={3}
                 className={`${INPUT_CLASS} px-4 py-3 text-[13px] resize-y`}
-                placeholder="考试简介（选填）"
+                placeholder={t('examDescPlaceholder')}
               />
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="开始时间">
+              <Field label={t('fieldStartTime')}>
                 <input
                   type="datetime-local"
                   value={examForm.startTime}
@@ -296,7 +299,7 @@ export function ExamManagePanel() {
                   className={`${INPUT_CLASS} px-3 py-2.5 text-[13px]`}
                 />
               </Field>
-              <Field label="结束时间">
+              <Field label={t('fieldEndTime')}>
                 <input
                   type="datetime-local"
                   value={examForm.endTime}
@@ -306,7 +309,7 @@ export function ExamManagePanel() {
               </Field>
             </div>
 
-            <Field label="时长（分钟）">
+            <Field label={t('fieldDuration')}>
               <input
                 type="number"
                 min={1}
@@ -318,7 +321,7 @@ export function ExamManagePanel() {
               />
             </Field>
 
-            <Field label="技术标签">
+            <Field label={t('fieldTechTags')}>
               <div className="flex flex-wrap gap-1.5">
                 {TECH_TAGS.map((tag) => {
                   const selected = examForm.techTags.includes(tag.key);
@@ -329,7 +332,7 @@ export function ExamManagePanel() {
                       onClick={() => {
                         setExamForm((f) => ({
                           ...f,
-                          techTags: selected ? f.techTags.filter((t) => t !== tag.key) : [...f.techTags, tag.key],
+                          techTags: selected ? f.techTags.filter((key) => key !== tag.key) : [...f.techTags, tag.key],
                         }));
                       }}
                       className={`meta-mono text-[10px] px-2.5 py-1 border transition-colors ${
@@ -358,7 +361,7 @@ export function ExamManagePanel() {
                 disabled={examCreating}
                 className="focus-amber meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               >
-                取消
+                {tc('cancel')}
               </button>
               <button
                 type="button"
@@ -366,7 +369,7 @@ export function ExamManagePanel() {
                 disabled={examCreating}
                 className="focus-amber meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors disabled:opacity-50"
               >
-                {examCreating ? '创建中...' : '创建考试 →'}
+                {examCreating ? t('creating') : t('createExamBtn')}
               </button>
             </div>
           </div>

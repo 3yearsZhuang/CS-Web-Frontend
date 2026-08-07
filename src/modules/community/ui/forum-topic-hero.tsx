@@ -10,6 +10,7 @@ import { Avatar } from '@/components/avatar';
 import { formatDateTime } from '@/shared/utils/utils';
 import { FollowButton } from './follow-button';
 import type { CommunityPostDetail } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface TopicHeroProps {
   topic: CommunityPostDetail;
@@ -21,6 +22,7 @@ interface TopicHeroProps {
 }
 
 export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId }: TopicHeroProps) {
+  const t = useTranslations('forum');
   return (
     <CollapsingHero
       index="00"
@@ -32,7 +34,7 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId
           href="/community"
           className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
         >
-          ← 返回
+          {t('backToCommunity')}
         </Link>
       }
     >
@@ -44,7 +46,7 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId
         <RevealItem>
           <div className="flex items-center gap-2 mb-6 meta-mono text-[var(--muted-foreground)]">
             <Link href="/community" className="hover:text-[var(--primary)] transition-colors">
-              社区
+              {t('community')}
             </Link>
             <span>/</span>
             <Link
@@ -117,7 +119,7 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId
               size={28}
             />
             <span className="font-mono text-[13px] text-[var(--foreground)]">
-              {topic.author?.displayName ?? '匿名'}
+              {topic.author?.displayName ?? t('anonymous')}
             </span>
             <span className="meta-mono">·</span>
             <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">

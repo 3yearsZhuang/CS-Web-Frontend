@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
@@ -15,6 +16,7 @@ import { SectionLoading } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 
 export default function DraftsPage() {
+  const t = useTranslations('communityDrafts');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } =
     useCollapsingHero();
   const hero: HeroState = {
@@ -49,7 +51,7 @@ export default function DraftsPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            草稿箱
+            {t('heroTitle')}
           </h1>
         </RevealTitle>
         <RevealItem>
@@ -59,7 +61,7 @@ export default function DraftsPage() {
             }`}
           >
             <p className="max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
-              你的未发布文章，仅自己可见。
+              {t('heroDesc')}
             </p>
           </div>
         </RevealItem>
@@ -72,10 +74,10 @@ export default function DraftsPage() {
           ) : loginRequired ? (
             <div className="py-16 text-center">
               <div className="meta-mono text-[var(--muted-foreground)] mb-4">
-                {'// 草稿箱需要登录'}
+                {t('loginRequiredDesc')}
               </div>
               <Link href="/login" className="meta-mono text-[var(--primary)] underline-grow">
-                去登录 →
+                {t('loginLink')}
               </Link>
             </div>
           ) : (
@@ -85,15 +87,15 @@ export default function DraftsPage() {
                   href="/community"
                   className="meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
                 >
-                  ← 返回全部内容
+                  {t('backToAll')}
                 </Link>
                 <Link href="/community/new" className="meta-mono text-[12px] text-[var(--primary)] underline-grow">
-                  写新文章 →
+                  {t('writeNew')}
                 </Link>
               </div>
               <CommunityPostList
                 endpoint="/api/community/drafts"
-                emptyText="// 暂无草稿"
+                emptyText={t('emptyText')}
               />
             </>
           )}

@@ -6,6 +6,7 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components';
 import { MarkdownEditor } from './forum-markdown-editor';
+import { useTranslations } from 'next-intl';
 
 interface TopicReplyEditorProps {
   replyContent: string;
@@ -28,16 +29,17 @@ export function TopicReplyEditor({
   onSubmit,
   onCancel,
 }: TopicReplyEditorProps) {
+  const t = useTranslations('forum');
   const router = useRouter();
 
   if (!isLoggedIn) {
     return (
       <div className="border border-[var(--border)] p-8 sm:p-12 text-center">
         <p className="meta-mono text-[var(--muted-foreground)] mb-6">
-          {'// 登录后才能参与讨论'}
+          {t('pleaseLogin')}
         </p>
         <Button onClick={() => router.push('/login')}>
-          立即登录 →
+          {t('loginNow')}
         </Button>
       </div>
     );
@@ -47,19 +49,19 @@ export function TopicReplyEditor({
     <div className="border-t border-[var(--border)] pt-8">
       {replyParentId && (
         <div className="mb-3 meta-mono text-[var(--primary)]">
-          {'// 回复楼中楼 (parent: '}{replyParentId.slice(0, 8)}{'...)'}
+          {t('replyToNested')} ({replyParentId.slice(0, 8)})
           <button
             onClick={onCancel}
             className="ml-3 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
           >
-            取消
+            {t('cancel')}
           </button>
         </div>
       )}
       <MarkdownEditor
         value={replyContent}
         onChange={onContentChange}
-        placeholder="在此输入你的回复... (支持 Markdown)"
+        placeholder={t('replyPlaceholder')}
         minHeight={200}
         className="max-sm:!min-h-[150px]"
       />
@@ -75,7 +77,7 @@ export function TopicReplyEditor({
           disabled={submittingReply || !replyContent.trim()}
           className="w-full sm:w-auto"
         >
-          {submittingReply ? 'Posting...' : '发布回复'}
+          {submittingReply ? 'Posting...' : t('postReply')}
         </Button>
         {replyContent && (
           <Button
@@ -85,7 +87,7 @@ export function TopicReplyEditor({
             disabled={submittingReply}
             className="w-full sm:w-auto"
           >
-            清空
+            {t('clear')}
           </Button>
         )}
       </div>

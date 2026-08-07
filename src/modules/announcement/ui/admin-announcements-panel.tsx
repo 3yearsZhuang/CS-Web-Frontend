@@ -7,6 +7,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { SectionLoading } from '@/components';
@@ -49,15 +50,16 @@ const emptyForm: AnnouncementForm = {
   targetRoles: [],
 };
 
-const levelOptions: { value: AnnouncementLevel; label: string }[] = [
-  { value: 'info', label: '信息' },
-  { value: 'warning', label: '警告' },
-  { value: 'success', label: '成功' },
-  { value: 'error', label: '重要' },
+const levelOptions: { value: AnnouncementLevel; labelKey: string }[] = [
+  { value: 'info', labelKey: 'levelInfo' },
+  { value: 'warning', labelKey: 'levelWarning' },
+  { value: 'success', labelKey: 'levelSuccess' },
+  { value: 'error', labelKey: 'levelError' },
 ];
 
 /** 公告管理子面板 — 列表 + 新建/编辑表单 + 启用/删除 */
 export function AnnouncementsPanel() {
+  const t = useTranslations('announcementsAdmin');
   const { confirm } = useConfirm();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -75,13 +77,13 @@ export function AnnouncementsPanel() {
       const res = await fetch('/api/admin/announcements');
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '获取公告列表失败');
+        throw new Error(data.error || t('loadFailed'));
       }
       const data = await res.json();
       setAnnouncements(data.items || []);
       setAnnError(null);
     } catch (err) {
-      setAnnError(err instanceof Error ? err.message : '未知错误');
+      setAnnError(err instanceof Error ? err.message : t('unknownError'));
     } finally {
       setAnnLoading(false);
     }
@@ -118,7 +120,7 @@ export function AnnouncementsPanel() {
 
   const handleAnnSubmit = async () => {
     if (!form.title.trim()) {
-      setAnnError('标题不能为空');
+      setAnnError(t('titleRequired'));
       return;
     }
     setSubmitting(true);
@@ -148,12 +150,12 @@ export function AnnouncementsPanel() {
         });
       }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '操作失败');
-      annShowSuccess(editingId ? '公告已更新' : '公告已创建');
+      if (!res.ok) throw new Error(data.error || t('actionFailed'));
+      annShowSuccess(editingId ? t('updated') : t('created'));
       resetForm();
       fetchAnnouncements();
     } catch (err) {
-      setAnnError(err instanceof Error ? err.message : '操作失败');
+      setAnnError(err instanceof Error ? err.message : t('actionFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -168,32 +170,32 @@ export function AnnouncementsPanel() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '操作失败');
+        throw new Error(data.error || t('actionFailed'));
       }
       fetchAnnouncements();
     } catch (err) {
-      setAnnError(err instanceof Error ? err.message : '操作失败');
+      setAnnError(err instanceof Error ? err.message : t('actionFailed'));
     }
   };
 
   const handleDelete = async (a: Announcement) => {
     const confirmed = await confirm({
-      title: '删除公告',
-      message: `确定删除公告「${a.title}」？此操作不可撤销。`,
+      title: t('deleteTitle'),
+      message: t('deleteMessage', { title: a.title }),
       variant: 'danger',
-      confirmLabel: '确认删除',
+      confirmLabel: t('confirmDelete'),
     });
     if (!confirmed) return;
     try {
       const res = await fetch(`/api/admin/announcements/${a.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || '删除失败');
+        throw new Error(data.error || t('deleteFailed'));
       }
-      annShowSuccess('公告已删除');
+      annShowSuccess(t('deleted'));
       fetchAnnouncements();
     } catch (err) {
-      setAnnError(err instanceof Error ? err.message : '删除失败');
+      setAnnError(err instanceof Error ? err.message : t('deleteFailed'));
     }
   };
 
@@ -205,7 +207,7 @@ export function AnnouncementsPanel() {
       error: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     };
     const labels: Record<string, string> = {
-      info: '信息', warning: '警告', success: '成功', error: '重要',
+      info: t('levelInfo'), warning: t('levelWarning'), success: t('levelSuccess'), error: t('levelError'),
     };
     return (
       <span className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${colors[level] || colors.info}`}>
@@ -219,7 +221,7 @@ export function AnnouncementsPanel() {
       {/* 操作栏 */}
       <RevealItem>
         <div className="py-5 flex items-center justify-between">
-          <div className="meta-mono text-[var(--muted-foreground)]">[ {announcements.length} 条公告 ]</div>
+          <div className="meta-mono text-[var(--muted-foreground)]">{t('countLabel', { count: announcements.length })}</div>
           <button
             onClick={() => {
               resetForm();
@@ -228,7 +230,7 @@ export function AnnouncementsPanel() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--foreground)]/5 transition-colors"
           >
             <Plus size={14} />
-            新建公告
+            {t('newBtn')}
           </button>
         </div>
       </RevealItem>
@@ -242,7 +244,7 @@ export function AnnouncementsPanel() {
       {annError && (
         <div className="p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
           {annError}
-          <button onClick={() => setAnnError(null)} className="ml-2 underline">关闭</button>
+          <button onClick={() => setAnnError(null)} className="ml-2 underline">{t('close')}</button>
         </div>
       )}
 
@@ -251,7 +253,7 @@ export function AnnouncementsPanel() {
         <div className="mt-4 p-4 border border-[var(--border)] bg-[var(--foreground)]/2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[11px] font-mono tracking-wider text-[var(--muted-foreground)]">
-              {editingId ? '编辑公告' : '新建公告'}
+              {editingId ? t('editTitle') : t('createTitle')}
             </h3>
             <button onClick={resetForm} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
               <X size={14} />
@@ -259,42 +261,42 @@ export function AnnouncementsPanel() {
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">标题 *</label>
+              <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldTitle')}</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 maxLength={200}
                 className="w-full px-3 py-2 text-[12px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)]/30"
-                placeholder="公告标题"
+                placeholder={t('titlePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">内容</label>
+              <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldContent')}</label>
               <textarea
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 maxLength={5000}
                 rows={3}
                 className="w-full px-3 py-2 text-[12px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)]/30 resize-none"
-                placeholder="可选，公告详细内容"
+                placeholder={t('contentPlaceholder')}
               />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">级别</label>
+                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldLevel')}</label>
                 <select
                   value={form.level}
                   onChange={(e) => setForm({ ...form, level: e.target.value as AnnouncementLevel })}
                   className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
                 >
                   {levelOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">优先级</label>
+                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldPriority')}</label>
                 <input
                   type="number"
                   value={form.priority}
@@ -305,7 +307,7 @@ export function AnnouncementsPanel() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">过期时间</label>
+                <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldExpires')}</label>
                 <input
                   type="datetime-local"
                   value={form.expiresAt ? form.expiresAt.slice(0, 16) : ''}
@@ -321,13 +323,13 @@ export function AnnouncementsPanel() {
                     onChange={(e) => setForm({ ...form, isDismissible: e.target.checked })}
                     className="rounded"
                   />
-                  可关闭
+                  {t('dismissible')}
                 </label>
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={resetForm} className="px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-                取消
+                {t('cancel')}
               </button>
               <button
                 onClick={handleAnnSubmit}
@@ -335,7 +337,7 @@ export function AnnouncementsPanel() {
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 disabled:opacity-50 transition-colors"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                {editingId ? '保存修改' : '创建公告'}
+                {editingId ? t('saveChanges') : t('createBtn')}
               </button>
             </div>
           </div>
@@ -344,10 +346,10 @@ export function AnnouncementsPanel() {
 
       {/* 公告列表 */}
       {annLoading ? (
-        <SectionLoading label="加载中..." />
+        <SectionLoading label={t('loading')} />
       ) : announcements.length === 0 ? (
         <div className="py-12 text-center text-[12px] font-mono text-[var(--muted-foreground)]">
-          暂无公告，点击「新建公告」创建第一条。
+          {t('empty')}
         </div>
       ) : (
         <div className="mt-4 border border-[var(--border)]">
@@ -355,13 +357,13 @@ export function AnnouncementsPanel() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--foreground)]/3">
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">标题</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">级别</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">状态</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">优先级</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">过期</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">创建</th>
-                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">操作</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colTitle')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colLevel')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colStatus')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colPriority')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colExpires')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colCreated')}</th>
+                  <th className="px-4 py-2 text-[10px] font-mono text-[var(--muted-foreground)]">{t('colAction')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -378,7 +380,7 @@ export function AnnouncementsPanel() {
                     <td className="px-4 py-2.5">{levelBadge(a.level)}</td>
                     <td className="px-4 py-2.5">
                       <span className={`text-[11px] font-mono ${a.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--muted-foreground)]'}`}>
-                        {a.isActive ? '生效中' : '已关闭'}
+                        {a.isActive ? t('statusActive') : t('statusInactive')}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">{a.priority}</td>
@@ -393,21 +395,21 @@ export function AnnouncementsPanel() {
                         <button
                           onClick={() => startEdit(a)}
                           className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                          title="编辑"
+                          title={t('editTooltip')}
                         >
                           <Save size={13} />
                         </button>
                         <button
                           onClick={() => toggleActive(a)}
                           className="p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                          title={a.isActive ? '关闭' : '激活'}
+                          title={a.isActive ? t('disableTooltip') : t('enableTooltip')}
                         >
                           {a.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
                         </button>
                         <button
                           onClick={() => handleDelete(a)}
                           className="p-1 text-[var(--muted-foreground)] hover:text-red-500 transition-colors"
-                          title="删除"
+                          title={t('deleteTooltip')}
                         >
                           <Trash2 size={13} />
                         </button>

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
 import type { CommunityPost } from '@/modules/community/types';
 import type { MemberItem } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface CommunitySidebarTrendingProps {
   hotTopics: CommunityPost[];
@@ -25,6 +26,7 @@ export function CommunitySidebarTrending({
   stats,
   className = '',
 }: CommunitySidebarTrendingProps) {
+  const t = useTranslations('forum');
   return (
     <aside className={`space-y-8 ${className}`}>
       {/* 社区仪表盘 */}
@@ -35,19 +37,19 @@ export function CommunitySidebarTrending({
           </h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">今日发帖</span>
+              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('trendingTodayTopics')}</span>
               <span className="font-mono text-[14px] tabular-nums text-[var(--foreground)]">
                 {stats.todayTopics}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">活跃用户</span>
+              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('trendingActiveUsers')}</span>
               <span className="font-mono text-[14px] tabular-nums text-[var(--foreground)]">
                 {stats.activeUsers}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">在线用户</span>
+              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('trendingOnlineUsers')}</span>
               <span className="font-mono text-[14px] tabular-nums text-[var(--foreground)]">
                 {stats.onlineUsers}
               </span>
@@ -117,7 +119,7 @@ export function CommunitySidebarTrending({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="font-mono text-[12px] text-[var(--foreground)] leading-tight truncate group-hover:text-[var(--primary)] transition-colors">
-                    {member.displayName ?? '未命名用户'}
+                    {member.displayName ?? t('trendingUnnamedUser')}
                   </p>
                   {member.techTags.length > 0 && (
                     <p className="meta-mono text-[10px] text-[var(--muted-foreground)] mt-0.5 truncate">

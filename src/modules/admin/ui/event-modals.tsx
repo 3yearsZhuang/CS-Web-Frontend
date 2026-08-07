@@ -5,6 +5,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import { MarkdownEditorBase } from '@/modules/community/ui/forum-markdown-editor-base';
 import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
@@ -57,6 +58,7 @@ export function EventModals({
   onExportCsv,
   onManageRegistration,
 }: EventModalsProps) {
+  const t = useTranslations('adminEvents');
   // 内部保留一个本地 form 引用（modal 内编辑时使用）
   const [localForm, setLocalForm] = useState<EventForm | null>(null);
 
@@ -70,7 +72,7 @@ export function EventModals({
     <>
       {/* ============ 模态框：报名列表 ============ */}
       {modal.type === 'eventRegistrations' && (
-        <ModalShell title={`[ 报名列表 / Registrations · ${modal.event.title} ]`} onClose={onClose}>
+        <ModalShell title={t('registrationsTitle', { title: modal.event.title })} onClose={onClose}>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="meta-mono text-[12px] text-[var(--muted-foreground)]">
@@ -80,23 +82,23 @@ export function EventModals({
                     Loading...
                   </span>
                 ) : (
-                  `${registrations.length} 人已报名`
+                  t('registrationsCount', { count: registrations.length })
                 )}
               </div>
               {registrations.length > 0 && (
                 <Button size="sm" type="button" onClick={() => onExportCsv(modal.event, registrations)}>
-                  CSV 导出 / Export
+                  {t('csvExport')}
                 </Button>
               )}
             </div>
 
             {registrationsLoading && registrations.length === 0 ? (
               <div className="py-12 flex items-center justify-center">
-                <span className="meta-mono text-[var(--muted-foreground)]">加载报名数据中...</span>
+                <span className="meta-mono text-[var(--muted-foreground)]">{t('loadingRegistrations')}</span>
               </div>
             ) : registrations.length === 0 ? (
               <div className="py-12 text-center border border-[var(--border)]">
-                <p className="meta-mono text-[var(--muted-foreground)]">暂无报名记录</p>
+                <p className="meta-mono text-[var(--muted-foreground)]">{t('noRegistrations')}</p>
               </div>
             ) : (
               <div className="border border-[var(--border)] overflow-x-auto">
@@ -104,16 +106,16 @@ export function EventModals({
                   <thead>
                     <tr className="border-b border-[var(--border)] bg-[var(--muted)]/[0.3]">
                       <th className="text-left meta-mono py-3 px-4 text-[11px]">#</th>
-                      <th className="text-left meta-mono py-3 px-4 text-[11px]">姓名 / Name</th>
-                      <th className="text-left meta-mono py-3 px-4 text-[11px]">邮箱 / Email</th>
-                      <th className="text-left meta-mono py-3 px-4 text-[11px]">状态 / Status</th>
-                      <th className="text-left meta-mono py-3 px-4 text-[11px]">报名时间</th>
+                      <th className="text-left meta-mono py-3 px-4 text-[11px]">{t('colName')}</th>
+                      <th className="text-left meta-mono py-3 px-4 text-[11px]">{t('colEmail')}</th>
+                      <th className="text-left meta-mono py-3 px-4 text-[11px]">{t('colStatus')}</th>
+                      <th className="text-left meta-mono py-3 px-4 text-[11px]">{t('colRegisteredAt')}</th>
                       {modal.event.registrationFields && modal.event.registrationFields.length > 0 &&
                         modal.event.registrationFields.map((f) => (
                           <th key={f.key} className="text-left meta-mono py-3 px-4 text-[11px]">{f.label}</th>
                         ))
                       }
-                      <th className="text-right meta-mono py-3 px-4 text-[11px]">操作</th>
+                      <th className="text-right meta-mono py-3 px-4 text-[11px]">{t('colActions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -130,7 +132,7 @@ export function EventModals({
                                 ? 'border-[var(--destructive)]/30 text-[var(--destructive)]'
                                 : 'border-[var(--border)] text-[var(--muted-foreground)]'
                           }`}>
-                            {r.status === 'registered' ? '已报名' : r.status === 'cancelled' ? '已取消' : '候补'}
+                            {r.status === 'registered' ? t('statusRegistered') : r.status === 'cancelled' ? t('statusCancelled') : t('statusWaitlisted')}
                           </span>
                         </td>
                         <td className="py-3 px-4 meta-mono text-[var(--muted-foreground)]">{formatDate(r.registeredAt)}</td>
@@ -150,7 +152,7 @@ export function EventModals({
                                 onClick={() => onManageRegistration(modal.event.id, r.id, 'cancelled')}
                                 className="meta-mono text-[10px] text-[var(--destructive)] hover:text-[var(--destructive)]/70 underline-grow focus-amber"
                               >
-                                {regManageSaving === r.id ? '...' : '取消'}
+                                {regManageSaving === r.id ? '...' : t('cancelRegistration')}
                               </button>
                             )}
                             {r.status !== 'registered' && r.status !== 'waitlisted' && (
@@ -160,7 +162,7 @@ export function EventModals({
                                 onClick={() => onManageRegistration(modal.event.id, r.id, 'registered')}
                                 className="meta-mono text-[10px] text-[var(--primary)] hover:text-[var(--primary)]/70 underline-grow focus-amber"
                               >
-                                {regManageSaving === r.id ? '...' : '恢复'}
+                                {regManageSaving === r.id ? '...' : t('restoreRegistration')}
                               </button>
                             )}
                           </div>
@@ -193,7 +195,7 @@ export function EventModals({
                 type="button"
                 onClick={onClose}
                 className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[14px] leading-none"
-                aria-label="关闭"
+                aria-label={t('close')}
               >
                 ✕
               </button>
@@ -203,14 +205,14 @@ export function EventModals({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   {/* 标题 — 跨两列 */}
                   <div className="md:col-span-2">
-                    <Field label="标题 / Title" count={`${form.title.length}/120`}>
+                    <Field label={t('fieldTitle')} count={`${form.title.length}/120`}>
                       <input
                         type="text"
                         value={form.title}
                         maxLength={120}
                         onChange={(e) => setForm((f) => ({ ...f!, title: e.target.value }))}
                         className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
-                        placeholder="例如：秋季招新"
+                        placeholder={t('titlePlaceholder')}
                         autoFocus
                       />
                     </Field>
@@ -218,21 +220,21 @@ export function EventModals({
 
                   {/* 描述 — 跨两列 */}
                   <div className="md:col-span-2">
-                    <Field label="描述 / Description" count={`${form.description.length}/500`}>
+                    <Field label={t('fieldDescription')} count={`${form.description.length}/500`}>
                       <textarea
                         value={form.description}
                         maxLength={500}
                         rows={3}
                         onChange={(e) => setForm((f) => ({ ...f!, description: e.target.value }))}
                         className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-                        placeholder="一句话介绍活动内容"
+                        placeholder={t('descPlaceholder')}
                       />
                     </Field>
                   </div>
 
                   {/* 月份 / 日期 */}
                   <>
-                    <Field label="月份 / Month" count={`${form.month.length}/8`}>
+                    <Field label={t('fieldMonth')} count={`${form.month.length}/8`}>
                       <input
                         type="text"
                         value={form.month}
@@ -242,7 +244,7 @@ export function EventModals({
                         placeholder="Sep"
                       />
                     </Field>
-                    <Field label="日期 / Date" count={`${form.date.length}/32`}>
+                    <Field label={t('fieldDate')} count={`${form.date.length}/32`}>
                       <input
                         type="text"
                         value={form.date}
@@ -256,7 +258,7 @@ export function EventModals({
 
                   {/* 年份 */}
                   <div className="md:col-span-2">
-                    <Field label="年份 / Year" count={`${form.year.length}/8`}>
+                    <Field label={t('fieldYear')} count={`${form.year.length}/8`}>
                       <input
                         type="text"
                         value={form.year}
@@ -270,14 +272,14 @@ export function EventModals({
 
                   {/* 状态 */}
                   <div className="md:col-span-2">
-                    <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 状态 / Status ]</div>
+                    <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('fieldStatus')}</div>
                     <div className="flex flex-wrap gap-1.5">
                       {(
                         [
-                          { v: '', label: '未设置' },
-                          { v: 'upcoming', label: '即将开始' },
-                          { v: 'ongoing', label: '进行中' },
-                          { v: 'ended', label: '已结束' },
+                          { v: '', label: t('statusUnset') },
+                          { v: 'upcoming', label: t('statusUpcoming') },
+                          { v: 'ongoing', label: t('statusOngoing') },
+                          { v: 'ended', label: t('statusEnded') },
                         ] as { v: EventForm['status']; label: string }[]
                       ).map((s) => (
                         <button
@@ -297,7 +299,7 @@ export function EventModals({
                   </div>
 
                   {/* 主题（逗号分隔） */}
-                  <Field label="主题 / Topics" count={`${splitTags(form.topicsStr).length}/10`}>
+                  <Field label={t('fieldTopics')} count={`${splitTags(form.topicsStr).length}/10`}>
                     <input
                       type="text"
                       value={form.topicsStr}
@@ -305,11 +307,11 @@ export function EventModals({
                       className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
                       placeholder="Recruiting, Open House"
                     />
-                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">逗号分隔，单主题≤40字符</p>
+                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('topicsHint')}</p>
                   </Field>
 
                   {/* 标签（逗号分隔） */}
-                  <Field label="标签 / Tags" count={`${splitTags(form.tagsStr).length}/10`}>
+                  <Field label={t('fieldTags')} count={`${splitTags(form.tagsStr).length}/10`}>
                     <input
                       type="text"
                       value={form.tagsStr}
@@ -317,12 +319,12 @@ export function EventModals({
                       className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
                       placeholder="Hackathon, 24h"
                     />
-                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">逗号分隔，单标签≤40字符</p>
+                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('tagsHint')}</p>
                   </Field>
 
                   {/* 置顶 */}
                   <div>
-                    <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 置顶 / Pinned ]</div>
+                    <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('fieldPinned')}</div>
                     <button
                       type="button"
                       onClick={() => setForm((f) => (f ? { ...f, isPinned: !f.isPinned } : f))}
@@ -332,13 +334,13 @@ export function EventModals({
                           : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                       }`}
                     >
-                      {form.isPinned ? '📌 已置顶' : '置顶 / Pin'}
+                      {form.isPinned ? t('pinnedOn') : t('pinnedOff')}
                     </button>
-                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">置顶活动将始终排在最前</p>
+                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('pinnedHint')}</p>
                   </div>
 
                   {/* 活动容量 */}
-                  <Field label="容量 / Capacity">
+                  <Field label={t('fieldCapacity')}>
                     <input
                       type="number"
                       value={form.capacity}
@@ -352,9 +354,9 @@ export function EventModals({
                         }))
                       }
                       className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
-                      placeholder="0 = 不限"
+                      placeholder={t('capacityPlaceholder')}
                     />
-                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">0 表示不限名额</p>
+                    <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('capacityHint')}</p>
                   </Field>
 
                   {/* 活动详情 Markdown — 跨两列 */}
@@ -369,7 +371,7 @@ export function EventModals({
                             : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                         }`}
                       >
-                        编辑 / Edit
+                        {t('tabEdit')}
                       </button>
                       <button
                         type="button"
@@ -380,7 +382,7 @@ export function EventModals({
                             : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                         }`}
                       >
-                        预览 / Preview
+                        {t('tabPreview')}
                       </button>
                       <span className="meta-mono text-[10px] text-[var(--muted-foreground)] ml-auto">
                         {form.contentMarkdown.length}/10000
@@ -390,7 +392,7 @@ export function EventModals({
                       <MarkdownEditorBase
                         value={form.contentMarkdown}
                         onChange={(v) => setForm((f) => ({ ...f!, contentMarkdown: v }))}
-                        placeholder={'可选 — 活动详情 Markdown，渲染在活动详情页 Details 区\n\n## 示例\n- 时间地点\n- 议程安排\n- 注意事项'}
+                        placeholder={t('contentPlaceholder')}
                         rows={6}
                       />
                     ) : (
@@ -399,13 +401,13 @@ export function EventModals({
                           <MarkdownRenderer content={form.contentMarkdown} />
                         ) : (
                           <p className="meta-mono text-[var(--muted-foreground)] text-center py-8">
-                            暂无内容 — 切换到「编辑」Tab 写入 Markdown
+                            {t('noContent')}
                           </p>
                         )}
                       </div>
                     )}
                     <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">
-                      支持 Markdown 语法，最多 10000 字符；不填则不显示 Details 区
+                      {t('contentHint')}
                     </p>
                   </div>
                 </div>
@@ -419,17 +421,17 @@ export function EventModals({
                 <div className="flex items-center gap-4 pt-2">
                   <Button type="submit" disabled={eventSaving} loading={eventSaving}>
                     {eventSaving
-                      ? '保存中 / Saving...'
+                      ? t('saving')
                       : modal.type === 'eventCreate'
-                        ? '创建活动 / Create Event →'
-                        : '保存更改 / Save Changes →'}
+                        ? t('createEventBtn')
+                        : t('saveChangesBtn')}
                   </Button>
                   <button
                     type="button"
                     onClick={onClose}
                     className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
                   >
-                    取消
+                    {t('cancel')}
                   </button>
                 </div>
               </form>
@@ -441,10 +443,10 @@ export function EventModals({
       {/* ============ 模态框：删除活动确认 ============ */}
       <ConfirmDialog
         open={modal.type === 'eventDelete'}
-        title="删除活动"
-        message="确认删除该活动？此操作不可撤销。"
+        title={t('deleteTitle')}
+        message={t('deleteMessage')}
         variant="danger"
-        confirmLabel={eventDeleteSaving ? '删除中...' : '确认删除'}
+        confirmLabel={eventDeleteSaving ? t('deleting') : t('confirmDelete')}
         loading={eventDeleteSaving}
         onConfirm={onDelete}
         onCancel={onClose}

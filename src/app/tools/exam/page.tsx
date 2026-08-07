@@ -11,9 +11,20 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 
 type ExamTab = 'ongoing' | 'upcoming' | 'ended';
+
+type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
+
+function formatDuration(minutes: number, t: TFn): string {
+  if (minutes <= 0) return t('durUnlimited');
+  if (minutes < 60) return t('durMin', { min: minutes });
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? t('durHm', { h, m }) : t('durH', { h });
+}
 
 interface ExamItem {
   id: string;
@@ -29,15 +40,8 @@ interface ExamItem {
   updatedAt: string;
 }
 
-function formatDuration(minutes: number): string {
-  if (minutes <= 0) return '不限时';
-  if (minutes < 60) return `${minutes} 分钟`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
 export default function ExamListPage() {
+  const t = useTranslations('toolsExam');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -52,9 +56,9 @@ export default function ExamListPage() {
   const [error, setError] = useState<string | null>(null);
 
   const examTabs: CapsuleTab[] = [
-    { key: 'ongoing', num: '01', label: '进行中' },
-    { key: 'upcoming', num: '02', label: '即将开始' },
-    { key: 'ended', num: '03', label: '已结束' },
+    { key: 'ongoing', num: '01', label: t('tabOngoing') },
+    { key: 'upcoming', num: '02', label: t('tabUpcoming') },
+    { key: 'ended', num: '03', label: t('tabEnded') },
   ];
 
   const fetchExams = useCallback(async () => {
@@ -102,7 +106,7 @@ export default function ExamListPage() {
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
-        label="考试"
+        label={t('heroTitle')}
         hero={hero}
         pageKey="exam"
         minHeight="50vh"
@@ -116,7 +120,7 @@ export default function ExamListPage() {
             href="/tools"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
           >
-            ← 返回
+            ← {t('back')}
           </Link>
         }
       >
@@ -129,7 +133,7 @@ export default function ExamListPage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            考试
+            {t('heroTitle')}
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -137,7 +141,7 @@ export default function ExamListPage() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / Exam
+              {t('heroTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -154,9 +158,9 @@ export default function ExamListPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              算法周赛 · 项目组考核 · 技术能力评估
+              {t('heroDesc1')}
               <span className="serif-italic text-[var(--foreground)]">
-                。验证你的实力，发现你的薄弱点
+                {t('heroDesc2')}
               </span>
               。
             </p>
@@ -169,19 +173,19 @@ export default function ExamListPage() {
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
             <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
-              {activeTab === 'ongoing' && '进行中'}
-              {activeTab === 'upcoming' && '即将开始'}
-              {activeTab === 'ended' && '已结束'}
+              {activeTab === 'ongoing' && t('listOngoing')}
+              {activeTab === 'upcoming' && t('listUpcoming')}
+              {activeTab === 'ended' && t('listEnded')}
               <span className="ark-divider ml-2">
-                {activeTab === 'ongoing' && 'Active'}
-                {activeTab === 'upcoming' && 'Upcoming'}
-                {activeTab === 'ended' && 'Archive'}
+                {activeTab === 'ongoing' && t('listOngoingEn')}
+                {activeTab === 'upcoming' && t('listUpcomingEn')}
+                {activeTab === 'ended' && t('listEndedEn')}
               </span>
             </h2>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
-              {activeTab === 'ongoing' && `// 当前可参与的考试 — ${filteredExams.length} 场`}
-              {activeTab === 'upcoming' && `// 即将开始的考试 — ${filteredExams.length} 场`}
-              {activeTab === 'ended' && `// 已结束的考试 — ${filteredExams.length} 场`}
+              {activeTab === 'ongoing' && t('countOngoing', { count: filteredExams.length })}
+              {activeTab === 'upcoming' && t('countUpcoming', { count: filteredExams.length })}
+              {activeTab === 'ended' && t('countEnded', { count: filteredExams.length })}
             </p>
 
             {/* Loading */}
@@ -198,7 +202,7 @@ export default function ExamListPage() {
               <div className="py-16 text-center">
                 <div className="meta-mono text-[var(--destructive)] mb-6">{error}</div>
                 <button onClick={fetchExams} className="meta-mono text-[var(--primary)] underline-grow">
-                  重试
+                  {t('retry')}
                 </button>
               </div>
             )}
@@ -207,15 +211,15 @@ export default function ExamListPage() {
             {!loading && !error && filteredExams.length === 0 && (
               <div className="py-16 text-center">
                 <div className="meta-mono text-[var(--muted-foreground)] mb-6">
-                  {activeTab === 'ongoing' && '// 暂无进行中的考试'}
-                  {activeTab === 'upcoming' && '// 暂无即将开始的考试'}
-                  {activeTab === 'ended' && '// 暂无已结束的考试'}
+                  {activeTab === 'ongoing' && t('emptyOngoing')}
+                  {activeTab === 'upcoming' && t('emptyUpcoming')}
+                  {activeTab === 'ended' && t('emptyEnded')}
                 </div>
                 <Link
                   href="/tools"
                   className="meta-mono text-[var(--primary)] underline-grow"
                 >
-                  返回工具集 ←
+                  {t('backToTools')}
                 </Link>
               </div>
             )}
@@ -243,7 +247,7 @@ export default function ExamListPage() {
                                   : 'border-[var(--border)] text-[var(--muted-foreground)]'
                             }`}
                           >
-                            {activeTab === 'ongoing' ? '进行中' : activeTab === 'upcoming' ? '即将开始' : '已结束'}
+                            {activeTab === 'ongoing' ? t('badgeOngoing') : activeTab === 'upcoming' ? t('badgeUpcoming') : t('badgeEnded')}
                           </span>
                         </div>
                         {exam.startTime && (
@@ -269,7 +273,7 @@ export default function ExamListPage() {
                       <div className="flex items-center gap-3 flex-wrap">
                         <span className="meta-mono text-[10px] text-[var(--muted-foreground)] flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {formatDuration(exam.durationMinutes)}
+                          {formatDuration(exam.durationMinutes, t)}
                         </span>
                         {tags.slice(0, 3).map((tag, i) => (
                           <span
@@ -287,7 +291,7 @@ export default function ExamListPage() {
                       </div>
 
                       <div className="mt-4 text-[var(--primary)] meta-mono text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">
-                        进入考试 →
+                        {t('enterExam')}
                       </div>
                     </Link>
                   );

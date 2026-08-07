@@ -7,6 +7,7 @@
 import { useRef, useState } from 'react';
 import { MarkdownRenderer } from './forum-markdown-renderer';
 import { InlineTabs } from '@/components/primitives/inline-tabs';
+import { useTranslations } from 'next-intl';
 
 export interface MarkdownEditorBaseProps {
   /** 当前 Markdown 内容 */
@@ -33,6 +34,7 @@ export function MarkdownEditorBase({
   textareaClassName = '',
   className = '',
 }: MarkdownEditorBaseProps) {
+  const t = useTranslations('forum');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<Mode>('edit');
 
@@ -102,7 +104,7 @@ export function MarkdownEditorBase({
             <MarkdownRenderer content={value} />
           ) : (
             <div className="meta-mono text-[var(--muted-foreground)] text-[14px]">
-              暂无内容可预览
+              {t('editorNoPreviewContent')}
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
 import { formatDate } from './tool-types';
 
@@ -24,6 +25,8 @@ interface DevDocDetail {
 
 /** 开发文档查看器（左侧列表 + 右侧内容） */
 export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
+  const t = useTranslations('toolsAdmin');
+  const tc = useTranslations('common');
   const [docs, setDocs] = useState<DevDoc[]>([]);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [detail, setDetail] = useState<DevDocDetail | null>(null);
@@ -41,7 +44,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
       const res = await fetch('/api/dev-docs');
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error || '加载失败');
+        setError(json.error || t('loadFailed'));
         return;
       }
       const data = await res.json();
@@ -50,7 +53,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
         setSelectedSlug(data[0].slug);
       }
     } catch {
-      setError('网络错误');
+      setError(t('networkError'));
     } finally {
       setLoading(false);
     }
@@ -63,14 +66,14 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
       const res = await fetch(`/api/dev-docs/${slug}`);
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error || '加载失败');
+        setError(json.error || t('loadFailed'));
         return;
       }
       const data = await res.json();
       setDetail(data);
       setEditContent(data.content);
     } catch {
-      setError('网络错误');
+      setError(t('networkError'));
     } finally {
       setLoading(false);
     }
@@ -99,14 +102,14 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
       });
       if (!res.ok) {
         const json = await res.json();
-        setError(json.error || '保存失败');
+        setError(json.error || t('saveFailed'));
         return;
       }
       setDetail((prev) => prev ? { ...prev, content: editContent, modified: new Date().toISOString() } : null);
       setEditing(false);
       setError(null);
     } catch {
-      setError('网络错误');
+      setError(t('networkError'));
     } finally {
       setSaving(false);
     }
@@ -124,7 +127,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
       <div className="md:w-[280px] lg:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)]">
         <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
           <span className="meta-mono text-[10px] text-[var(--primary)] uppercase">
-            文档列表
+            {t('docList')}
           </span>
           <button
             type="button"
@@ -132,14 +135,14 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
             disabled={loading}
             className="meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] disabled:opacity-30"
           >
-            {loading ? 'Loading' : 'Refresh'}
+            {loading ? tc('loading') : tc('refresh')}
           </button>
         </div>
         <div className="overflow-y-auto max-h-[calc(100vh-420px)]">
           {docs.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <span className="meta-mono text-[10px] text-[var(--muted-foreground)]/50 uppercase">
-                {loading ? '加载中...' : '无文档'}
+                {loading ? t('loading') : t('noDoc')}
               </span>
             </div>
           ) : (
@@ -183,8 +186,8 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
 
         {!selectedSlug && !loading && (
           <div className="py-20 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 选择文档 / Select a doc ]</div>
-            <p className="text-[14px] text-[var(--muted-foreground)]">从左侧列表选择一份文档查看。</p>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('selectDoc')}</div>
+            <p className="text-[14px] text-[var(--muted-foreground)]">{t('selectDocDesc')}</p>
           </div>
         )}
 
@@ -215,7 +218,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                         : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                     }`}
                   >
-                    源码
+                    {t('source')}
                   </button>
                   <button
                     type="button"
@@ -226,7 +229,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                         : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                     }`}
                   >
-                    预览
+                    {t('preview')}
                   </button>
                 </div>
                 {isRoot && (
@@ -235,7 +238,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                     onClick={() => { setEditContent(detail.content); setEditing(true); }}
                     className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
                   >
-                    编辑
+                    {t('edit')}
                   </button>
                 )}
               </div>
@@ -266,7 +269,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                   disabled={saving}
                   className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 >
-                  取消
+                  {tc('cancel')}
                 </button>
                 <button
                   type="button"
@@ -274,7 +277,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                   disabled={saving}
                   className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors disabled:opacity-50"
                 >
-                  {saving ? '保存中...' : '保存 →'}
+                  {saving ? t('saving') : t('saveBtn')}
                 </button>
               </div>
             </div>
@@ -284,7 +287,7 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               className="flex-1 w-full p-4 bg-transparent border-0 text-[13px] font-mono text-[var(--foreground)] resize-none focus:outline-none leading-[1.7] min-h-[400px]"
-              placeholder="输入文档内容..."
+              placeholder={t('docContentPlaceholder')}
             />
           </div>
         )}

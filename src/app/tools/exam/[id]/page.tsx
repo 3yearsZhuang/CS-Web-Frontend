@@ -10,12 +10,14 @@
 
 import { use } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import { useExam } from './use-exam';
 import { QuestionList } from './question-list';
 import { QuestionPanel } from './question-panel';
 
 export default function ExamPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations('toolsExam');
   const { id } = use(params);
   const exam = useExam(id);
   const {
@@ -56,7 +58,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ ERROR ]</div>
           <h1 className="display-serif text-4xl mb-4">{error}</h1>
           <Button variant="outline" onClick={() => router.push('/tools/exam')}>
-            返回考试列表
+            {t('backToList')}
           </Button>
         </div>
       </main>
@@ -75,7 +77,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
               href="/tools/exam"
               className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors shrink-0"
             >
-              ← 返回
+              ← {t('back')}
             </Link>
             <h1 className="text-lg font-semibold truncate">{detail.title}</h1>
             {timeRemaining !== null && (
@@ -95,12 +97,12 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="lg:hidden meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
               >
-                {sidebarOpen ? '关闭题目列表' : `题目 ${currentQuestionIdx + 1}/${questions.length}`}
+                {sidebarOpen ? t('closeList') : t('questionNav', { current: currentQuestionIdx + 1, total: questions.length })}
               </button>
             )}
             {submitted && (
               <div className="meta-mono text-[13px] text-[var(--primary)]">
-                {correctCount}/{questions.length} 正确 · {totalScore}/{maxScore} 分
+                {t('resultLine', { correct: correctCount, total: questions.length, score: totalScore, max: maxScore })}
               </div>
             )}
           </div>

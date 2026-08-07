@@ -8,32 +8,34 @@
  */
 
 import { Trophy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { SectionLoading } from '@/components';
 import type { useTasks } from './use-tasks';
 
 const LEVEL_THRESHOLDS = [
-  { l: 1, t: '新人学徒', p: 0 },
-  { l: 2, t: '初级成员', p: 50 },
-  { l: 3, t: '活跃成员', p: 150 },
-  { l: 4, t: '资深成员', p: 400 },
-  { l: 5, t: '核心骨干', p: 1000 },
-  { l: 6, t: '技术专家', p: 2500 },
-  { l: 7, t: '协会元老', p: 5000 },
+  { l: 1, key: 'levelL1', p: 0 },
+  { l: 2, key: 'levelL2', p: 50 },
+  { l: 3, key: 'levelL3', p: 150 },
+  { l: 4, key: 'levelL4', p: 400 },
+  { l: 5, key: 'levelL5', p: 1000 },
+  { l: 6, key: 'levelL6', p: 2500 },
+  { l: 7, key: 'levelL7', p: 5000 },
 ];
 
 export function PointsTab(props: ReturnType<typeof useTasks>) {
+  const t = useTranslations('toolsTask');
   const { user, pointsLoading, pointsProfile, leaderboard } = props;
 
   return (
     <div>
       <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-        积分<span className="text-[var(--primary)]">系统</span>
+        {t('pointsSystem')}
       </h2>
 
       {!user ? (
         <div className="py-12 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 未登录 ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">请先登录查看积分。</p>
+          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('notLoggedIn')} ]</div>
+          <p className="text-[14px] text-[var(--muted-foreground)]">{t('loginToViewPoints')}</p>
         </div>
       ) : pointsLoading ? (
         <SectionLoading label="Loading..." />
@@ -75,8 +77,8 @@ export function PointsTab(props: ReturnType<typeof useTasks>) {
                       : ''
                   }`}
                 >
-                  <span className="text-[var(--foreground)]">Lv.{lv.l} {lv.t}</span>
-                  <span className="meta-mono text-[var(--muted-foreground)]">{lv.p} 分</span>
+                  <span className="text-[var(--foreground)]">Lv.{lv.l} {t(lv.key)}</span>
+                  <span className="meta-mono text-[var(--muted-foreground)]">{lv.p} {t('pointsUnit')}</span>
                 </div>
               ))}
             </div>
@@ -120,7 +122,7 @@ export function PointsTab(props: ReturnType<typeof useTasks>) {
                         Lv.{entry.level}
                       </span>
                     </div>
-                    <span className="meta-mono text-[12px] text-[var(--primary)]">{entry.balance} 分</span>
+                    <span className="meta-mono text-[12px] text-[var(--primary)]">{entry.balance} {t('pointsUnit')}</span>
                   </div>
                 ))}
               </div>

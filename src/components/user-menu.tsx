@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { Button } from '@/components/primitives/button';
@@ -18,21 +19,18 @@ import type { User } from '@/modules/user/types';
 const MENU_ITEMS = [
   {
     key: 'more',
-    label: '更多',
     en: 'More',
     action: 'navigate' as const,
     href: '/profile',
   },
   {
     key: 'switch',
-    label: '切换',
     en: 'Switch',
     action: 'logout-navigate' as const,
     href: '/login',
   },
   {
     key: 'logout',
-    label: '退出',
     en: 'Logout',
     action: 'logout-navigate' as const,
     href: '/',
@@ -42,7 +40,6 @@ const MENU_ITEMS = [
 /** 管理员专属菜单项 */
 const ADMIN_MENU_ITEM = {
   key: 'admin',
-  label: '管理',
   en: 'Admin',
   action: 'navigate' as const,
   href: '/admin',
@@ -96,10 +93,18 @@ interface UserMenuProps {
 export function UserMenu({ size = 32 }: UserMenuProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('userMenu');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement>(null);
+
+  const labels: Record<string, string> = {
+    more: t('more'),
+    switch: t('switch'),
+    logout: t('logout'),
+    admin: t('admin'),
+  };
 
   const menuRef = useFocusTrap<HTMLDivElement>({
     active: open,
@@ -145,12 +150,10 @@ export function UserMenu({ size = 32 }: UserMenuProps = {}) {
     if (action === 'logout-navigate' || action === 'logout-stay') {
       const isSwitch = key === 'switch';
       const confirmed = await confirm({
-        title: isSwitch ? '切换账号' : '退出登录',
-        message: isSwitch
-          ? '切换后将登出当前账号并返回登录页。'
-          : '退出后将登出当前账号并返回首页。',
+        title: isSwitch ? t('switchTitle') : t('logoutTitle'),
+        message: isSwitch ? t('switchMessage') : t('logoutMessage'),
         variant: isSwitch ? 'warning' : 'info',
-        confirmLabel: isSwitch ? '确认切换' : '确认退出',
+        confirmLabel: isSwitch ? t('switchConfirm') : t('logoutConfirm'),
       });
       if (!confirmed) return;
 
@@ -180,7 +183,7 @@ export function UserMenu({ size = 32 }: UserMenuProps = {}) {
         size="sm"
         onClick={() => router.push('/login')}
       >
-        登录
+        {t('login')}
       </Button>
     );
   }
@@ -239,7 +242,7 @@ export function UserMenu({ size = 32 }: UserMenuProps = {}) {
                     00
                   </span>
                   <span className="text-[13px] text-[var(--primary)] font-medium">
-                    {ADMIN_MENU_ITEM.label}
+                    {labels[ADMIN_MENU_ITEM.key]}
                   </span>
                   <span className="meta-mono ml-auto text-[10px] text-[var(--primary)]/70">
                     {ADMIN_MENU_ITEM.en}
@@ -257,7 +260,7 @@ export function UserMenu({ size = 32 }: UserMenuProps = {}) {
                     0{idx + 1}
                   </span>
                   <span className="text-[13px] text-[var(--foreground)]">
-                    {item.label}
+                    {labels[item.key]}
                   </span>
                   <span className="meta-mono ml-auto text-[10px] text-[var(--muted-foreground)]">
                     {item.en}

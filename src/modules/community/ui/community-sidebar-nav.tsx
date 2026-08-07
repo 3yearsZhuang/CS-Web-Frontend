@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import type { CommunityCategory } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface CommunitySidebarNavProps {
   categories: CommunityCategory[];
@@ -17,6 +18,7 @@ export function CommunitySidebarNav({
   activeSection,
   className = '',
 }: CommunitySidebarNavProps) {
+  const t = useTranslations('forum');
   return (
     <aside className={`space-y-6 ${className}`}>
       {/* 版块导航 */}
@@ -33,7 +35,7 @@ export function CommunitySidebarNav({
                 : 'text-[var(--foreground)] hover:text-[var(--primary)] pl-[14px]'
             }`}
           >
-            全部版块
+            {t('sidebarAllSections')}
           </Link>
           {categories.map((cat) => (
             <Link
@@ -64,19 +66,19 @@ export function CommunitySidebarNav({
             href="/community?tab=topic"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            → 论坛首页
+            {t('linkForumHome')}
           </Link>
           <Link
             href="/community?tab=post"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            → 博客
+            {t('linkBlog')}
           </Link>
           <Link
             href="/members"
             className="block py-2.5 font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            → 成员列表
+            {t('linkMembers')}
           </Link>
         </nav>
       </section>

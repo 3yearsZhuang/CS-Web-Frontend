@@ -8,18 +8,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 
 type TargetType = 'topic' | 'reply';
 
 const REASONS = [
-  '垃圾广告 /  spam',
-  '色情低俗',
-  '辱骂攻击',
-  '虚假信息',
-  '侵权 / 抄袭',
-  '其他',
-];
+  { id: 'spam', key: 'reasons.spam' },
+  { id: 'porn', key: 'reasons.porn' },
+  { id: 'abuse', key: 'reasons.abuse' },
+  { id: 'fakeInfo', key: 'reasons.fakeInfo' },
+  { id: 'infringement', key: 'reasons.infringement' },
+  { id: 'other', key: 'reasons.other' },
+] as const;
 
 interface ReportButtonProps {
   targetType: TargetType;
@@ -27,6 +28,7 @@ interface ReportButtonProps {
 }
 
 export function ReportButton({ targetType, targetId }: ReportButtonProps) {
+  const t = useTranslations('report');
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -39,7 +41,7 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
 
   const handleSubmit = async () => {
     if (!reason) {
-      setError('请选择举报理由');
+      setError(t('errorSelectReason'));
       return;
     }
     setSubmitting(true);
@@ -56,7 +58,7 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
       }
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || '举报提交失败');
+        throw new Error(data?.error || t('errorSubmitFailed'));
       }
       setDone(true);
       setTimeout(() => {
@@ -66,7 +68,7 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
         setDetail('');
       }, 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '举报提交失败');
+      setError(err instanceof Error ? err.message : t('errorSubmitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -78,9 +80,9 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
         variant="outline"
         onClick={() => setOpen(true)}
         className="flex items-center font-mono uppercase tracking-wider px-4 py-2.5 text-[12px] gap-1.5 min-h-[44px] min-w-[44px]"
-        title="举报"
+        title={t('buttonTitle')}
       >
-        举报
+        {t('buttonLabel')}
       </Button>
 
       {open && (
@@ -92,27 +94,27 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
             className="w-full max-w-md border border-[var(--border)] bg-[var(--background)] p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 举报内容 ]</div>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('dialogTitle')}</div>
             {done ? (
               <div className="py-8 text-center meta-mono text-[var(--primary)]">
-                举报已提交，感谢反馈。
+                {t('successMessage')}
               </div>
             ) : (
               <>
                 <div className="space-y-2 mb-4">
                   {REASONS.map((r) => (
                     <label
-                      key={r}
+                      key={r.id}
                       className="flex items-center gap-3 cursor-pointer meta-mono text-[13px] text-[var(--foreground)]"
                     >
                       <input
                         type="radio"
                         name="report-reason"
-                        checked={reason === r}
-                        onChange={() => setReason(r)}
+                        checked={reason === r.id}
+                        onChange={() => setReason(r.id)}
                         className="accent-[var(--primary)]"
                       />
-                      {r}
+                      {t(r.key)}
                     </label>
                   ))}
                 </div>
@@ -120,7 +122,7 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
                   value={detail}
                   onChange={(e) => setDetail(e.target.value.slice(0, 1000))}
                   rows={3}
-                  placeholder="补充说明（可选，最多 1000 字）"
+                  placeholder={t('detailPlaceholder')}
                   className="w-full px-3 py-2 bg-transparent border border-[var(--border)] text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
                 {error && (
@@ -132,10 +134,10 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
                     onClick={() => setOpen(false)}
                     disabled={submitting}
                   >
-                    取消
+                    {t('cancel')}
                   </Button>
                   <Button onClick={handleSubmit} disabled={submitting}>
-                    {submitting ? '提交中...' : '提交举报'}
+                    {submitting ? t('submitting') : t('submit')}
                   </Button>
                 </div>
               </>

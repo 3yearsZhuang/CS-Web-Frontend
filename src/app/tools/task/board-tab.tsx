@@ -8,11 +8,13 @@
  */
 
 import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import type { useTasks } from './use-tasks';
-import { CATEGORY_LABELS, INPUT_CLASS } from './task-shared';
+import { categoryLabel, categoryOptions, INPUT_CLASS } from './task-shared';
 
 export function BoardTab(props: ReturnType<typeof useTasks>) {
+  const t = useTranslations('toolsTask');
   const {
     tasksLoading,
     tasksError,
@@ -42,7 +44,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
   return (
     <div>
       <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-        任务<span className="text-[var(--primary)]">板</span>
+        {t('boardTitle')}
       </h2>
 
       {/* 分类筛选 */}
@@ -58,7 +60,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                   : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
               }`}
             >
-              全部 ({tasks.length})
+              {t('filterAll')} ({tasks.length})
             </button>
             {categories.map((cat) => (
               <button
@@ -70,7 +72,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                     : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                 }`}
               >
-                {CATEGORY_LABELS[cat] || cat}
+                {categoryLabel(t, cat)}
               </button>
             ))}
           </div>
@@ -85,11 +87,11 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             className="flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors"
           >
             <Plus className="w-3 h-3" />
-            {showCreateForm ? '取消' : '创建任务'}
+            {showCreateForm ? t('createCancel') : t('createTask')}
           </button>
           {pendingClaims.length > 0 && (
             <span className="meta-mono text-[11px] text-[var(--primary)]">
-              待审核: {pendingClaims.length}
+              {t('pendingBadge')} {pendingClaims.length}
             </span>
           )}
         </div>
@@ -99,41 +101,41 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
       {showCreateForm && isAdmin && (
         <form onSubmit={handleCreate} className="border border-[var(--border)] p-6 sm:p-8 mb-8 space-y-4">
           <div>
-            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 01 ] 任务标题</label>
+            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 01 ] {t('fldTitle')}</label>
             <input
               value={newTask.title}
               onChange={(e) => setNewTask((f) => ({ ...f, title: e.target.value }))}
               className={INPUT_CLASS}
-              placeholder="例如：更新社团 Wiki 页面"
+              placeholder={t('titlePlaceholder')}
               required
             />
           </div>
           <div>
-            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 02 ] 任务描述</label>
+            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 02 ] {t('fldDesc')}</label>
             <textarea
               value={newTask.description}
               onChange={(e) => setNewTask((f) => ({ ...f, description: e.target.value }))}
               className={INPUT_CLASS}
               rows={3}
-              placeholder="详细描述任务内容和要求..."
+              placeholder={t('descPlaceholder')}
               required
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 03 ] 分类</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 03 ] {t('fldCategory')}</label>
               <select
                 value={newTask.category}
                 onChange={(e) => setNewTask((f) => ({ ...f, category: e.target.value }))}
                 className={INPUT_CLASS}
               >
-                {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+                {categoryOptions(t).map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 04 ] 积分奖励</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 04 ] {t('fldPoints')}</label>
               <input
                 type="number"
                 value={newTask.points}
@@ -144,7 +146,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
               />
             </div>
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 05 ] 认领上限</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 05 ] {t('fldMaxClaimants')}</label>
               <input
                 type="number"
                 value={newTask.maxClaimants}
@@ -156,17 +158,17 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             </div>
           </div>
           <div>
-            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 06 ] 标签（逗号分隔）</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 06 ] {t('fldTags')}</label>
             <input
               value={newTask.tags}
               onChange={(e) => setNewTask((f) => ({ ...f, tags: e.target.value }))}
               className={INPUT_CLASS}
-              placeholder="React, TypeScript, 文档"
+              placeholder={t('tagsPlaceholder')}
             />
           </div>
           <div className="flex gap-3">
             <Button type="submit" disabled={creating}>
-              {creating ? '创建中...' : '创建任务'}
+              {creating ? t('creating') : t('createTask')}
             </Button>
           </div>
         </form>
@@ -189,14 +191,14 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                   disabled={reviewingId === c.id}
                   className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-green-500/30 text-green-600 dark:text-green-400 hover:bg-green-500/10 transition-colors"
                 >
-                  ✓ 通过
+                  {t('reviewPass')}
                 </button>
                 <button
                   onClick={() => handleReview(c.id, false)}
                   disabled={reviewingId === c.id}
                   className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors"
                 >
-                  ✗ 拒绝
+                  {t('reviewReject')}
                 </button>
               </div>
             </div>
@@ -211,8 +213,8 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
         <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{tasksError}</div>
       ) : filteredTasks.length === 0 ? (
         <div className="py-12 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ No Quest ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">暂无可认领的任务。</p>
+          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('emptyTasks')} ]</div>
+          <p className="text-[14px] text-[var(--muted-foreground)]">{t('emptyTasksText')}</p>
         </div>
       ) : (
         <div className="space-y-0 border-t border-[var(--border)]">
@@ -233,7 +235,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                       {task.title}
                     </span>
                     <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
-                      {CATEGORY_LABELS[task.category] || task.category}
+                      {categoryLabel(t, task.category)}
                     </span>
                   </div>
                   <p className="text-[13px] text-[var(--muted-foreground)] mt-2 line-clamp-2">
@@ -243,7 +245,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <span className="flex items-center gap-1 meta-mono text-[11px] text-[var(--primary)]">
                     <Zap className="w-3 h-3" />
-                    {task.points} 分
+                    {task.points} {t('pointsUnit')}
                   </span>
                   <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
                     {task.claimCount}/{task.maxClaimants}
@@ -275,7 +277,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                           disabled={claimingId === task.id || task.claimCount >= task.maxClaimants}
                           className="text-[11px] px-4 py-2"
                         >
-                          {task.claimCount >= task.maxClaimants ? '已满' : claimingId === task.id ? '认领中...' : '认领任务'}
+                          {task.claimCount >= task.maxClaimants ? t('claimFull') : claimingId === task.id ? t('claiming') : t('claimTask')}
                         </Button>
                       )}
                       {isAdmin && task.status === 'draft' && (
@@ -283,11 +285,11 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                           onClick={(e) => { e.stopPropagation(); handlePublish(task.id); }}
                           className="px-3 py-1.5 text-[11px] font-mono border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors"
                         >
-                          发布
+                          {t('publish')}
                         </button>
                       )}
                       <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                        {task.status === 'draft' ? '草稿' : task.publishedAt ? `发布于 ${task.publishedAt}` : ''}
+                        {task.status === 'draft' ? t('draft') : task.publishedAt ? t('publishedAt', { date: task.publishedAt }) : ''}
                       </span>
                     </div>
                   </div>
