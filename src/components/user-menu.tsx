@@ -1,273 +1,428 @@
-/**
- * @file UserMenu 用户菜单组件 — 未登录显示登录按钮，已登录显示头像与下拉菜单（更多/切换/退出）
- */
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
+import { LogOut, RefreshCw, User, PenLine, Shield } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
-import { Button } from '@/components/primitives/button';
+import { formatRelativeTime } from '@/shared/utils/utils';
+import { useAuth } from '@/shared/hooks/use-auth';
+import { useNotificationsPreview } from '@/components/use-notifications-preview';
+import { TYPE_STYLES } from '@/components/notification-bell';
+import { Avatar } from '@/components/avatar';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
-import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
-import { Avatar } from './avatar';
-import type { User } from '@/modules/user/types';
 
-/** 下拉菜单项配置 */
-const MENU_ITEMS = [
-  {
-    key: 'more',
-    en: 'More',
-    action: 'navigate' as const,
-    href: '/profile',
-  },
-  {
-    key: 'switch',
-    en: 'Switch',
-    action: 'logout-navigate' as const,
-    href: '/login',
-  },
-  {
-    key: 'logout',
-    en: 'Logout',
-    action: 'logout-navigate' as const,
-    href: '/',
-  },
-];
-
-/** 管理员专属菜单项 */
-const ADMIN_MENU_ITEM = {
-  key: 'admin',
-  en: 'Admin',
-  action: 'navigate' as const,
-  href: '/admin',
-};
-
-/** 下拉菜单 variants — 与面包屑动画风格一致 */
 const listVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.04, delayChildren: 0.04 },
   },
   exit: {
     opacity: 0,
-    transition: { staggerChildren: 0.03, staggerDirection: -1 },
+    transition: { staggerChildren: 0.02, staggerDirection: -1 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: -8, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: -6, filter: 'blur(4px)' },
   visible: {
     opacity: 1,
     y: 0,
     filter: 'blur(0px)',
-    transition: { duration: 0.25, ease: EASE },
+    transition: { duration: 0.2, ease: EASE },
   },
   exit: {
     opacity: 0,
-    y: -4,
+    y: -3,
     filter: 'blur(2px)',
-    transition: { duration: 0.15 },
+    transition: { duration: 0.12 },
   },
 };
 
-/** 登出请求 */
-async function logout(): Promise<void> {
-  await fetch('/api/auth/logout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  }).catch(() => {
-    // 网络错误也不阻塞跳转
-  });
+/** 角色标签 */
+const ROLE_LABEL: Record<string, string> = {
+  root: 'Root',
+  admin: 'Admin',
+  member: 'Member',
+};
+
+function MenuItem({
+  href,
+  icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
+  return (
+    <motion.div variants={itemVariants}>
+      <Link
+        href={href}
+        onClick={onClick}
+        className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[var(--foreground)] hover:bg-[var(--primary)]/[0.06] transition-colors"
+      >
+        <span className="text-[var(--muted-foreground)]">{icon}</span>
+        <span>{label}</span>
+      </Link>
+    </motion.div>
+  );
 }
 
-interface UserMenuProps {
-  /** 头像尺寸（px），默认 32 */
-  size?: number;
-}
-
-/** 用户菜单 — 登录状态显示头像与下拉菜单，未登录显示登录按钮 */
-export function UserMenu({ size = 32 }: UserMenuProps = {}) {
+/** 头像展开页 — 内嵌「通知」与「中英文切换」 */
+export function UserMenu({ size = 32 }: { size?: number }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const t = useTranslations('userMenu');
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const avatarRef = useRef<HTMLDivElement>(null);
+  const locale = useLocale();
+  const tProfile = useTranslations('profile');
+  const tUserMenu = useTranslations('userMenu');
+  const tCommon = useTranslations('common');
+  const tNotif = useTranslations('notifications');
 
-  const labels: Record<string, string> = {
-    more: t('more'),
-    switch: t('switch'),
-    logout: t('logout'),
-    admin: t('admin'),
-  };
-
-  const menuRef = useFocusTrap<HTMLDivElement>({
-    active: open,
-    triggerRef: avatarRef,
-    onClose: () => setOpen(false),
-    lockScroll: false,
-  });
-
-  // 路由变化时重新获取用户，解决登录跳回后 Navbar（持久化在 layout）未更新的问题
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetch('/api/auth/me')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) {
-          setUser(data?.user ?? null);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
-
+  const { user, isLoggedIn } = useAuth();
   const { confirm } = useConfirm();
 
-  /** 处理菜单项点击 — logout 类操作需二次确认 */
-  const handleAction = async (action: string, href: string, key?: string) => {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const {
+    notifications,
+    loading: notifLoading,
+    unreadCount,
+    isLoggedIn: notifLoggedIn,
+    markRead,
+    markAllRead,
+  } = useNotificationsPreview(5);
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: tUserMenu('logoutTitle'),
+      message: tUserMenu('logoutMessage'),
+      variant: 'danger',
+      confirmLabel: tUserMenu('logoutConfirm'),
+    });
+    if (!ok) return;
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // 忽略失败，仍跳转首页
+    }
     setOpen(false);
-
-    if (action === 'navigate') {
-      router.push(href);
-      return;
-    }
-
-    // 切换 / 退出 → 二次确认
-    if (action === 'logout-navigate' || action === 'logout-stay') {
-      const isSwitch = key === 'switch';
-      const confirmed = await confirm({
-        title: isSwitch ? t('switchTitle') : t('logoutTitle'),
-        message: isSwitch ? t('switchMessage') : t('logoutMessage'),
-        variant: isSwitch ? 'warning' : 'info',
-        confirmLabel: isSwitch ? t('switchConfirm') : t('logoutConfirm'),
-      });
-      if (!confirmed) return;
-
-      await logout();
-      setUser(null);
-      if (action === 'logout-navigate') {
-        router.push(href);
-      } else {
-        router.refresh();
-      }
-    }
+    router.push('/');
   };
 
-  if (loading) {
-    return (
-      <div
-        className="shrink-0 bg-[var(--muted)] border border-[var(--border)]"
-        style={{ width: size, height: size }}
-      />
-    );
-  }
+  const handleSwitch = async () => {
+    const ok = await confirm({
+      title: tUserMenu('switchTitle'),
+      message: tUserMenu('switchMessage'),
+      variant: 'warning',
+      confirmLabel: tUserMenu('switchConfirm'),
+    });
+    if (!ok) return;
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // 忽略失败
+    }
+    setOpen(false);
+    router.push('/login');
+  };
 
-  // 未登录
-  if (!user) {
-    return (
-      <Button
-        size="sm"
-        onClick={() => router.push('/login')}
-      >
-        {t('login')}
-      </Button>
-    );
-  }
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open]);
+
+  /** 登录态：本地 store 或通知探测二者任一登录即视为已登录 */
+  const loggedIn = isLoggedIn || notifLoggedIn === true;
+
+  const LANGUAGE_OPTIONS = [
+    { value: 'zh-CN', label: '中文' },
+    { value: 'en', label: 'EN' },
+  ];
+
+  const switchLocale = (next: string) => {
+    if (next === locale) return;
+    document.cookie = `locale=${encodeURIComponent(next)}; path=/; max-age=31536000; samesite=lax`;
+    window.location.reload();
+  };
 
   return (
-    <div ref={avatarRef} className="relative">
-      <Avatar
-        email={user.email}
-        displayName={user.displayName}
-        avatarUrl={user.avatarUrl}
-        avatarType={user.avatarType}
-        size={size}
-        clickable
-        onClick={() => setOpen((v) => !v)}
-      />
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={() => {
+          if (!isLoggedIn) {
+            router.push('/login');
+            return;
+          }
+          setOpen((v) => !v);
+        }}
+        style={{ width: size, height: size }}
+        className="flex items-center justify-center rounded-full bg-[var(--primary)]/[0.12] text-[var(--primary)] hover:bg-[var(--primary)]/[0.2] transition-colors focus-amber"
+        aria-label={tUserMenu('menuAria')}
+        aria-expanded={open}
+        title={user?.displayName || user?.email || tUserMenu('login')}
+      >
+        {user ? (
+          <Avatar
+            email={user.email}
+            displayName={user.displayName}
+            avatarUrl={user.avatarUrl}
+            avatarType={user.avatarType ?? undefined}
+            size={size - 8}
+            className="!rounded-full !bg-transparent !border-0"
+          />
+        ) : (
+          <User className="w-4 h-4" />
+        )}
+      </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            ref={menuRef}
             initial="hidden"
             animate="visible"
             exit="exit"
             variants={listVariants}
-            className="absolute right-0 bottom-[calc(100%+8px)] md:bottom-auto md:top-[calc(100%+8px)] z-50 min-w-[200px] sm:min-w-[240px] border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(88vw,320px)] max-h-[80vh] overflow-y-auto border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
           >
             {/* 用户信息头部 */}
             <motion.div
               variants={itemVariants}
               className="px-4 py-3 border-b border-[var(--border)]"
             >
-              <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-1">
-                [ Account ]
+              <div className="meta-mono text-[13px] text-[var(--foreground)]">
+                {user?.displayName || user?.email || tUserMenu('login')}
               </div>
-              <div className="text-[13px] text-[var(--foreground)] truncate">
-                {user.displayName || user.email}
+              <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mt-0.5">
+                {user?.role ? (ROLE_LABEL[user.role] ?? user.role) : ''}
               </div>
-              {user.displayName && (
-                <div className="text-[11px] text-[var(--muted-foreground)] truncate mt-0.5">
-                  {user.email}
+            </motion.div>
+
+            {/* 通知区块（未登录时引导登录查看） */}
+            <motion.div variants={itemVariants} className="border-b border-[var(--border)]">
+              <div className="flex items-center justify-between px-4 py-2">
+                <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
+                  [ {tNotif('ariaLabel')} ]
+                </span>
+                {loggedIn && (
+                  <div className="flex items-center gap-2">
+                    {unreadCount > 0 && (
+                      <span className="meta-mono text-[10px] text-[var(--primary)]">
+                        {tNotif('unread', { count: unreadCount })}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={markAllRead}
+                      disabled={unreadCount === 0}
+                      className="meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {tNotif('markAllRead')}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {loggedIn ? (
+                <div className="max-h-[240px] overflow-y-auto">
+                  {notifLoading ? (
+                    <div className="px-4 py-6 text-center text-[var(--muted-foreground)] text-[12px]">
+                      {tNotif('loading')}
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-[var(--muted-foreground)] text-[12px]">
+                      {tNotif('empty')}
+                    </div>
+                  ) : (
+                    notifications.map((n) => {
+                      const typeStyle = TYPE_STYLES[n.type] ?? TYPE_STYLES.system;
+                      return (
+                        <button
+                          key={n.id}
+                          type="button"
+                          onClick={() => {
+                            if (!n.isRead) markRead(n.id);
+                            setOpen(false);
+                            router.push('/notifications');
+                          }}
+                          className={`w-full text-left px-4 py-2.5 hover:bg-[var(--primary)]/[0.06] transition-colors border-b border-[var(--border)] last:border-b-0 relative ${
+                            !n.isRead ? 'pl-[18px]' : ''
+                          }`}
+                        >
+                          {!n.isRead && (
+                            <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--primary)]" />
+                          )}
+                          <div className="flex items-start gap-2">
+                            <span
+                              className={`meta-mono text-[9px] px-1.5 py-0.5 shrink-0 ${typeStyle.className}`}
+                            >
+                              {typeStyle.label}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[12px] text-[var(--foreground)] truncate">
+                                {n.title}
+                              </div>
+                              <div className="mt-0.5 meta-mono text-[10px] text-[var(--muted-foreground)]">
+                                {formatRelativeTime(n.createdAt)}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    router.push('/login');
+                  }}
+                  className="w-full px-4 py-4 text-left text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/[0.06] transition-colors"
+                >
+                  {tUserMenu('loginToView')}
+                </button>
+              )}
+
+              {loggedIn && (
+                <div className="px-4 py-2 text-right">
+                  <Link
+                    href="/notifications"
+                    onClick={() => setOpen(false)}
+                    className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
+                  >
+                    {tNotif('viewAll')}
+                  </Link>
                 </div>
               )}
             </motion.div>
 
-            {/* 菜单项 */}
-            <div className="py-1">
-              {/* 管理员专属 — 仅 admin / root 可见 */}
-              {(user.role === 'admin' || user.role === 'root') && (
-                <motion.button
-                  key={ADMIN_MENU_ITEM.key}
-                  variants={itemVariants}
-                  onClick={() => handleAction(ADMIN_MENU_ITEM.action, ADMIN_MENU_ITEM.href)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--primary)]/[0.08] transition-colors group border-b border-[var(--border)]"
+            {/* 语言切换区块 */}
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]"
+            >
+              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
+                [ {tCommon('language')} ]
+              </span>
+              <div className="flex items-center gap-1" role="group" aria-label={tCommon('language')}>
+                {LANGUAGE_OPTIONS.map((opt) => {
+                  const active = opt.value === locale;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => switchLocale(opt.value)}
+                      aria-current={active ? 'true' : undefined}
+                      className={`meta-mono text-[11px] px-2 py-0.5 transition-colors focus-amber ${
+                        active
+                          ? 'text-[var(--primary)] underline-grow'
+                          : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            {/* 菜单项（已登录显示） */}
+            {loggedIn && (
+              <>
+                <motion.div variants={itemVariants}>
+                  <MenuItem
+                    href="/profile"
+                    icon={<User className="w-3.5 h-3.5" />}
+                    label={tProfile('profileTitle')}
+                    onClick={() => setOpen(false)}
+                  />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <MenuItem
+                    href="/create"
+                    icon={<PenLine className="w-3.5 h-3.5" />}
+                    label={tUserMenu('create')}
+                    onClick={() => setOpen(false)}
+                  />
+                </motion.div>
+
+                {user?.role === 'admin' || user?.role === 'root' ? (
+                  <motion.div variants={itemVariants}>
+                    <MenuItem
+                      href="/admin"
+                      icon={<Shield className="w-3.5 h-3.5" />}
+                      label={tUserMenu('admin')}
+                      onClick={() => setOpen(false)}
+                    />
+                  </motion.div>
+                ) : null}
+
+                <motion.div variants={itemVariants}>
+                  <button
+                    type="button"
+                    onClick={handleSwitch}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] text-[var(--foreground)] hover:bg-[var(--primary)]/[0.06] transition-colors"
+                  >
+                    <span className="text-[var(--muted-foreground)]">
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </span>
+                    <span>{tUserMenu('switch')}</span>
+                  </button>
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] text-[var(--foreground)] hover:bg-[var(--primary)]/[0.06] transition-colors"
+                  >
+                    <span className="text-[var(--muted-foreground)]">
+                      <LogOut className="w-3.5 h-3.5" />
+                    </span>
+                    <span>{tUserMenu('logout')}</span>
+                  </button>
+                </motion.div>
+              </>
+            )}
+
+            {/* 未登录：登录项 */}
+            {!loggedIn && (
+              <motion.div variants={itemVariants}>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-[var(--background)] bg-[var(--primary)] hover:opacity-90 transition-opacity"
                 >
-                  <span className="meta-mono text-[10px] text-[var(--primary)] group-hover:text-[var(--primary)] transition-colors">
-                    00
+                  <span>
+                    <LogOut className="w-3.5 h-3.5" />
                   </span>
-                  <span className="text-[13px] text-[var(--primary)] font-medium">
-                    {labels[ADMIN_MENU_ITEM.key]}
-                  </span>
-                  <span className="meta-mono ml-auto text-[10px] text-[var(--primary)]/70">
-                    {ADMIN_MENU_ITEM.en}
-                  </span>
-                </motion.button>
-              )}
-              {MENU_ITEMS.map((item, idx) => (
-                <motion.button
-                  key={item.key}
-                  variants={itemVariants}
-                  onClick={() => handleAction(item.action, item.href, item.key)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--primary)]/[0.08] transition-colors group"
-                >
-                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors">
-                    0{idx + 1}
-                  </span>
-                  <span className="text-[13px] text-[var(--foreground)]">
-                    {labels[item.key]}
-                  </span>
-                  <span className="meta-mono ml-auto text-[10px] text-[var(--muted-foreground)]">
-                    {item.en}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
+                  <span>{tUserMenu('login')}</span>
+                </Link>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -64,7 +64,7 @@
 
 | # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
 |---|------|------|------|:---:|------|:---:|
-| 9 | SQL 注入防护 | - | 全部 DB 查询 | **[后端]** | 原 `better-sqlite3` 参数化为遗留代码；运行时 SQL 由后端 SQLAlchemy ORM 参数化 | ✅ 良好 |
+| 9 | SQL 注入防护 | - | 全部 DB 查询 | **[后端]** | 运行时 SQL 由后端 SQLAlchemy ORM 参数化（原 `better-sqlite3` 遗留代码已删除） | ✅ 良好 |
 
 ### A04: 不安全的设计
 
@@ -248,7 +248,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 ## 8. 迁移影响
 
-- 角色 RBAC 由后端 `rbac.py` + seed 数据承载，前端 `users.role` 列为遗留 SQLite 表（运行时不引用）
+- 角色 RBAC 由后端 `rbac.py` + seed 数据承载（旧前端 SQLite `users.role` 单列已随迁移与清理移除）
 - 旧 `role='admin'` 账号在迁移时映射为后端 `admin` 角色 + 必要权限
 - 仅新增后端 partial index / RBAC seed，无破坏性变更，可安全回滚（后端 Alembic 管理）
 
@@ -296,7 +296,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 | SI4 | 事件监听器已注册 | 监听器数 < 1 的事件类型数 = 0 | **[BFF]** | 启动健康检查 |
 | SI5 | 生产关键变量已配置 | `ALLOWED_ORIGINS`（BFF）/ `SECRET_KEY` `TOTP_ENCRYPTION_KEY`（后端）缺失 = 0 | **[BFF]+[后端]** | 启动断言 |
 | SI6 | 审计日志覆盖所有管理员写操作 | 缺 `logAdminAction` 的后端端点数 = 0 | **[后端]** | 后端静态扫描 |
-| SI7 | BFF 不直连业务数据库 | BFF API 路由引用 `better-sqlite3` 的数量 = 0 | **[BFF]** | 静态扫描（迁移后新增） |
+| SI7 | BFF 不直连业务数据库 | BFF 代码中 `better-sqlite3` 依赖引用 = 0（依赖已整体移除） | **[BFF]** | 静态扫描（迁移后新增） |
 
 > SI5 调整说明：单体时代 `AUTH_SESSION_SECRET` 为前端 session 签名密钥；迁移后运行时 JWT 签名密钥为后端 `SECRET_KEY`，`AUTH_SESSION_SECRET` 仅遗留代码自保护使用。生产关键变量拆分为 BFF 侧（`ALLOWED_ORIGINS`）与后端侧（`SECRET_KEY`/`TOTP_ENCRYPTION_KEY`/`DATABASE_PASSWORD`）。
 

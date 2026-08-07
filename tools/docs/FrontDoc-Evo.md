@@ -187,7 +187,7 @@
 
 > 设计原则：**平滑过渡、可逆、不中断服务**。通过环境变量 `DATABASE_DIALECT` 控制实际使用的数据库，开发期仍可回退 SQLite。
 
-> ⚠️ ADR-009 收官后，此双引擎机制仅遗留脚本（`create-user`/`seed`）使用，BFF 运行时 API 路由不引用。
+> ⚠️ ADR-009 收官后，此双引擎机制已无任何运行时引用；遗留脚本与 `src/shared/db/*` 双引擎代码已于 2026-08-07 全部删除。
 
 ---
 
@@ -214,7 +214,7 @@
 | Drizzle schema 双 dialect 漂移 | 中 | CI 校验 `drizzle-kit check` 双 dialect |
 | 回滚困难（PG 专属类型无法回 SQLite） | 中 | 保留 SQLite 实例 + 增量同步 |
 
-> ℹ️ ADR-009 收官后，前四项风险已随前端降级为 BFF 而消解（BFF 不再持有业务数据）；第五项保留 SQLite 实例的缓解措施仍适用于遗留脚本。
+> ℹ️ ADR-009 收官后，前四项风险已随前端降级为 BFF 而消解（BFF 不再持有业务数据）；第五项保留 SQLite 实例的缓解措施已随遗留脚本删除（2026-08-07）而不再适用。
 
 ---
 
@@ -222,16 +222,16 @@
 
 | 文件 | 职责 | 运行时状态 |
 |------|------|:---:|
-| `src/shared/db/db.ts` | db 单例，按 dialect 初始化 | ⚠️ 遗留 |
-| `src/shared/db/drizzle.ts` | 双 dialect Drizzle 实例 | ⚠️ 遗留 |
-| `src/shared/db/repositories/*.repo.ts` | 各模块 DbEngine 抽象 Repository（ADR-009；audit 为首个模板，已扩展至 auth/user/community/events/tools/notification/admin/announcement） | ⚠️ 遗留 |
-| `src/shared/db/migrations.ts` | 双 dialect 迁移执行 | ⚠️ 遗留 |
-| `drizzle.config.ts` | Drizzle 配置（dialect 切换） | ⚠️ 遗留 |
-| `src/shared/db/drizzle/` | 各模块 Drizzle/PG schema 定义（getXxxSchema 工厂） | ⚠️ 遗留 |
-| `src/shared/db/sqlite/` | 各模块 SQLite 建表脚本（initXxxSchema） | ⚠️ 遗留 |
-| `tools/scripts/migrate-sqlite-to-pg.mjs` | SQLite -> PG 数据迁移脚本（UUID->Integer 重映射 + 依赖序导入 + 类型转换 + setval + 幂等）；用法见 [FrontDoc-PGMig.md](FrontDoc-PGMig.md) | ✅ 迁移工具 |
+| `src/shared/db/db.ts` | db 单例，按 dialect 初始化 | ❌ 已删除 |
+| `src/shared/db/drizzle.ts` | 双 dialect Drizzle 实例 | ❌ 已删除 |
+| `src/shared/db/repositories/*.repo.ts` | 各模块 DbEngine 抽象 Repository（ADR-009；audit 为首个模板，已扩展至 auth/user/community/events/tools/notification/admin/announcement） | ❌ 已删除 |
+| `src/shared/db/migrations.ts` | 双 dialect 迁移执行 | ❌ 已删除 |
+| `drizzle.config.ts` | Drizzle 配置（dialect 切换） | ❌ 已删除 |
+| `src/shared/db/drizzle/` | 各模块 Drizzle/PG schema 定义（getXxxSchema 工厂） | ❌ 已删除 |
+| `src/shared/db/sqlite/` | 各模块 SQLite 建表脚本（initXxxSchema） | ❌ 已删除 |
+| `tools/scripts/migrate-sqlite-to-pg.mjs` | SQLite -> PG 数据迁移脚本（UUID->Integer 重映射 + 依赖序导入 + 类型转换 + setval + 幂等）；用法见 [FrontDoc-PGMig.md](FrontDoc-PGMig.md) | ❌ 已删除（迁移已 100% 完成） |
 
-> ⚠️ = 迁移前单体遗留代码，BFF 运行时不被任何 API 路由引用，待清理（见根目录 `项目待办事项.md` "多库支持-待办"）
+> ❌ = 迁移前单体遗留代码，已于 2026-08-07 全部删除（`src/shared/db/*`、`drizzle.config.ts`、遗留脚本 `create-user.mjs`/`seed-exam-data.mjs`/`migrate-sqlite-to-pg.mjs`；前端零 SQLite 依赖）。
 
 ---
 

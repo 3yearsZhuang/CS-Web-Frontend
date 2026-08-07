@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const proxy = await proxyBackend(req, { path: '/community/tags' });
-  const res = NextResponse.json(proxy.body ?? []);
+  const res = NextResponse.json(proxy.body ?? { tags: [] }, { status: proxy.status });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }
