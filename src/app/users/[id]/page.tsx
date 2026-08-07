@@ -1,5 +1,5 @@
 /**
- * @file 用户公开主页（/users/[id]）— 技术档案 + 考试统计 + 论坛活动
+ * @file 用户公开主页（/users/[id]）— 技术档案 + 考试统计 + 社区活动
  */
 'use client';
 
@@ -15,7 +15,7 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
-type ProfileTab = 'profile' | 'exam' | 'forum';
+type ProfileTab = 'profile' | 'exam' | 'community';
 
 type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -94,7 +94,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
     () => [
       { key: 'profile', num: '01', label: '资料 / Profile' },
       { key: 'exam', num: '02', label: '考试 / Exam' },
-      { key: 'forum', num: '03', label: '论坛 / Forum' },
+      { key: 'community', num: '03', label: '社区 / Community' },
     ],
     [],
   );
@@ -105,7 +105,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
       try {
         const [userRes, topicsRes] = await Promise.all([
           fetch(`/api/users/${id}`),
-          fetch(`/api/community/forum/users/${id}/topics?page=1&page_size=5`),
+          fetch(`/api/community/users/${id}/topics?page=1&page_size=5`),
         ]);
         if (!userRes.ok) {
           const data = await userRes.json();
@@ -281,11 +281,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                   </div>
                 </div>
 
-                {/* 论坛统计 */}
+                {/* 社区统计 */}
                 {stats && (
                   <div>
                     <div className="meta-mono text-[var(--muted-foreground)] mb-3">
-                      [ 03 ] {t('forumActivity')}
+                      [ 03 ] {t('communityActivity')}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="card-minimal p-4 text-center">
@@ -333,10 +333,10 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
               </motion.div>
             )}
 
-            {/* [03] 论坛 */}
-            {activeTab === 'forum' && (
+            {/* [03] 社区 */}
+            {activeTab === 'community' && (
               <motion.div
-                key="forum"
+                key="community"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
@@ -347,7 +347,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                     {topics.map((topic) => (
                       <Link
                         key={topic.id}
-                        href={`/community/forum/${topic.category?.slug || 'general'}/${topic.id}`}
+                        href={`/community/community/${topic.category?.slug || 'general'}/${topic.id}`}
                         className="card-minimal block p-4 group"
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -377,7 +377,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 {stats && (
                   <div className="mt-8">
                     <div className="meta-mono text-[var(--muted-foreground)] mb-3">
-                      论坛活跃度
+                      社区活跃度
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="card-minimal p-4 text-center">

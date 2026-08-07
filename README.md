@@ -44,7 +44,7 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 - 共享基础设施：`src/shared/`（BFF 客户端 / 安全 / 配置 / hooks）。其中 `db/`、`utils/mail.ts`、`events/` 为迁移前单体遗留代码，**运行时不被任何 API 路由引用**，待清理
 - 测试：`tools/tests/`（Vitest 单元 + Playwright E2E）
 
-> 顶层编排与全栈架构见根仓库 [README.md](../README.md) 与 [docs/RootDoc-Deploy.md](../docs/RootDoc-Deploy.md)；详细前端结构见 [架构文档](tools/docs/FrontDoc-Arch.md)。
+> 顶层编排与全栈架构见根仓库 [README.md](../README.md) 与 [docs/RootDoc-Deploy.md](../docs/RootDoc-Deploy.md)；详细前端结构见 [架构文档](tools/docs/FrontDoc-01-Arch.md)。
 
 ---
 
@@ -61,11 +61,11 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `/admin` | 管理后台（需 admin/root） |
 | `/notifications` | 消息通知（需登录） |
 | `/community` | 社区聚合页 — Feed 流 |
-| `/community/forum` | 论坛首页 — 版块列表 · 最近主题 |
-| `/community/forum/[category]` | 版块详情 — 主题列表 |
-| `/community/forum/[category]/[topicId]` | 主题详情 — 主帖 · 回复 · 楼中楼 |
-| `/community/forum/new` | 发新帖 |
-| `/community/blog/[slug]` | 博客详情 — Markdown 渲染 |
+| `/community` | 社区首页 — 版块列表 · 最近主题 |
+| `/community/[category]` | 版块详情 — 主题列表 |
+| `/community/[category]/[topicId]` | 主题详情 — 主帖 · 回复 · 楼中楼 |
+| `/community/new` | 发新内容 |
+| `/community/series/[slug]` | 系列详情 — Markdown 渲染 |
 | `/community/members` | 成员名录 |
 | `/tools` | 工具集首页 |
 | `/tools/exam` | 题库 |
@@ -99,9 +99,9 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 ### 角色
 
 - `user` — 普通用户（默认）
-- `admin` — 标准管理员（用户/活动/论坛管理）
+- `admin` — 标准管理员（用户/活动/社区管理）
 - `root` — 超级管理员（唯一，不可删除，拥有审计日志和角色管理权限）
-- `content_moderator` — 内容审核员（论坛审核）
+- `content_moderator` — 内容审核员（社区审核）
 - `exam_admin` — 考试管理员（题目/考试管理）
 - `task_publisher` — 任务发布员（任务管理）
 
@@ -113,15 +113,15 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 |------|------|-------|------|------------|
 | 浏览活动 | ✅ | ✅ | ✅ | ✅ |
 | 报名活动 | ✅ | ✅ | ✅ | ✅ |
-| 论坛发帖/回复 | ✅ | ✅ | ✅ | ✅ |
+| 社区发帖/回复 | ✅ | ✅ | ✅ | ✅ |
 | 管理用户（禁用/启用/编辑） | ❌ | ✅（不能操作管理员） | ✅ | ❌ |
 | 管理活动（创建/编辑/删除） | ❌ | ✅ | ✅ | ❌ |
-| 管理论坛（版块/主题审核） | ❌ | ✅ | ✅ | ❌ |
-| 管理论坛（审核/置精/删除） | ❌ | ✅ | ✅ | ✅(content_moderator) |
+| 管理社区（版块/主题审核） | ❌ | ✅ | ✅ | ❌ |
+| 管理社区（审核/置精/删除） | ❌ | ✅ | ✅ | ✅(content_moderator) |
 | 管理考试（创建/发布/结束） | ❌ | ✅ | ✅ | ✅(exam_admin) |
 | 管理任务（创建/发布/关闭） | ❌ | ✅ | ✅ | ✅(task_publisher) |
 | 角色权限管理 | ❌ | ❌ | ✅ | ❌ |
-| 博客发文 | ✅ | ✅ | ✅ | ✅ |
+| 社区发文 | ✅ | ✅ | ✅ | ✅ |
 | 任务认领 | ✅ | ✅ | ✅ | ✅ |
 | 群发通知 | ❌ | ✅ | ✅ | ❌ |
 | 审批密码重置 | ❌ | ✅（不能审批自己） | ✅ | ❌ |
@@ -183,9 +183,9 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 ```
 tools/tests/
-├── e2e/                         # Playwright E2E（auth/core-flows/events/exam/forum + global-setup）
+├── e2e/                         # Playwright E2E（auth/core-flows/events/exam/community + global-setup）
 ├── announcement.test.ts         # 公告模块
-├── blog-points.test.ts          # 博客积分逻辑
+├── community-points.test.ts     # 社区积分逻辑
 ├── events.test.ts               # 活动 CRUD/报名/归档日期兼容
 ├── exam.test.ts                 # 考试模块
 ├── join.test.ts                 # 入社申请
@@ -207,10 +207,10 @@ tools/tests/
 
 | 文档 | 说明 |
 |------|------|
-| [架构 + API 文档](tools/docs/FrontDoc-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
-| [安全文档](tools/docs/FrontDoc-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
+| [架构 + API 文档](tools/docs/FrontDoc-01-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
+| [安全文档](tools/docs/FrontDoc-02-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
 | [运维文档](tools/docs/FrontDoc-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
-| [演进与 ADR](tools/docs/FrontDoc-Evo.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
+| [演进与 ADR](docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/FrontDoc-MDE.md) | 编辑器使用指南 |
 | [入职指南 + 项目规则](../../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
 | [PG 数据迁移](tools/docs/FrontDoc-PGMig.md) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除） |

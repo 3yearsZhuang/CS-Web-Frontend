@@ -17,7 +17,7 @@ interface FeaturedTopicStripProps {
 }
 
 export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStripProps) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   if (topics.length === 0) return null;
 
   return (

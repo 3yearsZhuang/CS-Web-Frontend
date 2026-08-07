@@ -3,7 +3,7 @@
  */
 
 export * from './auth-schemas';
-export * from './forum-schemas';
+export * from './community-schemas';
 export * from './exam-schemas';
 export * from './event-schemas';
 export * from './announcement-schemas';

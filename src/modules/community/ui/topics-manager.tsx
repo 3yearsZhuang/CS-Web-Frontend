@@ -1,5 +1,5 @@
 /**
- * @file 主题审核子面板 — 从 forum-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * @file 主题审核子面板 — 从 community-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
  */
 'use client';
 
@@ -19,7 +19,7 @@ import {
   TOPICS_PAGE_SIZE,
   type SortValue,
   type TopicStatus,
-} from './forum-admin-utils';
+} from './community-admin-utils';
 
 interface CategoriesResponse {
   items: CommunityCategory[];
@@ -52,7 +52,7 @@ export function TopicsManager() {
 
   /** 加载版块（用于筛选下拉） */
   useEffect(() => {
-    fetch('/api/admin/community/forum/categories')
+    fetch('/api/admin/community/community/categories')
       .then(async (res) => {
         if (!res.ok) return null;
         const data = (await res.json()) as CategoriesResponse;
@@ -80,7 +80,7 @@ export function TopicsManager() {
       if (categoryFilter) params.set('category', categoryFilter);
       if (search.trim()) params.set('search', search.trim());
 
-      const res = await fetch(`/api/admin/community/forum/topics?${params}`);
+      const res = await fetch(`/api/admin/community/community/topics?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(getError(data, t('loadFailed')));
@@ -131,7 +131,7 @@ export function TopicsManager() {
   const handleHide = (topic: CommunityPost) => {
     const reason = window.prompt(t('hidePrompt', { title: topic.title })) ?? '';
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/forum/topics/${topic.id}/hide`, {
+      fetch(`/api/admin/community/community/topics/${topic.id}/hide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: reason.trim() || undefined }),
@@ -142,14 +142,14 @@ export function TopicsManager() {
   /** 恢复主题 */
   const handleRestore = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/forum/topics/${topic.id}/restore`, { method: 'POST' }),
+      fetch(`/api/admin/community/community/topics/${topic.id}/restore`, { method: 'POST' }),
     );
   };
 
   /** 切换置顶 */
   const handleTogglePin = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/forum/topics/${topic.id}/pin`, {
+      fetch(`/api/admin/community/community/topics/${topic.id}/pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pinned: !topic.isPinned }),
@@ -160,7 +160,7 @@ export function TopicsManager() {
   /** 切换加精 */
   const handleToggleFeature = (topic: CommunityPost) => {
     void doAction(topic.id, () =>
-      fetch(`/api/admin/community/forum/topics/${topic.id}/feature`, {
+      fetch(`/api/admin/community/community/topics/${topic.id}/feature`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ featured: !topic.isFeatured }),
@@ -179,7 +179,7 @@ export function TopicsManager() {
       });
       if (!confirmed) return;
       doAction(topic.id, () =>
-        fetch(`/api/admin/community/forum/topics/${topic.id}`, { method: 'DELETE' }),
+        fetch(`/api/admin/community/community/topics/${topic.id}`, { method: 'DELETE' }),
       );
     })();
   };

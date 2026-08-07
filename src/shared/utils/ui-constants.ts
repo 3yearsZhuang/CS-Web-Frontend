@@ -28,18 +28,18 @@ export const INPUT_CLASS =
 
 /** 常用表单字段长度限制（与后端保持一致） */
 export const FORM_LIMITS = {
-  /** 标题最大长度（通知标题 / 论坛标题） */
+  /** 标题最大长度（通知标题 / 社区标题） */
   TITLE_MAX: 120,
-  /** 标题最小长度（论坛发帖） */
+  /** 标题最小长度（社区发帖） */
   TITLE_MIN: 4,
   /** 通知内容最大长度 */
   NOTIFICATION_CONTENT_MAX: 500,
   /** Markdown 内容最大长度（活动详情） */
   EVENT_MARKDOWN_MAX: 10000,
-  /** Markdown 内容最大长度（论坛主题 / 回复） */
-  FORUM_MARKDOWN_MAX: 20000,
-  /** Markdown 内容最小长度（论坛发帖） */
-  FORUM_MARKDOWN_MIN: 10,
+  /** Markdown 内容最大长度（社区主题 / 回复） */
+  COMMUNITY_MARKDOWN_MAX: 20000,
+  /** Markdown 内容最小长度（社区发帖） */
+  COMMUNITY_MARKDOWN_MIN: 10,
   /** 活动描述最大长度 */
   EVENT_DESC_MAX: 500,
   /** 月份字符串最大长度 */

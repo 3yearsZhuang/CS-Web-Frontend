@@ -4,7 +4,7 @@ import { eventStatusLabel, splitTags, blankEventForm } from '@/modules/admin/ui/
 import { formatDate, TASK_CATEGORY_LABELS } from '@/modules/tools/ui/tool-types';
 import { roleBadgeLabel } from '@/modules/admin/ui/roles-types';
 import { roleLabel, resetStatusLabel } from '@/modules/admin/ui/users-panel-utils';
-import { getError } from '@/modules/community/ui/forum-admin-utils';
+import { getError } from '@/modules/community/ui/community-admin-utils';
 import { LOGO_PALETTE, LOGO_PALETTE_MINI } from '@/shared/constants/logo-colors';
 import { BREAKPOINTS, BREAKPOINT_QUERIES } from '@/shared/constants/breakpoints';
 
@@ -97,7 +97,7 @@ describe('roles-types / users-panel-utils (拆分)', () => {
   });
 });
 
-describe('forum-admin-utils (forum-admin-panel 拆分)', () => {
+describe('community-admin-utils (community-admin-panel 拆分)', () => {
   it('getError 提取 error 字段', () => {
     expect(getError({ error: '失败' }, 'fallback')).toBe('失败');
     expect(getError(null, 'fallback')).toBe('fallback');

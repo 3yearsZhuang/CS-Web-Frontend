@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, RefreshCw, User, PenLine, Shield } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
+import { setLocaleCookie } from '@/shared/utils/locale';;
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useNotificationsPreview } from '@/components/use-notifications-preview';
 import { TYPE_STYLES } from '@/components/notification-bell';
@@ -162,7 +163,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
 
   const switchLocale = (next: string) => {
     if (next === locale) return;
-    document.cookie = `locale=${encodeURIComponent(next)}; path=/; max-age=31536000; samesite=lax`;
+    setLocaleCookie(next);
     window.location.reload();
   };
 

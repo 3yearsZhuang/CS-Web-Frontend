@@ -3,7 +3,7 @@
 > 文档定位：Markdown 编辑器组件使用指南（how-to）
 > 受众：前端开发者 / 需要接入富文本编辑的模块负责人
 > Source of truth：编辑器组件架构、接入方式、内容限制的唯一权威位置
-> 关联：组件目录见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；设计规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
+> 关联：组件目录见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；设计规范见 [FrontDoc-UID.md](FrontDoc-UID.md)
 > 最后更新：2026-08-01（修复组件路径与 API 路径重复）
 > 更新人：3yearsZ
 > cadence：编辑器组件变更时
@@ -31,10 +31,10 @@ MarkdownRenderer              - 只读渲染（react-markdown + 插件链）
     │       ↑
     │       └── MarkdownEditor - 完整编辑器（工具栏 + 图片上传）
     │
-    └── ForumReplyItem        - 回复项渲染（主回复 + 楼中楼）
+    └── CommunityReplyItem        - 回复项渲染（主回复 + 楼中楼）
 ```
 
-所有组件位于 `src/modules/community/ui/` 目录（文件名以 forum- 前缀）。
+所有组件位于 `src/modules/community/ui/` 目录（文件名以 community- 前缀）。
 
 ---
 
@@ -42,7 +42,7 @@ MarkdownRenderer              - 只读渲染（react-markdown + 插件链）
 
 ### 2.1 MarkdownRenderer - 渲染器
 
-文件：`src/modules/community/ui/forum-markdown-renderer.tsx`
+文件：`src/modules/community/ui/community-markdown-renderer.tsx`
 
 定位：只读 Markdown 渲染，用于展示主题正文、回复内容等。
 
@@ -69,7 +69,7 @@ Props：
 使用示例：
 
 ```tsx
-import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 
 <MarkdownRenderer content={topic.contentMarkdown} />
 ```
@@ -78,7 +78,7 @@ import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer
 
 ### 2.2 MarkdownEditorBase - 基础编辑器
 
-文件：`src/modules/community/ui/forum-markdown-editor-base.tsx`
+文件：`src/modules/community/ui/community-markdown-editor-base.tsx`
 
 定位：纯编辑/预览切换，无工具栏和图片上传。
 
@@ -104,7 +104,7 @@ Props：
 使用示例：
 
 ```tsx
-import { MarkdownEditorBase } from '@/modules/community/ui/forum-markdown-editor-base';
+import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
 
 <MarkdownEditorBase
   value={eventDetailMarkdown}
@@ -118,9 +118,9 @@ import { MarkdownEditorBase } from '@/modules/community/ui/forum-markdown-editor
 
 ### 2.3 MarkdownEditor - 完整编辑器
 
-文件：`src/modules/community/ui/forum-markdown-editor.tsx`
+文件：`src/modules/community/ui/community-markdown-editor.tsx`
 
-定位：论坛发主题 / 回复的完整编辑器。
+定位：社区发主题 / 回复的完整编辑器。
 
 继承关系：基于 `MarkdownEditorBase`，额外提供工具栏和图片上传。
 
@@ -139,7 +139,7 @@ import { MarkdownEditorBase } from '@/modules/community/ui/forum-markdown-editor
 | `-` | 无序列表 | `- item` |
 | `1.` | 有序列表 | `1. item` |
 
-图片上传：调用 `/api/community/forum/upload`，支持 JPEG / PNG / WebP / GIF，限制 5MB。
+图片上传：调用 `/api/community/community/upload`，支持 JPEG / PNG / WebP / GIF，限制 5MB。
 
 Props：
 
@@ -154,7 +154,7 @@ Props：
 使用示例：
 
 ```tsx
-import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
+import { MarkdownEditor } from '@/modules/community/ui/community-markdown-editor';
 
 <MarkdownEditor
   value={content}
@@ -170,11 +170,11 @@ import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
 
 | 场景 | 页面 / 组件 | 使用组件 |
 |------|-----------|---------|
-| 论坛发帖 | `/community/forum/new` | `MarkdownEditor` |
-| 编辑主题 | `/community/forum/[category]/[topicId]` | `MarkdownEditor` |
-| 撰写回复 | `/community/forum/[category]/[topicId]` | `MarkdownEditor` |
+| 社区发帖 | `/community/community/new` | `MarkdownEditor` |
+| 编辑主题 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
+| 撰写回复 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
 | 活动详情编辑 | `/admin`（活动创建 / 编辑弹窗） | `MarkdownEditorBase` |
-| 主题正文渲染 | `/community/forum/[category]/[topicId]` | `MarkdownRenderer` |
+| 主题正文渲染 | `/community/community/[category]/[topicId]` | `MarkdownRenderer` |
 | 回复内容渲染 | `reply-item.tsx` | `MarkdownRenderer` |
 
 ## 四、内容长度限制
@@ -183,8 +183,8 @@ import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
 
 | 常量 | 值 | 适用范围 |
 |------|-----|---------|
-| `FORUM_MARKDOWN_MIN` | `10` | 论坛发帖最小长度 |
-| `FORUM_MARKDOWN_MAX` | `20000` | 论坛主题 / 回复最大长度 |
+| `COMMUNITY_MARKDOWN_MIN` | `10` | 社区发帖最小长度 |
+| `COMMUNITY_MARKDOWN_MAX` | `20000` | 社区主题 / 回复最大长度 |
 | `EVENT_MARKDOWN_MAX` | `10000` | 活动详情最大长度 |
 
 ## 五、已知待统一项

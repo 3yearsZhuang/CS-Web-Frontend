@@ -9,7 +9,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { MarkdownEditor } from '@/modules/community/ui/forum-markdown-editor';
+import { MarkdownEditor } from '@/modules/community/ui/community-markdown-editor';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { Button } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';

@@ -1,5 +1,5 @@
 /**
- * @file 举报处理子面板 — 从 forum-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * @file 举报处理子面板 — 从 community-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
  */
 'use client';
 
@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
-import { getError } from './forum-admin-utils';
+import { getError } from './community-admin-utils';
 
 type ReportStatusFilter = 'pending' | 'resolved' | 'dismissed' | 'all';
 
@@ -49,7 +49,7 @@ export function ReportsManager() {
 
   const { confirm } = useConfirm();
   const t = useTranslations('reportsManager');
-  const tf = useTranslations('forum');
+  const tf = useTranslations('community');
   const tc = useTranslations('communityAdmin');
 
   const load = useCallback(async () => {

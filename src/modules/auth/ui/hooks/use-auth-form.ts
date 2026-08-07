@@ -12,6 +12,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useSWRConfig } from 'swr';
 import { EMAIL_REGEX } from '@/modules/auth/types/constants';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import { logger } from '@/shared/logger';
@@ -77,6 +78,7 @@ export function useAuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('auth');
+  const { mutate } = useSWRConfig();
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -266,6 +268,8 @@ export function useAuthForm() {
         return;
       }
 
+      // 登录成功：Cookie 已回写，主动刷新全局登录态缓存，避免 navbar/页面短暂显示未登录
+      await mutate('/api/auth/me');
       router.push('/profile');
     } catch (err) {
       logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 请求失败');
@@ -305,6 +309,8 @@ export function useAuthForm() {
         return;
       }
 
+      // 2FA 登录成功：Cookie 已回写，主动刷新全局登录态缓存
+      await mutate('/api/auth/me');
       router.push('/profile');
     } catch (err) {
       logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 2FA 验证失败');

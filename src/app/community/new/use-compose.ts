@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { CommunityCategory } from '@/modules/community/types';
 
-/** 后端长度限制（与 server/forum.ts LIMITS 保持一致） */
+/** 后端长度限制（与 server/community.ts LIMITS 保持一致） */
 const LIMITS = {
   TITLE_MIN: 4,
   TITLE_MAX: 120,
@@ -65,7 +65,7 @@ export function useCompose() {
     try {
       const [meRes, catRes] = await Promise.all([
         fetch('/api/auth/me'),
-        fetch('/api/community/forum/categories'),
+        fetch('/api/community/categories'),
       ]);
 
       if (meRes.ok) {
@@ -134,7 +134,7 @@ export function useCompose() {
 
       setSubmitting(true);
       try {
-        const res = await fetch('/api/community/forum/topics', {
+        const res = await fetch('/api/community/topics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

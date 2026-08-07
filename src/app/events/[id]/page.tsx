@@ -12,7 +12,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { EventStatusBadge } from '@/modules/events/ui/event-status-badge';
 
 /** 容量为 0 表示不限名额（数据库无 NULL 容量，以 0 代表不限制） */

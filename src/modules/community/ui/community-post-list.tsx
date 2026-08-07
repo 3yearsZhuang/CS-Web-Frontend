@@ -28,7 +28,7 @@ export function CommunityPostList({
   emptyText = '// 暂无内容',
   sortAtField = 'updatedAt',
 }: CommunityPostListProps) {
-  const t = useTranslations('forum');
+  const t = useTranslations('communityCommon');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

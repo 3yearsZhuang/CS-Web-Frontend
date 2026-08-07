@@ -27,12 +27,18 @@ export function SecurityTab() {
   } = usePassword();
 
   return (
-    <>
-      <form
-        onSubmit={handlePasswordSubmit}
-        className="grid grid-cols-12 gap-0 border-t border-[var(--border)]"
-      >
-        <div className="col-span-12 md:col-span-8 md:col-start-3 p-6 sm:p-8 md:py-10 space-y-8">
+    <div className="grid grid-cols-12 gap-0">
+      {/* 左栏：密码修改（窄栏，对标资料页头像区；宽屏下粘性定位） */}
+      <div className="col-span-12 md:col-span-5 border-t border-[var(--border)] md:border-r md:pr-6">
+        {/* 安全子区块分隔标题 */}
+        <div className="flex items-center gap-3 pt-10 mt-10">
+          <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">
+            <span className="ark-divider">{t('securityTitle')}</span>
+          </span>
+        </div>
+
+        <form onSubmit={handlePasswordSubmit} className="p-5 sm:p-6 md:py-8 space-y-6 md:sticky md:top-24">
+
           {/* 当前密码 */}
           <div>
             <label
@@ -134,14 +140,17 @@ export function SecurityTab() {
               {t('reset')}
             </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
 
-      {/* 双因素认证 */}
-      <TwoFactorSettings />
+      {/* 右栏：双因素认证 + 活跃会话（对标资料页表单区） */}
+      <div className="col-span-12 md:col-span-7 md:pl-6 flex flex-col">
+        {/* 双因素认证 */}
+        <TwoFactorSettings />
 
-      {/* 活跃会话管理 */}
-      <SessionManager />
-    </>
+        {/* 活跃会话管理 */}
+        <SessionManager />
+      </div>
+    </div>
   );
 }

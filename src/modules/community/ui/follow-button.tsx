@@ -5,7 +5,7 @@
  *   <FollowButton targetUserId={authorId} currentUserId={currentUser?.id} />
  *
  * - 未登录：点击跳转 /login
- * - 已登录且非本人：显示「关注 / 已关注」切换，调用 POST /api/community/forum/users/[id]/follow
+ * - 已登录且非本人：显示「关注 / 已关注」切换，调用 POST /api/community/users/[id]/follow
  * - 关注状态首次挂载时若未显式传入，则从 GET 同名接口拉取
  */
 'use client';
@@ -42,7 +42,7 @@ export function FollowButton({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/community/forum/users/${targetUserId}/follow`, {
+        const res = await fetch(`/api/community/users/${targetUserId}/follow`, {
           cache: 'no-store',
         });
         const data = (await res.json()) as { following: boolean };
@@ -67,7 +67,7 @@ export function FollowButton({
     if (isSelf || pending) return;
     setPending(true);
     try {
-      const res = await fetch(`/api/community/forum/users/${targetUserId}/follow`, {
+      const res = await fetch(`/api/community/users/${targetUserId}/follow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

@@ -4,7 +4,7 @@
 > 更新人：3yearsZ
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：**前端 BFF 层**的运维操作、SLO 阈值、回滚流程的唯一权威位置
-> 关联：**全栈部署/编排权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)**；后端 PG/备份/运维端点见 [CS-Web-Backend/docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md)；架构与 API 见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；安全见 [FrontDoc-Sec.md](FrontDoc-Sec.md)；演进与 ADR 见 [FrontDoc-Evo.md](FrontDoc-Evo.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 关联：**全栈部署/编排权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)**（含 §七 跨端 SLO 与可观测性基线）；后端 PG/备份/运维端点见 [CS-Web-Backend/tools/docs/BackDoc-Infra.md](../../CS-Web-Backend/tools/docs/BackDoc-Infra.md)；架构与 API 见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；安全见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；演进与 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 变更触发：BFF 部署架构变更 / SLO 阈值调整 / 新增故障场景 / 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行 / 仍引用 SQLite/Litestream（应为后端职责）
 
@@ -37,7 +37,7 @@
 
 ```bash
 # === BFF 运行时（必填）===
-BACKEND_URL=http://localhost:9000              # BFF 转发的后端 FastAPI 地址
+BACKEND_URL=http://localhost:9000              # BFF 转发的后端 FastAPI 地址（本地开发；容器编排内改为 http://backend:8000）
 NEXT_PUBLIC_SITE_URL=https://your-domain.com   # 站点 URL（metadata base URL）
 ALLOWED_ORIGINS=https://your-domain.com        # Origin 白名单（逗号分隔，POST 端点防 Login CSRF）
 TRUST_PROXY=true                               # 反向代理部署时必设为 true（速率限制需正确客户端 IP）
@@ -219,6 +219,7 @@ PORT=5200 pnpm start    # 改用其他端口
 > 变更触发：性能可用性偏离 SLO / 用户量增长触发容量重评估 / 重大架构变更
 
 > **范围说明**：本 SLO 覆盖**用户可见的 BFF 端点**（含其转发后端的链路）。后端 PG / Alembic / Redis 等组件的内部 SLO 由后端文档管理。
+> **跨端 SLO 基线（可用性/延迟/数据持久性/错误预算/可观测性/告警/巡检）的唯一权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md#七slo-与可观测性基线) §七**；本文 Part B 仅补充 BFF 端点级 SLI 矩阵、错误预算消耗规则与评审流程。
 
 ## 一、SLO 定义（0.9.1 最小集）
 
@@ -239,7 +240,7 @@ PORT=5200 pnpm start    # 改用其他端口
 ```
 GET  /api/health                  — 可用性探活（BFF 转发后端 /health）
 POST /api/auth/login              — 认证关键路径
-GET  /api/community/forum/topics  — 论坛列表（读高频）
+GET  /api/community/community/topics  — 社区列表（读高频）
 POST /api/exam/submit             — 考试提交（业务关键，单独 SLO）
 GET  /api/events                  — 活动列表
 GET  /api/notifications           — 通知（轮询高频）
@@ -256,7 +257,7 @@ GET  /api/notifications           — 通知（轮询高频）
 | API P95 延迟 | pino `requestId` + `responseTime` | 按端点分组计算 P95 |
 | 考试提交 | pino 业务日志 | 按考试 ID 聚合 `exam.submit` 成功率 |
 
-> ℹ️ 外部探针接入等待办条目已迁移至根目录 `项目待办事项.md`。
+> ℹ️ 外部探针接入等待办条目已迁移至 `docs/项目待办事项.md`。
 
 ---
 
@@ -276,7 +277,7 @@ GET  /api/notifications           — 通知（轮询高频）
 
 - **冻结条件**：月可用性预算超支（> 7.2 小时宕机）或考试期 SLO 违约
 - **冻结范围**：所有非 hotfix 发布暂停；hotfix 须经 oncall 批准
-- **解冻条件**：下一测量窗口开始 + 根因分析文档完成（写入 [FrontDoc-Evo.md](FrontDoc-Evo.md) ADR）
+- **解冻条件**：下一测量窗口开始 + 根因分析文档完成（写入 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) ADR）
 
 ---
 
@@ -304,13 +305,13 @@ GET  /api/notifications           — 通知（轮询高频）
 | 月份 | 可用性 | 5xx 错误率 | P95 延迟 | Budget 消耗 | 状态 | 备注 |
 |------|--------|----------|---------|------------|------|------|
 
-> ℹ️ 待发布月份记录等待办条目已迁移至根目录 `项目待办事项.md`。
+> ℹ️ 待发布月份记录等待办条目已迁移至 `docs/项目待办事项.md`。
 
 ---
 
 ## 五、相关文档与 ADR
 
-- [FrontDoc-Evo.md](FrontDoc-Evo.md) — ADR-018（0.9.1 SLO 与单实例风险接受）、R18（外部探针未接入前降级风险）
+- [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) — ADR-018（0.9.1 SLO 与单实例风险接受）、R18（外部探针未接入前降级风险）
 - 本文档 Part C — SLO 违约运维处置｜Part A — 部署与回滚（影响可用性）
 
 ---
@@ -327,11 +328,11 @@ GET  /api/notifications           — 通知（轮询高频）
 | 场景 | 触发条件 | 决策者 |
 |------|---------|--------|
 | SLO 违约 | 月宕机 > 7.2 小时 或 考试期 SLO 违约 | oncall |
-| 严重 bug | 核心功能不可用（登录/考试/论坛）且无 hotfix | oncall + owner |
+| 严重 bug | 核心功能不可用（登录/考试/社区）且无 hotfix | oncall + owner |
 | BFF 转发链路故障 | BFF 镜像回归致大面积 5xx | oncall |
 | 安全回退 | 发布引入安全漏洞（如 ADR-015 类） | oncall + owner |
 
-> 数据损坏 / 不可逆迁移回滚属**后端职责**，见后端 `docs/BackDoc-MigV.md` 与根 `docs/RootDoc-Deploy.md` §六。
+> 数据损坏 / 不可逆迁移回滚属**后端职责**，见后端 `docs/BackDoc-Infra.md` §六 迁移验证与根 `docs/RootDoc-Deploy.md` §六。
 
 ### 2. 决策树
 
@@ -357,8 +358,8 @@ git checkout v1.0.0                          # 替换为实际回滚目标 tag
 docker compose build cs-website
 docker compose up -d cs-website
 curl -f http://localhost:2333/api/health    # 期望 {"ok":true,...}
-# 手动验证：首页 / 登录测试账号 / 论坛·活动·考试列表
-# 记录回滚事件到 FrontDoc-Evo.md（Part A ADR）
+# 手动验证：首页 / 登录测试账号 / 社区·活动·考试列表
+# 记录回滚事件到 项目演变历史-0.9.1.md（附录 Part A ADR）
 ```
 
 RTO：≤ 10 分钟（从决策到服务恢复）。
@@ -376,9 +377,9 @@ docker compose build cs-website && docker compose up -d cs-website   # 跳过 CI
 
 - [ ] `/api/health` 返回 200（BFF + 后端链路通）
 - [ ] 登录正常（JWT Cookie 设置/刷新链路）
-- [ ] 核心读路径正常（论坛/活动/考试列表）
+- [ ] 核心读路径正常（社区/活动/考试列表）
 - [ ] pino 日志连续 5 分钟无 ERROR
-- [ ] 在 [FrontDoc-Evo.md](FrontDoc-Evo.md) 新增 ADR 记录回滚事件
+- [ ] 在 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) 新增 ADR 记录回滚事件
 
 ---
 
@@ -463,7 +464,7 @@ docker compose restart backend                   # 后端崩溃则重启（PG �
 # 通过 admin 后台创建全站公告通知考生
 ```
 
-> 数据库损坏恢复属后端职责，见后端 `docs/BackDoc-Infra.md` 与 `docs/BackDoc-MigV.md`。
+> 数据库损坏恢复属后端职责，见后端 `docs/BackDoc-Infra.md` §六 迁移验证。
 
 违约后按 [Part B](#二error-budget-消耗规则) 二·1 立即介入 + 根因分析写入 ADR。
 
@@ -504,7 +505,7 @@ df -h                                            # 磁盘问题
 
 ### 2. 数据保留清理
 
-> ℹ️ 数据保留清理（手动，未来由 L9 定时任务自动化）等待办条目已迁移至根目录 `项目待办事项.md`。
+> ℹ️ 数据保留清理（手动，未来由 L9 定时任务自动化）等待办条目已迁移至 `docs/项目待办事项.md`。
 
 ### 3. 后端数据备份与恢复演练
 
@@ -515,10 +516,10 @@ df -h                                            # 磁盘问题
 ## 五、相关文档
 
 - 本文档 Part B — SLO 阈值与 error budget 规则｜Part A — 部署配置与环境变量
-- [FrontDoc-Evo.md](FrontDoc-Evo.md) — ADR 记录（回滚事件需新增 ADR）
+- [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) — ADR 记录（回滚事件需新增 ADR）
 - 根 [docs/Onboarding.md](../../../docs/Onboarding.md#a7-防再犯清单explanation) — 防再犯清单
 - 根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md) — 全栈部署/编排权威
 - 后端 [docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md) — 后端运维端点 / PG / Redis / OTel
-- 后端 [docs/BackDoc-MigV.md](../../CS-Web-Backend/docs/BackDoc-MigV.md) — Alembic 迁移与回滚验证
+- 后端 [docs/BackDoc-Infra.md §六 迁移验证](../../CS-Web-Backend/tools/docs/BackDoc-Infra.md#六迁移验证) — Alembic 迁移与回滚验证
 
 ---

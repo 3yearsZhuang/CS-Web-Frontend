@@ -8,7 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useSWRConfig } from 'swr';
+import { useConfirm } from '@/components/primitives/confirm-dialog';
 
 /** 会话记录 */
 interface SessionItem {
@@ -21,10 +24,14 @@ interface SessionItem {
 
 export function SessionManager() {
   const t = useTranslations('profile');
+  const router = useRouter();
+  const { mutate } = useSWRConfig();
+  const { confirm } = useConfirm();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +71,32 @@ export function SessionManager() {
     }
   };
 
+  const handleRevokeAll = async () => {
+    const ok = await confirm({
+      title: t('logoutAllTitle'),
+      message: t('logoutAllConfirm'),
+      variant: 'danger',
+      confirmLabel: t('logoutAllConfirmLabel'),
+      cancelLabel: t('cancel'),
+    });
+    if (!ok) return;
+
+    setRevokingAll(true);
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      if (!res.ok) throw new Error(t('logoutAllFailed'));
+      // 全部撤销后当前设备也失效，刷新登录态并跳转登录页
+      await mutate('/api/auth/me');
+      router.push('/login');
+    } catch {
+      setRevokingAll(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
@@ -87,9 +120,18 @@ export function SessionManager() {
   return (
     <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
       <div className="col-span-12 md:col-span-8 md:col-start-3 p-6 sm:p-8 md:py-10 space-y-6">
-        <div className="meta-mono text-[var(--muted-foreground)] flex items-center justify-between">
-          <span>{t('sessionsLabel')}</span>
-          <span>{t('active', { count: sessions.length })}</span>
+        <div className="meta-mono text-[var(--muted-foreground)] flex items-center justify-between gap-4">
+          <span>
+            {t('sessionsLabel')}
+            <span className="ml-2">{t('active', { count: sessions.length })}</span>
+          </span>
+          <button
+            onClick={handleRevokeAll}
+            disabled={revokingAll || sessions.length === 0}
+            className="meta-mono text-[11px] text-[var(--destructive)] hover:opacity-80 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            {revokingAll ? '...' : t('logoutAll')}
+          </button>
         </div>
 
         {sessions.length === 0 ? (

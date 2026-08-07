@@ -92,7 +92,7 @@ export interface CommonMessages {
     submitting: string;
     submit: string;
   },
-  forum: {
+  communityCommon: {
     backToCommunity: string;
     community: string;
     anonymous: string;
@@ -121,8 +121,8 @@ export interface CommonMessages {
     saveFailed: string;
     noRepliesYet: string;
     sidebarAllSections: string;
-    linkForumHome: string;
-    linkBlog: string;
+    linkCommunityHome: string;
+    linkCommunity: string;
     linkMembers: string;
     trendingTodayTopics: string;
     trendingActiveUsers: string;
@@ -271,7 +271,7 @@ export const zhCN: CommonMessages = {
     submitting: '提交中...',
     submit: '提交举报',
   },
-  forum: {
+  communityCommon: {
     backToCommunity: '← 返回',
     community: '社区',
     anonymous: '匿名',
@@ -300,8 +300,8 @@ export const zhCN: CommonMessages = {
     saveFailed: '保存失败',
     noRepliesYet: '暂无回复，来发表第一条吧',
     sidebarAllSections: '全部版块',
-    linkForumHome: '→ 论坛首页',
-    linkBlog: '→ 博客',
+    linkCommunityHome: '→ 社区首页',
+    linkCommunity: '→ 社区',
     linkMembers: '→ 成员列表',
     trendingTodayTopics: '今日发帖',
     trendingActiveUsers: '活跃用户',
@@ -340,7 +340,7 @@ export const zhCN: CommonMessages = {
     editorUploadImage: '上传图片',
     editorUploading: '···',
     editorNoPreviewContent: '暂无内容可预览',
-    contentActions: '论坛内容操作',
+    contentActions: '社区内容操作',
     like: '点赞',
     unlike: '取消点赞',
     favorite: '收藏',
@@ -450,7 +450,7 @@ export const en: CommonMessages = {
     submitting: 'Submitting...',
     submit: 'Submit Report',
   },
-  forum: {
+  communityCommon: {
     backToCommunity: '← Back',
     community: 'Community',
     anonymous: 'Anonymous',
@@ -479,8 +479,8 @@ export const en: CommonMessages = {
     saveFailed: 'Save failed',
     noRepliesYet: 'No replies yet. Be the first to comment!',
     sidebarAllSections: 'All Sections',
-    linkForumHome: '→ Forum Home',
-    linkBlog: '→ Blog',
+    linkCommunityHome: '→ Community Home',
+    linkCommunity: '→ Community',
     linkMembers: '→ Members',
     trendingTodayTopics: 'Today’s Posts',
     trendingActiveUsers: 'Active Users',
@@ -519,7 +519,7 @@ export const en: CommonMessages = {
     editorUploadImage: 'Upload Image',
     editorUploading: '···',
     editorNoPreviewContent: 'Nothing to preview',
-    contentActions: 'Forum content actions',
+    contentActions: 'Community content actions',
     like: 'Like',
     unlike: 'Unlike',
     favorite: 'Favorite',

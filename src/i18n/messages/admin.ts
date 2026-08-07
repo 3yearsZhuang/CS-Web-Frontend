@@ -1554,7 +1554,7 @@ export const en: AdminMessages = {
     statTotalUsers: 'Total Users',
     statTopics: 'Topics',
     statReplies: 'Replies/Comments',
-    statPosts: 'Blog Posts',
+    statPosts: 'Community Posts',
     statCategories: 'Sections',
     statAnnouncements: 'Announcements',
   }

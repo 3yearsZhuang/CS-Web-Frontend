@@ -1,5 +1,5 @@
 /**
- * @file 版块管理子面板 — 从 forum-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
+ * @file 版块管理子面板 — 从 community-admin-panel 拆出（GENERAL 2.4 按关注点拆分）
  */
 'use client';
 
@@ -9,7 +9,7 @@ import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityCategory } from '@/modules/community/types';
-import { getError, type CategoryInput, type CategoriesResponse } from './forum-admin-utils';
+import { getError, type CategoryInput, type CategoriesResponse } from './community-admin-utils';
 
 /** 版块管理 — 新建/编辑/删除版块 */
 export function CategoriesManager() {
@@ -47,7 +47,7 @@ export function CategoriesManager() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/community/forum/categories');
+      const res = await fetch('/api/admin/community/community/categories');
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(getError(data, t('loadFailed')));
@@ -75,7 +75,7 @@ export function CategoriesManager() {
     }
     setCreating(true);
     try {
-      const res = await fetch('/api/admin/community/forum/categories', {
+      const res = await fetch('/api/admin/community/community/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,7 +121,7 @@ export function CategoriesManager() {
     }
     setSavingEdit(true);
     try {
-      const res = await fetch(`/api/admin/community/forum/categories/${id}`, {
+      const res = await fetch(`/api/admin/community/community/categories/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +156,7 @@ export function CategoriesManager() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/admin/community/forum/categories/${cat.id}`, {
+      const res = await fetch(`/api/admin/community/community/categories/${cat.id}`, {
         method: 'DELETE',
       });
       const data = await res.json().catch(() => null);

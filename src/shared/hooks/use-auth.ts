@@ -36,7 +36,8 @@ export function useAuth() {
 
   const { data, isLoading, mutate } = useSWR<AuthMeResponse>('/api/auth/me', {
     revalidateOnFocus: false,
-    revalidateOnReconnect: false,
+    // 断网恢复后自动重验证登录态，避免 token 在后台轮换后 UI 停留旧态
+    revalidateOnReconnect: true,
     revalidateIfStale: true,
   });
 

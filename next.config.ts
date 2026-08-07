@@ -81,7 +81,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       // 社区聚合：独立列表页永久重定向到 /community
-      // 详情页（/forum/[category]/[topicId]、/blog/[slug]、/users/[id]）不受影响
+      // 详情页（/community/[category]/[topicId]、/community/[slug]、/users/[id]）不受影响
       {
         source: '/blog',
         destination: '/community',
@@ -97,7 +97,7 @@ const nextConfig: NextConfig = {
         destination: '/community',
         permanent: true,
       },
-      // 社区统一重构：forum/blog 顶层列表合并为 /community
+      // 社区统一重构：旧版列表入口合并为 /community
       {
         source: '/community/forum',
         destination: '/community?tab=topic',
@@ -123,7 +123,8 @@ const nextConfig: NextConfig = {
         key: 'Content-Security-Policy',
         value: [
           "default-src 'self'",
-          "script-src 'self'",
+          // 'unsafe-eval' is required for Turbopack HMR in dev (see dev CSP note above)
+          "script-src 'self' 'unsafe-eval'",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob: https://q1.qlogo.cn https://q2.qlogo.cn https://q.qlogo.cn",

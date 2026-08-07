@@ -89,10 +89,10 @@ const RATE_LIMIT_CONFIG = {
   sendCode:       { max: 3,  windowMs: 60_000, desc: '验证码发送：每个 IP+email 每分钟 3 次（防邮件轰炸）' },
   forgotPassword: { max: 3,  windowMs: 60_000, desc: '忘记密码：每个 IP 每分钟 3 次（防滥用）' },
   auth:           { max: 20, windowMs: 60_000, desc: '认证操作：每个 IP 每分钟 20 次' },
-  forumPost:      { max: 5,  windowMs: 60_000, desc: '论坛发主题：每个 IP 每分钟 5 次（防垃圾主题）' },
-  forumReply:     { max: 10, windowMs: 60_000, desc: '论坛回复：每个 IP 每分钟 10 次' },
-  forumLike:      { max: 30, windowMs: 60_000, desc: '论坛点赞：每个 IP 每分钟 30 次（点赞轻量）' },
-  forumUpload:    { max: 10, windowMs: 60_000, desc: '论坛图片上传：每个 IP 每分钟 10 次' },
+  communityPost:      { max: 5,  windowMs: 60_000, desc: '社区发主题：每个 IP 每分钟 5 次（防垃圾主题）' },
+  communityReply:     { max: 10, windowMs: 60_000, desc: '社区回复：每个 IP 每分钟 10 次' },
+  communityLike:      { max: 30, windowMs: 60_000, desc: '社区点赞：每个 IP 每分钟 30 次（点赞轻量）' },
+  communityUpload:    { max: 10, windowMs: 60_000, desc: '社区图片上传：每个 IP 每分钟 10 次' },
   examSubmit:     { max: 10, windowMs: 60_000, desc: '考试答题提交：每个 IP 每分钟 10 次（防刷分）' },
   resourceSubmit: { max: 5,  windowMs: 60_000, desc: '资源提交：每个 IP 每分钟 5 次（防垃圾资源）' },
   resourceUpload: { max: 5,  windowMs: 60_000, desc: '资源文件上传：每个 IP 每分钟 5 次' },
@@ -148,17 +148,17 @@ export const forgotPasswordLimiter = createRateLimiter('forgotPassword');
 /** 全局认证操作速率限制器 */
 export const authRateLimiter = createRateLimiter('auth');
 
-/** 论坛发主题速率限制器 */
-export const forumPostLimiter = createRateLimiter('forumPost');
+/** 社区发主题速率限制器 */
+export const communityPostLimiter = createRateLimiter('communityPost');
 
-/** 论坛回复速率限制器 */
-export const forumReplyLimiter = createRateLimiter('forumReply');
+/** 社区回复速率限制器 */
+export const communityReplyLimiter = createRateLimiter('communityReply');
 
-/** 论坛点赞速率限制器 */
-export const forumLikeLimiter = createRateLimiter('forumLike');
+/** 社区点赞速率限制器 */
+export const communityLikeLimiter = createRateLimiter('communityLike');
 
-/** 论坛图片上传速率限制器 */
-export const forumUploadLimiter = createRateLimiter('forumUpload');
+/** 社区图片上传速率限制器 */
+export const communityUploadLimiter = createRateLimiter('communityUpload');
 
 /** 考试答题提交速率限制器 */
 export const examSubmitLimiter = createRateLimiter('examSubmit');

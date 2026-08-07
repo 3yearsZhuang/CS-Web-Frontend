@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { MarkdownRenderer } from '@/modules/community/ui/forum-markdown-renderer';
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { formatDate } from './tool-types';
 
 interface DevDoc {

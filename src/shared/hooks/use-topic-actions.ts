@@ -41,7 +41,7 @@ export function useTopicActions({
       likeCount: topic.likeCount + (wasLiked ? -1 : 1),
     });
     try {
-      const res = await fetch('/api/community/forum/like', {
+      const res = await fetch('/api/community/like', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ targetType: 'topic', targetId: topic.id }),
@@ -63,7 +63,7 @@ export function useTopicActions({
       favoriteCount: topic.favoriteCount + (wasFav ? -1 : 1),
     });
     try {
-      const res = await fetch('/api/community/forum/favorite', {
+      const res = await fetch('/api/community/favorite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topicId: topic.id }),
@@ -79,7 +79,7 @@ export function useTopicActions({
   const handleDeleteTopic = useCallback(async () => {
     if (!topic) return;
     try {
-      const res = await fetch(`/api/community/forum/topics/${topic.id}`, {
+      const res = await fetch(`/api/community/topics/${topic.id}`, {
         method: 'DELETE',
       });
       if (!res.ok) {

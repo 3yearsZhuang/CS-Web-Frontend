@@ -3,7 +3,7 @@
 > 文档定位：前端视觉与交互设计规范（reference）
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
-> 关联：组件清单见 [FrontDoc-Arch.md](FrontDoc-Arch.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 最后更新：2026-08-06（规范收口迭代：圆角/阴影 token 化 + 胶囊可发现性增强 + next/font 字体自托管 + §5 组件清单/四态规范补全）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
@@ -122,7 +122,7 @@
 
 ### 3.4 子页面返回按键
 
-所有从上级页面进入的子页面（如 `/tools/exam`、`/tools/resource`、`/community/forum/[category]`），必须在 Hero 区域的 `[ 00 ]` section-marker 下方放置返回按键，链接回上级页面。
+所有从上级页面进入的子页面（如 `/tools/exam`、`/tools/resource`、`/community/community/[category]`），必须在 Hero 区域的 `[ 00 ]` section-marker 下方放置返回按键，链接回上级页面。
 
 位置：`[ 00 ]` section-marker 的正下方，12 栏栅格左侧 2 栏内
 
@@ -167,8 +167,8 @@
 |--------|---------|---------|
 | `/tools/exam` | `/tools` | `← 返回` |
 | `/tools/resource` | `/tools` | `← 返回` |
-| `/community/forum/[category]` | `/community/forum` | `← 返回` |
-| `/community/forum/[category]/[topicId]` | `/community/forum/[category]` | `← 返回` |
+| `/community/community/[category]` | `/community/community` | `← 返回` |
+| `/community/community/[category]/[topicId]` | `/community/community/[category]` | `← 返回` |
 | `/tools/exam/[id]` | `/tools/exam` | `← 返回` |
 
 ### 3.5 全局 Token 速查表
@@ -300,13 +300,13 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 | 路由 | 页面 | Tab 列表 |
 |------|------|---------|
-| `/community/forum` | 论坛首页 | `[01] 最近 / Latest`, `[02] 发现 / Discover` |
-| `/community/forum/[category]` | 版块详情 | `[01] 主题 / Topics`, `[02] 规则 / Rules`, `[03] 下一步 / Next` |
-| `/community/forum/[category]/[topicId]` | 主题详情 | `[01] 回复 / Replies`, `[02] 你的回复 / Reply` |
+| `/community/community` | 社区首页 | `[01] 最近 / Latest`, `[02] 发现 / Discover` |
+| `/community/community/[category]` | 版块详情 | `[01] 主题 / Topics`, `[02] 规则 / Rules`, `[03] 下一步 / Next` |
+| `/community/community/[category]/[topicId]` | 主题详情 | `[01] 回复 / Replies`, `[02] 你的回复 / Reply` |
 | `/about` | 关于 / 加入 | `[01] 信念 / Belief`, `[02] 方向 / Directions`, `[03] 期望 / Expectation`, `[04] 流程 / Process`, `[05] 加入 / Join` |
 | `/events` | 活动 | `[01] 时间线 / Timeline`, `[02] 归档 / Archive`, `[03] 下一步 / Next` |
-| `/profile` | 个人主页 | `[01] 资料 / Profile`, `[02] 安全 / Security`, `[03] 活动 / Activity`, `[04] 论坛 / Forum` |
-| `/admin` | 管理后台 | `[01] 用户 / Users`, `[02] 活动 / Activities`, `[03] 通知 / Notifications`, `[04] 论坛 / Forum`, `[05] 工具 / Tools` |
+| `/profile` | 个人主页 | `[01] 资料 / Profile`, `[02] 安全 / Security`, `[03] 活动 / Activity`, `[04] 社区 / Community` |
+| `/admin` | 管理后台 | `[01] 用户 / Users`, `[02] 活动 / Activities`, `[03] 通知 / Notifications`, `[04] 社区 / Community`, `[05] 工具 / Tools` |
 | `/tools` | 工具集 | `[01] 可用`, `[02] 即将上线`, `[03] 规划中` |
 | `/tools/resource` | 资源站 | `[00] 全部`, `[01] 文章`, `[02] 视频`, … |
 
