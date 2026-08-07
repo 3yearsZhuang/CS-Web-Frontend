@@ -36,7 +36,7 @@ interface NotificationsResponse {
 }
 
 /** 类型标签颜色映射 */
-const TYPE_STYLES: Record<NotificationType, { label: string; className: string }> = {
+export const TYPE_STYLES: Record<NotificationType, { label: string; className: string }> = {
   system: {
     label: 'SYS',
     className: 'text-[var(--primary)] bg-[var(--primary)]/10',

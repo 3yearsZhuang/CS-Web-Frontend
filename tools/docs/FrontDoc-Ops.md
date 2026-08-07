@@ -73,7 +73,7 @@ docker compose up -d
 - 应用容器：运行 `pnpm start`
 - **无本地业务数据卷**：前端为 BFF，业务数据由后端 PostgreSQL 承载（`data/` 仅遗留脚本/上传文件，非运行时数据源）
 
-首次部署后创建管理员：⚠️ `pnpm create-user` 为**迁移前遗留脚本，仍直连本地 SQLite**，写入的 `data/app.db` 并非运行时数据源。生产环境请通过**后端 CLI / Swagger** 创建管理员，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
+首次部署后创建管理员：通过**后端 CLI / Swagger** 创建（后端 rbac_init seed 已用 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` 配置创建默认管理员），见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。原前端遗留脚本 `pnpm create-user` 已删除。
 
 ### 方式二：直接运行
 
@@ -500,13 +500,7 @@ df -h                                            # 磁盘问题
 
 ### 1. 创建管理员
 
-> ⚠️ `pnpm create-user` 与 `pnpm seed` 为**迁移前遗留脚本，仍直连本地 SQLite**（`better-sqlite3`），写入的 `data/app.db` 并非运行时数据源（后端 PostgreSQL）。**生产环境请通过后端 CLI / Swagger 创建管理员**，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
-
-```bash
-# 遗留脚本（仅开发/种子用途，非生产数据源）
-pnpm create-user --role root
-pnpm create-user --role admin
-```
+> 原前端遗留脚本 `pnpm create-user` / `pnpm seed`（直连 SQLite）已于 2026-08-07 删除。管理员由后端 `rbac_init` seed 创建（配置 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD`，见后端 `.env.example`）；生产环境如需额外管理员请通过**后端 CLI / Swagger** 创建，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
 
 ### 2. 数据保留清理
 

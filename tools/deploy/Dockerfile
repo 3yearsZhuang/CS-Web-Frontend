@@ -21,6 +21,9 @@ COPY public ./public
 # 构建 Next.js 生产版本
 RUN pnpm next build
 
+# 删除 Turbopack/Next 增量编译缓存（可再生；避免镜像层膨胀到数 GB）
+RUN rm -rf .build/cache
+
 # 打包自定义服务器（CJS 格式，目标 node20）
 RUN pnpm tsup src/server.ts \
   --format cjs \

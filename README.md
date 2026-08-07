@@ -85,7 +85,7 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | 框架 | Next.js 16 · App Router · React 19 |
 | 样式 | Tailwind CSS v4 · CSS 变量双主题 |
 | 动画 | Motion (Framer Motion 下一代) |
-| 数据库 | 无本地业务库——前端为 BFF，业务数据由后端 PostgreSQL 承载（`better-sqlite3` 依赖为迁移前遗留，仅开发/种子脚本使用，运行时 API 路由不引用） |
+| 数据库 | 无本地业务库——前端为 BFF，业务数据由后端 PostgreSQL 承载（`better-sqlite3` 依赖已于 2026-08-07 移除，前端零 SQLite） |
 | 认证 | 后端 JWT 双 token（access 15min / refresh 7day）· BFF 以 HttpOnly Cookie 托管 · 401 静默刷新 · TOTP 2FA / GitHub OAuth 由后端处理 |
 | 邮件 | 由后端 aiosmtplib 承载（前端 `nodemailer` 为迁移前遗留，运行时未使用） |
 | 测试 | Vitest（单元，441+）· Playwright（E2E） |
@@ -152,7 +152,7 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `TRUST_PROXY` | 是否信任反向代理头（Caddy/Nginx 后须 true） | `false` |
 | `SENTRY_DSN` | Sentry 错误监控（可选，运行时动态导入，留空不启用） | 未启用 |
 
-> 以下为迁移前单体遗留变量，运行时**不被任何 API 路由引用**（认证/邮件/OAuth 已由后端承载），仅遗留代码与开发脚本可能使用，待后续清理：`SQLITE_DB_PATH`、`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`。
+> 以下为迁移前单体遗留变量，运行时**不被任何 API 路由引用**（认证/邮件/OAuth 已由后端承载），待后续清理：`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`（`SQLITE_DB_PATH` 已随 SQLite 清理于 2026-08-07 移除）。
 
 ---
 
@@ -213,7 +213,7 @@ tools/tests/
 | [演进与 ADR](tools/docs/FrontDoc-Evo.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/FrontDoc-MDE.md) | 编辑器使用指南 |
 | [入职指南 + 项目规则](../../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
-| [PG 数据迁移](tools/docs/FrontDoc-PGMig.md) | SQLite → PostgreSQL 迁移脚本用法与注意事项（`migrate-sqlite-to-pg.mjs`） |
+| [PG 数据迁移](tools/docs/FrontDoc-PGMig.md) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 

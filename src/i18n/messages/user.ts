@@ -274,6 +274,8 @@ export interface UserMessages {
     logout: string;
     admin: string;
     login: string;
+    create: string;
+    loginToView: string;
     switchTitle: string;
     logoutTitle: string;
     switchMessage: string;
@@ -646,6 +648,8 @@ export const zhCN: UserMessages = {
     logout: '退出',
     admin: '管理',
     login: '登录',
+    create: '创作中心',
+    loginToView: '登录以查看通知',
     switchTitle: '切换账号',
     logoutTitle: '退出登录',
     switchMessage: '切换后将登出当前账号并返回登录页。',
@@ -1018,6 +1022,8 @@ export const en: UserMessages = {
     logout: 'Logout',
     admin: 'Admin',
     login: 'Sign in',
+    create: 'Create',
+    loginToView: 'Sign in to view notifications',
     switchTitle: 'Switch account',
     logoutTitle: 'Sign out',
     switchMessage: 'You will be signed out and redirected to the login page.',

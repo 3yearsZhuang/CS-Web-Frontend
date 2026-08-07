@@ -10,9 +10,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { NotificationBell } from '@/components/notification-bell';
 import { UserMenu } from '@/components/user-menu';
-import { LanguageSwitcher } from '@/components/layout/language-switcher';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
 import type { NavMessageKey } from '@/i18n/types';
@@ -97,9 +95,7 @@ export function Navbar() {
               })}
             </nav>
 
-            <LanguageSwitcher compact />
             <ThemeToggle />
-            <NotificationBell />
             <span className="h-4 w-px bg-[var(--border)] mx-2" />
             <UserMenu />
           </div>
@@ -107,7 +103,6 @@ export function Navbar() {
           {/* 移动端右侧 — 按钮需 min 44x44 触摸目标（WCAG 2.5.5） */}
           <div className="flex md:hidden items-center gap-1">
             <ThemeToggle />
-            <NotificationBell />
             <button
               ref={hamburgerRef}
               onClick={() => setMobileOpen((v) => !v)}

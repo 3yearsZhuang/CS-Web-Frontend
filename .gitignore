@@ -1,41 +1,24 @@
-# 依赖
-node_modules/
+# ============ CS-Web-Frontend .gitignore ============
+# 公共段与根级 / 后端共享同一套规范；下方为本项目 Next.js 前端专属忽略项。
 
-# 构建产物（统一输出到 .build/）
-.build/
-.rsbuild/
-coverage/
+# ---- 公共段（根级 / 后端 / 前端 三者一致）----
 
-# 环境变量
+# 环境变量（密钥不入库；模板 .env.example 需提交）
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
 # 日志
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# 数据库
-data/
-# 例外：保留 tools/data 子模块的目录结构占位
-!tools/data/
-!tools/data/.gitkeep
-
-# Litestream 备份
-backups/
-
-# IDE / 编辑器
+# IDE / 编辑器 / 工具数据
 .vscode/
 .idea/
 *.iml
 *.swp
 *.swo
 *~
+.codebuddy/
 
 # OS
 .DS_Store
@@ -43,6 +26,36 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 ._*
+
+# 运行时数据 / 备份（由 compose 卷挂载到根级 data/ backups/）
+data/
+backups/
+
+# Redis 快照（运行时数据；可能含会话态，不入库）
+dump.rdb
+*.rdb
+appendonlydir/
+
+# 注：pgdata / caddy_data / caddy_config 等为 Docker 命名卷，由 Docker 管理，
+# 不落在工作区目录，无需在此忽略。
+
+# ---- Node / Next.js 专属段 ----
+
+# 依赖
+node_modules/
+
+# 构建产物（Next distDir 统一到 .build/；tsup 服务器输出到 dist/）
+.build/
+dist/
+.rsbuild/
+coverage/
+
+# 数据库（前端 data/ 运行时数据已被公共段忽略；保留 tools/data 目录结构占位）
+!tools/data/
+!tools/data/.gitkeep
+
+# Litestream 备份（已被公共段忽略，此处保留语义注释）
+# backups/
 
 # 缓存
 .cache/
@@ -61,4 +74,3 @@ test-results/
 playwright-report/
 blob-report/
 tools/tests/e2e/.storage-state.json
-

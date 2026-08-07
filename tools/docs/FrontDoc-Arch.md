@@ -1,6 +1,6 @@
 # FZTBUCS-Arch-架构与 API 文档
 
-> **当前进度 / 真实状态（2026-08-06）**：前端 `src/app/api/**` 已为**纯薄转发**（B1 验收闭环，2026-08-06 完成），不再含有业务数据存储；`src/modules/*/server/` 与 `src/shared/db/` 等为遗留层、运行时不被引用，待清理。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）。后端事件总线已于 2026-08-06 支持跨实例（ADR-014 落地，arq/Redis 广播）。本文下述「方案 B 目标态 / 规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
+> **当前进度 / 真实状态（2026-08-07）**：前端 `src/app/api/**` 已为**纯薄转发**（B1 验收闭环，2026-08-06 完成），不再含有业务数据存储；`src/modules/*/server/` 与 `src/shared/db/`（含 `src/shared/db.ts`）已于 2026-08-06 整体删除，2026-08-07 又移除遗留脚本（`create-user`/`seed-exam-data`/`migrate-sqlite-to-pg`）与 `better-sqlite3` 依赖，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）。后端事件总线已于 2026-08-06 支持跨实例（ADR-014 落地，arq/Redis 广播）。本文下述「方案 B 目标态 / 规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
 > 文档定位：**前端 BFF 层**的架构与 API 契约权威文档（reference）
 > 受众：开发工程师 / 架构评审 / API 接入方 / 新人
@@ -14,7 +14,7 @@
 > **范围声明（BFF 视角）**：前端为 BFF（Backend-for-Frontend）薄转发层，基于 Next.js 16 App Router。业务数据、认证、邮件、OAuth、RBAC enforce 均由后端 FastAPI + PostgreSQL 承载。BFF API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
 > - **BFF 层（本文档覆盖）**：页面路由、UI 组件、API 路由薄转发、Origin/Content-Type 校验、JWT Cookie 托管、UI 层角色兜底
 > - **后端层（见后端 `docs/BackDoc-Arch.md`）**：业务数据存储、RBAC enforce、Alembic 迁移、密码哈希、2FA、限流、审计日志
-> - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/shared/db.ts`、`src/shared/db/`、`src/modules/*/server/`（除 BFF 转发所需）、`src/shared/utils/mail.ts`、`src/shared/events/`。这些文件仍存在但运行时不被引用，待清理；其历史结构保留在本文作为审计证据。
+> - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/shared/utils/mail.ts`、`src/shared/events/`（event-bus.ts / event-types.ts）。`src/shared/db.ts`、`src/shared/db/`、`src/modules/*/server/` 已于 2026-08-06/07 删除（含遗留脚本与 `better-sqlite3` 依赖）；其余遗留文件仍存在但运行时不被引用，待清理；其历史结构保留在本文作为审计证据。
 
 ## 文档结构
 
@@ -78,9 +78,7 @@ shared/
 ├── app-error.ts          # 应用错误基类 + assertOwnership
 ├── logger.ts             # pino 结构化日志（Q4，dev pino-pretty / 生产 NDJSON）
 ├── server-only.ts        # server-only 本地空实现（M11，自定义 dev server 兼容）
-├── db.ts                 # ⚠️ 遗留：SQLite 单例（运行时不被 API 路由引用，仅遗留脚本）
-├── db/                   # ⚠️ 遗留：drivers/repositories/drizzle/sqlite/sqlite-init/seeds/cleanup（运行时不引用）
-├── events/               # ⚠️ 遗留：进程内事件总线 event-bus.ts + event-types.ts
+├── events/               # ⚠️ 遗留：进程内事件总线 event-bus.ts + event-types.ts（db.ts / db/ 双引擎层已于 2026-08-06/07 删除）
 ├── config/               # avatar-presets / admin-avatars / header-images / auth-constants
 ├── hooks/                # 客户端 hooks（全 'use client'，M11）：use-auth / use-collapsing-hero / use-debounce / use-focus-trap / use-topic-detail / use-topic-actions(Q1) / use-reply-actions(Q1)
 ├── types/                # role-types / user-types / audit-types（M11 下沉斩断依赖）
@@ -90,23 +88,23 @@ shared/
 
 > ★ = BFF 运行时核心 · ⚠️ = 迁移前单体遗留代码，运行时不被任何 API 路由引用，待清理
 
-**modules/ — 业务模块（9 个，统一 `server/`+`types/`+`ui/`）**
+**modules/ — 业务模块（9 个，UI + types；`server/` 遗留直连层已于 2026-08-06 B1 收口删除）**
 
-> ⚠️ `server/` 子目录中除 BFF 转发所需（如 `admin/server/require.ts` 的 UI 兜底鉴权）外，多为迁移前单体遗留的业务逻辑（直连 SQLite）。运行时 API 路由通过 `shared/backend-client.ts` 转发后端，不调用这些遗留 server 代码。
+> 迁移前单体遗留的 `server/` 子目录（直连 SQLite 的业务逻辑）已随 B1 收口整体删除；业务逻辑 100% 由后端承载，运行时 API 路由通过 `shared/backend-client.ts` 转发后端。
 
-| 模块 | 说明 | server 文件数 | 后端数据表（BFF 不直连） |
-|------|------|:---:|------|
-| `admin/` | 用户/角色/审计/权限/密码重置（UI + BFF 兜底） | 6 | users, sessions, admin_actions（后端 PG） |
-| `auth/` | 登录/注册/2FA/OAuth/密码重置（BFF 转发） | 6 | users, sessions, login_history, verification_codes, password_reset_requests（后端 PG） |
-| `community/` | 论坛+博客+成员名录+Feed（BFF 转发 + UI） | 15 | forum_categories, forum_topics, forum_replies, forum_likes, forum_favorites, forum_topic_views, forum_mentions, forum_images, blog_posts, blog_series, blog_likes（后端 PG） |
-| `events/` | 活动 CRUD/报名/签到/归档（BFF 转发 + UI） | 6 | events, event_registrations, event_checkins（后端 PG） |
-| `join/` | 入社申请（BFF 转发） | 1 | join_applications（后端 PG） |
-| `notification/` | 通知（BFF 转发 + 遗留事件总线） | 2 | notifications（后端 PG） |
-| `announcement/` | 公告（BFF 转发） | 1 | announcements（后端 PG） |
-| `tools/` | 考试/资源/任务/组件注册表/Auxilio（BFF 转发 + UI） | 11 | exams, exam_questions, exam_question_options, exam_attempts, tasks, task_claims, resources, points_transactions（后端 PG） |
-| `user/` | 用户资料（BFF 转发） | 2 | users, activity_participations（后端 PG） |
+| 模块 | 说明 | 后端数据表（BFF 不直连） |
+|------|------|------|
+| `admin/` | 用户/角色/审计/权限/密码重置（UI + BFF 兜底） | users, sessions, admin_actions（后端 PG） |
+| `auth/` | 登录/注册/2FA/OAuth/密码重置（BFF 转发） | users, sessions, login_history, verification_codes, password_reset_requests（后端 PG） |
+| `community/` | 论坛+博客+成员名录+Feed（BFF 转发 + UI） | forum_categories, forum_topics, forum_replies, forum_likes, forum_favorites, forum_topic_views, forum_mentions, forum_images, blog_posts, blog_series, blog_likes（后端 PG） |
+| `events/` | 活动 CRUD/报名/签到/归档（BFF 转发 + UI） | events, event_registrations, event_checkins（后端 PG） |
+| `join/` | 入社申请（BFF 转发） | join_applications（后端 PG） |
+| `notification/` | 通知（BFF 转发 + 遗留事件总线） | notifications（后端 PG） |
+| `announcement/` | 公告（BFF 转发） | announcements（后端 PG） |
+| `tools/` | 考试/资源/任务/组件注册表/Auxilio（BFF 转发 + UI） | exams, exam_questions, exam_question_options, exam_attempts, tasks, task_claims, resources, points_transactions（后端 PG） |
+| `user/` | 用户资料（BFF 转发） | users, activity_participations（后端 PG） |
 
-> community 是 forum/blog/members 扁平合并产物，内部 `server/` 按 `forum/`、`blog/`、`members/` 子目录拆分（详见 [§2.2](#22-community-模块内部结构)）。
+> community 是 forum/blog/members 扁平合并产物（详见 [§2.2](#22-community-模块内部结构)）。
 
 **BFF API 前缀映射**
 
@@ -143,19 +141,19 @@ shared/
 
 ### 脚本与部署
 
-`tools/scripts/`：`build-app.mjs`、`dev-server.mjs`(端口 2333)、`start-server.mjs`、`install-deps.sh`、`create-user.mjs`(⚠️ 遗留，仍直连 SQLite)、`seed-exam-data.mjs`(⚠️ 遗留)、`cloudflare-tunnel.mjs`、`migrate-sqlite-to-pg.mjs`(迁移脚本)。
+`tools/scripts/`：`build-app.mjs`、`dev-server.mjs`(端口 2333)、`start-server.mjs`、`install-deps.sh`、`cloudflare-tunnel.mjs`、`restart-frontend.mjs`。
 
-> ⚠️ 已删除：`setup-litestream.sh`、`restore-drill.sh`（BFF 无本地业务数据库，备份/恢复由后端 PG 负责，见 [FrontDoc-Ops.md](FrontDoc-Ops.md)）。
+> ⚠️ 已删除：`setup-litestream.sh`、`restore-drill.sh`（BFF 无本地业务数据库，备份/恢复由后端 PG 负责，见 [FrontDoc-Ops.md](FrontDoc-Ops.md)）；`create-user.mjs`、`seed-exam-data.mjs`、`migrate-sqlite-to-pg.mjs`（SQLite 迁移已 100% 完成，遗留脚本已清理；创建管理员走后端 rbac_init seed / 管理 API）。
 
 部署：全栈编排（db + backend + frontend + caddy）见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)；前端独立部署见 [FrontDoc-Ops.md](FrontDoc-Ops.md) Part A。容器编排见 `tools/deploy/docker-compose.yml`（应用 + Caddy，BFF 通过 `cs-net` 内网转发到后端）。
 
-`tools/data/`：运行时数据占位目录（遗留脚本写入的 `data/app.db` 非运行时数据源；上传文件实际落于仓库根 `data/`）。
+`tools/data/`：运行时数据占位目录（上传文件实际落于仓库根 `data/`）。
 
 ### 数据库与部署模型
 
 > **BFF 无本地业务数据库**。业务数据由后端 PostgreSQL 承载（见后端 `docs/BackDoc-Infra.md` §二）。下方"单进程依赖"表仅描述 BFF 自身进程级状态。
 
-DB 文件 `data/app.db`（gitignored）为**迁移前遗留**，仅遗留脚本（`create-user`/`seed`）使用，运行时 API 路由不引用。用户头像/论坛图片存 `data/avatars/`、`data/forum-images/`（上传文件由后端处理，BFF 薄转发 FormData）。
+DB 文件 `data/app.db`（gitignored）为**迁移前遗留**（旧 SQLite 单体库，2026-08-05 迁移完成后已无任何引用，可安全删除）。用户头像/论坛图片存 `data/avatars/`、`data/forum-images/`（上传文件由后端处理，BFF 薄转发 FormData）。
 
 > 重要约束：当前为**单进程部署模型**，多个机制依赖此前提。
 
@@ -179,9 +177,9 @@ DB 文件 `data/app.db`（gitignored）为**迁移前遗留**，仅遗留脚本�
 ```
 BFF 共享层（shared/）- 被所有模块依赖
   ├── backend-client.ts（★ BFF 代理客户端）   security.ts（Origin/CSRF）   logger.ts
-  ├── db.ts / db/（⚠️ 遗留，运行时不引用）   events/event-bus.ts（⚠️ 遗留）
+  ├── events/event-bus.ts（⚠️ 遗留，运行时不引用；db.ts / db/ 已于 2026-08-06/07 删除）
         ↓
-BFF 业务模块（server/ 多为遗留，UI 为运行时）
+BFF 业务模块（UI + types，server/ 遗留层已随 B1 删除）
   ├── auth      user      community(论坛+博客+成员+Feed)
   ├── events    tools(考试/任务/资源/Auxilio)   notification   announcement   join
         ↓
@@ -193,37 +191,28 @@ BFF 业务模块（server/ 多为遗留，UI 为运行时）
 
 ```
 community/
-├── server/
-│   ├── forum/    # ⚠️ 遗留：categories/topics/replies/reactions/moderation/mentions/user-data/uploads/shared
-│   ├── blog/     # ⚠️ 遗留：posts/series/likes/utils
-│   ├── members/  # ⚠️ 遗留：index.ts
-│   ├── feed.ts   # ⚠️ 遗留：Feed 聚合查询
-│   └── index.ts  # 统一 barrel
-└── types/
-    └── index.ts  # ForumTopic/BlogPost/MemberItem/FeedItem 等统一类型
+├── ui/                  # 论坛/博客/成员/Feed UI 组件（运行时）
+├── types/               # ForumTopic/BlogPost/MemberItem/FeedItem 等统一类型
+└── index.ts             # 统一 barrel
 ```
 
-> 运行时论坛/博客/成员 API 请求由 `src/app/api/community/**/route.ts` 通过 `backend-client.ts` 转发后端，不调用 `server/` 子目录遗留代码。
-
-命名规范：按业务域拆 `forum/`、`blog/`、`members/` 子目录，文件名去除原前缀（`forum-`/`blog-`）扁平放置。
+> `server/` 遗留直连层（forum/blog/members/feed.ts）已随 B1 收口删除（2026-08-06）；运行时论坛/博客/成员 API 请求由 `src/app/api/community/**/route.ts` 通过 `backend-client.ts` 转发后端。
 
 ### 2.3 直接导入依赖矩阵
 
-> 反映 BFF 运行时实际依赖（★ backend-client 为核心）。`db` 列为遗留依赖，运行时 API 路由不引用。
+> 反映 BFF 运行时实际依赖（★ backend-client 为核心）。`db`（SQLite 双引擎）遗留依赖已于 2026-08-06/07 删除，矩阵不再包含该列。
 
-| 模块 \ 被依赖 | backend-client | db(遗留) | admin | notification | community | auth | events | pagination | shared |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `auth/` | ✓ | ⚠️ | - | - | - | - | - | - | ✓ |
-| `user/` | ✓ | ⚠️ | - | - | - | - | - | - | ✓ |
-| `community/` | ✓ | ⚠️ | ✓ | ✓ | - | - | - | ✓ | ✓ |
-| `events/` | ✓ | ⚠️ | ✓ | ✓ | - | - | - | ✓ | - |
-| `tools/` | ✓ | ⚠️ | ✓ | - | - | - | - | - | - |
-| `notification/` | ✓ | ⚠️ | - | - | - | - | - | ✓ | - |
-| `join/` | ✓ | ⚠️ | ✓ | - | - | - | - | - | - |
-| `announcement/` | ✓ | ⚠️ | - | - | - | - | - | - | - |
-| `admin/` | ✓ | ⚠️ | ✓ | - | - | - | - | ✓ | ✓ |
-
-> `db` 列标 ⚠️ 表示存在遗留 import 但运行时 API 路由不执行其逻辑；后续清理遗留代码时此列应清空。
+| 模块 \ 被依赖 | backend-client | admin | notification | community | auth | events | pagination | shared |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `auth/` | ✓ | - | - | - | - | - | - | ✓ |
+| `user/` | ✓ | - | - | - | - | - | - | ✓ |
+| `community/` | ✓ | ✓ | ✓ | - | - | - | ✓ | ✓ |
+| `events/` | ✓ | ✓ | ✓ | - | - | - | ✓ | - |
+| `tools/` | ✓ | ✓ | - | - | - | - | - | - |
+| `notification/` | ✓ | - | - | - | - | - | ✓ | - |
+| `join/` | ✓ | ✓ | - | - | - | - | - | - |
+| `announcement/` | ✓ | - | - | - | - | - | - | - |
+| `admin/` | ✓ | ✓ | - | - | - | - | ✓ | ✓ |
 
 ---
 
@@ -620,13 +609,13 @@ export async function register() {
 
 ## 十七、健康检查端点
 
-**17.1 BFF 公开** `GET /api/health`（公开）— BFF 转发后端 `/api/v1/health`
+**17.1 BFF 公开** `GET /api/health`（公开）— BFF 转发后端 `/health`
 
 返回 `{"ok": true/false}`（BFF 仅判断后端 `/health` 是否 200，不泄露细节）。
 
 ```typescript
 // src/app/api/health/route.ts
-const res = await fetch(`${BACKEND_URL}/api/v1/health`, { cache: 'no-store' });
+const res = await fetch(`${BACKEND_URL}/health`, { cache: 'no-store' });
 return NextResponse.json({ ok: res.status === 200 });
 ```
 
