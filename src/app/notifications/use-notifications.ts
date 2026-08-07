@@ -8,10 +8,27 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
 export type FilterType = 'all' | 'unread' | NotificationType;
+
+type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
+
+export function filterTabs(t: TFn): { value: FilterType; label: string }[] {
+  return [
+    { value: 'all', label: t('filterAll') },
+    { value: 'unread', label: t('filterUnread') },
+    { value: 'system', label: t('filterSystem') },
+    { value: 'admin', label: '管理员' },
+    { value: 'activity', label: '活动' },
+    { value: 'like', label: '点赞' },
+    { value: 'reply', label: '回复' },
+    { value: 'favorite', label: '收藏' },
+    { value: 'follow', label: '关注' },
+  ];
+}
 
 export interface Notification {
   id: string;
@@ -31,18 +48,6 @@ interface NotificationsResponse {
   totalPages: number;
   unreadCount: number;
 }
-
-export const FILTER_TABS: { value: FilterType; label: string }[] = [
-  { value: 'all', label: '全部' },
-  { value: 'unread', label: '未读' },
-  { value: 'system', label: '系统' },
-  { value: 'admin', label: '管理员' },
-  { value: 'activity', label: '活动' },
-  { value: 'like', label: '点赞' },
-  { value: 'reply', label: '回复' },
-  { value: 'favorite', label: '收藏' },
-  { value: 'follow', label: '关注' },
-];
 
 export const TYPE_STYLES: Record<NotificationType, { label: string; className: string }> = {
   system: { label: 'SYS', className: 'text-[var(--primary)] bg-[var(--primary)]/10' },

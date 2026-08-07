@@ -3,6 +3,7 @@
  */
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { PermissionModule } from './roles-types';
@@ -31,6 +32,7 @@ export function CreateRoleForm({
   onSubmit,
   onCancel,
 }: CreateRoleFormProps) {
+  const t = useTranslations('adminRoles');
   const toggle = (permKey: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -42,30 +44,30 @@ export function CreateRoleForm({
 
   return (
     <div className="space-y-4">
-      <Field label="角色 key" count={`${form.key.length}/32`}>
+      <Field label={t('fieldKey')} count={`${form.key.length}/32`}>
         <input
           type="text"
           value={form.key}
           onChange={(e) => setForm((f) => ({ ...f, key: e.target.value.toLowerCase() }))}
           maxLength={32}
-          placeholder="如 content_editor / exam_reviewer"
+          placeholder={t('keyPlaceholder')}
           className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
         />
         <p className="meta-mono text-[10px] text-[var(--muted-foreground)] mt-1">
-          小写字母开头，仅含 a-z / 0-9 / _，长度 2-32。创建后不可修改。
+          {t('keyHint')}
         </p>
       </Field>
-      <Field label="角色名称" count={`${form.displayName.length}/32`}>
+      <Field label={t('fieldDisplayName')} count={`${form.displayName.length}/32`}>
         <input
           type="text"
           value={form.displayName}
           onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
           maxLength={32}
-          placeholder="如 内容编辑 / 考试审核员"
+          placeholder={t('displayNamePlaceholder')}
           className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
         />
       </Field>
-      <Field label="角色描述" count={`${form.description.length}/200`}>
+      <Field label={t('fieldDescription')} count={`${form.description.length}/200`}>
         <textarea
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -77,7 +79,7 @@ export function CreateRoleForm({
 
       <div>
         <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-2">
-          [ 初始权限 / Initial Permissions ]（{selected.size} 项已选）
+          {t('initialPermissions', { count: selected.size })}
         </div>
         <div className="max-h-64 overflow-y-auto border border-[var(--border)] divide-y divide-[var(--border)]">
           {modules.map((module) => (
@@ -121,7 +123,7 @@ export function CreateRoleForm({
           onClick={onCancel}
           className="meta-mono text-[12px] px-4 py-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
         >
-          取消
+          {t('cancel')}
         </button>
         <button
           type="button"
@@ -129,7 +131,7 @@ export function CreateRoleForm({
           disabled={saving}
           className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-50"
         >
-          {saving ? '创建中...' : '创建角色'}
+          {saving ? t('creating') : t('createRole')}
         </button>
       </div>
     </div>

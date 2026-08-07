@@ -115,7 +115,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[14px] leading-none"
-            aria-label="关闭"
+            aria-label={t('common.close')}
           >
             ✕
           </button>
@@ -134,8 +134,8 @@ export function ConfirmDialog({
               {variant === 'danger'
                 ? t('common.irreversible')
                 : variant === 'warning'
-                  ? '此操作可能影响系统状态，请确认后再继续。'
-                  : '请确认以上信息后再继续操作。'}
+                  ? t('common.warningHint')
+                  : t('common.infoHint')}
             </p>
           </div>
 

@@ -14,6 +14,7 @@ import { PageHeaderBackground } from '@/components/layout/page-header-background
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { SectionLoading } from '@/components';
+import { useTranslations } from 'next-intl';
 import { useNotifications } from './use-notifications';
 import { NotificationCenter } from './notification-center';
 
@@ -26,6 +27,7 @@ export default function NotificationsPage() {
 }
 
 function NotificationsContent() {
+  const t = useTranslations('notifications');
   const n = useNotifications();
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
@@ -50,7 +52,7 @@ function NotificationsContent() {
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{n.error}</div>
           <button onClick={() => n.fetchNotifications()} className="meta-mono text-[var(--primary)] underline-grow">
-            重试
+            {t('retry')}
           </button>
         </div>
       </main>
@@ -84,8 +86,7 @@ function NotificationsContent() {
                     }`}
                     onClick={heroCollapsed ? onTitleClick : undefined}
                   >
-                    通知
-                    <span className="text-[var(--primary)]"> 中心</span>
+                    {t('centerTitle')}
                     <span
                       className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                         heroCollapsed
@@ -93,7 +94,7 @@ function NotificationsContent() {
                           : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
                       }`}
                     >
-                      / Notifications
+                      {t('centerTitleEn')}
                     </span>
                   </h1>
                 </RevealTitle>
@@ -104,7 +105,7 @@ function NotificationsContent() {
                 >
                   <RevealItem>
                     <p className="text-[var(--muted-foreground)] text-[14px] sm:text-[15px] meta-mono">
-                      {n.unreadCount > 0 ? `你有 ${n.unreadCount} 条未读通知` : '所有通知均已阅读'}
+                      {n.unreadCount > 0 ? t('unreadCount', { count: n.unreadCount }) : t('allReadDone')}
                     </p>
                   </RevealItem>
                 </div>

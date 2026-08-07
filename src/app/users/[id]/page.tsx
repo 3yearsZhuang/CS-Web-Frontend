@@ -11,10 +11,31 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SkeletonBlock } from '@/components';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
 type ProfileTab = 'profile' | 'exam' | 'forum';
+
+type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
+
+function techTagLabel(t: TFn, tag: string): string {
+  const map: Record<string, string> = {
+    web: t('techWeb'),
+    ai: t('techAi'),
+    system: t('techSystem'),
+    game: t('techGame'),
+    security: t('techSecurity'),
+    mobile: t('techMobile'),
+    data: t('techData'),
+    devops: t('techDevops'),
+    graphics: t('techGraphics'),
+    hardware: t('techHardware'),
+    algorithm: t('techAlgorithm'),
+    design: t('techDesign'),
+  };
+  return map[tag] ?? tag;
+}
 
 interface PublicUser {
   id: string;
@@ -49,22 +70,8 @@ interface CommunityPost {
   category: { id: string; slug: string; name: string } | null;
 }
 
-const TAG_LABELS: Record<string, string> = {
-  web: 'Web 开发',
-  ai: 'AI / ML',
-  system: '系统编程',
-  game: '游戏开发',
-  security: '网络安全',
-  mobile: '移动开发',
-  data: '数据 / 数据库',
-  devops: 'DevOps / 云原生',
-  graphics: '图形学 / 可视化',
-  hardware: '硬件 / IoT',
-  algorithm: '算法 / 竞赛',
-  design: 'UI / 设计',
-};
-
 export default function UserPublicPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations('userPublic');
   const { id } = use(params);
   const router = useRouter();
   const { collapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
@@ -102,7 +109,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
         ]);
         if (!userRes.ok) {
           const data = await userRes.json();
-          throw new Error(data.error || '用户不存在');
+          throw new Error(data.error || t('notFound'));
         }
         const userData = await userRes.json();
         if (cancelled) return;
@@ -115,7 +122,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
         }
       } catch (e) {
         if (cancelled) return;
-        setError(e instanceof Error ? e.message : '加载失败');
+        setError(e instanceof Error ? e.message : t('loadFailed'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -139,9 +146,9 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
       <main className="relative pt-16">
         <div className="max-w-[1600px] mx-auto px-6 py-24 text-center">
           <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 404 ]</div>
-          <h1 className="display-serif text-4xl mb-4">{error || '用户不存在'}</h1>
+          <h1 className="display-serif text-4xl mb-4">{error || t('notFound')}</h1>
           <Button variant="outline" onClick={() => router.push('/')}>
-            返回首页
+            {t('backHome')}
           </Button>
         </div>
       </main>
@@ -188,9 +195,9 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
               </h1>
               <p className="meta-mono text-[var(--muted-foreground)] mt-1">
                 <span className={user.role === 'root' ? 'text-[var(--destructive)]' : user.role === 'admin' ? 'text-[var(--primary)]' : undefined}>
-                  {user.role === 'root' ? '超级管理员' : user.role === 'admin' ? '管理员' : '成员'}
+                  {user.role === 'root' ? t('roleRoot') : user.role === 'admin' ? t('roleAdmin') : t('roleMember')}
                 </span>
-                {' · '}加入于 {new Date(user.createdAt).toLocaleDateString('zh-CN')}
+                {' · '}{t('joined', { date: new Date(user.createdAt).toLocaleDateString('zh-CN') })}
               </p>
             </div>
           </div>
@@ -216,12 +223,12 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">技术档案</h2>
+                <h2 className="display-serif text-3xl mb-8">{t('profileTitle')}</h2>
 
                 {/* 技术标签 */}
                 <div className="mb-8">
                   <div className="meta-mono text-[var(--muted-foreground)] mb-3">
-                    [ 01 ] 技术方向
+                    [ 01 ] {t('techDir')}
                   </div>
                   {user.techTags.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
@@ -230,19 +237,19 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                           key={tag}
                           className="meta-mono text-[13px] px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)]"
                         >
-                          {TAG_LABELS[tag] || tag}
+                          {techTagLabel(t, tag)}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[var(--muted-foreground)]/60">暂无技术标签</p>
+                    <p className="text-sm text-[var(--muted-foreground)]/60">{t('noTags')}</p>
                   )}
                 </div>
 
                 {/* 链接 */}
                 <div className="mb-8">
                   <div className="meta-mono text-[var(--muted-foreground)] mb-3">
-                    [ 02 ] 链接
+                    [ 02 ] {t('links')}
                   </div>
                   <div className="space-y-2">
                     {user.githubUrl ? (
@@ -252,11 +259,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm text-[var(--primary)] hover:underline"
                       >
-                        <span className="meta-mono text-[var(--muted-foreground)]">GitHub</span>
+                        <span className="meta-mono text-[var(--muted-foreground)]">{t('github')}</span>
                         {user.githubUrl}
                       </a>
                     ) : (
-                      <p className="text-sm text-[var(--muted-foreground)]/60">未设置 GitHub</p>
+                      <p className="text-sm text-[var(--muted-foreground)]/60">{t('noGithub')}</p>
                     )}
                     {user.websiteUrl ? (
                       <a
@@ -265,11 +272,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-sm text-[var(--primary)] hover:underline"
                       >
-                        <span className="meta-mono text-[var(--muted-foreground)]">Website</span>
+                        <span className="meta-mono text-[var(--muted-foreground)]">{t('website')}</span>
                         {user.websiteUrl}
                       </a>
                     ) : (
-                      <p className="text-sm text-[var(--muted-foreground)]/60">未设置个人网站</p>
+                      <p className="text-sm text-[var(--muted-foreground)]/60">{t('noWebsite')}</p>
                     )}
                   </div>
                 </div>
@@ -278,16 +285,16 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 {stats && (
                   <div>
                     <div className="meta-mono text-[var(--muted-foreground)] mb-3">
-                      [ 03 ] 论坛活跃度
+                      [ 03 ] {t('forumActivity')}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="card-minimal p-4 text-center">
                         <div className="display-serif text-2xl">{stats.topicCount}</div>
-                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">主题</div>
+                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('statTopic')}</div>
                       </div>
                       <div className="card-minimal p-4 text-center">
                         <div className="display-serif text-2xl">{stats.replyCount}</div>
-                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">回复</div>
+                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('statReply')}</div>
                       </div>
                     </div>
                   </div>
@@ -303,25 +310,25 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">考试统计</h2>
+                <h2 className="display-serif text-3xl mb-8">{t('examTitle')}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                   <div className="card-minimal p-4 text-center">
                     <div className="display-serif text-2xl">{stats.examCount}</div>
-                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">参加考试</div>
+                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('examTaken')}</div>
                   </div>
                   <div className="card-minimal p-4 text-center">
                     <div className="display-serif text-2xl">{stats.examPassedCount}</div>
-                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">通过考试</div>
+                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('examPassed')}</div>
                   </div>
                   <div className="card-minimal p-4 text-center">
                     <div className="display-serif text-2xl">
                       {stats.examCount > 0 ? Math.round((stats.examPassedCount / stats.examCount) * 100) : 0}%
                     </div>
-                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">通过率</div>
+                    <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('examRate')}</div>
                   </div>
                 </div>
                 {stats.examCount === 0 && (
-                  <p className="text-sm text-[var(--muted-foreground)]/60">暂无考试记录</p>
+                  <p className="text-sm text-[var(--muted-foreground)]/60">{t('noExams')}</p>
                 )}
               </motion.div>
             )}
@@ -334,7 +341,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">最近主题</h2>
+                <h2 className="display-serif text-3xl mb-8">{t('recentTopics')}</h2>
                 {topics.length > 0 ? (
                   <div className="space-y-2">
                     {topics.map((topic) => (
@@ -349,15 +356,15 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                               {topic.title}
                             </h3>
                             <div className="meta-mono text-[11px] text-[var(--muted-foreground)]/60 mt-1">
-                              {topic.category?.name || '综合讨论'} · {new Date(topic.createdAt).toLocaleDateString('zh-CN')}
+                              {topic.category?.name || t('defaultCat')} · {new Date(topic.createdAt).toLocaleDateString('zh-CN')}
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-                              {topic.replyCount} 回复
+                              {topic.replyCount} {t('replies')}
                             </span>
                             <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-                              {topic.likeCount} 赞
+                              {topic.likeCount} {t('likes')}
                             </span>
                           </div>
                         </div>
@@ -365,7 +372,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-[var(--muted-foreground)]/60">暂无主题</p>
+                  <p className="text-sm text-[var(--muted-foreground)]/60">{t('noTopics')}</p>
                 )}
                 {stats && (
                   <div className="mt-8">
@@ -375,11 +382,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                     <div className="grid grid-cols-2 gap-4">
                       <div className="card-minimal p-4 text-center">
                         <div className="display-serif text-2xl">{stats.topicCount}</div>
-                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">主题</div>
+                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('statTopic')}</div>
                       </div>
                       <div className="card-minimal p-4 text-center">
                         <div className="display-serif text-2xl">{stats.replyCount}</div>
-                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">回复</div>
+                        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mt-1">{t('statReply')}</div>
                       </div>
                     </div>
                   </div>

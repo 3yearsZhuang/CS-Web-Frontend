@@ -56,7 +56,7 @@ export function Navbar() {
           <Link href="/" className="group flex items-center gap-3">
             <Image
               src="/logo.png"
-              alt="计算机协会 Logo"
+              alt={t('logoAlt')}
               width={32}
               height={32}
               className="w-8 h-8 object-contain"

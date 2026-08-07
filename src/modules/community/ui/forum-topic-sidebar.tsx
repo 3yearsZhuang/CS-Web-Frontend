@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
 import type { CommunityPostDetail, CommunityPost } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface TopicSidebarProps {
   topic: CommunityPostDetail;
@@ -14,6 +15,7 @@ interface TopicSidebarProps {
 }
 
 export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSidebarProps) {
+  const t = useTranslations('forum');
   const author = topic.author;
   const category = topic.category;
 
@@ -34,7 +36,7 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
           />
           <div>
             <p className="font-mono text-[13px] text-[var(--foreground)] leading-tight">
-              {author?.displayName ?? '匿名'}
+              {author?.displayName ?? t('anonymous')}
             </p>
           </div>
         </div>
@@ -43,19 +45,19 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
             <p className="font-mono text-[15px] tabular-nums text-[var(--foreground)]">
               {topic.viewCount}
             </p>
-            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">阅读</p>
+            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">{t('viewsLabel')}</p>
           </div>
           <div className="flex-1">
             <p className="font-mono text-[15px] tabular-nums text-[var(--foreground)]">
               {topic.likeCount}
             </p>
-            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">点赞</p>
+            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">{t('likesLabel')}</p>
           </div>
           <div className="flex-1">
             <p className="font-mono text-[15px] tabular-nums text-[var(--foreground)]">
               {topic.replyCount}
             </p>
-            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">回复</p>
+            <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">{t('repliesLabel')}</p>
           </div>
         </div>
       </section>
@@ -67,21 +69,21 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
             Related
           </h3>
           <div className="space-y-0">
-            {relatedTopics.slice(0, 5).map((t) => (
+            {relatedTopics.slice(0, 5).map((item) => (
               <Link
-                key={t.id}
-                href={`/community/${t.id}`}
+                key={item.id}
+                href={`/community/${item.id}`}
                 className="block border-t border-[var(--border)]/50 py-3 group focus-amber"
               >
                 <p className="font-mono text-[12px] text-[var(--foreground)] leading-snug line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
-                  {t.title}
+                  {item.title}
                 </p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                    {t.replyCount} replies
+                    {item.replyCount} replies
                   </span>
                   <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                    {t.likeCount} likes
+                    {item.likeCount} likes
                   </span>
                 </div>
               </Link>
@@ -106,7 +108,7 @@ export function TopicSidebar({ topic, relatedTopics, className = '' }: TopicSide
             href="/community"
             className="block font-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
           >
-            ← 所有版块
+            {t('allSections')}
           </Link>
         </section>
       )}

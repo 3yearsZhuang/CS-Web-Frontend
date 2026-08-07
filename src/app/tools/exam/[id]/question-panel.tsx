@@ -8,10 +8,12 @@
  */
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import type { ExamState } from './use-exam';
 
 export function QuestionPanel(props: ExamState) {
+  const t = useTranslations('toolsExam');
   const {
     exam,
     questions,
@@ -44,9 +46,9 @@ export function QuestionPanel(props: ExamState) {
             [{String(currentQuestionIdx + 1).padStart(2, '0')}]
           </span>
           <span className="meta-mono text-[11px] text-[var(--muted-foreground)]/60">
-            {currentQuestion.type === 'single_choice' ? '选择题' : '编程题'}
+            {currentQuestion.type === 'single_choice' ? t('typeSingle') : t('typeCoding')}
           </span>
-          <span className="meta-mono text-[11px] text-[var(--muted-foreground)]/60">{currentQuestion.score} 分</span>
+          <span className="meta-mono text-[11px] text-[var(--muted-foreground)]/60">{currentQuestion.score} {t('scoreUnit')}</span>
         </div>
 
         <h2 className="text-xl font-semibold mb-4">{currentQuestion.title}</h2>
@@ -90,10 +92,10 @@ export function QuestionPanel(props: ExamState) {
                     </span>
                     <span className="text-sm">{opt.content}</span>
                     {submitted && isCorrectAnswer && (
-                      <span className="meta-mono text-[11px] text-emerald-500 ml-auto shrink-0">✓ 正确</span>
+                      <span className="meta-mono text-[11px] text-emerald-500 ml-auto shrink-0">✓ {t('correct')}</span>
                     )}
                     {submitted && isWrongSelection && (
-                      <span className="meta-mono text-[11px] text-red-500 ml-auto shrink-0">✗ 错误</span>
+                      <span className="meta-mono text-[11px] text-red-500 ml-auto shrink-0">✗ {t('wrong')}</span>
                     )}
                   </div>
                 </button>
@@ -109,16 +111,16 @@ export function QuestionPanel(props: ExamState) {
               value={answers[currentQuestion.id] || ''}
               onChange={(e) => setCodingAnswer(currentQuestion.id, e.target.value)}
               disabled={submitted}
-              placeholder="在此输入你的代码..."
+              placeholder={t('codePlaceholder')}
               className="w-full h-48 bg-[var(--background)] border border-[var(--border)] p-4 font-mono text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]/40 resize-none focus:outline-none focus:border-[var(--primary)]/40 transition-colors"
             />
             {submitted && results[currentQuestion.id]?.score !== null && (
               <div className="mt-3 meta-mono text-[13px] text-[var(--primary)]">
-                得分: {results[currentQuestion.id]?.score} / {currentQuestion.score}
+                {t('scoreLabel')}: {results[currentQuestion.id]?.score} / {currentQuestion.score}
               </div>
             )}
             {submitted && results[currentQuestion.id]?.score === null && (
-              <div className="mt-3 meta-mono text-[13px] text-[var(--muted-foreground)]">待批改</div>
+              <div className="mt-3 meta-mono text-[13px] text-[var(--muted-foreground)]">{t('pendingReview')}</div>
             )}
           </div>
         )}
@@ -132,10 +134,10 @@ export function QuestionPanel(props: ExamState) {
             onClick={() => setCurrentQuestionIdx((i) => i - 1)}
             className="text-sm"
           >
-            ← 上一题
+            ← {t('prev')}
           </Button>
 
-          <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
+            <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
             {currentQuestionIdx + 1} / {questions.length}
           </span>
 
@@ -146,7 +148,7 @@ export function QuestionPanel(props: ExamState) {
               onClick={() => setCurrentQuestionIdx((i) => i + 1)}
               className="text-sm"
             >
-              下一题 →
+              {t('next')} →
             </Button>
           ) : (
             <Button
@@ -155,7 +157,7 @@ export function QuestionPanel(props: ExamState) {
               disabled={submitting || submitted}
               className="text-sm"
             >
-              {submitting ? '提交中...' : submitted ? '已提交' : isLoggedIn ? '提交答案' : '登录后提交'}
+              {submitting ? t('submitting') : submitted ? t('submitted') : isLoggedIn ? t('submitAnswer') : t('submitLogin')}
             </Button>
           )}
         </div>

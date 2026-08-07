@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
@@ -47,6 +48,9 @@ export function ReportsManager() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { confirm } = useConfirm();
+  const t = useTranslations('reportsManager');
+  const tf = useTranslations('forum');
+  const tc = useTranslations('communityAdmin');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,12 +61,12 @@ export function ReportsManager() {
       const res = await fetch(`/api/admin/community/reports?${params.toString()}`);
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '加载失败'));
+        throw new Error(getError(data, tc('loadFailed')));
       }
       const data = (await res.json()) as ReportsResponse;
       setReports(data.items ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : tc('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -75,19 +79,19 @@ export function ReportsManager() {
   const handleAction = async (id: string, action: 'resolve' | 'dismiss') => {
     setActionError(null);
     const ok = action === 'resolve'
-      ? await confirm({ title: '标记已处理', message: '确认将该举报标记为已处理？内容处置请另行执行。', confirmLabel: '确认' })
-      : await confirm({ title: '驳回举报', message: '确认驳回该举报（认定无违规）？', confirmLabel: '确认' });
+      ? await confirm({ title: t('resolveTitle'), message: '确认将该举报标记为已处理？内容处置请另行执行。', confirmLabel: t('confirm') })
+      : await confirm({ title: t('dismissTitle'), message: '确认驳回该举报（认定无违规）？', confirmLabel: t('confirm') });
     if (!ok) return;
     setBusyIds((s) => new Set(s).add(id));
     try {
       const res = await fetch(`/api/admin/community/reports/${id}?action=${action}`, { method: 'POST' });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '操作失败'));
+        throw new Error(getError(data, tc('actionFailed')));
       }
       setReports((prev) => prev.filter((r) => r.id !== id));
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '操作失败');
+      setActionError(err instanceof Error ? err.message : tc('actionFailed'));
     } finally {
       setBusyIds((s) => {
         const next = new Set(s);
@@ -136,18 +140,18 @@ export function ReportsManager() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-2 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    <span className="text-[var(--primary)]">{r.targetType === 'topic' ? '主题' : '回复'}</span>
+                    <span className="text-[var(--primary)]">{r.targetType === 'topic' ? t('targetTopic') : t('targetReply')}</span>
                     <span>·</span>
-                    <span>举报人：{r.reporterName ?? '匿名'}</span>
+                    <span>{t('reporter')}：{r.reporterName ?? tf('anonymous')}</span>
                     <span>·</span>
                     <span>{formatDateTime(r.createdAt)}</span>
                   </div>
-                  <div className="text-[14px] text-[var(--foreground)] mb-1">理由：{r.reason}</div>
+                  <div className="text-[14px] text-[var(--foreground)] mb-1">{t('reason')}：{r.reason}</div>
                   {r.detail && (
                     <div className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">{r.detail}</div>
                   )}
                   <Link href={`/community/${r.targetId}`} className="inline-block mt-2 meta-mono text-[11px] text-[var(--primary)] underline-grow">
-                    查看内容 →
+                    {t('viewContent')}
                   </Link>
                 </div>
                 {r.status === 'pending' && (
@@ -158,7 +162,7 @@ export function ReportsManager() {
                       onClick={() => handleAction(r.id, 'resolve')}
                       className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
                     >
-                      {busyIds.has(r.id) ? '...' : '已处理'}
+                      {busyIds.has(r.id) ? '...' : t('resolveBtn')}
                     </button>
                     <button
                       type="button"
@@ -166,13 +170,13 @@ export function ReportsManager() {
                       onClick={() => handleAction(r.id, 'dismiss')}
                       className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors disabled:opacity-30 focus-amber"
                     >
-                      {busyIds.has(r.id) ? '...' : '驳回'}
+                      {busyIds.has(r.id) ? '...' : t('dismissBtn')}
                     </button>
                   </div>
                 )}
                 {r.status !== 'pending' && (
                   <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)] shrink-0">
-                    {r.status === 'resolved' ? '已处理' : '已驳回'}
+                    {r.status === 'resolved' ? t('statusResolvedLabel') : t('statusDismissedLabel')}
                   </span>
                 )}
               </div>

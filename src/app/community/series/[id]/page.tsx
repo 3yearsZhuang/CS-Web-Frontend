@@ -8,6 +8,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
@@ -16,6 +17,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 export default function SeriesDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id ?? '';
+  const t = useTranslations('communitySeries');
 
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } =
     useCollapsingHero();
@@ -48,7 +50,7 @@ export default function SeriesDetailPage() {
             }`}
           >
             <p className="max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
-              系列合集，按发布顺序阅读。
+              {t('heroDesc')}
             </p>
           </div>
         </RevealItem>
@@ -61,12 +63,12 @@ export default function SeriesDetailPage() {
               href="/community"
               className="meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
             >
-              ← 返回全部内容
+              {t('backToAll')}
             </Link>
           </div>
           <CommunityPostList
             endpoint={`/api/community/posts?kind=post&seriesId=${encodeURIComponent(id)}`}
-            emptyText="// 该系列下暂无文章"
+            emptyText={t('emptyText')}
           />
         </div>
       </section>

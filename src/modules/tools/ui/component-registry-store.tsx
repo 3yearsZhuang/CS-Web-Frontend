@@ -12,6 +12,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
+import { useTranslations } from 'next-intl';
 import type {
   ComponentItem,
   ComponentItemInput,
@@ -112,19 +113,20 @@ const StoreContext = createContext<StoreContextValue | null>(null);
 
 /** 组件注册表 Store Provider（useReducer + Context） */
 export function ComponentRegistryStoreProvider({ children }: { children: ReactNode }) {
+  const t = useTranslations('toolsAdmin');
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const loadComponents = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
     try {
       const res = await fetch('/api/tools/component-registry', { cache: 'no-store' });
-      if (!res.ok) throw new Error('加载失败');
+      if (!res.ok) throw new Error(t('storeLoadFailed'));
       const data = (await res.json()) as { components: ComponentItem[] };
       dispatch({ type: 'LOAD_SUCCESS', components: data.components });
     } catch (err) {
       dispatch({
         type: 'LOAD_ERROR',
-        error: err instanceof Error ? err.message : '未知错误',
+        error: err instanceof Error ? err.message : t('storeUnknownError'),
       });
     }
   }, []);
@@ -143,7 +145,7 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ variantId, enabled }),
         });
-        if (!res.ok) throw new Error('切换变体失败');
+        if (!res.ok) throw new Error(t('storeToggleFailed'));
       } catch {
         // 回滚：重新加载
         loadComponents();
@@ -162,7 +164,7 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ migrationStatus: status }),
         });
-        if (!res.ok) throw new Error('更新状态失败');
+        if (!res.ok) throw new Error(t('storeUpdateStatusFailed'));
       } catch {
         // 回滚
         loadComponents();
@@ -181,7 +183,7 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(guide),
         });
-        if (!res.ok) throw new Error('更新规范失败');
+        if (!res.ok) throw new Error(t('storeUpdateGuideFailed'));
       } catch {
         loadComponents();
       }
@@ -199,7 +201,7 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? '创建失败');
+          throw new Error(data.error ?? t('storeCreateFailed'));
         }
         const data = (await res.json()) as { item: ComponentItem };
         dispatch({ type: 'CREATE_COMPONENT', item: data.item });
@@ -219,7 +221,7 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
         const res = await fetch(`/api/tools/component-registry/${itemId}`, {
           method: 'DELETE',
         });
-        if (!res.ok) throw new Error('删除失败');
+        if (!res.ok) throw new Error(t('storeDeleteFailed'));
         return true;
       } catch {
         loadComponents();

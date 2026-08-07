@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
 import { type NotifHistoryItem } from '@/modules/admin/ui/types';
@@ -15,6 +16,7 @@ const NOTIF_HISTORY_LIMIT = 20;
 /** 广播历史子面板 — 拉取并展示群发通知历史 */
 export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void }) {
   const router = useRouter();
+  const t = useTranslations('adminNotifications');
   const [history, setHistory] = useState<NotifHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -54,7 +56,7 @@ export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void
           <div className="meta-mono text-[var(--muted-foreground)]">[ Broadcast History ]</div>
           <div className="flex items-center gap-4">
             <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-              {history.length} 条记录
+              {t('recordsCount', { count: history.length })}
             </div>
             <Button
               variant="outline"
@@ -63,7 +65,7 @@ export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void
               onClick={() => fetchHistory()}
               disabled={historyLoading}
             >
-              {historyLoading ? '刷新中...' : '刷新'}
+              {historyLoading ? t('refreshing') : t('refreshBtn')}
             </Button>
           </div>
         </div>
@@ -72,7 +74,7 @@ export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void
           <SectionLoading label="Loading..." />
         ) : history.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">暂无群发记录</p>
+            <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">{t('noHistory')}</p>
           </div>
         ) : (
           <div className="border-t border-[var(--border)]">
@@ -105,7 +107,7 @@ export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void
                   )}
                 </div>
                 <div className="col-span-6 md:col-span-2 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                  {h.recipientCount} 收件人
+                  {t('recipientsCount', { count: h.recipientCount })}
                 </div>
                 <div className="col-span-6 md:col-span-2 meta-mono text-[11px] text-[var(--muted-foreground)] text-right">
                   {formatDate(h.createdAt)}

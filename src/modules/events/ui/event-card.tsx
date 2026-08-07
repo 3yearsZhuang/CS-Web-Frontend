@@ -3,6 +3,7 @@
  */
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import type { EventItem } from '@/modules/events/types';
 import { EventStatusBadge } from './event-status-badge';
@@ -14,6 +15,7 @@ interface EventCardProps {
 
 /** 活动卡片组件 — 左右交替排列的时间轴节点 */
 export function EventCard({ event, isLeft }: EventCardProps) {
+  const t = useTranslations('eventsAdmin');
   const isArchived = event.status === 'ended';
 
   return (
@@ -45,7 +47,7 @@ export function EventCard({ event, isLeft }: EventCardProps) {
               isArchived ? 'text-[var(--muted-foreground)]' : 'text-[var(--foreground)]'
             }`}>
               {event.isPinned && (
-                <span className="inline-block align-middle mr-2 text-[var(--primary)]" title="置顶">
+                <span className="inline-block align-middle mr-2 text-[var(--primary)]" title={t('pinned')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block -mt-0.5">
                     <line x1="12" y1="17" x2="12" y2="22"/>
                     <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>

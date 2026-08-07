@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import {
@@ -36,6 +37,7 @@ export interface ComponentRegistryDrawerProps {
 
 /** 编辑变体抽屉 */
 export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDrawerProps) {
+  const t = useTranslations('toolsAdmin');
   const { state, toggleVariant } = useComponentRegistryStore();
 
   // ESC 键关闭
@@ -84,7 +86,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <div className="min-w-0">
             <span className="meta-mono text-[11px] text-[var(--primary)] uppercase">
-              编辑变体 / Edit Variants
+              {t('editVariants')}
             </span>
             <h3 className="display-serif text-[16px] text-[var(--foreground)] truncate mt-0.5">
               {item.name}
@@ -169,7 +171,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
               {enabledCount}
             </span>
             <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-              / {totalCount} 已启用
+              / {totalCount} {t('enabledSuffix')}
             </span>
             {/* mini 进度条 */}
             <div className="w-16 h-1 bg-[var(--muted)]/20 overflow-hidden ml-2">
@@ -183,7 +185,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
             onClick={onClose}
             className="px-4 py-1.5 border border-[var(--border)] meta-mono text-[11px] text-[var(--foreground)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
           >
-            关闭 / Close
+            {t('closeBtn')}
           </button>
         </div>
       </aside>

@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
@@ -41,9 +42,9 @@ type ReviewModal =
 /* ============= 常量 ============= */
 
 const STATUS_FILTERS: Array<{ v: AppStatus; label: string }> = [
-  { v: 'pending', label: '待审' },
-  { v: 'approved', label: '已通过' },
-  { v: 'rejected', label: '已拒绝' },
+  { v: 'pending', label: 'statusPending' },
+  { v: 'approved', label: 'statusApproved' },
+  { v: 'rejected', label: 'statusRejected' },
 ];
 
 /* ============= 工具函数 ============= */
@@ -52,11 +53,11 @@ const STATUS_FILTERS: Array<{ v: AppStatus; label: string }> = [
 function statusLabel(s: AppStatus): string {
   switch (s) {
     case 'pending':
-      return '待审';
+      return 'statusPending';
     case 'approved':
-      return '已通过';
+      return 'statusApproved';
     case 'rejected':
-      return '已拒绝';
+      return 'statusRejected';
   }
 }
 
@@ -81,6 +82,7 @@ interface AdminJoinPanelProps {
 /** 管理员入社申请审核面板 — 按状态筛选申请列表，支持通过/拒绝及备注 */
 export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
   const router = useRouter();
+  const t = useTranslations('adminJoin');
   const { pushToast } = useToast();
 
   const [applications, setApplications] = useState<JoinApplication[]>([]);
@@ -112,12 +114,12 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
         }
         if (!res.ok) {
           const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
+          throw new Error(data?.error || t('loadFailed'));
         }
         const data = (await res.json()) as { applications: JoinApplication[] };
         setApplications(data.applications ?? []);
       } catch (e) {
-        setError(e instanceof Error ? e.message : '加载失败');
+        setError(e instanceof Error ? e.message : t('loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -164,14 +166,14 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
         | { application?: JoinApplication; error?: string }
         | null;
       if (!res.ok || !data?.application) {
-        setModalError(data?.error || '审批失败，请稍后再试');
+        setModalError(data?.error || t('reviewFailed'));
         return;
       }
-      pushToast('success', action === 'approved' ? '已通过申请' : '已拒绝申请');
+      pushToast('success', action === 'approved' ? t('approveSuccess') : t('rejectSuccess'));
       setApplications((prev) => prev.filter((a) => a.id !== application.id));
       closeModal();
     } catch {
-      setModalError('网络错误，请稍后再试');
+      setModalError(t('networkError'));
     } finally {
       setSaving(false);
     }
@@ -187,7 +189,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-7">
               <div className="meta-mono mb-2 text-[var(--muted-foreground)]">
-                [ 状态筛选 / Status Filter ]
+                {t('statusFilterLabel')}
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {STATUS_FILTERS.map((s) => (
@@ -201,7 +203,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                     }`}
                   >
-                    {s.label}
+                    {t(s.label)}
                   </button>
                 ))}
               </div>
@@ -227,19 +229,19 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
         {/* 列表区 */}
         {loading && applications.length === 0 && (
           <div className="py-20 flex items-center justify-center">
-            <SectionLoading label="加载中 / Loading..." />
+            <SectionLoading label={t('loadingLabel')} />
           </div>
         )}
 
         {!loading && !error && applications.length === 0 && (
           <div className="py-20 text-center">
             <div className="meta-mono text-[var(--muted-foreground)] mb-4">
-              [ 暂无申请 / No Applications ]
+              {t('noApplications')}
             </div>
             <p className="text-[14px] text-[var(--muted-foreground)]">
-              {statusFilter === 'pending' && '当前没有待审核的入社申请。'}
-              {statusFilter === 'approved' && '尚未通过任何申请。'}
-              {statusFilter === 'rejected' && '尚未拒绝任何申请。'}
+              {statusFilter === 'pending' && t('noApplicationsPending')}
+              {statusFilter === 'approved' && t('noApplicationsApproved')}
+              {statusFilter === 'rejected' && t('noApplicationsRejected')}
             </p>
           </div>
         )}
@@ -257,15 +259,15 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                         {app.applicantName}
                       </h3>
                       <span className={`meta-mono text-[10px] px-2 py-0.5 border ${statusBadgeClass(app.status)}`}>
-                        {statusLabel(app.status)}
+                        {t(statusLabel(app.status))}
                       </span>
                     </div>
                     <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">
-                      <span>学号 / {app.studentId}</span>
-                      <span>专业 / {app.major}</span>
-                      <span>提交 / {formatDate(app.createdAt)}</span>
+                      <span>{t('studentIdLabel', { id: app.studentId })}</span>
+                      <span>{t('majorLabel', { major: app.major })}</span>
+                      <span>{t('submittedLabel', { date: formatDate(app.createdAt) })}</span>
                       {app.userId && (
-                        <span className="text-[var(--primary)]">已关联用户</span>
+                        <span className="text-[var(--primary)]">{t('linkedUser')}</span>
                       )}
                     </div>
                   </div>
@@ -274,7 +276,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                 {/* 申请理由 */}
                 <div className="mb-4">
                   <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-2">
-                    [ 申请理由 / Reason ]
+                    {t('reasonSectionLabel')}
                   </div>
                   <p className="text-[13px] text-[var(--foreground)] leading-[1.7] whitespace-pre-wrap">
                     {app.reason}
@@ -285,7 +287,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                 {app.techTags.length > 0 && (
                   <div className="mb-4">
                     <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-2">
-                      [ 技术方向 / Tech Tags ]
+                      {t('techTagsSectionLabel')}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {app.techTags.map((tag, i) => (
@@ -304,7 +306,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                 {(app.contactQq || app.contactPhone) && (
                   <div className="mb-4">
                     <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-2">
-                      [ 联系方式 / Contact ]
+                      {t('contactSectionLabel')}
                     </div>
                     <div className="meta-mono text-[12px] text-[var(--foreground)] flex flex-wrap gap-x-6 gap-y-1">
                       {app.contactQq && <span>QQ: {app.contactQq}</span>}
@@ -317,7 +319,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                 {app.reviewNote && (
                   <div className="mb-4 p-3 border-l-2 border-[var(--border)] bg-[var(--muted)]/[0.04]">
                     <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-1">
-                      [ 审批备注 / Review Note ]
+                      {t('reviewNoteSectionLabel')}
                     </div>
                     <p className="text-[12px] text-[var(--foreground)]">{app.reviewNote}</p>
                   </div>
@@ -331,14 +333,14 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                       onClick={() => openReviewModal(app, 'approved')}
                       className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                     >
-                      ✓ 通过
+                      {t('approveBtn')}
                     </button>
                     <button
                       type="button"
                       onClick={() => openReviewModal(app, 'rejected')}
                       className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
                     >
-                      ✕ 拒绝
+                      {t('rejectBtn')}
                     </button>
                   </div>
                 )}
@@ -350,24 +352,24 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
         {/* 审批确认模态框 */}
         {modal.type === 'review' && (
           <ModalShell
-            title={modal.action === 'approved' ? '通过申请 / Approve' : '拒绝申请 / Reject'}
+            title={modal.action === 'approved' ? t('approveTitle') : t('rejectTitle')}
             onClose={closeModal}
           >
             <div className="space-y-5">
               {/* 申请人信息摘要 */}
               <div className="border border-[var(--border)] p-4">
                 <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-2">
-                  [ 申请人 / Applicant ]
+                  {t('applicantSectionLabel')}
                 </div>
                 <div className="text-[14px] text-[var(--foreground)] mb-1">
                   {modal.application.applicantName}
                 </div>
                 <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-                  学号 {modal.application.studentId} · 专业 {modal.application.major}
+                  {t('applicantInfo', { studentId: modal.application.studentId, major: modal.application.major })}
                 </div>
               </div>
 
-              <Field label="审批备注（可选）" count={`${reviewNote.length}/200`}>
+              <Field label={t('reviewNoteOptional')} count={`${reviewNote.length}/200`}>
                 <textarea
                   value={reviewNote}
                   onChange={(e) => setReviewNote(e.target.value.slice(0, 200))}
@@ -376,8 +378,8 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                   className={`${INPUT_CLASS} px-4 py-3 text-[13px] resize-y`}
                   placeholder={
                     modal.action === 'approved'
-                      ? '例如：欢迎加入，请联系 XXX 安排后续'
-                      : '例如：当前方向名额已满，建议下学期再申请'
+                      ? t('approveNotePlaceholder')
+                      : t('rejectNotePlaceholder')
                   }
                 />
               </Field>
@@ -395,7 +397,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                   disabled={saving}
                   className="focus-amber meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 >
-                  取消
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
@@ -408,10 +410,10 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                   }`}
                 >
                   {saving
-                    ? '处理中...'
+                    ? t('processing')
                     : modal.action === 'approved'
-                      ? '确认通过 →'
-                      : '确认拒绝 →'}
+                      ? t('confirmApprove')
+                      : t('confirmReject')}
                 </button>
               </div>
             </div>

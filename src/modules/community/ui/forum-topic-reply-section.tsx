@@ -11,6 +11,7 @@ import type {
   CommunityCommentDetail,
   NestedCommentsResult,
 } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface TopicReplySectionProps {
   replies: CommunityCommentDetail[];
@@ -59,6 +60,7 @@ export function TopicReplySection({
   onDeleteReply,
   onSetReplyPage,
 }: TopicReplySectionProps) {
+  const t = useTranslations('forum');
   return (
     <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-b border-[var(--border)]">
       <div className="max-w-[1600px] mx-auto w-full">
@@ -67,7 +69,7 @@ export function TopicReplySection({
             {/* 回复排序栏 */}
             <div className="flex items-center justify-between mb-8">
               <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]">
-                回复 <span className="text-[var(--primary)]">列表</span>
+                {t('replyListTitle')} <span className="text-[var(--primary)]">列表</span>
                 <span className="display-serif italic text-[var(--muted-foreground)] text-[clamp(14px,2vw,24px)] ml-3 align-baseline">
                   / Replies
                 </span>
@@ -94,7 +96,7 @@ export function TopicReplySection({
             {/* [02] 回复编辑器 */}
             <div className="mt-20">
               <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                你的 <span className="text-[var(--primary)]">回复</span>
+                {t('yourReplyTitle')}
                 <span className="display-serif italic text-[var(--muted-foreground)] text-[clamp(14px,2vw,24px)] ml-3 align-baseline">
                   / Reply
                 </span>

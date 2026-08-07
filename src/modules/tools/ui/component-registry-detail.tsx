@@ -4,6 +4,7 @@
 
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import { VariantCell } from './component-registry-variant-renderer';
@@ -42,6 +43,7 @@ export interface ComponentDetailPanelProps {
 
 /** 右侧详情面板 */
 export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPanelProps) {
+  const t = useTranslations('toolsAdmin');
   const { setMigrationStatus } = useComponentRegistryStore();
 
   if (!item) {
@@ -51,10 +53,10 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           <span className="meta-mono text-[18px] text-[var(--muted-foreground)]/30">?</span>
         </div>
         <p className="meta-mono text-[11px] text-[var(--muted-foreground)] uppercase">
-          选择一个组件
+          {t('selectComponent')}
         </p>
         <p className="text-[12px] text-[var(--muted-foreground)]/60 mt-1 text-center max-w-[200px]">
-          从左侧列表选择组件，查看变体预览与使用规范
+          {t('selectComponentDesc')}
         </p>
       </div>
     );
@@ -110,7 +112,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
               }}
               className="px-3 py-1 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)] transition-colors uppercase"
             >
-              ← 回退
+              {t('retreat')}
             </button>
           )}
           {canAdvance && (
@@ -121,7 +123,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
               }}
               className="px-3 py-1 border border-[var(--primary)]/30 meta-mono text-[10px] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
             >
-              推进 →
+              {t('advance')}
             </button>
           )}
         </div>
@@ -130,7 +132,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
       {/* ============ [3] 简化变体预览（3×3） ============ */}
       <div className="px-6 py-4 border-b border-[var(--border)]">
         <span className="meta-mono text-[10px] text-[var(--primary)] uppercase">
-          变体预览 / Variant Preview · Default State
+          {t('variantPreview')}
         </span>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full border-collapse">
@@ -194,14 +196,14 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           onClick={() => onOpenDrawer(item.id)}
           className="mt-4 px-4 py-1.5 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors uppercase"
         >
-          编辑全部变体（27 格） / Edit All Variants
+          {t('editAllVariants')}
         </button>
       </div>
 
       {/* ============ [4] 使用规范 ============ */}
       <div className="px-6 py-4">
         <span className="meta-mono text-[10px] text-[var(--primary)] uppercase">
-          使用规范 / Usage Guide
+          {t('usageGuide')}
         </span>
 
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -212,12 +214,12 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
                 <Check className="w-2.5 h-2.5 text-emerald-500" />
               </span>
               <span className="meta-mono text-[10px] text-emerald-500 uppercase">
-                适用场景
+                {t('useCases')}
               </span>
             </div>
             {item.guide.useCases.length === 0 ? (
               <p className="meta-mono text-[10px] text-[var(--muted-foreground)]/50 italic">
-                尚无记录
+                {t('noRecord')}
               </p>
             ) : (
               <ul className="space-y-1.5">
@@ -240,12 +242,12 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
                 <X className="w-2.5 h-2.5 text-red-500" />
               </span>
               <span className="meta-mono text-[10px] text-red-500 uppercase">
-                反模式
+                {t('antiPatterns')}
               </span>
             </div>
             {item.guide.antiPatterns.length === 0 ? (
               <p className="meta-mono text-[10px] text-[var(--muted-foreground)]/50 italic">
-                尚无记录
+                {t('noRecord')}
               </p>
             ) : (
               <ul className="space-y-1.5">

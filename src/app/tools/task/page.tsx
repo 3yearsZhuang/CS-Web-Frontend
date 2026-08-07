@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTasks } from './use-tasks';
@@ -19,6 +20,7 @@ import { PointsTab } from './points-tab';
 import type { TaskTab } from './task-shared';
 
 export default function TaskPage() {
+  const t = useTranslations('toolsTask');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -30,15 +32,15 @@ export default function TaskPage() {
   const [activeTab, setActiveTab] = useState<TaskTab>('board');
 
   const tasks = useTasks();
-  const { user, loadMyClaims, loadPoints } = tasks;
+  const { loadMyClaims, loadPoints } = tasks;
 
   const taskTabs = useMemo(
     () => [
-      { key: 'board', num: '01', label: '任务板' },
-      { key: 'my-claims', num: '02', label: '我的认领' },
-      { key: 'points', num: '03', label: '积分' },
+      { key: 'board', num: '01', label: t('tabBoard') },
+      { key: 'my-claims', num: '02', label: t('tabMyClaims') },
+      { key: 'points', num: '03', label: t('tabPoints') },
     ],
-    [],
+    [t],
   );
 
   // Tab 切换时按需加载「我的认领」「积分」
@@ -52,7 +54,7 @@ export default function TaskPage() {
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
-        label="任务板"
+        label={t('heroLabel')}
         hero={hero}
         minHeight="50vh"
         capsule={{
@@ -65,7 +67,7 @@ export default function TaskPage() {
             href="/tools"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
           >
-            ← 返回
+            ← {t('back')}
           </Link>
         }
       >
@@ -77,11 +79,11 @@ export default function TaskPage() {
           }`}
           onClick={onTitleClick}
         >
-          任务<button className="text-[var(--primary)] focus-amber" onClick={onTitleClick}>发布板</button>
+          {t('heroTitle1')}<button className="text-[var(--primary)] focus-amber" onClick={onTitleClick}>{t('heroTitle2')}</button>
         </h1>
         <p className="mt-4 sm:mt-6 text-[14px] sm:text-[15px] text-[var(--muted-foreground)] leading-[1.8] max-w-2xl">
-          协会任务板 — 类似冒险者公会。
-          <span className="serif-italic text-[var(--foreground)]">领取任务、完成挑战、获得积分奖励</span>
+          {t('heroDesc1')}
+          <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>
           。
         </p>
       </CollapsingHero>

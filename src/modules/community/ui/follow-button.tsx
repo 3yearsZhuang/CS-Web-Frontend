@@ -12,6 +12,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -28,6 +29,7 @@ export function FollowButton({
   initialFollowing,
   compact,
 }: FollowButtonProps) {
+  const t = useTranslations('follow');
   const router = useRouter();
   const isSelf = !!currentUserId && currentUserId === targetUserId;
   const [following, setFollowing] = useState<boolean>(initialFollowing ?? false);
@@ -97,7 +99,7 @@ export function FollowButton({
           : 'border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5'
       }`}
     >
-      {pending ? '...' : following ? '已关注' : '+ 关注'}
+      {pending ? t('pending') : following ? t('following') : t('follow')}
     </button>
   );
 }

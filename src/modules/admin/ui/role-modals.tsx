@@ -3,6 +3,7 @@
  */
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
@@ -47,10 +48,11 @@ export function RoleModals({
   onDelete,
   onClose,
 }: RoleModalsProps) {
+  const t = useTranslations('adminRoles');
   return (
     <>
       {modal.type === 'create' && (
-        <ModalShell title="创建自定义角色" onClose={onClose}>
+        <ModalShell title={t('createRoleTitle')} onClose={onClose}>
           <CreateRoleForm
             form={createForm}
             setForm={setCreateForm}
@@ -66,9 +68,9 @@ export function RoleModals({
       )}
 
       {modal.type === 'edit' && (
-        <ModalShell title={`编辑角色 / ${modal.role.key}`} onClose={onClose}>
+        <ModalShell title={t('editRoleTitle', { key: modal.role.key })} onClose={onClose}>
           <div className="space-y-4">
-            <Field label="角色名称" count={`${editForm.displayName.length}/32`}>
+            <Field label={t('fieldDisplayName')} count={`${editForm.displayName.length}/32`}>
               <input
                 type="text"
                 value={editForm.displayName}
@@ -77,7 +79,7 @@ export function RoleModals({
                 className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
               />
             </Field>
-            <Field label="角色描述" count={`${editForm.description.length}/200`}>
+            <Field label={t('fieldDescription')} count={`${editForm.description.length}/200`}>
               <textarea
                 value={editForm.description}
                 onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
@@ -93,7 +95,7 @@ export function RoleModals({
                 onClick={onClose}
                 className="meta-mono text-[12px] px-4 py-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               >
-                取消
+                {t('cancel')}
               </button>
               <button
                 type="button"
@@ -101,7 +103,7 @@ export function RoleModals({
                 disabled={editSaving}
                 className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-50"
               >
-                {editSaving ? '保存中...' : '保存'}
+                {editSaving ? t('saving') : t('save')}
               </button>
             </div>
           </div>
@@ -111,17 +113,17 @@ export function RoleModals({
       {modal.type === 'delete' && (
         <ConfirmDialog
           open={true}
-          title="删除角色"
-          message={`即将删除角色 ${modal.role.displayName} (${modal.role.key})。此操作不可恢复。`}
+          title={t('deleteRoleTitle')}
+          message={t('deleteRoleMessage', { name: modal.role.displayName, key: modal.role.key })}
           variant="danger"
-          confirmLabel={editSaving ? '删除中...' : '确认删除'}
+          confirmLabel={editSaving ? t('deleting') : t('confirmDelete')}
           loading={editSaving}
           onConfirm={onDelete}
           onCancel={onClose}
         >
           {modal.role.userCount !== undefined && modal.role.userCount > 0 && (
             <p className="text-[12px] text-[var(--destructive)] meta-mono">
-              警告：该角色仍被 {modal.role.userCount} 个用户使用，无法删除。
+              {t('deleteWarningUsers', { count: modal.role.userCount })}
             </p>
           )}
           {editError && <p className="text-[12px] text-[var(--destructive)] meta-mono">{editError}</p>}

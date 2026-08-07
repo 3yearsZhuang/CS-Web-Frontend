@@ -9,6 +9,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -32,6 +33,7 @@ export default function ComposePage() {
 
 function ComposePageContent() {
   const c = useCompose();
+  const t = useTranslations('communityNew');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -58,12 +60,12 @@ function ComposePageContent() {
           <div className="text-center max-w-md">
             <div className="section-marker mb-6">[ 00 ]</div>
             <h1 className="display-serif text-[clamp(28px,5vw,48px)] text-[var(--foreground)] leading-[1.1] mb-6">
-              请先 <span className="text-[var(--primary)]">登录</span>
+              {t('loginRequiredTitle1')}<span className="text-[var(--primary)]">{t('loginRequiredTitle2')}</span>
             </h1>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] leading-[1.8] mb-8">
-              {'// 发布内容需要登录账户，加入社区讨论'}
+              {t('loginRequiredDesc')}
             </p>
-            <Button onClick={() => c.router.push('/login?redirect=/community/new')}>立即登录 →</Button>
+            <Button onClick={() => c.router.push('/login?redirect=/community/new')}>{t('loginNow')}</Button>
           </div>
         </section>
       </main>
@@ -83,7 +85,7 @@ function ComposePageContent() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            发布 <span className="text-[var(--primary)]">内容</span>
+            {t('heroTitle1')}<span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -103,7 +105,7 @@ function ComposePageContent() {
           <RevealItem>
             <p className="max-w-2xl text-[var(--muted-foreground)] text-[15px] leading-[1.8]">
               <span className="ark-divider mr-2">{'//'}</span>
-              选择版块，写下你的问题、思考或作品。支持 Markdown 与图片上传。
+              {t('heroDesc')}
             </p>
           </RevealItem>
         </div>
@@ -128,35 +130,35 @@ function ComposePageContent() {
           <div className="grid grid-cols-12 gap-0">
             <div className="col-span-12 md:col-span-2 mb-6 md:mb-0">
               <div className="section-marker">[ 02 ]</div>
-              <div className="meta-mono mt-2">提示 / Hints</div>
+              <div className="meta-mono mt-2">{t('hintsLabel')}</div>
             </div>
             <div className="col-span-12 md:col-span-10">
               <h2 className="display-serif text-[clamp(24px,4vw,40px)] text-[var(--foreground)] mb-8">
-                发布 <span className="text-[var(--primary)]">提示</span>
+                {t('hintsTitle1')}<span className="text-[var(--primary)]">{t('hintsTitle2')}</span>
               </h2>
               <div className="border-t border-[var(--border)] pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 max-w-3xl">
                 <div>
-                  <div className="ark-divider mb-3">{'// 01 标题'}</div>
+                  <div className="ark-divider mb-3">{t('hint01Title')}</div>
                   <p className="text-[14px] leading-[1.7] text-[var(--muted-foreground)]">
-                    简明描述问题或主题，避免「求助」「跪求」等无信息量词汇。
+                    {t('hint01Desc')}
                   </p>
                 </div>
                 <div>
-                  <div className="ark-divider mb-3">{'// 02 正文'}</div>
+                  <div className="ark-divider mb-3">{t('hint02Title')}</div>
                   <p className="text-[14px] leading-[1.7] text-[var(--muted-foreground)]">
-                    提供必要的背景、代码、报错信息。代码请用 ``` 包裹。
+                    {t('hint02Desc')}
                   </p>
                 </div>
                 <div>
-                  <div className="ark-divider mb-3">{'// 03 图片'}</div>
+                  <div className="ark-divider mb-3">{t('hint03Title')}</div>
                   <p className="text-[14px] leading-[1.7] text-[var(--muted-foreground)]">
-                    支持上传 ≤5MB 的 JPEG/PNG/WebP/GIF，单帖 ≤5 张。
+                    {t('hint03Desc')}
                   </p>
                 </div>
                 <div>
-                  <div className="ark-divider mb-3">{'// 04 审核'}</div>
+                  <div className="ark-divider mb-3">{t('hint04Title')}</div>
                   <p className="text-[14px] leading-[1.7] text-[var(--muted-foreground)]">
-                    事后审核：发布即发布，管理员有权隐藏违规内容。
+                    {t('hint04Desc')}
                   </p>
                 </div>
               </div>

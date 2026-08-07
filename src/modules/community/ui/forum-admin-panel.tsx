@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { CategoriesManager } from './categories-manager';
 import { TopicsManager } from './topics-manager';
 import { UsersManager } from './users-manager';
@@ -15,16 +16,17 @@ import { ReportsManager } from './reports-manager';
 import type { SubView } from './forum-admin-utils';
 
 const TABS: { key: SubView; label: string }[] = [
-  { key: 'categories', label: '[ 版块管理 / Categories ]' },
-  { key: 'topics', label: '[ 主题审核 / Topics ]' },
-  { key: 'users', label: '[ 用户管理 / Users ]' },
-  { key: 'announcements', label: '[ 公告管理 / Announcements ]' },
-  { key: 'dashboard', label: '[ 数据看板 / Dashboard ]' },
-  { key: 'reports', label: '[ 举报处理 / Reports ]' },
+  { key: 'categories', label: 'tabCategories' },
+  { key: 'topics', label: 'tabTopics' },
+  { key: 'users', label: 'tabUsers' },
+  { key: 'announcements', label: 'tabAnnouncements' },
+  { key: 'dashboard', label: 'tabDashboard' },
+  { key: 'reports', label: 'tabReports' },
 ];
 
 /** 管理员论坛面板 — 子视图切换 */
 export function AdminForumPanel() {
+  const t = useTranslations('communityAdmin');
   const [subView, setSubView] = useState<SubView>('categories');
 
   return (
@@ -42,7 +44,7 @@ export function AdminForumPanel() {
                 : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             }`}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

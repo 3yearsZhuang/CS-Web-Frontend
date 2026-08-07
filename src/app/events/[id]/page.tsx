@@ -4,6 +4,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -49,6 +50,7 @@ interface EventDetail {
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const t = useTranslations('events');
   const eventId = params.id;
 
   const [event, setEvent] = useState<EventDetail | null>(null);
@@ -153,13 +155,13 @@ export default function EventDetailPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '报名失败');
+        throw new Error(data.error || t('registerFailed'));
       }
 
       setRegistered(true);
       setRegisteredCount((prev) => prev + 1);
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '报名失败，请稍后再试');
+      setActionError(err instanceof Error ? err.message : t('registerFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -176,13 +178,13 @@ export default function EventDetailPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || '取消报名失败');
+        throw new Error(data.error || t('cancelFailed'));
       }
 
       setRegistered(false);
       setRegisteredCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : '取消失败，请稍后再试');
+      setActionError(err instanceof Error ? err.message : t('cancelFailed'));
     } finally {
       setActionLoading(false);
     }
@@ -203,12 +205,12 @@ export default function EventDetailPage() {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="meta-mono text-[var(--destructive)] mb-4">{error || '活动不存在'}</div>
+          <div className="meta-mono text-[var(--destructive)] mb-4">{error || t('notFound')}</div>
           <Link
             href="/events"
             className="meta-mono text-[var(--primary)] underline-grow inline-block"
           >
-            ← 返回活动列表
+            ← {t('backToList')}
           </Link>
         </div>
       </main>
@@ -227,7 +229,7 @@ export default function EventDetailPage() {
             href="/events"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
           >
-            ← 返回
+            ← {t('back')}
           </Link>
         }
       >
@@ -337,7 +339,7 @@ export default function EventDetailPage() {
                   </div>
                 ) : (
                   <div className="meta-mono text-[var(--muted-foreground)] py-8">
-                    活动详情待补充
+                    {t('detailEmpty')}
                   </div>
                 )}
               </section>
@@ -350,21 +352,21 @@ export default function EventDetailPage() {
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
                     <div>
                       <div className="display-serif text-2xl text-[var(--foreground)] mb-2">
-                        参与活动
+                        {t('participateTitle')}
                       </div>
                       <div className="meta-mono text-[var(--muted-foreground)]">
                         {isFull
-                          ? '活动名额已满'
+                          ? t('fullMsg')
                           : registered
-                            ? '你已成功报名本次活动'
-                            : '点击按钮报名参与'}
+                            ? t('registeredMsg')
+                            : t('clickToRegister')}
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-4 sm:min-w-[320px]">
                       {!registered && event.registrationFields && event.registrationFields.length > 0 && (
                         <div className="space-y-4 p-5 border border-[var(--border)]">
-                          <div className="meta-mono text-[var(--muted-foreground)]">报名信息</div>
+                          <div className="meta-mono text-[var(--muted-foreground)]">{t('regInfo')}</div>
                           {event.registrationFields.map((field) => (
                             <div key={field.key}>
                               {field.type === 'textarea' ? (
@@ -439,13 +441,13 @@ export default function EventDetailPage() {
 
                       {isLoggedIn === false ? (
                         <Button onClick={() => router.push('/login')}>
-                          <span>登录后报名</span>
+                          <span>{t('loginToRegister')}</span>
                           <span>→</span>
                         </Button>
                       ) : registered ? (
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
-                            <span>已报名</span>
+                            <span>{t('registered')}</span>
                             <span>✓</span>
                           </Button>
                           <Button
@@ -454,19 +456,19 @@ export default function EventDetailPage() {
                             disabled={actionLoading}
                             className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]"
                           >
-                            {actionLoading ? '处理中...' : '取消报名'}
+                            {actionLoading ? t('processing') : t('cancelReg')}
                           </Button>
                         </div>
                       ) : isFull ? (
                         <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
-                          <span>报名已满</span>
+                          <span>{t('full')}</span>
                         </Button>
                       ) : (
                         <Button
                           onClick={handleRegister}
                           disabled={actionLoading}
                         >
-                          <span>{actionLoading ? '处理中...' : '立即报名'}</span>
+                          <span>{actionLoading ? t('processing') : t('registerNow')}</span>
                           <span>→</span>
                         </Button>
                       )}

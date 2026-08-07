@@ -4,6 +4,7 @@
 
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
 import type { VariantSize, VariantColor, VariantState } from '../types';
@@ -49,6 +50,7 @@ interface VariantCellProps {
  * 渲染单个变体单元 — 根据 slug 分发到对应组件渲染器
  */
 export function VariantCell({ slug, size, color, state }: VariantCellProps) {
+  const t = useTranslations('toolsAdmin');
   const wrapperClass = `inline-flex items-center justify-center gap-2 transition-all ${SIZE_CLASS[size]} ${STATE_CLASS[state]}`;
 
   switch (slug) {
@@ -103,22 +105,23 @@ export function VariantCell({ slug, size, color, state }: VariantCellProps) {
 
 /** ConfirmDialog 微缩预览 — 渲染一个小型对话框 */
 function ConfirmDialogPreview({ size, color, state }: { size: VariantSize; color: VariantColor; state: VariantState }) {
+  const t = useTranslations('toolsAdmin');
   const w = size === 'sm' ? 'w-28' : size === 'md' ? 'w-36' : 'w-44';
   return (
     <div className={`${w} ${SIZE_CLASS[size]} ${STATE_CLASS[state]} border border-[var(--border)] bg-[var(--background)]`}>
       <div className={`px-2 py-1 border-b border-[var(--border)] meta-mono text-[9px] ${COLOR_TEXT[color]}`}>
-        [ 确认操作 ]
+        {t('confirmAction')}
       </div>
       <div className="px-2 py-2">
         <p className="font-mono text-[9px] text-[var(--muted-foreground)] leading-tight">
-          确定要执行此操作吗？
+          {t('confirmPrompt')}
         </p>
         <div className="flex gap-1 mt-1.5">
           <span className={`px-1.5 py-0.5 text-[8px] border ${COLOR_TEXT[color]} border-current`}>
-            确认
+            {t('confirm')}
           </span>
           <span className="px-1.5 py-0.5 text-[8px] border border-[var(--border)] text-[var(--muted-foreground)]">
-            取消
+            {t('cancel')}
           </span>
         </div>
       </div>

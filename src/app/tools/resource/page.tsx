@@ -9,6 +9,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Plus } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -21,6 +22,7 @@ import { ResourceCard } from './resource-card';
 import { SubmitResourceModal } from './submit-resource-modal';
 
 export default function ResourcePage() {
+  const t = useTranslations('toolsResource');
   const res = useResources();
   const {
     collapsed: heroCollapsed,
@@ -43,7 +45,7 @@ export default function ResourcePage() {
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
-        label="学习资源站"
+        label={t('heroLabel')}
         hero={hero}
         pageKey="resource"
         minHeight="50vh"
@@ -57,7 +59,7 @@ export default function ResourcePage() {
             href="/tools"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
           >
-            ← 返回
+            ← {t('back')}
           </Link>
         }
       >
@@ -70,7 +72,7 @@ export default function ResourcePage() {
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
-            学习资源站
+            {t('pageTitle')}
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -78,7 +80,7 @@ export default function ResourcePage() {
                   : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
               }`}
             >
-              / Resource Hub
+              / {t('pageTitleEn')}
             </span>
           </h1>
         </RevealTitle>
@@ -93,9 +95,9 @@ export default function ResourcePage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              发现优质技术资源
+              {t('desc1')}
               <span className="serif-italic text-[var(--foreground)]">
-                。社区共建知识库，每个人都是贡献者
+                {t('desc2')}
               </span>
               。
             </p>
@@ -111,15 +113,15 @@ export default function ResourcePage() {
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
             <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
-              {res.activeType === 'all' ? '全部资源' : res.activeTypeLabel}
+              {res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}
               <span className="ark-divider ml-2">
-                {res.activeType === 'all' ? 'All Resources' : res.activeTypeLabel}
+                {res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}
               </span>
             </h2>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {res.loading
                 ? '// 加载中...'
-                : `// ${res.data?.total ?? 0} 条资源 · 按${res.sort === 'latest' ? '最新' : '热门'}排序`}
+                : t('sortCount', { count: res.data?.total ?? 0, sort: res.sort === 'latest' ? t('sortLatest') : t('sortPopular') })}
             </p>
 
             {/* 工具栏：技术标签 + 排序 + 提交 */}
@@ -152,7 +154,7 @@ export default function ResourcePage() {
                       : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                   }`}
                 >
-                  最新
+                  {t('sortLatest')}
                 </button>
                 <button
                   onClick={() => res.setSortAndReset('popular')}
@@ -162,14 +164,14 @@ export default function ResourcePage() {
                       : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
                   }`}
                 >
-                  热门
+                  {t('sortPopular')}
                 </button>
               </div>
 
               {res.isLoggedIn && (
                 <Button size="sm" onClick={res.openSubmit} className="whitespace-nowrap">
                   <Plus className="w-3.5 h-3.5" />
-                  提交资源
+                  {t('submit')}
                 </Button>
               )}
             </div>
@@ -179,13 +181,13 @@ export default function ResourcePage() {
               <SectionLoading label="Loading..." />
             ) : !res.data || res.data.resources.length === 0 ? (
               <div className="py-16 text-center">
-                <div className="meta-mono text-[var(--muted-foreground)] mb-6">{'// 暂无资源，成为第一个贡献者吧'}</div>
+                <div className="meta-mono text-[var(--muted-foreground)] mb-6">{'// '}{t('empty')}</div>
                 {res.isLoggedIn && (
                   <button
                     onClick={res.openSubmit}
                     className="meta-mono text-[var(--primary)] underline-grow"
                   >
-                    提交资源 →
+                    {t('submitHere')}
                   </button>
                 )}
               </div>

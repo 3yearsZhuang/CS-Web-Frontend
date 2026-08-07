@@ -17,6 +17,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import { useTwoFA } from './use-two-fa';
 
@@ -30,6 +31,7 @@ const OUTLINE_BTN_CLASS =
 
 /** 双因素认证 (2FA) 设置组件 — 支持启用/禁用/重新生成备用码 */
 export function TwoFactorSettings() {
+  const t = useTranslations('authSettings');
   const {
     status,
     loading,
@@ -76,9 +78,9 @@ export function TwoFactorSettings() {
     return (
       <div className="py-6">
         <div className="meta-mono text-[var(--destructive)] mb-2">[ Error ]</div>
-        <p className="text-[13px] text-[var(--muted-foreground)]">{error || '加载失败'}</p>
+        <p className="text-[13px] text-[var(--muted-foreground)]">{error || t('loadFailed')}</p>
         <button onClick={fetchStatus} className={`${OUTLINE_BTN_CLASS} mt-4`}>
-          重试
+          {t('retry')}
         </button>
       </div>
     );
@@ -93,7 +95,7 @@ export function TwoFactorSettings() {
       </div>
 
       <h3 className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] leading-[1.1]">
-        双因素认证
+        {t('title')}
         <span className="display-serif italic text-[var(--muted-foreground)] ml-2 text-[clamp(14px,1.6vw,18px)]">
           / Two-Factor Authentication
         </span>
@@ -105,10 +107,10 @@ export function TwoFactorSettings() {
           <AlertTriangle size={16} className="text-[var(--destructive)] shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-[13px] text-[var(--destructive)] leading-relaxed font-medium">
-              管理员账号需要启用 2FA
+              {t('adminRequired')}
             </p>
             <p className="text-[11px] font-mono text-[var(--muted-foreground)] mt-1">
-              你的账号角色要求启用双因素认证后才能继续使用全部功能。
+              {t('adminRequiredDesc')}
             </p>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function TwoFactorSettings() {
         <div className="flex items-start gap-2 p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="ml-auto underline shrink-0">
-            关闭
+            {t('close')}
           </button>
         </div>
       )}
@@ -136,9 +138,9 @@ export function TwoFactorSettings() {
             <Shield size={28} className="text-[var(--muted-foreground)] shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="meta-mono text-[var(--muted-foreground)] mb-1">[ Status ] · Disabled</div>
-              <p className="text-[14px] text-[var(--foreground)] leading-relaxed">双因素认证未启用</p>
+              <p className="text-[14px] text-[var(--foreground)] leading-relaxed">{t('disabledTitle')}</p>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-2 leading-relaxed">
-                启用后，登录时除密码外还需输入由认证 App（如 Google Authenticator、1Password）生成的 6 位验证码，显著提升账号安全性。
+                {t('disabledDesc')}
               </p>
               <Button
                 onClick={handleStartSetup}
@@ -146,7 +148,7 @@ export function TwoFactorSettings() {
                 loading={setupLoading}
                 className="mt-4"
               >
-                {setupLoading ? 'Initializing...' : '启用双因素认证 →'}
+                {setupLoading ? 'Initializing...' : t('enableBtn')}
               </Button>
             </div>
           </div>
@@ -162,7 +164,7 @@ export function TwoFactorSettings() {
             <button
               onClick={handleCancelSetup}
               className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber"
-              aria-label="取消"
+              aria-label={t('cancel')}
             >
               <X size={16} />
             </button>
@@ -180,9 +182,9 @@ export function TwoFactorSettings() {
               alt="2FA QR Code"
               className="w-[240px] h-[240px] border border-[var(--border)] p-2 bg-white"
             />
-            <p className="text-[11px] font-mono text-[var(--muted-foreground)] text-center max-w-[320px]">
-              使用认证 App 扫描二维码，或手动输入下方密钥。
-            </p>
+              <p className="text-[11px] font-mono text-[var(--muted-foreground)] text-center max-w-[320px]">
+                {t('scanQrDesc')}
+              </p>
           </div>
 
           {/* Secret 密钥（手动输入） */}
@@ -198,7 +200,7 @@ export function TwoFactorSettings() {
               <button
                 onClick={handleCopySecret}
                 className={`${OUTLINE_BTN_CLASS} shrink-0`}
-                title="复制密钥"
+                title={t('copySecretTitle')}
               >
                 {copiedSecret ? <Check size={14} /> : <Copy size={14} />}
               </button>
@@ -215,7 +217,7 @@ export function TwoFactorSettings() {
             </div>
             <div className="p-3 border border-[var(--border)] bg-[var(--destructive)]/[0.03]">
               <p className="text-[11px] font-mono text-[var(--destructive)] mb-3 leading-relaxed">
-                ⚠ 请立即保存以下备用码。丢失认证设备时可用其完成登录，每个仅可使用一次。
+                ⚠ {t('backupCodesHint')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {setupData.backupCodes.map((code, idx) => (
@@ -257,10 +259,10 @@ export function TwoFactorSettings() {
               disabled={verifying || verifyCode.length !== 6}
               loading={verifying}
             >
-              {verifying ? 'Verifying...' : '确认启用 →'}
+              {verifying ? 'Verifying...' : t('confirmEnable')}
             </Button>
             <button onClick={handleCancelSetup} disabled={verifying} className={OUTLINE_BTN_CLASS}>
-              取消
+              {t('cancel')}
             </button>
           </div>
         </div>
@@ -275,11 +277,11 @@ export function TwoFactorSettings() {
             <div className="flex-1 min-w-0">
               <div className="meta-mono text-[var(--muted-foreground)] mb-1">[ Status ] · Enabled</div>
               <p className="text-[14px] text-[var(--foreground)] leading-relaxed flex items-center gap-2">
-                2FA 已启用
+                {t('enabledTitle')}
                 <Check size={16} className="text-green-600 dark:text-green-400" />
               </p>
               <p className="text-[12px] text-[var(--muted-foreground)] mt-2 leading-relaxed">
-                登录时需要输入由认证 App 生成的 6 位验证码。
+                {t('enabledDesc')}
               </p>
             </div>
           </div>
@@ -292,13 +294,13 @@ export function TwoFactorSettings() {
                 <button
                   onClick={() => setRegeneratedCodes(null)}
                   className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  aria-label="关闭"
+                  aria-label={t('close')}
                 >
                   <X size={14} />
                 </button>
               </div>
               <p className="text-[11px] font-mono text-[var(--destructive)] mb-3 leading-relaxed">
-                ⚠ 旧备用码已失效。请立即保存以下新备用码。
+                ⚠ {t('regeneratedWarn')}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {regeneratedCodes.map((code, idx) => (
@@ -325,7 +327,7 @@ export function TwoFactorSettings() {
                 className={OUTLINE_BTN_CLASS}
               >
                 <Key size={14} />
-                重新生成备用码
+                {t('regenerateBackupCodes')}
               </button>
               <button
                 onClick={() => {
@@ -336,7 +338,7 @@ export function TwoFactorSettings() {
                 className="px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--destructive)]/40 text-[var(--destructive)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)] transition-colors focus-amber"
               >
                 <Shield size={14} />
-                禁用 2FA
+                {t('disable2fa')}
               </button>
             </div>
           ) : (
@@ -358,7 +360,7 @@ export function TwoFactorSettings() {
                 <button
                   onClick={handleCancelAction}
                   className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber"
-                  aria-label="取消"
+                  aria-label={t('cancel')}
                 >
                   <X size={16} />
                 </button>
@@ -366,8 +368,8 @@ export function TwoFactorSettings() {
 
               <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">
                 {actionMode === 'disable'
-                  ? '禁用后账号将仅由密码保护。请输入当前认证 App 生成的 6 位验证码以确认。'
-                  : '请输入当前认证 App 生成的 6 位验证码，验证后将生成一组新的备用码（旧码立即失效）。'}
+                  ? t('disableDesc')
+                  : t('regenerateDesc')}
               </p>
 
               <div>
@@ -402,15 +404,15 @@ export function TwoFactorSettings() {
                   {actionLoading
                     ? 'Processing...'
                     : actionMode === 'disable'
-                      ? '确认禁用'
-                      : '确认重新生成 →'}
+                      ? t('confirmDisable')
+                      : t('confirmRegenerate')}
                 </Button>
                 <button
                   onClick={handleCancelAction}
                   disabled={actionLoading}
                   className={OUTLINE_BTN_CLASS}
                 >
-                  取消
+                  {t('cancel')}
                 </button>
               </div>
             </div>

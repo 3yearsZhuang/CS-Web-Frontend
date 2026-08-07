@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { Button } from '@/components';
@@ -23,9 +24,9 @@ const NOTIF_TITLE_MAX = 120;
 const NOTIF_CONTENT_MAX = 500;
 
 const subTabMeta: { key: MessagesSubTab; num: string; label: string }[] = [
-  { key: 'broadcast', num: '01', label: '群发通知' },
-  { key: 'announcements', num: '02', label: '公告管理' },
-  { key: 'history', num: '03', label: '广播历史' },
+  { key: 'broadcast', num: '01', label: 'subTabBroadcast' },
+  { key: 'announcements', num: '02', label: 'subTabAnnouncements' },
+  { key: 'history', num: '03', label: 'subTabHistory' },
 ];
 
 /* ============= 面板组件 ============= */
@@ -37,6 +38,7 @@ interface AdminMessagesPanelProps {
 /** 统一消息管理面板 — 内部 Tab 切换：群发通知 / 公告管理 / 广播历史 */
 export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
   const router = useRouter();
+  const t = useTranslations('adminNotifications');
   const { pushToast } = useToast();
 
   const [subTab, setSubTab] = useState<MessagesSubTab>('broadcast');
@@ -52,15 +54,15 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!notifForm.title.trim()) {
-        setNotifError('标题不能为空');
+        setNotifError(t('titleEmpty'));
         return;
       }
       if (notifForm.title.length > NOTIF_TITLE_MAX) {
-        setNotifError('标题不能超过 120 字符');
+        setNotifError(t('titleTooLong'));
         return;
       }
       if (notifForm.content.length > NOTIF_CONTENT_MAX) {
-        setNotifError('内容不能超过 500 字符');
+        setNotifError(t('contentTooLong'));
         return;
       }
       setNotifSaving(true);
@@ -80,14 +82,14 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
           error?: string;
         } | null;
         if (!res.ok || !data?.ok) {
-          setNotifError(data?.error || '发送失败');
+          setNotifError(data?.error || t('sendFailedShort'));
           return;
         }
-        pushToast('success', `已群发通知给 ${data.count ?? 0} 位用户`);
+        pushToast('success', t('sendSuccess', { count: data.count ?? 0 }));
         setNotifForm({ title: '', content: '' });
         setNotifError(null);
       } catch {
-        setNotifError('网络错误');
+        setNotifError(t('networkErrorShort'));
       } finally {
         setNotifSaving(false);
       }
@@ -113,7 +115,7 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
                     : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                 }`}
               >
-                [ {meta.num} ] {meta.label}
+                [ {meta.num} ] {t(meta.label)}
               </button>
             ))}
           </div>
@@ -125,11 +127,11 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
         <>
           <RevealItem>
             <div className="py-5 border-b border-[var(--border)]">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-2">[ 群发 / Broadcast ]</div>
+              <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('panelLabel')}</div>
               <p className="text-[13px] text-[var(--foreground)] leading-[1.7]">
-                群发通知会即时推送给所有
-                <span className="text-[var(--primary)] meta-mono"> 活跃用户 </span>
-                （未禁用）。
+                {t('panelDescBefore')}
+                <span className="text-[var(--primary)] meta-mono">{t('panelDescHighlight')}</span>
+                {t('panelDescAfterShort')}
               </p>
             </div>
           </RevealItem>
@@ -140,7 +142,7 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
               className="py-8 border-b border-[var(--border)] space-y-6"
             >
               <div>
-                <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 标题 / Title ]</div>
+                <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('fieldTitle')}</div>
                 <input
                   type="text"
                   value={notifForm.title}
@@ -155,14 +157,14 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
               </div>
 
               <div>
-                <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 正文 / Content ]</div>
+                <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('fieldContent')}</div>
                 <textarea
                   value={notifForm.content}
                   maxLength={NOTIF_CONTENT_MAX}
                   rows={5}
                   onChange={(e) => setNotifForm((f) => ({ ...f, content: e.target.value }))}
                   className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
-                  placeholder="通知正文（可选，最多 500 字符）"
+                  placeholder={t('contentPlaceholderShort')}
                 />
                 <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">
                   {notifForm.content.length}/{NOTIF_CONTENT_MAX}
@@ -177,7 +179,7 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
 
               <div className="flex items-center gap-4">
                 <Button type="submit" disabled={notifSaving} loading={notifSaving}>
-                  {notifSaving ? '发送中...' : '群发 / Broadcast →'}
+                  {notifSaving ? t('sendingShort') : t('broadcastBtn')}
                 </Button>
                 <button
                   type="button"
@@ -187,7 +189,7 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
                   }}
                   className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
                 >
-                  清空
+                  {t('clearBtn')}
                 </button>
               </div>
             </form>

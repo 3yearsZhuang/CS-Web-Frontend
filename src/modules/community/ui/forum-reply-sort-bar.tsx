@@ -4,6 +4,7 @@
 'use client';
 
 import { InlineTabs } from '@/components/primitives/inline-tabs';
+import { useTranslations } from 'next-intl';
 
 /** 回复排序模式：最新、最早、最热 */
 export type ReplySortMode = 'newest' | 'oldest' | 'hottest';
@@ -15,10 +16,10 @@ interface ReplySortBarProps {
   className?: string;
 }
 
-const SORT_OPTIONS: { value: ReplySortMode; label: string }[] = [
-  { value: 'newest', label: '最新' },
-  { value: 'oldest', label: '最早' },
-  { value: 'hottest', label: '最热' },
+const SORT_OPTIONS: { value: ReplySortMode; labelKey: string }[] = [
+  { value: 'newest', labelKey: 'sortNewest' },
+  { value: 'oldest', labelKey: 'sortOldest' },
+  { value: 'hottest', labelKey: 'sortHottest' },
 ];
 
 /**
@@ -28,9 +29,11 @@ const SORT_OPTIONS: { value: ReplySortMode; label: string }[] = [
  * 选中项以 primary 色下划线指示。
  */
 export function ReplySortBar({ sortMode, onChange, className = '' }: ReplySortBarProps) {
+  const t = useTranslations('forum');
+  const options = SORT_OPTIONS.map((o) => ({ value: o.value, label: t(o.labelKey) }));
   return (
     <InlineTabs
-      options={SORT_OPTIONS}
+      options={options}
       value={sortMode}
       onChange={(v) => onChange(v as ReplySortMode)}
       label="Sort"

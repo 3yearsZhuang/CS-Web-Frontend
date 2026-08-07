@@ -5,6 +5,7 @@
  */
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { getTranslations } from 'next-intl/server';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
@@ -17,17 +18,18 @@ import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
 import './globals.css';
 
 /** 全局 SEO 元数据 */
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo');
+  return {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:2333',
   ),
   manifest: '/manifest.json',
   title: {
-    default: '计算机协会 | 探索技术的无限可能',
-    template: '%s | 计算机协会',
+    default: t('title'),
+    template: t('titleTemplate'),
   },
-  description:
-    '大学计算机协会官方主页 - 汇聚热爱技术的学生，探索编程、算法、人工智能与开源世界的无限可能。',
+  description: t('description'),
   keywords: [
     '计算机协会',
     '编程社团',
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
     '开源社区',
     '技术交流',
   ],
-  authors: [{ name: '计算机协会' }],
+  authors: [{ name: t('author') }],
   // 浏览器标签页图标 — 使用 logo.png（用户要求）
   icons: {
     icon: [{ url: '/logo.png', type: 'image/png', sizes: 'any' }],
@@ -45,16 +47,16 @@ export const metadata: Metadata = {
     shortcut: ['/logo.png'],
   },
   openGraph: {
-    title: '计算机协会 | 探索技术的无限可能',
-    description: '汇聚热爱技术的学生，探索编程与开源世界的无限可能。',
+    title: t('ogTitle'),
+    description: t('ogDescription'),
     locale: 'zh_CN',
     type: 'website',
-    images: [{ url: '/logo.png', width: 1254, height: 1254, alt: '计算机协会 Logo' }],
+    images: [{ url: '/logo.png', width: 1254, height: 1254, alt: t('ogAlt') }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '计算机协会 | 探索技术的无限可能',
-    description: '汇聚热爱技术的学生，探索编程与开源世界的无限可能。',
+    title: t('twitterTitle'),
+    description: t('twitterDescription'),
     images: ['/logo.png'],
   },
   robots: {
@@ -64,9 +66,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: '计算机协会',
+    title: t('appleTitle'),
   },
-};
+  };
+}
 
 /**
  * Service Worker 注册 + 缓存清理脚本

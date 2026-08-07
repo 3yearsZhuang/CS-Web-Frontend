@@ -5,6 +5,7 @@
 
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
+import { useTranslations } from 'next-intl';
 import type { PasswordResetRequest } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
 import { resetStatusLabel, type ResetStatusFilter } from './users-panel-utils';
@@ -31,6 +32,7 @@ export function UserResetsView({
   onApprove,
   onReject,
 }: UserResetsViewProps) {
+  const t = useTranslations('adminJoin');
   return (
     <>
       {/* 工具栏：状态筛选 */}
@@ -38,14 +40,14 @@ export function UserResetsView({
         <div className="border-t border-[var(--border)] border-b border-[var(--border)] py-5 sm:py-6 mb-0">
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
             <div className="col-span-12 md:col-span-8">
-              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">[ 状态筛选 / Status Filter ]</div>
+              <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('statusFilterLabel')}</div>
               <div className="flex flex-wrap gap-1.5">
                 {(
                   [
-                    { v: 'pending', label: '待处理' },
-                    { v: 'approved', label: '已批准' },
-                    { v: 'rejected', label: '已拒绝' },
-                    { v: 'all', label: '全部' },
+                    { v: 'pending', label: 'resetPending' },
+                    { v: 'approved', label: 'resetApproved' },
+                    { v: 'rejected', label: 'resetRejected' },
+                    { v: 'all', label: 'resetAll' },
                   ] as { v: ResetStatusFilter; label: string }[]
                 ).map((s) => (
                   <button
@@ -58,7 +60,7 @@ export function UserResetsView({
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
                     }`}
                   >
-                    {s.label}
+                    {t(s.label)}
                   </button>
                 ))}
               </div>
@@ -83,21 +85,21 @@ export function UserResetsView({
           <div className="p-4 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--destructive)]">
             [ Error ] {error}
             <button type="button" onClick={onFetch} className="focus-amber ml-3 underline hover:opacity-80">
-              重试
+              {t('retry')}
             </button>
           </div>
         )}
 
         {loading && requests.length === 0 && (
           <div className="py-20 flex items-center justify-center">
-            <SectionLoading label="加载申请中 / Loading..." />
+            <SectionLoading label={t('loadingResetsLabel')} />
           </div>
         )}
 
         {!loading && !error && requests.length === 0 && (
           <div className="py-20 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无申请 / No Request ]</div>
-            <p className="text-[14px] text-[var(--muted-foreground)]">没有符合条件的密码重置申请。</p>
+            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noResets')}</div>
+            <p className="text-[14px] text-[var(--muted-foreground)]">{t('noResetsDesc')}</p>
           </div>
         )}
 
@@ -135,9 +137,9 @@ export function UserResetsView({
                       <div className="flex items-center justify-end gap-2">
                         {r.status === 'pending' ? (
                           <>
-                            <Button size="sm" onClick={() => onApprove(r)}>批准并重置</Button>
+                            <Button size="sm" onClick={() => onApprove(r)}>{t('approveAndResetBtn')}</Button>
                             <Button variant="outline" size="sm" onClick={() => onReject(r)} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]/60">
-                              拒绝
+                              {t('reject')}
                             </Button>
                           </>
                         ) : (
@@ -160,29 +162,29 @@ export function UserResetsView({
                 <div className="text-[14px] text-[var(--foreground)] truncate font-mono break-all mb-3">{r.email}</div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
-                    <div className="meta-mono text-[var(--muted-foreground)]">状态 / Status</div>
+                    <div className="meta-mono text-[var(--muted-foreground)]">{t('mobileStatusLabel')}</div>
                     <div className={`meta-mono mt-1 ${r.status === 'pending' ? 'text-[var(--primary)]' : r.status === 'approved' ? 'text-[var(--foreground)]' : 'text-[var(--destructive)]'}`}>
                       {resetStatusLabel(r.status)}
                     </div>
                   </div>
                   <div>
-                    <div className="meta-mono text-[var(--muted-foreground)]">创建 / Created</div>
+                    <div className="meta-mono text-[var(--muted-foreground)]">{t('mobileCreatedLabel')}</div>
                     <div className="meta-mono mt-1 text-[var(--foreground)]">{formatDate(r.created_at)}</div>
                   </div>
                   <div>
-                    <div className="meta-mono text-[var(--muted-foreground)]">处理 / Resolved</div>
+                    <div className="meta-mono text-[var(--muted-foreground)]">{t('mobileResolvedLabel')}</div>
                     <div className="meta-mono mt-1 text-[var(--foreground)]">{r.resolved_at ? formatDate(r.resolved_at) : '—'}</div>
                   </div>
                   <div>
-                    <div className="meta-mono text-[var(--muted-foreground)]">备注 / Note</div>
+                    <div className="meta-mono text-[var(--muted-foreground)]">{t('mobileNoteLabel')}</div>
                     <div className="meta-mono mt-1 text-[var(--foreground)] break-all">{r.admin_note || '—'}</div>
                   </div>
                 </div>
                 {r.status === 'pending' && (
                   <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={() => onApprove(r)} className="flex-1">批准并重置</Button>
+                    <Button size="sm" onClick={() => onApprove(r)} className="flex-1">{t('approveAndResetBtn')}</Button>
                     <Button variant="outline" size="sm" onClick={() => onReject(r)} className="flex-1 hover:text-[var(--destructive)] hover:border-[var(--destructive)]/60">
-                      拒绝
+                      {t('reject')}
                     </Button>
                   </div>
                 )}

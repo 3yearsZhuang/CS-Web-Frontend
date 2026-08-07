@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X, ExternalLink, BookOpen } from 'lucide-react';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import {
@@ -14,6 +15,8 @@ import {
 
 /** 资源审核子面板 — 待审核资源列表 + 通过/拒绝 */
 export function ResourceReviewPanel() {
+  const t = useTranslations('toolsAdmin');
+  const tc = useTranslations('common');
   const [resources, setResources] = useState<PendingResource[]>([]);
   const [resourceTotal, setResourceTotal] = useState(0);
   const [resourcePage, setResourcePage] = useState(1);
@@ -32,10 +35,10 @@ export function ResourceReviewPanel() {
         setResourceTotal(json.total);
       } else {
         const json = await res.json();
-        setResourceError(json.error || '加载失败');
+        setResourceError(json.error || t('loadFailed'));
       }
     } catch {
-      setResourceError('网络错误');
+      setResourceError(t('networkError'));
     } finally {
       setResourceLoading(false);
     }
@@ -60,7 +63,7 @@ export function ResourceReviewPanel() {
       setResourceTotal((prev) => prev - 1);
     } else {
       const json = await res.json();
-      alert(json.error || '操作失败');
+      alert(json.error || t('actionFailed'));
     }
   };
 
@@ -69,14 +72,14 @@ export function ResourceReviewPanel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">待审核 {resourceTotal} 条</span>
+        <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('resourcePending', { count: resourceTotal })}</span>
         <button
           type="button"
           onClick={() => fetchResources(resourcePage)}
           disabled={resourceLoading}
           className="focus-amber meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30"
         >
-          {resourceLoading ? 'Loading' : 'Refresh'}
+          {resourceLoading ? tc('loading') : tc('refresh')}
         </button>
       </div>
 
@@ -131,7 +134,7 @@ export function ResourceReviewPanel() {
                           rel="noopener noreferrer"
                           className="text-[11px] text-[var(--primary)] hover:underline"
                         >
-                          附件
+                          {t('attachment')}
                         </a>
                       )}
                     </div>
@@ -157,7 +160,7 @@ export function ResourceReviewPanel() {
                     type="text"
                     value={reviewNote[r.id] || ''}
                     onChange={(e) => setReviewNote((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                    placeholder="审核备注（可选）"
+                    placeholder={t('reviewNotePlaceholder')}
                     maxLength={500}
                     className="flex-1 bg-transparent border border-[var(--border)] px-3 py-1.5 text-[12px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
                   />
@@ -166,14 +169,14 @@ export function ResourceReviewPanel() {
                     onClick={() => handleReview(r.id, 'published')}
                     className="flex items-center gap-1.5 text-[11px] font-mono px-3 py-1.5 border border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                   >
-                    <Check className="w-3.5 h-3.5" /> 通过
+                    <Check className="w-3.5 h-3.5" /> {t('approve')}
                   </button>
                   <button
                     type="button"
                     onClick={() => handleReview(r.id, 'hidden')}
                     className="flex items-center gap-1.5 text-[11px] font-mono px-3 py-1.5 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
                   >
-                    <X className="w-3.5 h-3.5" /> 拒绝
+                    <X className="w-3.5 h-3.5" /> {t('reject')}
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SectionLoading } from '@/components';
 
 interface DashboardStats {
@@ -21,6 +22,7 @@ export function DashboardManager() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations('dashboard');
 
   useEffect(() => {
     Promise.all([
@@ -41,18 +43,18 @@ export function DashboardManager() {
         });
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : '加载失败');
+        setError(err instanceof Error ? err.message : t('loadFailed'));
       })
       .finally(() => setLoading(false));
   }, []);
 
   const statCards = stats ? [
-    { label: '总用户', value: stats.totalUsers, color: 'var(--primary)' },
-    { label: '讨论主题', value: stats.totalTopics, color: 'var(--chart-2)' },
-    { label: '回复/评论', value: stats.totalReplies, color: 'var(--chart-1)' },
-    { label: '文章内容', value: stats.totalBlogPosts, color: 'var(--chart-5)' },
-    { label: '版块', value: stats.totalCategories, color: 'var(--chart-3)' },
-    { label: '公告', value: stats.totalAnnouncements, color: 'var(--destructive)' },
+    { label: t('statTotalUsers'), value: stats.totalUsers, color: 'var(--primary)' },
+    { label: t('statTopics'), value: stats.totalTopics, color: 'var(--chart-2)' },
+    { label: t('statReplies'), value: stats.totalReplies, color: 'var(--chart-1)' },
+    { label: t('statPosts'), value: stats.totalBlogPosts, color: 'var(--chart-5)' },
+    { label: t('statCategories'), value: stats.totalCategories, color: 'var(--chart-3)' },
+    { label: t('statAnnouncements'), value: stats.totalAnnouncements, color: 'var(--destructive)' },
   ] : [];
 
   if (loading) {
@@ -67,7 +69,7 @@ export function DashboardManager() {
 
   return (
     <div className="space-y-8">
-      <div className="meta-mono text-[var(--muted-foreground)]">{'// 社区运营数据概览'}</div>
+      <div className="meta-mono text-[var(--muted-foreground)]">{'// '}{t('overview')}</div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((card) => (
           <div key={card.label} className="border border-[var(--border)] p-6 card-minimal">

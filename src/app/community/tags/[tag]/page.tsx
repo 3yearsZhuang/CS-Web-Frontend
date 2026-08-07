@@ -8,6 +8,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
@@ -16,6 +17,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 export default function TagDetailPage() {
   const params = useParams<{ tag: string }>();
   const tag = decodeURIComponent(params?.tag ?? '');
+  const t = useTranslations('communityTags');
 
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } =
     useCollapsingHero();
@@ -48,7 +50,7 @@ export default function TagDetailPage() {
             }`}
           >
             <p className="max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
-              标签「{tag}」下的全部文章。
+              {t('heroDesc', { tag })}
             </p>
           </div>
         </RevealItem>
@@ -61,12 +63,12 @@ export default function TagDetailPage() {
               href="/community"
               className="meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
             >
-              ← 返回全部内容
+              {t('backToAll')}
             </Link>
           </div>
           <CommunityPostList
             endpoint={`/api/community/posts?kind=post&tag=${encodeURIComponent(tag)}`}
-            emptyText="// 该标签下暂无文章"
+            emptyText={t('emptyText')}
           />
         </div>
       </section>

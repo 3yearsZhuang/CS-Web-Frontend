@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
@@ -12,6 +13,7 @@ import { getError, type CategoryInput, type CategoriesResponse } from './forum-a
 
 /** 版块管理 — 新建/编辑/删除版块 */
 export function CategoriesManager() {
+  const t = useTranslations('communityAdmin');
   const [categories, setCategories] = useState<CommunityCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,12 +50,12 @@ export function CategoriesManager() {
       const res = await fetch('/api/admin/community/forum/categories');
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(getError(data, '加载失败'));
+        throw new Error(getError(data, t('loadFailed')));
       }
       const data = (await res.json()) as CategoriesResponse;
       setCategories(data.items ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export function CategoriesManager() {
     e.preventDefault();
     setCreateError(null);
     if (!createForm.slug.trim() || !createForm.name.trim()) {
-      setCreateError('slug 与 name 必填');
+      setCreateError(t('slugNameRequired'));
       return;
     }
     setCreating(true);
@@ -86,12 +88,12 @@ export function CategoriesManager() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(getError(data, '创建失败'));
+        throw new Error(getError(data, t('createFailed')));
       }
       setCreateForm({ slug: '', name: '', description: '', icon: '', sortOrder: 0 });
       await loadCategories();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : '创建失败');
+      setCreateError(err instanceof Error ? err.message : t('createFailed'));
     } finally {
       setCreating(false);
     }
@@ -114,7 +116,7 @@ export function CategoriesManager() {
   const handleSaveEdit = async (id: string) => {
     setEditError(null);
     if (!editForm.slug.trim() || !editForm.name.trim()) {
-      setEditError('slug 与 name 必填');
+      setEditError(t('slugNameRequired'));
       return;
     }
     setSavingEdit(true);
@@ -132,12 +134,12 @@ export function CategoriesManager() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(getError(data, '保存失败'));
+        throw new Error(getError(data, t('saveFailed')));
       }
       setEditingId(null);
       await loadCategories();
     } catch (err) {
-      setEditError(err instanceof Error ? err.message : '保存失败');
+      setEditError(err instanceof Error ? err.message : t('saveFailed'));
     } finally {
       setSavingEdit(false);
     }
@@ -146,10 +148,10 @@ export function CategoriesManager() {
   /** 删除版块（带二次确认） */
   const handleDelete = async (cat: CommunityCategory) => {
     const confirmed = await confirm({
-      title: '删除版块',
-      message: `确定要删除版块「${cat.name}」吗？\n该操作将级联删除其下所有主题与回复，且不可恢复。`,
+      title: t('deleteTitle'),
+      message: t('deleteMessage', { name: cat.name }),
       variant: 'danger',
-      confirmLabel: '确认删除',
+      confirmLabel: t('confirmDelete'),
     });
     if (!confirmed) return;
 
@@ -159,11 +161,11 @@ export function CategoriesManager() {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(getError(data, '删除失败'));
+        throw new Error(getError(data, t('deleteFailed')));
       }
       await loadCategories();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '删除失败');
+      setError(err instanceof Error ? err.message : t('deleteFailed'));
     }
   };
 
@@ -183,28 +185,28 @@ export function CategoriesManager() {
       <form onSubmit={handleCreate} className="border border-[var(--border)] p-4 sm:p-6">
         <div className="meta-mono text-[var(--foreground)] mb-4">
           <span className="ark-divider mr-2">{'//'}</span>
-          新建版块
+          {t('createSection')}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">标识 / Slug *</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('slugLabelRequired')}</label>
             <input type="text" value={createForm.slug} onChange={(e) => setCreateForm((f) => ({ ...f, slug: e.target.value }))} placeholder="web" maxLength={50} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">名称 / Name *</label>
-            <input type="text" value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} placeholder="Web 开发" maxLength={50} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('nameLabelRequired')}</label>
+            <input type="text" value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} placeholder={t('namePlaceholder')} maxLength={50} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">图标 / Icon</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('iconLabel')}</label>
             <input type="text" value={createForm.icon ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, icon: e.target.value }))} placeholder="</>" maxLength={20} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
           <div>
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">排序 / Sort Order</label>
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortOrderLabel')}</label>
             <input type="number" value={createForm.sortOrder ?? 0} onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} min={0} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
           <div className="sm:col-span-2 lg:col-span-4">
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">描述 / Description</label>
-            <input type="text" value={createForm.description ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} placeholder="版块描述..." maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('descriptionLabel')}</label>
+            <input type="text" value={createForm.description ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} placeholder={t('descPlaceholder')} maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
           </div>
         </div>
         {createError && (
@@ -212,25 +214,25 @@ export function CategoriesManager() {
         )}
         <div className="mt-4">
           <Button size="sm" type="submit" disabled={creating}>
-            {creating ? '创建中 / Creating...' : '创建 / Create →'}
+            {creating ? t('creatingBtn') : t('createBtn')}
           </Button>
         </div>
       </form>
 
       {/* 版块列表 */}
       {categories.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// 暂无版块'}</div>
+        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{t('noCategories')}</div>
       ) : (
         <div className="border-t border-[var(--border)]">
           {/* 表头 */}
           <div className="hidden md:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">
-            <div className="col-span-1">排序 / Sort</div>
-            <div className="col-span-2">标识 / Slug</div>
-            <div className="col-span-2">名称 / Name</div>
-            <div className="col-span-3">描述 / Description</div>
-            <div className="col-span-1 text-right">主题 / Topics</div>
-            <div className="col-span-1 text-right">帖子 / Posts</div>
-            <div className="col-span-2 text-right">操作 / Actions</div>
+            <div className="col-span-1">{t('colSort')}</div>
+            <div className="col-span-2">{t('colSlug')}</div>
+            <div className="col-span-2">{t('colName')}</div>
+            <div className="col-span-3">{t('colDesc')}</div>
+            <div className="col-span-1 text-right">{t('colTopics')}</div>
+            <div className="col-span-1 text-right">{t('colPosts')}</div>
+            <div className="col-span-2 text-right">{t('colActions')}</div>
           </div>
           {categories.map((cat) => (
             <div key={cat.id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 py-4 border-b border-[var(--border)] items-center">
@@ -238,23 +240,23 @@ export function CategoriesManager() {
                 // 编辑模式
                 <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 border border-[var(--primary)] bg-[var(--primary)]/[0.03]">
                   <div>
-                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">标识 / Slug</label>
+                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('slugLabel')}</label>
                     <input type="text" value={editForm.slug} onChange={(e) => setEditForm((f) => ({ ...f, slug: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
                   </div>
                   <div>
-                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">名称 / Name</label>
+                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('nameLabel')}</label>
                     <input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
                   </div>
                   <div>
-                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">图标 / Icon</label>
+                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('iconLabel')}</label>
                     <input type="text" value={editForm.icon ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, icon: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
                   </div>
                   <div>
-                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">排序 / Sort Order</label>
+                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortOrderLabel')}</label>
                     <input type="number" value={editForm.sortOrder ?? 0} onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
                   </div>
                   <div className="sm:col-span-2 lg:col-span-4">
-                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">描述 / Description</label>
+                    <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('descriptionLabel')}</label>
                     <input type="text" value={editForm.description ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
                   </div>
                   {editError && (
@@ -262,10 +264,10 @@ export function CategoriesManager() {
                   )}
                   <div className="sm:col-span-2 lg:col-span-4 flex gap-2">
                     <Button size="sm" type="button" onClick={() => handleSaveEdit(cat.id)} disabled={savingEdit}>
-                      {savingEdit ? '保存中 / Saving...' : '保存 / Save'}
+                      {savingEdit ? t('savingBtn') : t('saveBtn')}
                     </Button>
                     <Button variant="outline" size="sm" type="button" onClick={() => { setEditingId(null); setEditError(null); }} disabled={savingEdit}>
-                      取消 / Cancel
+                      {t('cancelBtn')}
                     </Button>
                   </div>
                 </div>
@@ -273,11 +275,11 @@ export function CategoriesManager() {
                 // 展示模式
                 <>
                   <div className="md:col-span-1 meta-mono text-[var(--muted-foreground)]">
-                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">排序:</span>
+                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">{t('sortMobile')}</span>
                     {cat.sortOrder}
                   </div>
                   <div className="md:col-span-2">
-                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">标识:</span>
+                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">{t('slugMobile')}</span>
                     <span className="meta-mono text-[var(--primary)]">{cat.slug}</span>
                   </div>
                   <div className="md:col-span-2 text-[var(--foreground)] font-mono text-[13px]">
@@ -286,19 +288,19 @@ export function CategoriesManager() {
                   </div>
                   <div className="md:col-span-3 text-[12px] text-[var(--muted-foreground)] line-clamp-1">{cat.description ?? '—'}</div>
                   <div className="md:col-span-1 md:text-right font-mono text-[12px] text-[var(--foreground)] tabular-nums">
-                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">主题:</span>
+                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">{t('topicsMobile')}</span>
                     {cat.topicCount}
                   </div>
                   <div className="md:col-span-1 md:text-right font-mono text-[12px] text-[var(--foreground)] tabular-nums">
-                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">帖子:</span>
+                    <span className="md:hidden meta-mono text-[10px] text-[var(--muted-foreground)] mr-2">{t('postsMobile')}</span>
                     {cat.postCount}
                   </div>
                   <div className="md:col-span-2 flex gap-2 md:justify-end">
                     <button type="button" onClick={() => startEdit(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber">
-                      编辑 / Edit
+                      {t('editBtn')}
                     </button>
                     <button type="button" onClick={() => handleDelete(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber">
-                      删除 / Del
+                      {t('deleteBtn')}
                     </button>
                   </div>
                 </>

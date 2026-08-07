@@ -8,9 +8,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import type { TaskData, ClaimData, PointsProfile, LeaderboardEntry } from './task-shared';
 
 export function useTasks() {
+  const t = useTranslations('toolsTask');
   // 任务列表
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -53,7 +55,7 @@ export function useTasks() {
     fetch('/api/tools/task?status=published&pageSize=50')
       .then(async (r) => {
         const data = await r.json();
-        if (!r.ok) throw new Error(data.error || '加载失败');
+        if (!r.ok) throw new Error(data.error || t('loadFailed'));
         setTasks(data.tasks || []);
         setTasksError(null);
       })
@@ -70,7 +72,7 @@ export function useTasks() {
     fetch('/api/tools/task/claims')
       .then(async (r) => {
         const data = await r.json();
-        if (!r.ok) throw new Error(data.error || '加载失败');
+        if (!r.ok) throw new Error(data.error || t('loadFailed'));
         setMyClaims(data.claims || []);
       })
       .catch(() => {})
@@ -110,7 +112,7 @@ export function useTasks() {
     try {
       const r = await fetch(`/api/tools/task/${taskId}/claim`, { method: 'POST' });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || '操作失败');
+      if (!r.ok) throw new Error(data.error || t('actionFailed'));
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, claimCount: t.claimCount + 1 } : t)));
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
@@ -124,7 +126,7 @@ export function useTasks() {
     try {
       const r = await fetch(`/api/tools/task/${taskId}/claim`, { method: 'DELETE' });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || '操作失败');
+      if (!r.ok) throw new Error(data.error || t('actionFailed'));
       loadMyClaims();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
@@ -149,7 +151,7 @@ export function useTasks() {
         }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || '创建失败');
+      if (!r.ok) throw new Error(data.error || t('createFailed'));
       setShowCreateForm(false);
       setNewTask({ title: '', description: '', category: 'general', points: 10, maxClaimants: 1, tags: '' });
       // 刷新

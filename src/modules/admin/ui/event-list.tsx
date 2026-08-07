@@ -4,6 +4,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import type { EventItem, YearGroup } from '@/modules/admin/ui/types';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
@@ -27,6 +28,7 @@ export function EventRow({
   keyPrefix: string;
   actions: EventRowActions;
 }) {
+  const t = useTranslations('adminEvents');
   return (
     <tr key={`${keyPrefix}-${ev.id}`} className="border-b border-[var(--border)] card-minimal align-middle">
       <td className="py-4 pr-4">
@@ -86,13 +88,13 @@ export function EventRow({
       <td className="py-4 pl-4">
         <div className="flex items-center justify-end gap-3 flex-wrap">
           <button type="button" onClick={() => actions.onRegistrations(ev)} className="focus-amber meta-mono text-[var(--primary)] hover:text-[var(--primary)]/70 underline-grow">
-            报名
+            {t('actionRegistrations')}
           </button>
           <button type="button" onClick={() => actions.onEdit(ev)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow">
-            编辑
+            {t('actionEdit')}
           </button>
           <button type="button" onClick={() => actions.onDelete(ev)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow">
-            删除
+            {t('actionDelete')}
           </button>
         </div>
       </td>
@@ -112,6 +114,7 @@ export function EventCard({
   keyPrefix: string;
   actions: EventRowActions;
 }) {
+  const t = useTranslations('adminEvents');
   return (
     <div key={`${keyPrefix}-${ev.id}`} className="p-4 card-minimal">
       <div className="flex items-start justify-between gap-3 mb-2">
@@ -126,23 +129,23 @@ export function EventCard({
           <div className="meta-mono mt-1 text-[var(--foreground)]">{ev.date || ev.month || ev.year || '—'}</div>
         </div>
         <div>
-          <div className="meta-mono text-[var(--muted-foreground)]">状态 / Status</div>
+          <div className="meta-mono text-[var(--muted-foreground)]">{t('cardStatus')}</div>
           <div className={`meta-mono mt-1 ${ev.status === 'upcoming' ? 'text-[var(--primary)]' : ev.status === 'ended' ? 'text-[var(--muted-foreground)]' : 'text-[var(--foreground)]'}`}>
             {ev.status === 'upcoming'
-              ? '即将开始'
+              ? t('statusUpcoming')
               : ev.status === 'ongoing'
-                ? '进行中'
+                ? t('statusOngoing')
                 : ev.status === 'ended'
-                  ? '已结束'
+                  ? t('statusEnded')
                   : '—'}
           </div>
         </div>
         <div>
-          <div className="meta-mono text-[var(--muted-foreground)]">更新 / Updated</div>
+          <div className="meta-mono text-[var(--muted-foreground)]">{t('cardUpdated')}</div>
           <div className="meta-mono mt-1 text-[var(--foreground)]">{formatDate(ev.updatedAt)}</div>
         </div>
         <div>
-          <div className="meta-mono text-[var(--muted-foreground)]">报名 / Regs</div>
+          <div className="meta-mono text-[var(--muted-foreground)]">{t('cardRegs')}</div>
           <div className="meta-mono mt-1">
             {(() => {
               const s = stat;
@@ -174,13 +177,13 @@ export function EventCard({
       )}
       <div className="flex items-center gap-4">
         <button type="button" onClick={() => actions.onRegistrations(ev)} className="focus-amber meta-mono text-[var(--primary)] hover:text-[var(--primary)]/70 underline-grow">
-          报名
+          {t('actionRegistrations')}
         </button>
         <button type="button" onClick={() => actions.onEdit(ev)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow">
-          编辑
+          {t('actionEdit')}
         </button>
         <button type="button" onClick={() => actions.onDelete(ev)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow ml-auto">
-          删除
+          {t('actionDelete')}
         </button>
       </div>
     </div>
@@ -203,6 +206,7 @@ export function EventYearGroups({
   onToggleYear: (year: string) => void;
   actions: EventRowActions;
 }) {
+  const t = useTranslations('adminEvents');
   return (
     <div>
       {/* 未分类活动 — 直接平铺，不包裹年份手风琴 */}
@@ -210,7 +214,7 @@ export function EventYearGroups({
         <div>
           <div className="border-b border-[var(--border)] py-4">
             <span className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--primary)]">Unclassified</span>
-            <span className="meta-mono text-[11px] text-[var(--muted-foreground)] ml-3">{uncategorizedEvents.length} 活动</span>
+            <span className="meta-mono text-[11px] text-[var(--muted-foreground)] ml-3">{t('eventsCount', { count: uncategorizedEvents.length })}</span>
           </div>
           <div className="hidden md:block">
             <table className="w-full border-collapse">
@@ -257,7 +261,7 @@ export function EventYearGroups({
               <span className="display-serif text-[clamp(20px,3vw,28px)] transition-colors duration-300 text-[var(--foreground)] group-hover:text-[var(--primary)]">
                 {group.year}
               </span>
-              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{group.events.length} 活动</span>
+              <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('eventsCount', { count: group.events.length })}</span>
               {activeCount > 0 && (
                 <span className="meta-mono text-[10px] text-[var(--primary)] px-2 py-0.5 border border-[var(--primary)]/30">
                   {activeCount} active

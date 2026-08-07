@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import {
   formatDate,
@@ -15,6 +16,8 @@ import {
 
 /** 任务管理子面板 — 任务列表 + 发布/关闭/删除 + 认领审核 */
 export function TaskManagePanel() {
+  const t = useTranslations('toolsAdmin');
+  const tc = useTranslations('common');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskTotal, setTaskTotal] = useState(0);
   const [taskPage, setTaskPage] = useState(1);
@@ -72,12 +75,12 @@ export function TaskManagePanel() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error || '发布失败');
+        alert(json.error || t('taskPublishFailed'));
       } else {
         fetchTasks(taskPage);
       }
     } catch {
-      alert('网络错误');
+      alert(t('networkError'));
     } finally {
       setTaskActingId(null);
     }
@@ -85,7 +88,7 @@ export function TaskManagePanel() {
 
   /** 关闭任务 */
   const handleCloseTask = async (taskId: string) => {
-    if (!confirm('确认关闭该任务？关闭后用户将无法认领。')) return;
+    if (!window.confirm(t('taskCloseConfirm'))) return;
     setTaskActingId(taskId);
     try {
       const res = await fetch('/api/admin/tools/task?sub=close', {
@@ -95,12 +98,12 @@ export function TaskManagePanel() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error || '关闭失败');
+        alert(json.error || t('taskCloseFailed'));
       } else {
         fetchTasks(taskPage);
       }
     } catch {
-      alert('网络错误');
+      alert(t('networkError'));
     } finally {
       setTaskActingId(null);
     }
@@ -108,7 +111,7 @@ export function TaskManagePanel() {
 
   /** 删除任务（需密码确认） */
   const handleDeleteTask = async (taskId: string) => {
-    const password = prompt('删除任务需输入登录密码以确认：');
+    const password = window.prompt(t('taskDeletePrompt'));
     if (password === null) return;
     setTaskActingId(taskId);
     try {
@@ -119,14 +122,14 @@ export function TaskManagePanel() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error || '删除失败');
+        alert(json.error || t('taskDeleteFailed'));
       } else {
-        setTasks((prev) => prev.filter((t) => t.id !== taskId));
+        setTasks((prev) => prev.filter((item) => item.id !== taskId));
         setTaskTotal((prev) => prev - 1);
         fetchPendingClaims();
       }
     } catch {
-      alert('网络错误');
+      alert(t('networkError'));
     } finally {
       setTaskActingId(null);
     }
@@ -143,12 +146,12 @@ export function TaskManagePanel() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error || '操作失败');
+        alert(json.error || t('actionFailed'));
       } else {
         setPendingClaims((prev) => prev.filter((c) => c.id !== claimId));
       }
     } catch {
-      alert('网络错误');
+      alert(t('networkError'));
     } finally {
       setClaimReviewingId(null);
     }
@@ -161,7 +164,7 @@ export function TaskManagePanel() {
       {/* 待审核认领 */}
       {pendingClaims.length > 0 && (
         <div className="border border-[var(--border)] p-4 mb-6">
-          <div className="meta-mono text-[11px] text-[var(--primary)] mb-3">待审核认领 {pendingClaims.length} 条</div>
+          <div className="meta-mono text-[11px] text-[var(--primary)] mb-3">{t('pendingClaims', { count: pendingClaims.length })}</div>
           <div className="space-y-0">
             {pendingClaims.map((c) => (
               <div
@@ -205,7 +208,7 @@ export function TaskManagePanel() {
           disabled={taskLoading}
           className="focus-amber meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30"
         >
-          {taskLoading ? 'Loading' : 'Refresh'}
+          {taskLoading ? tc('loading') : tc('refresh')}
         </button>
       </div>
 
@@ -216,13 +219,13 @@ export function TaskManagePanel() {
       )}
 
       {taskLoading && tasks.length === 0 && (
-        <div className="py-20 text-center meta-mono text-[var(--muted-foreground)]">加载中...</div>
+        <div className="py-20 text-center meta-mono text-[var(--muted-foreground)]">{t('loading')}</div>
       )}
 
       {!taskLoading && !taskError && tasks.length === 0 && (
         <div className="py-20 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 暂无任务 / No Tasks ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">尚未创建任何任务。</p>
+          <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('noTasks')}</div>
+          <p className="text-[14px] text-[var(--muted-foreground)]">{t('noTasksDesc')}</p>
         </div>
       )}
 
@@ -231,12 +234,12 @@ export function TaskManagePanel() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left meta-mono py-3 pr-4">任务 / Task</th>
-                <th className="text-left meta-mono py-3 pr-4">分类 / Category</th>
-                <th className="text-left meta-mono py-3 pr-4">状态 / Status</th>
-                <th className="text-left meta-mono py-3 pr-4">积分 / Points</th>
-                <th className="text-left meta-mono py-3 pr-4">认领 / Claims</th>
-                <th className="text-left meta-mono py-3">操作 / Action</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colTask')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colCategory')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colStatus')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colPoints')}</th>
+                <th className="text-left meta-mono py-3 pr-4">{t('colClaims')}</th>
+                <th className="text-left meta-mono py-3">{t('colAction')}</th>
               </tr>
             </thead>
             <tbody>
@@ -252,14 +255,14 @@ export function TaskManagePanel() {
                       task.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
                       'border-[var(--border)] text-[var(--muted-foreground)]'
                     }`}>
-                      {task.status === 'published' ? '已发布' :
-                       task.status === 'draft' ? '草稿' :
-                       task.status === 'closed' ? '已关闭' : task.status}
+                      {task.status === 'published' ? t('statusPublished') :
+                       task.status === 'draft' ? t('statusDraft') :
+                       task.status === 'closed' ? t('statusClosed') : task.status}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--primary)]">{task.points} 分</td>
+                  <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--primary)]">{t('pointsUnit', { count: task.points })}</td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
-                    {task.claimCount}/{task.maxClaimants}
+                    {t('taskClaimCount', { count: task.claimCount, max: task.maxClaimants })}
                   </td>
                   <td className="py-3">
                     <div className="flex items-center gap-2">
@@ -270,7 +273,7 @@ export function TaskManagePanel() {
                           disabled={taskActingId === task.id}
                           className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-30"
                         >
-                          发布
+                          {t('publish')}
                         </button>
                       )}
                       {task.status === 'published' && (
@@ -280,7 +283,7 @@ export function TaskManagePanel() {
                           disabled={taskActingId === task.id}
                           className="text-[11px] font-mono px-2.5 py-1.5 border border-amber-500/50 text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-30"
                         >
-                          关闭
+                          {t('close')}
                         </button>
                       )}
                       <button
@@ -289,8 +292,8 @@ export function TaskManagePanel() {
                         disabled={taskActingId === task.id}
                         className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors disabled:opacity-30"
                       >
-                        删除
-                      </button>
+                          {t('delete')}
+                        </button>
                     </div>
                   </td>
                 </tr>
@@ -336,15 +339,15 @@ export function TaskManagePanel() {
                       task.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
                       'border-[var(--border)] text-[var(--muted-foreground)]'
                     }`}>
-                      {task.status === 'published' ? '已发布' :
-                       task.status === 'draft' ? '草稿' :
-                       task.status === 'closed' ? '已关闭' : task.status}
+                      {task.status === 'published' ? t('statusPublished') :
+                       task.status === 'draft' ? t('statusDraft') :
+                       task.status === 'closed' ? t('statusClosed') : task.status}
                     </span>
                   </div>
                 </div>
-                <span className="shrink-0 meta-mono text-[11px] text-[var(--primary)]">{task.points} 分</span>
+                <span className="shrink-0 meta-mono text-[11px] text-[var(--primary)]">{t('pointsUnit', { count: task.points })}</span>
               </div>
-              <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-3">认领 {task.claimCount}/{task.maxClaimants}</div>
+              <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-3">{t('taskClaimCount', { count: task.claimCount, max: task.maxClaimants })}</div>
               <div className="flex items-center gap-2">
                 {task.status === 'draft' && (
                   <button

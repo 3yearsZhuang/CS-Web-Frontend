@@ -209,7 +209,6 @@ export default function AboutPage() {
                     <p className="mb-8 sm:mb-12 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
                       {t('directionsDesc1')}
                       <span className="serif-italic text-[var(--foreground)]"> {t('directionsDesc2')}</span>
-                      。
                     </p>
                   </RevealItem>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">

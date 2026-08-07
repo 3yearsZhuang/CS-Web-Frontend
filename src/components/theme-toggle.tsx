@@ -5,6 +5,7 @@
 
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Sun, Moon } from 'lucide-react';
 
 export interface ThemeToggleProps {
@@ -16,6 +17,7 @@ export interface ThemeToggleProps {
 export function ThemeToggle({ size = 'sm' }: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations('theme');
 
   // mounted 前渲染占位，避免 hydration mismatch
   useEffect(() => {
@@ -40,8 +42,8 @@ export function ThemeToggle({ size = 'sm' }: ThemeToggleProps) {
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className={containerCls}
-      aria-label={isDark ? '切换到浅色模式' : '切换到深色模式'}
-      title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+      aria-label={isDark ? t('toLight') : t('toDark')}
+      title={isDark ? t('toLight') : t('toDark')}
     >
       {mounted ? (
         isDark ? (

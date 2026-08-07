@@ -9,6 +9,7 @@
 
 import { motion } from 'motion/react';
 import { ExternalLink } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
 import type { ResourceItem } from './use-resources';
@@ -19,7 +20,8 @@ interface Props {
 }
 
 export function ResourceCard({ resource }: Props) {
-  const typeLabel = typeLabelOf(resource.resource_type);
+  const t = useTranslations('toolsResource');
+  const typeLabel = typeLabelOf(t, resource.resource_type);
   const typeIcon = typeIconOf(resource.resource_type);
   const tags: string[] = resource.tech_tags ? JSON.parse(resource.tech_tags) : [];
 
@@ -79,7 +81,7 @@ export function ResourceCard({ resource }: Props) {
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">
         {resource.author_display_name && <span>{resource.author_display_name}</span>}
         <span>{formatDate(resource.created_at)}</span>
-        <span>{resource.view_count} 次浏览</span>
+        <span>{t('viewsCount', { count: resource.view_count })}</span>
       </div>
     </motion.a>
   );

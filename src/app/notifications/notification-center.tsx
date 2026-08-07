@@ -7,12 +7,14 @@
  * 仅负责渲染；状态与逻辑由父页面注入的 `NotificationsState` 提供（GENERAL 2.2）。
  */
 
+import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { EmptyState, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
-import { FILTER_TABS, TYPE_STYLES, type NotificationsState } from './use-notifications';
+import { filterTabs, TYPE_STYLES, type NotificationsState } from './use-notifications';
 
 export function NotificationCenter(props: NotificationsState) {
+  const t = useTranslations('notifications');
   const {
     notifications,
     loading,
@@ -97,16 +99,16 @@ export function NotificationCenter(props: NotificationsState) {
             disabled={unreadCount === 0}
             className="meta-mono text-[12px] px-4 py-2.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
           >
-            全部标记已读
+            {t('markAllRead')}
           </button>
-          <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">共 {total} 条通知</div>
+          <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('total', { total })}</div>
         </div>
       </RevealItem>
 
       <RevealItem>
         <div className="border-b border-[var(--border)] mb-0 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex gap-0 min-w-max">
-            {FILTER_TABS.map((tab) => (
+            {filterTabs(t).map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => handleFilterChange(tab.value)}
@@ -136,7 +138,7 @@ export function NotificationCenter(props: NotificationsState) {
           {loading && notifications.length === 0 ? (
             <SectionLoading label="加载更多..." />
           ) : notifications.length === 0 ? (
-            <EmptyState label="// EMPTY" message="暂无通知" />
+            <EmptyState label="// EMPTY" message={t('empty')} />
           ) : (
             <div>
               {notifications.map((notification) => {

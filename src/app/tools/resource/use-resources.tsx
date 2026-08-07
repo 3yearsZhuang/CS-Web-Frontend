@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BookOpen, Video, GraduationCap, Wrench, BookMarked, Package } from 'lucide-react';
 import { useAuth } from '@/shared/hooks/use-auth';
@@ -15,15 +16,20 @@ import { TECH_TAGS, type TechTag } from '@/shared/utils/tech-tags';
 
 export type ResourceType = 'all' | 'article' | 'video' | 'course' | 'tool' | 'book' | 'other';
 
-export const TYPE_LABELS: Record<ResourceType, string> = {
-  all: '全部',
-  article: '文章',
-  video: '视频',
-  course: '课程',
-  tool: '工具',
-  book: '书籍',
-  other: '其他',
-};
+export type TFn = (key: string, values?: Record<string, string | number | Date>) => string;
+
+export function resourceTypeLabel(t: TFn, k: string): string {
+  const map: Record<string, string> = {
+    all: t('resTypeAll'),
+    article: t('resTypeArticle'),
+    video: t('resTypeVideo'),
+    course: t('resTypeCourse'),
+    tool: t('resTypeTool'),
+    book: t('resTypeBook'),
+    other: t('resTypeOther'),
+  };
+  return map[k] ?? k;
+}
 
 export const TYPE_ICONS: Record<Exclude<ResourceType, 'all'>, React.ReactNode> = {
   article: <BookOpen className="w-4 h-4" />,
@@ -35,8 +41,8 @@ export const TYPE_ICONS: Record<Exclude<ResourceType, 'all'>, React.ReactNode> =
 };
 
 /** 资源类型 → 展示标签 */
-export function typeLabelOf(t: string): string {
-  return TYPE_LABELS[t as ResourceType] ?? t;
+export function typeLabelOf(t: TFn, type: string): string {
+  return resourceTypeLabel(t, type);
 }
 
 /** 资源类型 → 展示图标 */
@@ -82,6 +88,7 @@ export function useResources() {
   const { isLoggedIn } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations('toolsResource');
 
   const [data, setData] = useState<ResourceListData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,10 +174,10 @@ export function useResources() {
         setForm((f) => ({ ...f, fileUrl: json.url }));
       } else {
         const json = await res.json();
-        setSubmitError(json.error || '文件上传失败');
+        setSubmitError(json.error || t('uploadFailed'));
       }
     } catch {
-      setSubmitError('文件上传失败，请重试');
+      setSubmitError(t('uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -202,10 +209,10 @@ export function useResources() {
           fetchData();
         } else {
           const json = await res.json();
-          setSubmitError(json.error || '提交失败');
+          setSubmitError(json.error || t('submitFailed'));
         }
       } catch {
-        setSubmitError('网络错误，请重试');
+        setSubmitError(t('networkError'));
       } finally {
         setSubmitLoading(false);
       }
@@ -215,18 +222,18 @@ export function useResources() {
 
   const typeTabs = useMemo(
     () =>
-      Object.entries(TYPE_LABELS).map(([key, label]) => ({
+      (['all', 'article', 'video', 'course', 'tool', 'book', 'other'] as const).map((key, idx) => ({
         key,
-        num: key === 'all' ? '00' : String(Object.keys(TYPE_LABELS).indexOf(key)).padStart(2, '0'),
-        label: `${label}${key !== 'all' ? ` / ${key.charAt(0).toUpperCase() + key.slice(1)}` : ''}`,
+        num: key === 'all' ? '00' : String(idx).padStart(2, '0'),
+        label: `${resourceTypeLabel(t, key)}${key !== 'all' ? ` / ${key.charAt(0).toUpperCase() + key.slice(1)}` : ''}`,
       })),
-    [],
+    [t],
   );
 
   const techTagTabs = useMemo(() => {
     const counts = data?.techTagCounts ?? {};
     return [
-      { key: '__all__', label: '全部', count: data?.total ?? 0 },
+      { key: '__all__', label: t('allLabel'), count: data?.total ?? 0 },
       ...TECH_TAGS.map((t: TechTag) => ({
         key: t.key,
         label: t.label,
@@ -236,7 +243,7 @@ export function useResources() {
   }, [data]);
 
   const pages = data?.totalPages ?? 1;
-  const activeTypeLabel = TYPE_LABELS[activeType];
+  const activeTypeLabel = resourceTypeLabel(t, activeType);
 
   const setType = useCallback((key: string) => {
     setActiveType(key as ResourceType);

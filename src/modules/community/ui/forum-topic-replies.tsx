@@ -9,6 +9,7 @@ import type {
   CommunityCommentDetail,
   NestedCommentsResult,
 } from '@/modules/community/types';
+import { useTranslations } from 'next-intl';
 
 interface TopicRepliesProps {
   replies: CommunityCommentDetail[];
@@ -39,11 +40,12 @@ export function TopicReplies({
   onDeleteReply,
   onSetReplyPage,
 }: TopicRepliesProps) {
+  const t = useTranslations('forum');
   return (
     <div>
       {replies.length === 0 ? (
         <div className="py-12 text-center meta-mono text-[var(--muted-foreground)] border-t border-[var(--border)]">
-          暂无回复，来发表第一条吧
+          {t('noRepliesYet')}
         </div>
       ) : (
         <div className="border-t border-[var(--border)]">

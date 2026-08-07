@@ -377,7 +377,7 @@ export default function Home() {
             </div>
             <div className="flex flex-col items-center gap-1">
               <span className="display-serif text-[18px] text-[var(--foreground)]">
-                {isAdminAvatar(currentPerson) ? currentPerson.name : (currentPerson.displayName || '未命名')}
+                {isAdminAvatar(currentPerson) ? currentPerson.name : (currentPerson.displayName || t('unnamed'))}
               </span>
               {isAdminAvatar(currentPerson) ? (
                 <span className="meta-mono text-[var(--primary)]">

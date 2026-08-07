@@ -4,6 +4,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   roleBadgeClass,
   roleBadgeLabel,
@@ -37,6 +38,7 @@ export function RolePermissionMatrix({
   onEdit,
   onDelete,
 }: RolePermissionMatrixProps) {
+  const t = useTranslations('adminRoles');
   const isReadOnly = role.isProtected;
   // root 角色展示全部权限（含 root_only），但不可编辑
   const isRootRole = role.key === 'root';
@@ -68,16 +70,16 @@ export function RolePermissionMatrix({
               </span>
             </div>
             <p className="text-[12px] text-[var(--muted-foreground)] mb-2">
-              {role.description || '（无描述）'}
+              {role.description || t('noDescription')}
             </p>
             <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap items-center gap-3">
               <span>key: {role.key}</span>
               <span>·</span>
-              <span>{role.permissions.length} 项权限</span>
+              <span>{t('permissionsCount', { count: role.permissions.length })}</span>
               {role.userCount !== undefined && (
                 <>
                   <span>·</span>
-                  <span>{role.userCount} 个用户使用</span>
+                  <span>{t('usersUsing', { count: role.userCount })}</span>
                 </>
               )}
             </div>
@@ -89,14 +91,14 @@ export function RolePermissionMatrix({
                 onClick={onEdit}
                 className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
               >
-                编辑
+                {t('edit')}
               </button>
               <button
                 type="button"
                 onClick={onDelete}
                 className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber"
               >
-                删除
+                {t('delete')}
               </button>
             </div>
           )}
@@ -106,7 +108,7 @@ export function RolePermissionMatrix({
         {!isReadOnly && (
           <div className="flex items-center justify-between gap-3 pt-3 border-t border-[var(--border)]">
             <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">
-              {dirty ? <span className="text-[var(--primary)]">● 有未保存的修改</span> : <span>权限已同步</span>}
+              {dirty ? <span className="text-[var(--primary)]">{t('unsavedChanges')}</span> : <span>{t('permissionsSynced')}</span>}
             </div>
             <div className="flex gap-2">
               <button
@@ -115,7 +117,7 @@ export function RolePermissionMatrix({
                 disabled={!dirty || saving}
                 className="meta-mono text-[11px] px-3 py-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-40"
               >
-                撤销
+                {t('reset')}
               </button>
               <button
                 type="button"
@@ -123,14 +125,14 @@ export function RolePermissionMatrix({
                 disabled={!dirty || saving}
                 className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-40"
               >
-                {saving ? '保存中...' : '保存修改'}
+                {saving ? t('saving') : t('saveChanges')}
               </button>
             </div>
           </div>
         )}
         {isReadOnly && (
           <div className="meta-mono text-[11px] text-[var(--muted-foreground)] pt-3 border-t border-[var(--border)]">
-            {isRootRole ? '● 超级管理员拥有所有权限（含 root 专属），不可修改' : '● 普通用户无管理权限，不可修改'}
+            {isRootRole ? t('rootReadOnly') : t('userReadOnly')}
           </div>
         )}
       </div>
@@ -138,7 +140,7 @@ export function RolePermissionMatrix({
       {/* 权限矩阵 */}
       {isUserRole ? (
         <div className="border border-dashed border-[var(--border)] py-12 text-center">
-          <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">普通用户角色无任何管理权限</p>
+          <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">{t('userNoPermissions')}</p>
         </div>
       ) : (
         <div className="space-y-4">

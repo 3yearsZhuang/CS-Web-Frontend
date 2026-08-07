@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { EASE } from '@/shared/utils/ui-constants';
 import { TECH_TAGS, TECH_TAGS_MAX } from '@/shared/utils/tech-tags';
 
@@ -18,6 +19,7 @@ interface TechTagSelectorProps {
 /** 技术方向标签选择器 — 多选 Chip 组件 */
 export function TechTagSelector({ selected, onChange, disabled }: TechTagSelectorProps) {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations('techTag');
 
   const toggle = useCallback(
     (key: string) => {
@@ -102,7 +104,7 @@ export function TechTagSelector({ selected, onChange, disabled }: TechTagSelecto
               })}
             </div>
             <div className="mt-3 meta-mono text-[10px] text-[var(--muted-foreground)]">
-              选择你最感兴趣的技术方向（最多 {TECH_TAGS_MAX} 个），用于个性化推荐。
+              {t('hint', { max: TECH_TAGS_MAX })}
             </div>
           </motion.div>
         )}

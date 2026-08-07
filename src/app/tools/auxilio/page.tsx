@@ -11,6 +11,7 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading } from '@/components';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface WeaknessTag {
   tag: string;
@@ -38,17 +39,21 @@ interface AuxilioAnalysis {
   recommendations: RecommendedResource[];
 }
 
-const RESOURCE_TYPE_LABELS: Record<string, string> = {
-  article: '文章',
-  video: '视频',
-  course: '课程',
-  tool: '工具',
-  book: '书籍',
-  other: '其他',
-};
+export function resourceTypeLabel(t: (key: string) => string, key: string): string {
+  const map: Record<string, string> = {
+    article: t('resTypeArticle'),
+    video: t('resTypeVideo'),
+    course: t('resTypeCourse'),
+    tool: t('resTypeTool'),
+    book: t('resTypeBook'),
+    other: t('resTypeOther'),
+  };
+  return map[key] ?? key;
+}
 
 export default function AuxilioPage() {
   const router = useRouter();
+  const t = useTranslations('toolsAuxilio');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -72,11 +77,11 @@ export default function AuxilioPage() {
         setNotLoggedIn(true);
         return;
       }
-      if (!res.ok) throw new Error('加载失败');
+      if (!res.ok) throw new Error(t('loadFailed'));
       const data = await res.json();
       setAnalysis(data.analysis);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -98,12 +103,12 @@ export default function AuxilioPage() {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 需要登录 ]</div>
+          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('notLoggedIn')} ]</div>
           <p className="text-[14px] text-[var(--muted-foreground)] mb-8">
-            Auxilio 需要基于你的考试数据进行分析，请先登录。
+            {t('loginPrompt')}
           </p>
           <Button onClick={() => router.push('/login')}>
-            <span>登录</span>
+            <span>{t('login')}</span>
             <span>→</span>
           </Button>
         </div>
@@ -120,7 +125,7 @@ export default function AuxilioPage() {
             onClick={fetchAnalysis}
             className="meta-mono text-[var(--primary)] underline-grow"
           >
-            重试
+            {t('retry')}
           </button>
         </div>
       </main>
@@ -141,7 +146,7 @@ export default function AuxilioPage() {
             href="/tools"
             className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
           >
-            ← 返回
+            ← {t('back')}
           </Link>
         }
       >
@@ -155,7 +160,7 @@ export default function AuxilioPage() {
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             Auxilio
-            <span className="text-[var(--primary)]"> 学习助手</span>
+            <span className="text-[var(--primary)]"> {t('heroTitle1')}</span>
             <span
               className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
                 hero.collapsed
@@ -178,8 +183,8 @@ export default function AuxilioPage() {
                 hero.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
               }`}
             >
-              基于考试结果分析薄弱点，
-              <span className="serif-italic text-[var(--foreground)]">推荐学习路径</span>
+              {t('heroDesc1')}
+              <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>
               。
             </p>
           </div>
@@ -198,9 +203,9 @@ export default function AuxilioPage() {
                 </div>
                 <div className="col-span-12 md:col-span-10">
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] leading-[1.05]">
-                    学习
-                    <span className="text-[var(--primary)]">分析</span>
-                    <span className="text-[var(--muted-foreground)]"> / Analysis</span>
+                    {t('analysisTitle1')}
+                    <span className="text-[var(--primary)]">{t('analysisTitle2')}</span>
+                    <span className="text-[var(--muted-foreground)]">{t('analysisTitleEn')}</span>
                   </h2>
                 </div>
               </div>
@@ -215,19 +220,19 @@ export default function AuxilioPage() {
               {/* 统计卡片 */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
                 <div className="border border-[var(--border)] p-5 text-center">
-                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">总答题数</div>
+                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('statTotal')}</div>
                   <div className="display-serif text-[clamp(28px,4vw,40px)] text-[var(--foreground)]">
                     {analysis.totalQuestions}
                   </div>
                 </div>
                 <div className="border border-[var(--border)] p-5 text-center">
-                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">正确数</div>
+                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('statCorrect')}</div>
                   <div className="display-serif text-[clamp(28px,4vw,40px)] text-[var(--primary)]">
                     {analysis.totalCorrect}
                   </div>
                 </div>
                 <div className="border border-[var(--border)] p-5 text-center">
-                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">正确率</div>
+                  <div className="meta-mono text-[var(--muted-foreground)] mb-2">{t('statAccuracy')}</div>
                   <div className="display-serif text-[clamp(28px,4vw,40px)] text-[var(--foreground)]">
                     {Math.round(analysis.overallAccuracy * 100)}%
                   </div>
@@ -243,8 +248,8 @@ export default function AuxilioPage() {
                     </div>
                     <div className="col-span-12 md:col-span-10">
                       <h3 className="display-serif text-[clamp(20px,3vw,32px)] text-[var(--foreground)] mb-6">
-                        薄弱
-                        <span className="text-[var(--primary)]">方向</span>
+                        {t('weakTitle1')}
+                        <span className="text-[var(--primary)]">{t('weakTitle2')}</span>
                       </h3>
                     </div>
                   </div>
@@ -258,7 +263,7 @@ export default function AuxilioPage() {
                         <div>
                           <span className="tag-badge mr-2">{w.tag}</span>
                           <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">
-                            {w.correct}/{w.total} 正确
+                            {w.correct}/{w.total} {t('correctLabel')}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
@@ -308,7 +313,7 @@ export default function AuxilioPage() {
                               {r.matchedTag}
                             </span>
                             <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                              {RESOURCE_TYPE_LABELS[r.resourceType] || r.resourceType}
+                              {resourceTypeLabel(t, r.resourceType)}
                             </span>
                           </div>
                           <h4 className="display-serif text-[16px] text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors mb-2">
@@ -328,12 +333,12 @@ export default function AuxilioPage() {
 
               {analysis.totalQuestions === 0 && (
                 <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">
-                  还没有考试记录。去参加考试来获得个性化推荐。
+                  {t('noExam')}
                   <Link
                     href="/tools/exam"
                     className="ml-2 text-[var(--primary)] underline-grow"
                   >
-                    前往考试 →
+                    {t('goExam')}
                   </Link>
                 </div>
               )}

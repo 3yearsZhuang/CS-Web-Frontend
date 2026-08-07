@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { LayoutGrid } from 'lucide-react';
 import type { MigrationStatus } from '../types';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -57,9 +58,18 @@ function getStatusConfig(status: MigrationStatus | undefined | null) {
 
 const STATUS_ORDER: MigrationStatus[] = ['legacy', 'migrating', 'done'];
 
+// 分类 key → i18n key（对应 toolsAdmin 的 categoryUiPrimitives/Feedback/Overlays/Layout）
+const CATEGORY_LABEL_KEY: Record<string, string> = {
+  'ui-primitives': 'categoryUiPrimitives',
+  feedback: 'categoryFeedback',
+  overlays: 'categoryOverlays',
+  layout: 'categoryLayout',
+};
+
 /* ============= 内部组件 ============= */
 
 function ShellContent({ embedded = false }: { embedded?: boolean }) {
+  const t = useTranslations('toolsAdmin');
   const { state } = useComponentRegistryStore();
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -126,9 +136,9 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
       {/* ============ [ 00 ] Hero（嵌入模式跳过） ============ */}
       {!embedded && (
         <main className="relative pt-16">
-        <CollapsingHero
+          <CollapsingHero
           index="00"
-          label="组件注册表"
+          label={t('registryName')}
           hero={heroState}
           pageKey="component-registry"
           minHeight="50vh"
@@ -167,9 +177,9 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                   heroState.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
                 }`}
               >
-                {stats.total} 个组件 · {stats.done} 已完成 · {progress}%
+                {t('registryHeroStats', { total: stats.total, done: stats.done, progress })}
                 <span className="serif-italic text-[var(--foreground)]">
-                  。盘点、预览、追踪重构进度
+                  {t('registryHeroTagline')}
                 </span>
                 。
               </p>
@@ -186,7 +196,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
       >
         <div className={embedded ? '' : 'max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]'}>
           {state.loading ? (
-            <SectionLoading label="加载组件数据..." />
+            <SectionLoading label={t('loadingComponents')} />
           ) : state.error ? (
             <div className="p-8 border border-red-500/30 text-center">
               <p className="text-red-500 text-sm">{state.error}</p>
@@ -198,7 +208,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                 {/* 分类筛选 */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="meta-mono text-[10px] text-[var(--muted-foreground)] uppercase mr-1">
-                    分类
+                    {t('categoryLabel')}
                   </span>
                   <button
                     onClick={() => setFilter((f) => ({ ...f, category: null }))}
@@ -208,7 +218,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                     }`}
                   >
-                    全部
+                    {t('all')}
                   </button>
                   {categories.map((cat) => (
                     <button
@@ -220,7 +230,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                           : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                       }`}
                     >
-                      {CATEGORY_CONFIG[cat]?.label ?? cat}
+                      {t(CATEGORY_LABEL_KEY[cat] ?? cat)}
                     </button>
                   ))}
                 </div>
@@ -228,7 +238,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                 {/* 状态筛选 */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="meta-mono text-[10px] text-[var(--muted-foreground)] uppercase mr-1">
-                    状态
+                    {t('statusLabel')}
                   </span>
                   <button
                     onClick={() => setFilter((f) => ({ ...f, migrationStatus: null }))}
@@ -238,7 +248,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                         : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
                     }`}
                   >
-                    全部
+                    {t('all')}
                   </button>
                   {STATUS_ORDER.map((s) => (
                     <button
@@ -265,7 +275,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                       onClick={() => setFilter(DEFAULT_FILTER)}
                       className="px-2 py-1 border border-[var(--border)] meta-mono text-[9px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors uppercase"
                     >
-                      重置
+                      {t('reset')}
                     </button>
                   )}
                 </div>
@@ -279,7 +289,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                   <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
                     <LayoutGrid className="w-3.5 h-3.5 text-[var(--primary)]" />
                     <span className="meta-mono text-[10px] text-[var(--primary)] uppercase">
-                      组件列表
+                      {t('componentList')}
                     </span>
                   </div>
 
@@ -288,7 +298,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                     {filteredComponents.length === 0 ? (
                       <div className="px-4 py-8 text-center">
                         <span className="meta-mono text-[10px] text-[var(--muted-foreground)]/50 uppercase">
-                          无匹配组件
+                          {t('noMatch')}
                         </span>
                       </div>
                     ) : (
@@ -315,7 +325,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="meta-mono text-[9px] text-[var(--muted-foreground)]">
-                                  {CATEGORY_CONFIG[item.category]?.label ?? item.category}
+                                  {t(CATEGORY_LABEL_KEY[item.category] ?? item.category)}
                                 </span>
                                 <span className={`meta-mono text-[9px] ${st.color}`}>
                                   {st.label}
