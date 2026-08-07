@@ -1,4 +1,4 @@
-﻿# ============ Stage 1: Builder ============
+# ============ Stage 1: Builder ============
 FROM node:20-slim AS builder
 
 # Next.js 生产构建需要 Origin 白名单；由 Compose build.args 注入
@@ -68,7 +68,7 @@ COPY --from=builder /app/tsconfig.json ./
 
 # 复制启动脚本（仅负责启动 Node 应用，数据持久化由后端 PostgreSQL 承载）
 COPY tools/deploy/docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /app/docker-entrypoint.sh && chmod +x /app/docker-entrypoint.sh
 
 # 创建数据与备份目录（data/: 用户上传文件；backups/: 预留归档目录）
 RUN mkdir -p data backups
