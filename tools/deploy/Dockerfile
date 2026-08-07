@@ -10,7 +10,7 @@ WORKDIR /app
 
 # 先复制依赖描述文件，利用 Docker 层缓存加速重复构建
 COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # 复制源码（精确 COPY，仅构建所需；不携带 tools/docs/、各类文档等无关文件，
 # 实现构建内容隔离。context 仍为仓库根，因 Next.js 应用根即仓库根。）
@@ -42,7 +42,7 @@ WORKDIR /app
 
 # 仅安装生产依赖（排除 devDependencies）
 COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install --prod --frozen-lockfile && \
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
     pnpm store prune
 
 # 从 builder 复制构建产物
