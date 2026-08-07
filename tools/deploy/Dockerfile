@@ -1,6 +1,16 @@
 ﻿# ============ Stage 1: Builder ============
 FROM node:20-slim AS builder
 
+# 中国境内 Debian 镜像源（可通过 --build-arg 覆盖）
+ARG APT_MIRROR=https://mirrors.aliyun.com/debian
+ARG APT_SECURITY_MIRROR=https://mirrors.aliyun.com/debian-security
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+      sed -i \
+        -e "s#https\?://deb.debian.org/debian-security#${APT_SECURITY_MIRROR}#g" \
+        -e "s#https\?://deb.debian.org/debian#${APT_MIRROR}#g" \
+        /etc/apt/sources.list.d/debian.sources; \
+    fi
+
 # better-sqlite3 预编译包不可用时需要编译，安装构建工具
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
