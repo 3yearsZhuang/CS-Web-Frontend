@@ -1,12 +1,12 @@
 # 前端架构与业务模块（FrontDoc-Arch）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-08（重构 Part A/B：业务模块契约统一模板（概述/接口/配置/安全要点/测试/前后端联动）；新增「前后端联动」映射；2.5/2.8 标题消歧；api-usage-stats 标注部分就绪）
-> 关联：后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/tools/docs/BackDoc-01-Arch.md](../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
+> 最后更新：2026-08-09（新增 §2.5.7 社区 Markdown 编辑器 UI 组件契约，下沉自 UID §14；其余同 2026-08-08 重构：业务模块契约统一模板、前后端联动映射、2.5/2.8 标题消歧、api-usage-stats 部分就绪标注）
+> 关联：后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/tools/docs/BackDoc-01-Arch.md](../../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
 
 > **文档定位**：前端 BFF 层架构与业务模块契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、**业务模块契约（Part B：认证 / 个人资料 / 活动 / 社区论坛 / 社区文章 / 通知 / 管理后台 / 工具集 / 成员与入社 / 会话管理 / 工作台 / 学习助手）与前后端联动**、状态码、事件总线、依赖矩阵。
 
-> **约定类文档边界**：前端专项约定以本文件（架构/工程）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
+> **约定类文档边界**：前端专项约定以本文件（架构/工程）、`FrontDoc-Conv.md`（编码规范）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
 
 > **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
@@ -16,6 +16,111 @@
 > - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/shared/utils/mail.ts`、`src/shared/events/`（event-bus.ts / event-types.ts）。`src/shared/db.ts`、`src/shared/db/`、`src/modules/*/server/` 已于 2026-08-06/07 删除（含遗留脚本与 `better-sqlite3` 依赖）；其余遗留文件仍存在但运行时不被引用，待清理；其历史结构保留在本文作为审计证据。
 
 ---
+
+
+
+
+## 章节速查（导航）
+
+- [1. Part A：项目架构](#1-part-a项目架构)
+  - [1.1 项目结构](#11-项目结构)
+  - [顶层目录](#顶层目录)
+  - [源代码结构（`src/`）](#源代码结构src)
+  - [测试（`tools/tests/`）](#测试toolstests)
+  - [脚本与部署](#脚本与部署)
+  - [数据库与部署模型](#数据库与部署模型)
+  - [1.2 模块化分析](#12-模块化分析)
+  - [1.2.1 模块层级关系](#121-模块层级关系)
+  - [1.2.2 community 模块内部结构](#122-community-模块内部结构)
+  - [1.2.3 直接导入依赖矩阵](#123-直接导入依赖矩阵)
+  - [1.2.4 工作台模块内部结构](#124-工作台模块内部结构)
+  - [1.3 代码质量](#13-代码质量)
+  - [1.3.1 历史问题收敛](#131-历史问题收敛)
+  - [1.3.2 已完成优化](#132-已完成优化)
+  - [1.3.3 待处理优化](#133-待处理优化)
+  - [1.4 BFF 通用约定（架构层，内容见 Part B §2.1 / §2.12–2.17）](#14-bff-通用约定架构层内容见-part-b-21-212217)
+  - [1.5 关键不变量（BFF 视角，贯穿全项目，勿打破）](#15-关键不变量bff-视角贯穿全项目勿打破)
+- [2. Part B · 业务模块契约与 BFF 通用约定](#2-part-b-业务模块契约与-bff-通用约定)
+  - [2.1 通用约定](#21-通用约定)
+  - [2.2 认证模块（/api/auth/）](#22-认证模块apiauth)
+  - [概述](#概述)
+  - [配置](#配置)
+  - [安全要点](#安全要点)
+  - [测试](#测试)
+  - [前后端联动](#前后端联动)
+  - [2.3 个人资料模块（/api/profile/）](#23-个人资料模块apiprofile)
+  - [概述](#概述-1)
+  - [配置](#配置-1)
+  - [安全要点](#安全要点-1)
+  - [测试](#测试-1)
+  - [前后端联动](#前后端联动-1)
+  - [2.4 活动模块（/api/events/）](#24-活动模块apievents)
+  - [概述](#概述-2)
+  - [配置](#配置-2)
+  - [安全要点](#安全要点-2)
+  - [测试](#测试-2)
+  - [前后端联动](#前后端联动-2)
+  - [2.5 社区论坛模块（/api/community/ — 主题 / 回复 / 互动）](#25-社区论坛模块apicommunity-主题-回复-互动)
+  - [概述](#概述-3)
+  - [配置](#配置-3)
+  - [安全要点](#安全要点-3)
+  - [测试](#测试-3)
+  - [前后端联动](#前后端联动-3)
+  - [2.5.7 社区 Markdown 编辑器（UI 组件）](#257-社区-markdown-编辑器ui-组件)
+  - [2.6 通知模块（/api/notifications/）](#26-通知模块apinotifications)
+  - [概述](#概述-4)
+  - [配置](#配置-4)
+  - [安全要点](#安全要点-4)
+  - [测试](#测试-4)
+  - [前后端联动](#前后端联动-4)
+  - [2.7 管理后台（/api/admin/）](#27-管理后台apiadmin)
+  - [概述](#概述-5)
+  - [配置](#配置-5)
+  - [安全要点](#安全要点-5)
+  - [测试](#测试-5)
+  - [前后端联动](#前后端联动-5)
+  - [2.8 社区文章模块（/api/community/community/ — 长文 / 系列）](#28-社区文章模块apicommunitycommunity-长文-系列)
+  - [概述](#概述-6)
+  - [配置](#配置-6)
+  - [安全要点](#安全要点-6)
+  - [测试](#测试-6)
+  - [前后端联动](#前后端联动-6)
+  - [2.9 工具集模块（/api/tools/）](#29-工具集模块apitools)
+  - [概述](#概述-7)
+  - [配置](#配置-7)
+  - [安全要点](#安全要点-7)
+  - [测试](#测试-7)
+  - [前后端联动](#前后端联动-7)
+  - [2.10 成员与入社模块](#210-成员与入社模块)
+  - [概述](#概述-8)
+  - [配置](#配置-8)
+  - [安全要点](#安全要点-8)
+  - [测试](#测试-8)
+  - [前后端联动](#前后端联动-8)
+  - [2.11 会话管理模块（/api/sessions/）](#211-会话管理模块apisessions)
+  - [概述](#概述-9)
+  - [配置](#配置-9)
+  - [安全要点](#安全要点-9)
+  - [测试](#测试-9)
+  - [前后端联动](#前后端联动-9)
+  - [2.12 速率限制参考](#212-速率限制参考)
+  - [2.13 状态码约定](#213-状态码约定)
+  - [2.14 错误响应扩展](#214-错误响应扩展)
+  - [2.15 事件总线接口](#215-事件总线接口)
+  - [2.16 版本化与兼容性策略](#216-版本化与兼容性策略)
+  - [2.17 健康检查端点](#217-健康检查端点)
+  - [2.18 工作台模块（/api/workbench/）](#218-工作台模块apiworkbench)
+  - [概述](#概述-10)
+  - [配置](#配置-10)
+  - [安全要点](#安全要点-10)
+  - [测试](#测试-10)
+  - [前后端联动](#前后端联动-10)
+  - [2.19 学习助手模块（/api/tools/auxilio/）](#219-学习助手模块apitoolsauxilio)
+  - [概述](#概述-11)
+  - [配置](#配置-11)
+  - [安全要点](#安全要点-11)
+  - [测试](#测试-11)
+  - [前后端联动](#前后端联动-11)
 
 ## 1. Part A：项目架构
 
@@ -280,7 +385,7 @@ workbench/
 
 ### 1.3.3 待处理优化
 
-> ℹ️ 待处理优化（P1/P2 项）已迁移至 `docs/项目待办事项.md`。剩余项详见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)。
+> ℹ️ 待处理优化（P1/P2 项）已迁移至 `docs/项目待办事项.md`。剩余项详见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)（ADR 索引）。
 
 ### 1.4 BFF 通用约定（架构层，内容见 Part B §2.1 / §2.12–2.17）
 
@@ -312,6 +417,7 @@ workbench/
 > **范围说明**：本部分描述 **BFF 路由层**的端点与转发契约，并按统一模板组织业务模块。所有端点（除 `/api/dev-docs` 与 `/api/health` 外）均通过 `shared/backend-client.ts` 转发到后端 FastAPI。后端真实业务逻辑、数据校验、RBAC enforce 见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`（Part A 架构 + Part B 模块契约）。
 >
 > **模块契约统一模板**（与后端 `BackDoc-01-Arch.md` Part B 对齐）：**概述（职责/边界）→ 接口（路由表）→ 配置 → 安全要点（或降级）→ 测试 → 前后端联动**。其中「前后端联动」给出：前端页面 / BFF 路由 → 后端 API → 后端模块归属（见后端 Part B 对应节），用于双向影响面排查。
+> **契约 SSOT 边界**：**原始端点契约（方法/路径/参数/响应 Schema）的权威为根 [`docs/api-reference.md`](../../../docs/api-reference.md)**（由 `openapi.baseline.json` 自动生成、请勿手改）；本节**按业务模块组织契约视图并提供 BFF 翻译层说明（JWT 注入、错误码映射、`toXxx` 响应整形等），不重复罗列原始参数**。两端点不一致时以 `api-reference.md` 为准。
 > §2.1 / §2.12–2.17 为 **BFF 通用约定**（架构层，索引见 Part A §1.4）。
 
 ### 2.1 通用约定
@@ -491,6 +597,61 @@ i18n `community` namespace。
 - BFF 路由：`/api/community/**`（topics / replies / like / favorite / upload）
 - 后端 API：`/api/v1/community/*`（`app/api/v1/community.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准）
 
+### 2.5.7 社区 Markdown 编辑器（UI 组件）
+
+> 社区全文 Markdown 编辑/渲染统一组件，位于 `src/modules/community/ui/`（文件名 `community-` 前缀）。本组件为**前端 UI 关注点**，API 转发仍走 §2.5 社区论坛端点与 §2.8 社区文章端点；其指南原属 `FrontDoc-UID.md` §14，2026-08-09 下沉至本模块契约以避免 UID 膨胀。
+
+**概述**
+
+三层架构统一全文 Markdown 编辑与渲染：
+
+```
+MarkdownRenderer              - 只读渲染（react-markdown + 插件链）
+    ↑
+    ├── MarkdownEditorBase    - 基础编辑器（编辑/预览 Tab 切换）
+    │       ↑
+    │       └── MarkdownEditor - 完整编辑器（工具栏 + 图片上传）
+    │
+    └── CommunityReplyItem        - 回复项渲染（主回复 + 楼中楼）
+```
+
+**组件详情**
+
+- **MarkdownRenderer（只读渲染）** — `src/modules/community/ui/community-markdown-renderer.tsx`。用于展示主题正文、回复内容等。依赖 `react-markdown` + `remark-gfm`（GFM）+ `rehype-sanitize`（安全过滤，白名单机制，禁止 `on*` 事件与 `javascript:` 协议）+ `rehype-highlight`（代码高亮）。支持标题/段落/强调/列表/链接/图片/表格/代码块等语法。Props：`content: string`、`className?: string`。
+- **MarkdownEditorBase（基础编辑器）** — `src/modules/community/ui/community-markdown-editor-base.tsx`。纯编辑/预览切换，无工具栏和图片上传；支持 `Cmd/Ctrl+B` 加粗、`Cmd/Ctrl+I` 斜体、字数统计；预览复用 `MarkdownRenderer`。适用不需要工具栏的场景（如管理后台活动详情编辑）。Props：`value`、`onChange`、`placeholder?`、`rows?`（默认 12）、`textareaClassName?`、`className?`。
+- **MarkdownEditor（完整编辑器）** — `src/modules/community/ui/community-markdown-editor.tsx`。基于 `MarkdownEditorBase`，额外提供工具栏（B/I/S/H/链接/代码/引用/列表）与图片上传（调用 `/api/community/upload`，JPEG·PNG·WebP·GIF，5MB）。Props：`value`、`onChange`、`placeholder?`、`minHeight?`（默认 `280px`）、`className?`。
+
+**使用场景**
+
+| 场景 | 页面 / 组件 | 使用组件 |
+|------|-----------|---------|
+| 社区发帖 | `/community/community/new` | `MarkdownEditor` |
+| 编辑主题 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
+| 撰写回复 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
+| 活动详情编辑 | `/admin`（活动创建 / 编辑弹窗） | `MarkdownEditorBase` |
+| 主题正文渲染 | `/community/community/[category]/[topicId]` | `MarkdownRenderer` |
+| 回复内容渲染 | `reply-item.tsx` | `MarkdownRenderer` |
+
+> 待统一项：`/events/[id]` 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未复用 `MarkdownRenderer` 也未配置 `rehype-sanitize`，后续迭代应统一替换（见 `docs/项目待办事项.md`）。
+
+**配置**
+
+内容长度限制统一在 `src/shared/utils/ui-constants.ts` 的 `FORM_LIMITS`：`COMMUNITY_MARKDOWN_MIN=10`、`COMMUNITY_MARKDOWN_MAX=20000`（主题/回复）、`EVENT_MARKDOWN_MAX=10000`（活动详情）。
+
+**安全要点**
+
+渲染层强制 `rehype-sanitize` 安全过滤（白名单，禁止 `on*` 事件与 `javascript:` 协议）；图片上传经 `/api/community/upload`（后端 enforce 大小/MIME/扩展名/魔数）。新增接入须复用 `MarkdownRenderer`，禁止裸 `ReactMarkdown`。
+
+**测试**
+
+`e2e/community.spec.ts` 覆盖发帖/回复渲染；组件单测见 `tools/tests/`（community 相关）。
+
+**前后端联动**
+
+- 前端组件：`src/modules/community/ui/community-*`、`reply-item.tsx`
+- BFF 路由：`/api/community/**`（topics / replies / upload）
+- 后端 API：`/api/v1/community/*`（以 `openapi.baseline.json` 为准）
+
 ### 2.6 通知模块（/api/notifications/）
 
 | 方法 | 路径 | 鉴权 | 说明 |
@@ -608,7 +769,7 @@ BFF `requireAdmin` / `requireRoot` 仅 UI 兜底；**后端 `require_permission`
 i18n `community` namespace（与论坛共用）。
 
 ### 安全要点
-作者 / 管理员编辑权限由后端 enforce；Markdown 渲染在前端（`[slug]` 页）。
+作者 / 管理员编辑权限由后端 enforce；Markdown 渲染在前端（`[slug]` 页），编辑器组件见 §2.5.7。
 
 ### 测试
 `e2e/community.spec.ts`。
@@ -797,7 +958,7 @@ i18n `auth` namespace（sessions 词条）。
 ### 2.15 事件总线接口
 
 > ⚠️ **遗留机制**：进程内通信（非 HTTP），迁移后业务通知由后端承载。新增通知场景应直接走 BFF→后端转发，不再新增前端事件监听器。
-> 对应根级 [docs/Onboarding.md](../../../docs/Onboarding.md#a3-模块化开发规范) 模块协作规范、[FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) ADR-013/014。
+> 对应根级 [docs/Onboarding.md](../../../docs/Onboarding.md#a3-模块化开发规范) 模块协作规范、[RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) ADR-013/014。
 
 **15.1 API**
 
@@ -827,7 +988,7 @@ appBus.off('reply.created', handler);
 
 > ⚠️ 迁移后：新增通知场景应直接走 BFF→后端转发，不再新增前端事件监听器。
 
-**15.4 监听器初始化**（[ADR-013](../../../docs/项目演变历史-0.9.1.md#2026-07-29)，2026-07-29 实施）
+**15.4 监听器初始化**（[ADR-013](../../../docs/RootDoc-ADR.md)，2026-07-29 实施）
 
 通知监听器迁至 `src/instrumentation.ts` 显式初始化（委托 `instrumentation-node.ts`，server-only，pino logger），不再依赖加载副作用：
 
@@ -850,7 +1011,7 @@ export async function register() {
 | 移除字段 | 🚫 先标记 `@deprecated`，下个大版本移除 |
 | 改变鉴权 | 须在 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md) 记录并通告 |
 
-**16.2 破坏性变更处理**：① 评估能否新增字段避免（[FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) FF2）② 记 ADR ③ 双写过渡（旧字段 `@deprecated`）④ 客户端迁移窗口 ⑤ 移除旧字段。
+**16.2 破坏性变更处理**：① 评估能否新增字段避免（[RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) FF2）② 记 ADR ③ 双写过渡（旧字段 `@deprecated`）④ 客户端迁移窗口 ⑤ 移除旧字段。
 
 **16.3 稳定契约字段**：`error`、`code`、`details`（错误）；分页 `items`/`total`/`page`/`pageSize`。其他业务字段可能演进，客户端须容错。
 
@@ -866,7 +1027,7 @@ const res = await fetch(`${BACKEND_URL}/health`, { cache: 'no-store' });
 return NextResponse.json({ ok: res.status === 200 });
 ```
 
-> 对应 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) Q5（2026-07-29）。后端运维端点（`/readyz` `/metrics/json` `/status`）不在 BFF 暴露，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §1.2。
+> 对应 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) Q5（2026-07-29）。后端运维端点（`/readyz` `/metrics/json` `/status`）不在 BFF 暴露，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §1.2。
 
 **17.2 安全健康检查（规划）**
 

@@ -14,6 +14,7 @@ import { InlineTabs } from '@/components/primitives/inline-tabs';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS } from './widget-registry';
 import AssistantChat from './widgets/assistant-chat';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type WorkbenchView = 'workbench' | 'assistant';
 
@@ -184,8 +185,10 @@ export function Workbench() {
             </p>
           )}
 
-          {full.map(({ component: C }) => (
-            <C key="greeting" />
+          {full.map(({ id, component: C }) => (
+            <VisibilityGate key={id} componentKey={id}>
+              <C />
+            </VisibilityGate>
           ))}
 
           {/* 视图切换 + 布局设置 */}
@@ -227,17 +230,23 @@ export function Workbench() {
           )}
 
           {view === 'assistant' ? (
-            <AssistantChat />
+            <VisibilityGate componentKey="wb-assistant-chat">
+              <AssistantChat />
+            </VisibilityGate>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
                 {main.map(({ id, component: C }) => (
-                  <C key={id} />
+                  <VisibilityGate key={id} componentKey={id}>
+                    <C />
+                  </VisibilityGate>
                 ))}
               </div>
               <div className="lg:col-span-4 flex flex-col gap-4 min-w-0">
                 {side.map(({ id, component: C }) => (
-                  <C key={id} />
+                  <VisibilityGate key={id} componentKey={id}>
+                    <C />
+                  </VisibilityGate>
                 ))}
               </div>
             </div>

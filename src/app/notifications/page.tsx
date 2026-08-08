@@ -17,6 +17,7 @@ import { SectionLoading } from '@/components';
 import { useTranslations } from 'next-intl';
 import { useNotifications } from './use-notifications';
 import { NotificationCenter } from './notification-center';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 export default function NotificationsPage() {
   return (
@@ -60,7 +61,8 @@ function NotificationsContent() {
   }
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="notifications">
+      <main className="relative pt-16">
       <section
         data-section-nav="00|Notifications"
         className={`relative px-4 sm:px-6 md:px-8 overflow-hidden transition-all hero-reveal ${
@@ -122,5 +124,6 @@ function NotificationsContent() {
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }

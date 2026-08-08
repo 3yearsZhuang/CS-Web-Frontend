@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type EventTab = 'timeline' | 'next' | 'admin';
 
@@ -180,7 +181,8 @@ export default function EventsPage() {
   }
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="events">
+      <main className="relative pt-16">
       {/* ============ Hero — 1s 后自动收缩悬浮（亚克力框） ============ */}
       <CollapsingHero
         index="00"
@@ -336,5 +338,6 @@ export default function EventsPage() {
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }

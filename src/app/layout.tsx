@@ -11,6 +11,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PageTransition } from '@/components/effects/page-transition';
 import { AnnouncementBanner } from '@/components/feedback/announcement-banner';
@@ -162,10 +163,16 @@ export default async function RootLayout({
         <NextIntlClientProvider>
           <ThemeProvider nonce={nonce}>
             <ConfirmProvider>
-              <Navbar />
-              <AnnouncementBanner />
+              <VisibilityGate componentKey="chrome-navbar">
+                <Navbar />
+              </VisibilityGate>
+              <VisibilityGate componentKey="chrome-announcement-banner">
+                <AnnouncementBanner />
+              </VisibilityGate>
               <PageTransition>{children}</PageTransition>
-              <Footer />
+              <VisibilityGate componentKey="chrome-footer">
+                <Footer />
+              </VisibilityGate>
             </ConfirmProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

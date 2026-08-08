@@ -20,11 +20,13 @@
 | 文件 | 主题 | 类型 | 说明 |
 |------|------|------|------|
 | [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) | 架构 + 业务模块契约 | reference | 前端 BFF 架构（Part A）+ 业务模块契约与前后端联动（Part B，统一模板：概述/接口/配置/安全要点/测试/联动） |
-| [项目演变历史-0.9.1.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) | 演进 / ADR | reference + decision | 重大架构决策记录与演进史（原 FrontDoc-Evo.md 已并入） |
+| [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) | 演进 / ADR | reference + decision | 重大架构决策记录与演进史（设计决策 SSOT，L0） |
 | [FrontDoc-i18n.md](FrontDoc-i18n.md) | 国际化 | how-to + reference | next-intl 约定、namespace、翻译流程 |
 | [FrontDoc-Ops.md](FrontDoc-Ops.md) | 运维 / SLO | reference + how-to | BFF 部署、SLO 阈值、回滚 Runbook |
+| [FrontDoc-Conv.md](FrontDoc-Conv.md) | 前端编码规范 | reference | TS/React/Next.js 约定、React Compiler 红线、样式令牌、JSDoc、组件复用契约、widget 注册表、i18n、测试、Git、编码侧禁止项（对标后端 BackDoc-Conv.md） |
 | [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md) | 安全 | reference | 前端安全约束、CSP、Origin 校验 |
-| [FrontDoc-UID.md](FrontDoc-UID.md) | UI 设计 + Markdown 编辑器 | reference + how-to | 组件、布局、设计 token 约定 + Markdown 编辑器指南（§14，原 FrontDoc-MDE.md 并入） |
+| [FrontDoc-UID.md](FrontDoc-UID.md) | UI 设计规范 | reference | 颜色/字体/布局/组件/动效/交互规范 + 全局组件体系（§5.0）；编码规范已迁出至 FrontDoc-Conv.md；Markdown 编辑器契约已下沉至 Arch §2.5.7 |
+| [capsule-tabs.md](capsule-tabs.md) | 胶囊 Tab 配置 + 设计决策 | data + decision | 悬浮折叠胶囊各页面 Tab 配置数据 + 未采用备选方案（从 UID §4.8 / 附录 A 迁出） |
 
 > PG 迁移归档（原 `FrontDoc-PGMig.md`）已于 2026-08-09 并入根 `docs/RootDoc-MigEval.md` §八。
 

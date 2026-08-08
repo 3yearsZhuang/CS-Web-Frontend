@@ -210,10 +210,10 @@ tools/tests/
 | [架构 + API 文档](tools/docs/FrontDoc-01-Arch.md) | 目录结构、路由、模块分析、完整 API 端点与契约 |
 | [安全文档](tools/docs/FrontDoc-02-Sec.md) | 安全审计（OWASP）+ 角色体系、权限矩阵与不变量 |
 | [运维文档](tools/docs/FrontDoc-Ops.md) | 部署指南 + SLO 与错误预算 + 运维 Runbook（回滚/故障处置） |
-| [演进与 ADR](docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
-| [Markdown 编辑器](tools/docs/FrontDoc-UID.md#14-markdown-编辑器原-frontdoc-mdem-并入) | 编辑器使用指南（UID §14） |
-| [入职指南 + 项目规则](../../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
-| [PG 数据迁移](../../docs/RootDoc-MigEval.md#八前端迁移执行细节原-frontdoc-pgmigm-并入已归档) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
+| [演进与 ADR](../docs/RootDoc-ADR.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
+| [Markdown 编辑器](tools/docs/FrontDoc-01-Arch.md#257-社区-markdown-编辑器ui-组件) | 编辑器使用指南（Arch §2.5.7） |
+| [入职指南 + 项目规则](../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
+| [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节原-frontdoc-pgmigmd-并入已归档) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 

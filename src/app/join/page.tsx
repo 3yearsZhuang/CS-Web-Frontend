@@ -15,6 +15,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useState, useEffect } from 'react';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 const TECH_TAG_OPTIONS = [
   '前端', '后端', 'AI', '安全', '设计', '移动端', '运维', '数据科学', '嵌入式', '游戏开发',
@@ -166,7 +167,8 @@ export default function JoinPage() {
   }
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="join">
+      <main className="relative pt-16">
       {/* ============ Hero ============ */}
       <CollapsingHero
         index="00"
@@ -406,5 +408,6 @@ export default function JoinPage() {
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }

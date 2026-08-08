@@ -20,6 +20,7 @@ import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-pane
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
 import { Button, SectionLoading } from '@/components';
 import { useCommunityFeed } from './use-community-feed';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 export default function CommunityPage() {
   return (
@@ -89,7 +90,8 @@ function CommunityPageContent() {
   }
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="community">
+      <main className="relative pt-16">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -154,9 +156,11 @@ function CommunityPageContent() {
         <div className="max-w-[1600px] mx-auto w-full">
           <div className="flex gap-0">
             {/* 左侧栏 — 版块导航（桌面端显示） */}
-            <div className="hidden md:block w-[200px] lg:w-[220px] flex-shrink-0 md:pr-6 md:border-r md:border-[var(--border)]">
-              <CommunitySidebarNav categories={categories} />
-            </div>
+            <VisibilityGate componentKey="community-sidebar-nav">
+              <div className="hidden md:block w-[200px] lg:w-[220px] flex-shrink-0 md:pr-6 md:border-r md:border-[var(--border)]">
+                <CommunitySidebarNav categories={categories} />
+              </div>
+            </VisibilityGate>
 
             {/* 中间 — Feed 流 */}
             <div className="flex-1 md:px-6 lg:px-10 min-w-0">
@@ -186,6 +190,7 @@ function CommunityPageContent() {
               {/* 搜索条 */}
               {activeTab !== 'mine' && (
               <>
+              <VisibilityGate componentKey="community-search">
               <form onSubmit={handleSearchSubmit} className="mb-8">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
@@ -230,35 +235,40 @@ function CommunityPageContent() {
                   </div>
                 )}
               </form>
+              </VisibilityGate>
 
               {/* 精选/置顶横滑区 */}
               {!hasSearch && activeTab === 'all' && featuredTopics.length > 0 && (
-                <FeaturedTopicStrip topics={featuredTopics} className="mb-8" />
+                <VisibilityGate componentKey="community-featured">
+                  <FeaturedTopicStrip topics={featuredTopics} className="mb-8" />
+                </VisibilityGate>
               )}
 
               {/* 标签筛选条 */}
               {tags.length > 0 && !selectedTag && (
-                <div className="mb-8">
-                  <div className="meta-mono text-[11px] mb-3">
-                    {t('hotTags')}
-                    <span className="text-[var(--primary)] tabular-nums">{tags.length}</span>
-                    {' tags'}
+                <VisibilityGate componentKey="community-tags">
+                  <div className="mb-8">
+                    <div className="meta-mono text-[11px] mb-3">
+                      {t('hotTags')}
+                      <span className="text-[var(--primary)] tabular-nums">{tags.length}</span>
+                      {' tags'}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.slice(0, 15).map((tag) => (
+                        <button
+                          key={tag.tag}
+                          onClick={() => handleTagClick(tag.tag)}
+                          className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber"
+                        >
+                          {tag.tag}
+                          <span className="ml-1 opacity-50">
+                            {tag.topicCount + tag.postCount + tag.memberCount}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.slice(0, 15).map((tag) => (
-                      <button
-                        key={tag.tag}
-                        onClick={() => handleTagClick(tag.tag)}
-                        className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber"
-                      >
-                        {tag.tag}
-                        <span className="ml-1 opacity-50">
-                          {tag.topicCount + tag.postCount + tag.memberCount}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                </VisibilityGate>
               )}
 
               {selectedTag && (
@@ -312,15 +322,17 @@ function CommunityPageContent() {
                   )}
                 </div>
               ) : (
-                <div className="border-t border-[var(--border)]">
-                  {items.map((item, idx) => (
-                    <FeedItemCard
-                      key={`${item.kind}-${item.data.id}`}
-                      item={item}
-                      index={(page - 1) * PAGE_SIZE + idx + 1}
-                    />
-                  ))}
-                </div>
+                <VisibilityGate componentKey="community-feed">
+                  <div className="border-t border-[var(--border)]">
+                    {items.map((item, idx) => (
+                      <FeedItemCard
+                        key={`${item.kind}-${item.data.id}`}
+                        item={item}
+                        index={(page - 1) * PAGE_SIZE + idx + 1}
+                      />
+                    ))}
+                  </div>
+                </VisibilityGate>
               )}
 
               {/* 分页 */}
@@ -361,32 +373,39 @@ function CommunityPageContent() {
 
               {/* 「我的」标签页 — 我的主题 / 回复 / 收藏（入口由个人主页迁移至此） */}
               {activeTab === 'mine' && currentUserId && (
-                <ProfileCommunityTab userId={currentUserId} />
+                <VisibilityGate componentKey="community-mine">
+                  <ProfileCommunityTab userId={currentUserId} />
+                </VisibilityGate>
               )}
 
               {/* Tab 99 — 社区管理（仅管理员） */}
               {activeTab === 'admin' && currentUser && (
-                <div>
-                  <AdminCommunityPanel />
-                </div>
+                <VisibilityGate componentKey="community-admin">
+                  <div>
+                    <AdminCommunityPanel />
+                  </div>
+                </VisibilityGate>
               )}
             </div>
 
             {/* 右侧栏 — 热榜 + 活跃用户（桌面端显示） */}
-            <div className="hidden md:block w-[220px] lg:w-[260px] flex-shrink-0 md:pl-6 md:border-l md:border-[var(--border)]">
-              <CommunitySidebarTrending
-                hotTopics={hotTopics}
-                activeMembers={activeMembers}
-                stats={
-                  stats
-                    ? { todayTopics: stats.topicCount, activeUsers: stats.memberCount, onlineUsers: 0 }
-                    : null
-                }
-              />
-            </div>
+            <VisibilityGate componentKey="community-sidebar-trending">
+              <div className="hidden md:block w-[220px] lg:w-[260px] flex-shrink-0 md:pl-6 md:border-l md:border-[var(--border)]">
+                <CommunitySidebarTrending
+                  hotTopics={hotTopics}
+                  activeMembers={activeMembers}
+                  stats={
+                    stats
+                      ? { todayTopics: stats.topicCount, activeUsers: stats.memberCount, onlineUsers: 0 }
+                      : null
+                  }
+                />
+              </div>
+            </VisibilityGate>
           </div>
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }

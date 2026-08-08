@@ -3,7 +3,7 @@
 > 文档定位：**前端 BFF 层**的安全与权限设计权威文档（reference）
 > 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
 > Source of truth：**BFF 层**的安全审计发现、UI 层角色与权限矩阵、安全不变量、加固变更记录
-> 关联：**后端鉴权/RBAC/密码/2FA/限流/审计日志权威见 [CS-Web-Backend/tools/docs/BackDoc-02-Sec.md](../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)**；权限矩阵与部署模型见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；运维见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)
+> 关联：**后端鉴权/RBAC/密码/2FA/限流/审计日志权威见 [CS-Web-Backend/tools/docs/BackDoc-02-Sec.md](../../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)**；权限矩阵与部署模型见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；运维见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)
 > 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任）；新增 Part E（BFF 转发同源安全 / proxyBackend / workbench namespace 三处 i18n / 前端不持有密钥）
 > 更新人：3yearsZ
 > 变更触发：BFF 安全发现 / UI 层角色变更 / 后端鉴权契约变更 / 新漏洞类
@@ -256,7 +256,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 # Part C: 事件驱动安全与运行时监测
 
-> 承接 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) ADR-013 / ADR-014 / R7 / R8。
+> 承接 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) ADR-013 / ADR-014 / R7 / R8。
 > **责任划分**：事件总线为 BFF 前端实现；2FA/限流/审计日志/失败登录记录为后端实现；BFF 仅做转发与 UI 监测。
 
 ## 9. 事件总线安全（BFF 前端实现）
@@ -305,7 +305,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 # Part D: 安全加固变更记录（Engineering Control Evidence）
 
 > 范围：2026-07-31 两轮加固（4 高 + 7 中 + 5 低 = 16 项 + ADR-015 新增 4 项 = 20 项已落地）。状态：✅ 全部通过验证（tsc 0 errors / 441 tests passed）。
-> 关联：[FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) 部署模型、[FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) ADR-015 / R7 / R8。
+> 关联：[FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) 部署模型、[RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) ADR-015 / R7 / R8。
 > **责任层说明**：本记录于单体时代生成，描述的修复动作多涉及前端遗留代码。迁移后对应控制的真实运行时位置见 Part A"责任层"列。
 
 ## 4.1 变更记录包

@@ -13,6 +13,7 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { AdminToolsPanel } from '@/modules/tools/ui/admin-tools-panel';
 import { Workbench } from '@/modules/workbench/workbench';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
@@ -27,6 +28,8 @@ interface ToolCard {
   enKey: string;
   descKey: string;
   status: ToolTab;
+  /** 受管组件 key（与可见性注册表一致） */
+  visibilityKey: string;
 }
 
 const TOOLS: ToolCard[] = [
@@ -37,6 +40,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'examEn',
     descKey: 'examDesc',
     status: 'available',
+    visibilityKey: 'tools-exam',
   },
   {
     href: '/tools/resource',
@@ -45,6 +49,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'resourceEn',
     descKey: 'resourceDesc',
     status: 'available',
+    visibilityKey: 'tools-resource',
   },
   {
     href: '/tools/auxilio',
@@ -53,6 +58,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'auxilioEn',
     descKey: 'auxilioDesc',
     status: 'available',
+    visibilityKey: 'tools-auxilio',
   },
   {
     href: '/tools/task',
@@ -61,6 +67,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'taskEn',
     descKey: 'taskDesc',
     status: 'available',
+    visibilityKey: 'tools-task',
   },
   {
     href: '/tools/dev-center',
@@ -69,6 +76,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'devCenterEn',
     descKey: 'devCenterDesc',
     status: 'available',
+    visibilityKey: 'tools-dev-center',
   },
   {
     href: '/community',
@@ -77,6 +85,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'communityEn',
     descKey: 'communityDesc',
     status: 'available',
+    visibilityKey: 'community',
   },
   {
     href: '',
@@ -85,6 +94,7 @@ const TOOLS: ToolCard[] = [
     enKey: 'chatEn',
     descKey: 'chatDesc',
     status: 'planned',
+    visibilityKey: 'tools-chat',
   },
 ];
 
@@ -160,7 +170,8 @@ export default function ToolsPage() {
   );
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="tools">
+      <main className="relative pt-16">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -284,12 +295,18 @@ export default function ToolsPage() {
 
                 if (isAvailable) {
                   return (
-                    <Link key={tool.titleKey} href={tool.href}>
-                      {CardContent}
-                    </Link>
+                    <VisibilityGate key={tool.titleKey} componentKey={tool.visibilityKey}>
+                      <Link href={tool.href}>
+                        {CardContent}
+                      </Link>
+                    </VisibilityGate>
                   );
                 }
-                return <div key={tool.titleKey}>{CardContent}</div>;
+                return (
+                  <VisibilityGate key={tool.titleKey} componentKey={tool.visibilityKey}>
+                    <div>{CardContent}</div>
+                  </VisibilityGate>
+                );
               })}
             </div>
           </div>
@@ -298,12 +315,15 @@ export default function ToolsPage() {
 
       {/* Tab 99 — 工具管理（仅管理员） */}
       {activeTab === 'admin' && currentUser && (
-        <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
-          <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
-            <AdminToolsPanel />
-          </div>
-        </section>
+        <VisibilityGate componentKey="tools-admin-panel">
+          <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+            <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
+              <AdminToolsPanel />
+            </div>
+          </section>
+        </VisibilityGate>
       )}
     </main>
+    </VisibilityGate>
   );
 }

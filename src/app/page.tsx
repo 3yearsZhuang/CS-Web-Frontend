@@ -16,6 +16,7 @@ import { Button } from '@/components';
 import { RevealItem, RevealTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import type { MemberItem } from '@/modules/community/types';
 
 /** 莫比乌斯环响应式配置 — 按断点分级
@@ -174,7 +175,8 @@ export default function Home() {
   }, [clearAutoHideTimer]);
 
   return (
-    <main className="relative" onClick={handlePageClick}>
+    <VisibilityGate componentKey="home">
+      <main className="relative" onClick={handlePageClick}>
       {/* 键盘可达的彩蛋入口 — 视觉隐藏，仅供屏幕阅读器与 Tab 键盘用户发现 */}
       <button
         type="button"
@@ -393,5 +395,6 @@ export default function Home() {
         )}
       </AnimatePresence>
     </main>
+    </VisibilityGate>
   );
 }

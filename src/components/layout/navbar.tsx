@@ -12,12 +12,15 @@ import { useTranslations } from 'next-intl';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { useAuth } from '@/shared/hooks/use-auth';
+import { useFeatureVisibility, deriveUserClass, DEFAULT_VISIBILITY } from '@/shared/hooks/use-feature-visibility';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
 import type { NavMessageKey } from '@/i18n/types';
 
 const NAV_LINKS: Array<{ href: string; key: NavMessageKey; requireAuth?: boolean }> = [
   { href: '/about', key: 'about' },
   { href: '/events', key: 'events' },
+  { href: '/community', key: 'community' },
   { href: '/tools', key: 'tools', requireAuth: true },
 ];
 
@@ -25,7 +28,9 @@ const NAV_LINKS: Array<{ href: string; key: NavMessageKey; requireAuth?: boolean
 export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const { rules } = useFeatureVisibility();
+  const userClass = deriveUserClass(isLoggedIn, user?.role);
   const t = useTranslations('nav');
   const hamburgerRef = useRef<HTMLButtonElement>(null);
 
@@ -36,9 +41,13 @@ export function Navbar() {
     lockScroll: true,
   });
 
-  const visibleLinks = NAV_LINKS.filter(
-    (link) => !link.requireAuth || isLoggedIn,
-  );
+  const visibleLinks = NAV_LINKS.filter((link) => {
+    const moduleKey = link.href.slice(1);
+    const rule = rules[moduleKey] ?? DEFAULT_VISIBILITY[moduleKey];
+    // 配置缺失或未知模块：回退原 requireAuth 行为（fail-open，保证可用性）
+    if (!rule) return !link.requireAuth || isLoggedIn;
+    return rule[userClass];
+  });
 
   useEffect(() => {
     setMobileOpen(false);
@@ -93,9 +102,13 @@ export function Navbar() {
               })}
             </nav>
 
-            <ThemeToggle />
+            <VisibilityGate componentKey="chrome-theme-toggle">
+              <ThemeToggle />
+            </VisibilityGate>
             <span className="h-4 w-px bg-[var(--border)] mx-2" />
-            <UserMenu />
+            <VisibilityGate componentKey="chrome-user-menu">
+              <UserMenu />
+            </VisibilityGate>
           </div>
 
           {/* 移动端右侧 — 按钮需 min 44x44 触摸目标（WCAG 2.5.5） */}
@@ -160,8 +173,12 @@ export function Navbar() {
           </nav>
           {/* 抽屉底部 — ThemeToggle 用 lg 大号变体更易触摸 */}
           <div className="mt-8 flex items-center justify-between border-t border-[var(--border)] pt-6">
-            <ThemeToggle size="lg" />
-            <UserMenu size={56} />
+            <VisibilityGate componentKey="chrome-theme-toggle">
+              <ThemeToggle size="lg" />
+            </VisibilityGate>
+            <VisibilityGate componentKey="chrome-user-menu">
+              <UserMenu size={56} />
+            </VisibilityGate>
           </div>
         </div>
       </div>
