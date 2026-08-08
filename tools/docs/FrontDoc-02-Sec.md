@@ -11,7 +11,7 @@
 
 > **范围声明（BFF 视角）**：前端为 BFF 薄转发层。安全责任划分如下：
 > - **BFF 层（本文档覆盖）**：Origin/Referer 白名单（防 Login CSRF）、Content-Type 与 Zod body 校验、JWT HttpOnly Cookie 托管（`__Host-` 前缀、Secure、SameSite=Lax）、401 静默刷新轮换、UI 层角色路由保护与按钮显隐
-> - **后端层（见后端 `docs/BackDoc-02-Sec.md`）**：JWT 签发与校验、密码哈希（bcrypt）、TOTP/2FA 加密与验证、RBAC `require_permission(resource, action)` 强制、速率限制、审计日志写入、session/refresh_token 表
+> - **后端层（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`）**：JWT 签发与校验、密码哈希（bcrypt）、TOTP/2FA 加密与验证、RBAC `require_permission(resource, action)` 强制、速率限制、审计日志写入、session/refresh_token 表
 > - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/modules/auth/server/identity.ts`（scrypt 密码哈希）、`src/modules/auth/server/totp.ts`（前端 TOTP）、`src/modules/auth/server/session.ts`（HMAC session）、`src/modules/auth/server/verification-code.ts`（验证码 HMAC）。这些文件仍存在但运行时不被引用，待清理；其历史安全发现保留在 Part A 作为审计证据。
 
 ## 文档结构
@@ -47,7 +47,7 @@
 | # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
 |---|------|------|------|:---:|------|:---:|
 | 1 | 2FA 端点缺少 `assertAllowedOrigin` | 🟠高 | `api/auth/2fa/verify` | **[BFF]** | verify/setup/disable/backup-codes 全部补齐，移至 body 解析前；BFF 路由仍执行 Origin 校验 | ✅ |
-| 2 | 2FA 设置端点缺少速率限制 | 🟡中 | `api/auth/2fa/setup` `disable` | **[后端]** | 原 `twoFactorSetupLimiter`（3 次/分/IP+用户）为前端内存限流；迁移后由后端限流（见后端 `docs/BackDoc-02-Sec.md` §3） | ✅ |
+| 2 | 2FA 设置端点缺少速率限制 | 🟡中 | `api/auth/2fa/setup` `disable` | **[后端]** | 原 `twoFactorSetupLimiter`（3 次/分/IP+用户）为前端内存限流；迁移后由后端限流（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §3） | ✅ |
 | 3 | Admin 路由权限检查一致性 | - | `admin/server/require.ts` | **[BFF]+[后端]** | BFF `requireAdmin`/`requireRoot` 做 UI 层兜底；真实 RBAC enforce 由后端 `require_permission` | ✅ 良好 |
 | 4 | 细粒度角色缺少模块级 enforce | 🟡中 | `auth/types` `admin/server/require` | **[后端]** | 原 `ROLE_MODULE_MAP` + `requireModuleAdmin` 为前端实现；迁移后由后端 `require_permission(resource, action)` 统一 enforce | ✅ |
 
@@ -56,7 +56,7 @@
 | # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
 |---|------|------|------|:---:|------|:---:|
 | 5 | TOTP Secret 密钥派生不够健壮 | 🟡中 | `auth/server/totp.ts` | **[遗留]**→**[后端]** | 前端 `totp.ts` 为遗留代码（运行时不引用）；TOTP 加密/派生由后端处理（`TOTP_ENCRYPTION_KEY`） | ✅ |
-| 6 | 密码哈希实现 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 `scryptSync` 为遗留代码；运行时密码哈希由后端 bcrypt（见后端 `docs/BackDoc-02-Sec.md` §1） | ✅ 良好 |
+| 6 | 密码哈希实现 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 `scryptSync` 为遗留代码；运行时密码哈希由后端 bcrypt（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1） | ✅ 良好 |
 | 7 | Session Token 存储 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 HMAC session 为遗留代码；运行时 JWT 对（access/refresh）由后端签发，BFF 以 HttpOnly Cookie 托管 | ✅ 良好 |
 | 8 | 生产 `AUTH_SESSION_SECRET` 缺失仅警告 | 🟠高 | `auth/server/identity.ts` | **[遗留]** | 前端 `session.ts` 仍保留生产 `[FATAL]`+退出逻辑（遗留代码自保护）；运行时 JWT 签名密钥为后端 `SECRET_KEY` | ✅ |
 
@@ -160,7 +160,7 @@
 
 优先级：`root > admin > 细粒度角色 > user`。BFF `resolvePrimaryRole()` 按此优先级从后端 `roles` 数组解析主角色；`is_superuser` 优先于显式角色列表解析为 `root`（保证 root 专属 UI/端点对超级用户可见）。
 
-> 角色数据真实存储与权限分配见后端 `docs/BackDoc-02-Sec.md` §1 与 `docs/BackDoc-01-Arch.md` RBAC 章节。
+> 角色数据真实存储与权限分配见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1 与 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md` RBAC 章节。
 
 ## 2. BFF 层权限保护（UI 兜底）
 
@@ -234,7 +234,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 | `POST /api/admin/users/[id]/reset-password` | root only | `require_permission` |
 | `GET/DELETE /api/admin/actions` `DELETE /api/admin/actions/[id]` | root only | `require_permission` |
 
-> 完整端点鉴权见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) Part B（管理后台 §7）；后端权限点定义见后端 `docs/BackDoc-02-Sec.md` §1。
+> 完整端点鉴权见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) Part B（管理后台 §7）；后端权限点定义见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1。
 
 ## 7. 管理后台 Tab 结构
 
@@ -271,7 +271,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 > 2FA 的加密、验证、限流、token 签发均由**后端**实现。BFF 仅薄转发 `/api/auth/2fa/*` 请求并管理 Cookie。
 
-- **后端 2FA 端点**：`/auth/2fa/verify` `/auth/2fa/setup` `/auth/2fa/disable` `/auth/2fa/backup-codes`，详见后端 `docs/BackDoc-02-Sec.md`
+- **后端 2FA 端点**：`/auth/2fa/verify` `/auth/2fa/setup` `/auth/2fa/disable` `/auth/2fa/backup-codes`，详见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`
 - **BFF 转发行为**：
   - 所有 2FA POST 路由先 `assertAllowedOrigin(req)`（BFF 层 CSRF 防护）
   - login 模式：`twoFactorToken` 来自请求体或 `__Host-oauth_2fa` HttpOnly cookie，BFF 转发至后端 `skipAuth: true`
@@ -281,7 +281,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 ## 11. 运行时安全监测
 
 - **BFF 健康检查** `/api/health`（公开）：转发后端 `/health`，仅返回 `{"ok": true/false}`，不泄露细节
-- **后端运维端点**（不在 BFF 暴露）：`/readyz` `/metrics/json` `/status` 需超级用户，见后端 `docs/BackDoc-Infra.md` §1.2
+- **后端运维端点**（不在 BFF 暴露）：`/readyz` `/metrics/json` `/status` 需超级用户，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §1.2
 - **失败登录记录**：由后端写入 `login_history`（含 `attempted_email`），用于检测暴力破解、账户枚举、凭证填充
 - **结构化日志（✅ 发现 27）**：BFF pino + pino-pretty；`createRequestLogger(req)` 绑定 `x-request-id`。字段：`level`/`time`/`msg`/`requestId`(必填)、`userId`/`ip`/`module`(视情况)
 - **依赖漏洞扫描（✅ 发现 17）**：`.github/workflows/audit.yml`，`pnpm audit --audit-level=high` 阻断构建；后续：Dependabot、SBOM

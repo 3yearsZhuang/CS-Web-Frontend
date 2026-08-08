@@ -23,6 +23,9 @@ export interface ToolsMessages {
     statusAvailable: string;
     statusComingSoon: string;
     statusPlanned: string;
+    communityTitle: string;
+    communityEn: string;
+    communityDesc: string;
     examTitle: string;
     examEn: string;
     examDesc: string;
@@ -369,6 +372,88 @@ export interface ToolsMessages {
     storeUpdateGuideFailed: string;
     storeCreateFailed: string;
     storeDeleteFailed: string;
+  },
+  workbench: {
+    wbTitle: string;
+    wbSubtitle: string;
+    greetingMorning: string;
+    greetingAfternoon: string;
+    greetingEvening: string;
+    onlineLabel: string;
+    todayTasks: string;
+    overdue: string;
+    dueToday: string;
+    noTasks: string;
+    addTask: string;
+    taskPlaceholder: string;
+    clearDone: string;
+    clearAll: string;
+    confirmClearTasks: string;
+    pomodoro: string;
+    focusPhase: string;
+    shortBreakPhase: string;
+    longBreakPhase: string;
+    roundN: string;
+    startFocus: string;
+    pause: string;
+    resume: string;
+    reset: string;
+    soundLabel: string;
+    soundRain: string;
+    soundWaves: string;
+    soundFire: string;
+    soundWhite: string;
+    silence: string;
+    uploadMusic: string;
+    myMusic: string;
+    nextPhaseIn: string;
+    examCountdown: string;
+    daysLater: string;
+    hoursLater: string;
+    minutesLater: string;
+    ended: string;
+    noExam: string;
+    quickNotes: string;
+    notePlaceholder: string;
+    allTools: string;
+    toolsHint: string;
+    heatmapTitle: string;
+    heatmapBind: string;
+    heatmapContributions: string;
+    heatmapStreak: string;
+    heatmapLess: string;
+    heatmapMore: string;
+    heatmapMax: string;
+    heatmapStale: string;
+    heatmapUsernamePlaceholder: string;
+    apiUsageTitle: string;
+    apiToday: string;
+    apiErrors: string;
+    apiLatency: string;
+    apiNoData: string;
+    loginRequired: string;
+    newChat: string;
+    noConversations: string;
+    loading: string;
+    chatPlaceholder: string;
+    chatIntro: string;
+    requestFailed: string;
+    networkError: string;
+    llmUsageTitle: string;
+    llmTodayCalls: string;
+    llmTodayTokens: string;
+    llmLatencyMs: string;
+    llmTotal: string;
+    llmModels: string;
+    llmSettings: string;
+    llmProvider: string;
+    llmApiKey: string;
+    llmBaseUrl: string;
+    llmModel: string;
+    llmSave: string;
+    llmSaved: string;
+    llmMaskedHint: string;
+    llmNoData: string;
   }
 }
 
@@ -392,6 +477,9 @@ export const zhCN: ToolsMessages = {
     statusAvailable: '可用',
     statusComingSoon: '即将上线',
     statusPlanned: '规划中',
+    communityTitle: '社区',
+    communityEn: 'Community',
+    communityDesc: '社团交流、问答与内容分享',
     examTitle: '内网考试',
     examEn: 'Exam System',
     examDesc: '选择题在线评测，自动判分与排名。支持算法周赛和项目组考核。',
@@ -738,6 +826,88 @@ export const zhCN: ToolsMessages = {
     storeUpdateGuideFailed: '更新规范失败',
     storeCreateFailed: '创建失败',
     storeDeleteFailed: '删除失败',
+  },
+  workbench: {
+    wbTitle: '工作台',
+    wbSubtitle: '你的个人学习工作中心',
+    greetingMorning: '早上好',
+    greetingAfternoon: '下午好',
+    greetingEvening: '晚上好',
+    onlineLabel: '本次在线',
+    todayTasks: '今日任务',
+    overdue: '已逾期',
+    dueToday: '今天到期',
+    noTasks: '暂无待办，享受此刻',
+    addTask: '添加',
+    taskPlaceholder: '今天要做什么…',
+    clearDone: '清除已完成',
+    clearAll: '清空全部',
+    confirmClearTasks: '确定清空全部待办吗？此操作不可恢复。',
+    pomodoro: '番茄钟',
+    focusPhase: '专注',
+    shortBreakPhase: '短休',
+    longBreakPhase: '长休',
+    roundN: '第 {n} 轮',
+    startFocus: '开始专注',
+    pause: '暂停',
+    resume: '继续',
+    reset: '重置',
+    soundLabel: '阶段音',
+    soundRain: '雨声',
+    soundWaves: '海浪',
+    soundFire: '篝火',
+    soundWhite: '白噪音',
+    silence: '静音',
+    uploadMusic: '上传音乐',
+    myMusic: '我的音乐',
+    nextPhaseIn: '下一阶段',
+    examCountdown: '考试倒计时',
+    daysLater: '{n} 天后',
+    hoursLater: '{n} 小时后',
+    minutesLater: '{n} 分钟后',
+    ended: '已结束',
+    noExam: '暂无考试安排',
+    quickNotes: '快捷便签',
+    notePlaceholder: '随手记点什么…',
+    allTools: '全部工具',
+    toolsHint: '原有工具入口，收编于此',
+    heatmapTitle: 'GitHub · {year}',
+    heatmapBind: '绑定',
+    heatmapContributions: 'contributions',
+    heatmapStreak: 'streak',
+    heatmapLess: 'less',
+    heatmapMore: 'more',
+    heatmapMax: 'max',
+    heatmapStale: 'stale',
+    heatmapUsernamePlaceholder: 'GitHub 用户名',
+    apiUsageTitle: 'API 调用 · 近 {days} 天',
+    apiToday: '今日',
+    apiErrors: '错误',
+    apiLatency: '延迟',
+    apiNoData: '暂无数据，先调用几个接口试试',
+    loginRequired: '请先登录后使用',
+    newChat: '新对话',
+    noConversations: '暂无历史会话',
+    loading: '加载中…',
+    chatPlaceholder: '输入问题，Enter 发送',
+    chatIntro: '问我学习问题、查看薄弱点、查考试倒计时、找资源、看 API 统计……我会调用工具获取你的真实数据。',
+    requestFailed: '（请求失败，请稍后重试）',
+    networkError: '（网络异常：{msg}）',
+    llmUsageTitle: 'LLM 用量 · 近 {days} 天',
+    llmTodayCalls: '今日调用',
+    llmTodayTokens: '今日 Tokens',
+    llmLatencyMs: '延迟',
+    llmTotal: '总计',
+    llmModels: '模型分布',
+    llmSettings: 'LLM 设置',
+    llmProvider: '服务商',
+    llmApiKey: 'API Key',
+    llmBaseUrl: 'Base URL（可选）',
+    llmModel: '模型',
+    llmSave: '保存',
+    llmSaved: '已保存',
+    llmMaskedHint: '当前 Key：{masked}',
+    llmNoData: '暂无用量数据，先和学习助手聊几句',
   }
 };
 
@@ -761,6 +931,9 @@ export const en: ToolsMessages = {
     statusAvailable: 'Available',
     statusComingSoon: 'Coming Soon',
     statusPlanned: 'Planned',
+    communityTitle: 'Community',
+    communityEn: 'Community',
+    communityDesc: 'Discussion, Q&A and community sharing',
     examTitle: 'Exam System',
     examEn: 'Exam System',
     examDesc: 'Online multiple-choice assessment with auto-grading and leaderboards. For algorithm contests and project-team assessments.',
@@ -1107,5 +1280,87 @@ export const en: ToolsMessages = {
     storeUpdateGuideFailed: 'Update guide failed',
     storeCreateFailed: 'Create failed',
     storeDeleteFailed: 'Delete failed',
+  },
+  workbench: {
+    wbTitle: 'Workbench',
+    wbSubtitle: 'Your personal learning hub',
+    greetingMorning: 'Good morning',
+    greetingAfternoon: 'Good afternoon',
+    greetingEvening: 'Good evening',
+    onlineLabel: 'Session time',
+    todayTasks: 'Today',
+    overdue: 'Overdue',
+    dueToday: 'Due today',
+    noTasks: 'All clear, enjoy the moment',
+    addTask: 'Add',
+    taskPlaceholder: 'What needs to be done…',
+    clearDone: 'Clear done',
+    clearAll: 'Clear all',
+    confirmClearTasks: 'Clear all tasks? This cannot be undone.',
+    pomodoro: 'Pomodoro',
+    focusPhase: 'Focus',
+    shortBreakPhase: 'Short break',
+    longBreakPhase: 'Long break',
+    roundN: 'Round {n}',
+    startFocus: 'Start focus',
+    pause: 'Pause',
+    resume: 'Resume',
+    reset: 'Reset',
+    soundLabel: 'Phase sound',
+    soundRain: 'Rain',
+    soundWaves: 'Waves',
+    soundFire: 'Fireplace',
+    soundWhite: 'White noise',
+    silence: 'Silence',
+    uploadMusic: 'Upload music',
+    myMusic: 'My music',
+    nextPhaseIn: 'Next phase',
+    examCountdown: 'Exam countdown',
+    daysLater: '{n} days',
+    hoursLater: '{n} hours',
+    minutesLater: '{n} min',
+    ended: 'Ended',
+    noExam: 'No exams scheduled',
+    quickNotes: 'Quick notes',
+    notePlaceholder: 'Jot something down…',
+    allTools: 'All tools',
+    toolsHint: 'Legacy tool entries, kept here',
+    heatmapTitle: 'GitHub · {year}',
+    heatmapBind: 'Bind',
+    heatmapContributions: 'contributions',
+    heatmapStreak: 'streak',
+    heatmapLess: 'less',
+    heatmapMore: 'more',
+    heatmapMax: 'max',
+    heatmapStale: 'stale',
+    heatmapUsernamePlaceholder: 'GitHub username',
+    apiUsageTitle: 'API calls · last {days} days',
+    apiToday: 'Today',
+    apiErrors: 'Errors',
+    apiLatency: 'Latency',
+    apiNoData: 'No data yet — try a few endpoints',
+    loginRequired: 'Please sign in first',
+    newChat: 'New chat',
+    noConversations: 'No conversations yet',
+    loading: 'Loading…',
+    chatPlaceholder: 'Type a message, Enter to send',
+    chatIntro: 'Ask me about learning, weak spots, exams, resources…',
+    requestFailed: '(Request failed, please retry)',
+    networkError: '(Network error: {msg})',
+    llmUsageTitle: 'LLM usage · last {days} days',
+    llmTodayCalls: 'Calls today',
+    llmTodayTokens: 'Tokens today',
+    llmLatencyMs: 'Latency',
+    llmTotal: 'Total',
+    llmModels: 'Models',
+    llmSettings: 'LLM Settings',
+    llmProvider: 'Provider',
+    llmApiKey: 'API Key',
+    llmBaseUrl: 'Base URL (optional)',
+    llmModel: 'Model',
+    llmSave: 'Save',
+    llmSaved: 'Saved',
+    llmMaskedHint: 'Current key: {masked}',
+    llmNoData: 'No usage yet — chat with the assistant first',
   }
 };

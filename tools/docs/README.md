@@ -4,7 +4,7 @@
 > 更新人：3yearsZ
 > 受众：前端贡献者 / reviewer / oncall
 > Source of truth：本目录（`CS-Web-Frontend/tools/docs/`）下所有前端工程文档的**统一入口与命名约束**唯一权威位置。
-> 关联：全栈部署/编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)；后端文档见 [CS-Web-Backend/docs/](../../CS-Web-Backend/docs/)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 关联：全栈部署/编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)；后端文档见 [CS-Web-Backend/tools/docs/](../../CS-Web-Backend/tools/docs/)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 变更触发：新增/重命名/废弃本目录下任一文档时，须同步更新本索引。
 > Stale 信号：本索引列出的文件不存在 / 存在未列出的 `.md` / 文档"类型"标签与实际不符。
 
@@ -13,7 +13,7 @@
 - 文件名固定前缀 `FrontDoc-`，后缀用 `-<主题>` 表意（如 `-Ops`、`-Sec`、`-Arch`）。
 - 每个文档头部须含"最后更新 / 更新人 / 类型 / Source of truth / 关联 / 变更触发 / Stale 信号"八项元信息（参考现有文档）。
 - 通用规范（跨仓库）以根级 `docs/RootDoc-*` 为准，本文档**不重复**，仅以链接引用（避免分叉）。
-- 后端职责（PG 备份、Alembic、Litestream、后端运维端点等）不在此目录展开，指向 `CS-Web-Backend/docs/`。
+- 后端职责（PG 备份、Alembic、Litestream、后端运维端点等）不在此目录展开，指向 `CS-Web-Backend/tools/docs/`。
 
 ## 文档清单
 

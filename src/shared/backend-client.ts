@@ -238,9 +238,38 @@ export async function proxyBackend(
   return { status: first.status, body: first.body, clearAuth: false };
 }
 
+/**
+ * SSE 流式透传：注入 Authorization 后把后端响应体原样 pipe 给客户端。
+ * 用于学习助手对话（stream: true），不做 JSON 解析与 401 自动刷新（前端处理）。
+ */
+export async function proxyStream(
+  req: Request,
+  opts: { path: string; method?: string; jsonBody?: unknown },
+): Promise<Response> {
+  const { access } = readPair(req);
+  const headers: Record<string, string> = {};
+  if (opts.jsonBody !== undefined) headers['Content-Type'] = 'application/json';
+  if (access) headers.Authorization = `Bearer ${access}`;
+
+  const upstream = await fetch(`${BACKEND_URL}${API_PREFIX}${opts.path}`, {
+    method: opts.method || 'POST',
+    headers,
+    body: opts.jsonBody !== undefined ? JSON.stringify(opts.jsonBody) : undefined,
+    cache: 'no-store',
+  });
+
+  return new Response(upstream.body, {
+    status: upstream.status,
+    headers: {
+      'Content-Type': upstream.headers.get('content-type') || 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'X-Accel-Buffering': 'no',
+    },
+  });
+}
+
 /** 写回 JWT 对（登录成功 / 刷新轮换后调用） */
-export function setAuthCookies(res: NextResponse, pair: BackendTokenPair): void {
-  res.cookies.set(ACCESS_COOKIE, pair.accessToken, {
+export function setAuthCookies(res: NextResponse, pair: BackendTokenPair): void {  res.cookies.set(ACCESS_COOKIE, pair.accessToken, {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',

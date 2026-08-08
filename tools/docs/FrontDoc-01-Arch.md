@@ -1,7 +1,7 @@
 # 前端架构文档（FrontDoc-Arch）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-07（BFF 视角，章节风格对齐 BackDoc-Arch）
+> 最后更新：2026-08-07（BFF 视角，章节风格对齐 BackDoc-01-Arch）
 > 关联：后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/tools/docs/BackDoc-01-Arch.md](../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
 
 > **文档定位**：前端 BFF 层架构与 API 契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、状态码、事件总线、依赖矩阵。
@@ -10,7 +10,7 @@
 
 > **范围声明（BFF 视角）**：前端为 BFF（Backend-for-Frontend）薄转发层，基于 Next.js 16 App Router。业务数据、认证、邮件、OAuth、RBAC enforce 均由后端 FastAPI + PostgreSQL 承载。BFF API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
 > - **BFF 层（本文档覆盖）**：页面路由、UI 组件、API 路由薄转发、Origin/Content-Type 校验、JWT Cookie 托管、UI 层角色兜底
-> - **后端层（见后端 `docs/BackDoc-01-Arch.md`）**：业务数据存储、RBAC enforce、Alembic 迁移、密码哈希、2FA、限流、审计日志
+> - **后端层（见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`）**：业务数据存储、RBAC enforce、Alembic 迁移、密码哈希、2FA、限流、审计日志
 > - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/shared/utils/mail.ts`、`src/shared/events/`（event-bus.ts / event-types.ts）。`src/shared/db.ts`、`src/shared/db/`、`src/modules/*/server/` 已于 2026-08-06/07 删除（含遗留脚本与 `better-sqlite3` 依赖）；其余遗留文件仍存在但运行时不被引用，待清理；其历史结构保留在本文作为审计证据。
 
 ---
@@ -37,7 +37,7 @@ fztbucs-projects/
 └── package.json
 ```
 
-> 全栈 monorepo 结构（含 `CS-Web-Backend` / `CS-Web-Frontend` submodule + 根级 compose 编排）见根 [README.md](../../../README.md) 与根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)。
+> 全栈 monorepo 结构（含 `CS-Web-Backend` / `CS-Web-Frontend` 子仓库(submodule) + 根级 compose 编排）见根 [README.md](../../../README.md) 与根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)。
 
 ### 源代码结构（`src/`）
 
@@ -141,7 +141,7 @@ shared/
 
 ### 数据库与部署模型
 
-> **BFF 无本地业务数据库**。业务数据由后端 PostgreSQL 承载（见后端 `docs/BackDoc-Infra.md` §二）。下方"单进程依赖"表仅描述 BFF 自身进程级状态。
+> **BFF 无本地业务数据库**。业务数据由后端 PostgreSQL 承载（见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §二）。下方"单进程依赖"表仅描述 BFF 自身进程级状态。
 
 DB 文件 `data/app.db`（gitignored）为**迁移前遗留**（旧 SQLite 单体库，2026-08-05 迁移完成后已无任何引用，可安全删除）。用户头像/社区图片存 `data/avatars/`、`data/community-images/`（上传文件由后端处理，BFF 薄转发 FormData）。
 
@@ -224,7 +224,7 @@ community/
 
 ## 2. Part B：BFF API 接口参考
 
-> **范围说明**：本部分描述 **BFF 路由层**的端点与转发契约。所有端点（除 `/api/dev-docs` 与 `/api/health` 外）均通过 `shared/backend-client.ts` 转发到后端 FastAPI。后端真实业务逻辑、数据校验、RBAC enforce 见后端 `docs/BackDoc-01-Arch.md`。
+> **范围说明**：本部分描述 **BFF 路由层**的端点与转发契约。所有端点（除 `/api/dev-docs` 与 `/api/health` 外）均通过 `shared/backend-client.ts` 转发到后端 FastAPI。后端真实业务逻辑、数据校验、RBAC enforce 见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`。
 
 ### 2.1 通用约定
 
@@ -281,7 +281,7 @@ community/
 | POST | `/api/auth/2fa/disable` | 登录 | 禁用（需验证码） |
 | POST | `/api/auth/2fa/backup-codes` | 登录 | 重生成备用码 |
 
-> TOTP 加密、验证、限流、token 签发均由后端实现（见后端 `docs/BackDoc-02-Sec.md`）。BFF 转发时 `assertAllowedOrigin` + login 模式从 `__Host-oauth_2fa` cookie 读 `twoFactorToken`。
+> TOTP 加密、验证、限流、token 签发均由后端实现（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`）。BFF 转发时 `assertAllowedOrigin` + login 模式从 `__Host-oauth_2fa` cookie 读 `twoFactorToken`。
 
 ### 2.3 个人资料模块（/api/profile/）
 
@@ -447,7 +447,7 @@ community/
 
 ### 2.12 速率限制参考
 
-> **责任划分**：BFF 仍保留单进程内存限流器（`src/shared/security/rate-limiter.ts`），但**业务限流权威在后端**（Redis 实现，见后端 `docs/BackDoc-02-Sec.md` §3）。下表为 BFF 层遗留限流器配置，运行时多为后端二次限流。
+> **责任划分**：BFF 仍保留单进程内存限流器（`src/shared/security/rate-limiter.ts`），但**业务限流权威在后端**（Redis 实现，见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §3）。下表为 BFF 层遗留限流器配置，运行时多为后端二次限流。
 
 限制器集中于 [src/shared/security/rate-limiter.ts](../../src/shared/security/rate-limiter.ts) 的 `RATE_LIMIT_CONFIG`，环境变量覆盖：`RATE_LIMIT_<NAME>_MAX`（次数）/`RATE_LIMIT_<NAME>_WINDOW_MS`（毫秒），`<NAME>` 为大写限制器名（如 `RATE_LIMIT_LOGIN_MAX=20`）。
 
@@ -583,7 +583,7 @@ export async function register() {
 
 ### 2.16 版本化与兼容性策略
 
-**16.1 版本策略**：BFF 无版本前缀，向后兼容演进。后端 API 有 `/api/v1` 前缀，版本策略见后端 `docs/BackDoc-01-Arch.md`。
+**16.1 版本策略**：BFF 无版本前缀，向后兼容演进。后端 API 有 `/api/v1` 前缀，版本策略见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`。
 
 | 变更 | 策略 |
 |------|------|
@@ -608,7 +608,7 @@ const res = await fetch(`${BACKEND_URL}/health`, { cache: 'no-store' });
 return NextResponse.json({ ok: res.status === 200 });
 ```
 
-> 对应 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) Q5（2026-07-29）。后端运维端点（`/readyz` `/metrics/json` `/status`）不在 BFF 暴露，见后端 `docs/BackDoc-Infra.md` §1.2。
+> 对应 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) Q5（2026-07-29）。后端运维端点（`/readyz` `/metrics/json` `/status`）不在 BFF 暴露，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §1.2。
 
 **17.2 安全健康检查（规划）**
 

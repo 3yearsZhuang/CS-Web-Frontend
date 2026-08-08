@@ -53,7 +53,7 @@ SENTRY_DSN=                                    # Sentry 错误监控（运行时
 > `SQLITE_DB_PATH`、`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`。
 > 完整说明见 [`.env.example`](../../.env.example)。
 
-> 后端必填密钥（`DATABASE_PASSWORD` / `SECRET_KEY` / `TOTP_ENCRYPTION_KEY` 等）见根 [`.env.example`](../../../.env.example) 与后端 `docs/BackDoc-Conv.md`。
+> 后端必填密钥（`DATABASE_PASSWORD` / `SECRET_KEY` / `TOTP_ENCRYPTION_KEY` 等）见根 [`.env.example`](../../../.env.example) 与后端 `CS-Web-Backend/tools/docs/BackDoc-Conv.md`。
 
 ---
 
@@ -157,7 +157,7 @@ Caddy 自动处理 HTTPS 证书。
 
 ### 数据库备份
 
-> **BFF 无本地业务数据库，无需备份**。业务数据由后端 PostgreSQL 承载，备份/恢复/PITR 见后端 `docs/BackDoc-Infra.md` 与根 `docs/RootDoc-Deploy.md` §六。
+> **BFF 无本地业务数据库，无需备份**。业务数据由后端 PostgreSQL 承载，备份/恢复/PITR 见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` 与根 `docs/RootDoc-Deploy.md` §六。
 
 ### 日志与监控
 
@@ -332,7 +332,7 @@ GET  /api/notifications           — 通知（轮询高频）
 | BFF 转发链路故障 | BFF 镜像回归致大面积 5xx | oncall |
 | 安全回退 | 发布引入安全漏洞（如 ADR-015 类） | oncall + owner |
 
-> 数据损坏 / 不可逆迁移回滚属**后端职责**，见后端 `docs/BackDoc-Infra.md` §六 迁移验证与根 `docs/RootDoc-Deploy.md` §六。
+> 数据损坏 / 不可逆迁移回滚属**后端职责**，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §六 迁移验证与根 `docs/RootDoc-Deploy.md` §六。
 
 ### 2. 决策树
 
@@ -464,7 +464,7 @@ docker compose restart backend                   # 后端崩溃则重启（PG �
 # 通过 admin 后台创建全站公告通知考生
 ```
 
-> 数据库损坏恢复属后端职责，见后端 `docs/BackDoc-Infra.md` §六 迁移验证。
+> 数据库损坏恢复属后端职责，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §六 迁移验证。
 
 违约后按 [Part B](#二error-budget-消耗规则) 二·1 立即介入 + 根因分析写入 ADR。
 
@@ -509,7 +509,7 @@ df -h                                            # 磁盘问题
 
 ### 3. 后端数据备份与恢复演练
 
-> BFF 无本地业务数据库，**备份与 restore drill 由后端负责**（PostgreSQL 物理备份 / pg_dump / PITR）。见后端 `docs/BackDoc-Infra.md` 与根 `docs/RootDoc-Deploy.md` §六。
+> BFF 无本地业务数据库，**备份与 restore drill 由后端负责**（PostgreSQL 物理备份 / pg_dump / PITR）。见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` 与根 `docs/RootDoc-Deploy.md` §六。
 
 ---
 
@@ -519,7 +519,7 @@ df -h                                            # 磁盘问题
 - [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd) — ADR 记录（回滚事件需新增 ADR）
 - 根 [docs/Onboarding.md](../../../docs/Onboarding.md#a7-防再犯清单explanation) — 防再犯清单
 - 根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md) — 全栈部署/编排权威
-- 后端 [docs/BackDoc-Infra.md](../../CS-Web-Backend/docs/BackDoc-Infra.md) — 后端运维端点 / PG / Redis / OTel
+- 后端 [docs/BackDoc-Infra.md](../../CS-Web-Backend/tools/docs/BackDoc-Infra.md) — 后端运维端点 / PG / Redis / OTel
 - 后端 [docs/BackDoc-Infra.md §六 迁移验证](../../CS-Web-Backend/tools/docs/BackDoc-Infra.md#六迁移验证) — Alembic 迁移与回滚验证
 
 ---

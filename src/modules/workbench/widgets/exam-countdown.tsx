@@ -1,0 +1,123 @@
+/**
+ * @file 考试倒计时 — 取最近的 published 考试（end_time 最近），展示倒计时。
+ * 未登录时降级为引导登录。
+ */
+'use client';
+
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { AlarmClock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface ExamItem {
+  id: string;
+  title: string;
+  endedAt: string | null;
+}
+
+function diffText(diffMs: number): { n: number; unit: 'daysLater' | 'hoursLater' | 'minutesLater' } {
+  const ms = Math.max(0, diffMs);
+  const days = Math.floor(ms / 86_400_000);
+  if (days > 0) return { n: days, unit: 'daysLater' };
+  const hours = Math.floor(ms / 3_600_000);
+  if (hours > 0) return { n: hours, unit: 'hoursLater' };
+  return { n: Math.max(1, Math.floor(ms / 60_000)), unit: 'minutesLater' };
+}
+
+export default function ExamCountdown() {
+  const t = useTranslations('workbench');
+  const [exams, setExams] = useState<ExamItem[]>([]);
+  const [notLoggedIn, setNotLoggedIn] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [nowTs, setNowTs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNowTs(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/tools/exam?status=published&page=1&pageSize=20', { cache: 'no-store' })
+      .then((res) => {
+        if (res.status === 401) {
+          if (!cancelled) setNotLoggedIn(true);
+          return null;
+        }
+        if (!res.ok) return null;
+        return res.json() as Promise<{ exams: ExamItem[] }>;
+      })
+      .then((data) => {
+        if (cancelled || !data) return;
+        const nowTs = Date.now();
+        const upcoming = (data.exams ?? [])
+          .filter((e) => e.endedAt && new Date(e.endedAt).getTime() > nowTs)
+          .sort(
+            (a, b) =>
+              new Date(a.endedAt as string).getTime() - new Date(b.endedAt as string).getTime(),
+          )
+          .slice(0, 3);
+        setExams(upcoming);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!loaded) {
+    return (
+      <div className="card-minimal p-5 min-h-[120px] flex items-center justify-center">
+        <span className="text-[13px] text-[var(--muted-foreground)]">…</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card-minimal p-5 flex flex-col gap-3">
+      <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
+        <AlarmClock className="w-4 h-4" />
+        {t('examCountdown')}
+      </h3>
+
+      {notLoggedIn ? (
+        <div className="text-[13px] text-[var(--muted-foreground)]">
+          <Link href="/login" className="text-[var(--primary)] underline underline-offset-2">
+            {t('wbSubtitle')} →
+          </Link>
+        </div>
+      ) : exams.length === 0 ? (
+        <p className="text-[13px] text-[var(--muted-foreground)]">{t('noExam')}</p>
+      ) : (
+        <ul className="flex flex-col gap-2.5">
+          {exams.map((exam, i) => {
+            const diff = exam.endedAt ? new Date(exam.endedAt).getTime() - nowTs : 0;
+            const { n, unit } = diffText(diff);
+            return (
+              <li key={exam.id} className="flex items-baseline justify-between gap-3">
+                {i === 0 ? (
+                  <span className="display-serif text-[clamp(28px,4vw,40px)] leading-none text-[var(--foreground)] tabular-nums">
+                    {n}
+                    <span className="text-[13px] text-[var(--muted-foreground)] ml-1.5">
+                      {t(unit, { n })}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-[13px] text-[var(--muted-foreground)]">
+                    {n} {t(unit, { n })}
+                  </span>
+                )}
+                <span className="text-[12px] text-[var(--muted-foreground)] truncate max-w-[55%] text-right">
+                  {exam.title}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
