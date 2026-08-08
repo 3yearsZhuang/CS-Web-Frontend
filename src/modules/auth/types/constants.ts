@@ -10,6 +10,5 @@ export {
   EMAIL_REGEX,
   PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_LENGTH,
-  ALLOWED_ORIGINS,
   COOKIE_SECURE,
 } from '@/shared/config';

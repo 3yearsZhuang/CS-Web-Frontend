@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import 'server-only';
-import { ALLOWED_ORIGINS } from '@/shared/config';
+import { ALLOWED_ORIGINS } from './allowed-origins';
 
 import { jsonError } from './http-helpers';
 

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     path: '/auth/logout',
     method: 'POST',
     jsonBody: refreshToken ? { refreshToken } : undefined,
-    skipAuth: true,
+    // Logout is an authenticated endpoint: forward the access token so the backend can blacklist it.
   }).catch(() => null);
 
   const res = NextResponse.json({ message: '已登出' });

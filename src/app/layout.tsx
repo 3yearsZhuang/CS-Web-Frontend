@@ -160,7 +160,7 @@ export default async function RootLayout({
         {/* 扫描线纹理叠加 — 极淡水平扫描线，增添工业终端质感 */}
         <div className="ark-scanline" aria-hidden="true" />
         <NextIntlClientProvider>
-          <ThemeProvider>
+          <ThemeProvider nonce={nonce}>
             <ConfirmProvider>
               <Navbar />
               <AnnouncementBanner />
