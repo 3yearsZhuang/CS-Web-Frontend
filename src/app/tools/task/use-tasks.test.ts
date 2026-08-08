@@ -2,6 +2,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+
+// Hooks under test use translations for user-facing fallback messages; keep unit tests independent of NextIntlClientProvider.
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
 import { useTasks } from './use-tasks';
 
 /**
