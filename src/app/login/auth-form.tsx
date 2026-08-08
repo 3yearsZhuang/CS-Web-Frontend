@@ -208,6 +208,7 @@ export function AuthForm(props: AuthFormState) {
         {/* GitHub 登录按钮 */}
         <Link
           href="/api/auth/oauth/github"
+          prefetch={false}
           className="flex items-center justify-center gap-3 w-full py-4 border border-[var(--border)] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-[13px] font-mono hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         >
           <Github className="w-5 h-5" />
