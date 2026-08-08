@@ -7,6 +7,26 @@ import { OAUTH_2FA_COOKIE_NAME, OAUTH_2FA_COOKIE_MAX_AGE } from '@/modules/auth/
 
 export const runtime = 'nodejs';
 
+
+/**
+ * Build browser redirects from the configured public origin instead of the
+ * internal Host value that an FRP/reverse proxy may pass to Next.js.
+ */
+function publicUrl(pathname: string, requestUrl: string): URL {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) {
+    try {
+      const base = new URL(configured);
+      if (base.protocol === 'http:' || base.protocol === 'https:') {
+        return new URL(pathname, base);
+      }
+    } catch {
+      // Fall back to the request URL when the deployment value is invalid.
+    }
+  }
+  return new URL(pathname, requestUrl);
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code') || '';
@@ -36,13 +56,13 @@ export async function GET(req: Request) {
     } else if (body.errorCode === 'GITHUB_EMAIL_CONFLICT') {
       errorParam = 'github_email_conflict';
     }
-    const redirectUrl = new URL('/login', req.url);
+    const redirectUrl = publicUrl('/login', req.url);
     redirectUrl.searchParams.set('error', errorParam);
     return NextResponse.redirect(redirectUrl, { status: 302 });
   }
 
   if (body.requires2Fa && body.twoFactorToken) {
-    const loginUrl = new URL('/login', req.url);
+    const loginUrl = publicUrl('/login', req.url);
     loginUrl.searchParams.set('oauth_2fa', '1');
     const res2 = NextResponse.redirect(loginUrl, { status: 302 });
     res2.cookies.set(OAUTH_2FA_COOKIE_NAME, body.twoFactorToken, {
@@ -55,7 +75,7 @@ export async function GET(req: Request) {
     return res2;
   }
 
-  const profileUrl = new URL('/profile', req.url);
+  const profileUrl = publicUrl('/profile', req.url);
   const res2 = NextResponse.redirect(profileUrl, { status: 302 });
   if (body.accessToken && body.refreshToken) {
     setAuthCookies(res2, { accessToken: body.accessToken, refreshToken: body.refreshToken });

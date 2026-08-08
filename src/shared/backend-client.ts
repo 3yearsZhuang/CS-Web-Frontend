@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file BFF → FastAPI 后端代理客户端（前后端分离迁移）
  *
  * 职责（OQ-3：JWT 由 BFF HttpOnly Cookie 托管）：
@@ -258,8 +258,16 @@ export function setAuthCookies(res: NextResponse, pair: BackendTokenPair): void 
 
 /** 清除 JWT 对（登出 / 刷新失败） */
 export function clearAuthCookies(res: NextResponse): void {
-  res.cookies.set(ACCESS_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
-  res.cookies.set(REFRESH_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
+  // __Host- cookies must retain Secure + Path=/ + no Domain even when deleting.
+  const options = {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 0,
+    secure: process.env.NODE_ENV === 'production',
+  };
+  res.cookies.set(ACCESS_COOKIE, '', options);
+  res.cookies.set(REFRESH_COOKIE, '', options);
 }
 
 /** 把后端错误体规范化为前端 {error, code?} 形状 */
