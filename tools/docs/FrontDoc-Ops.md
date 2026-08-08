@@ -1,6 +1,6 @@
 # FZTBUCS-Ops-运维文档
 
-> 最后更新：2026-08-05（BFF 视角重写，去 SQLite/Litestream）｜类型：reference + how-to
+> 最后更新：2026-08-08（BFF 视角重写，去 SQLite/Litestream；补充开发约定：pnpm 强制 / Node>=22 / i18n 新增流程 / 新增 widget 须注册 registry）｜类型：reference + how-to
 > 更新人：3yearsZ
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：**前端 BFF 层**的运维操作、SLO 阈值、回滚流程的唯一权威位置
@@ -26,9 +26,10 @@
 
 ### 环境要求
 
-- Node.js 20+ / pnpm 9+
+- Node.js >=22（`package.json` `engines.node: ">=22"`）/ pnpm 9+（`packageManager: pnpm@9.0.0`）
 - 反向代理：Nginx / Caddy / Cloudflare Tunnel
 - [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/)（仅内网穿透需要）
+- 包管理：强制 **pnpm**（`package.json` 设 `preinstall: "npx only-allow pnpm"`，使用 npm/yarn 安装会被拦截）
 - **后端 FastAPI 必须可达**（BFF 启动后所有 `/api/**` 调用均转发到 `BACKEND_URL`，后端不可达 → 所有业务 API 返回 5xx）
 
 ### 环境变量
@@ -192,6 +193,28 @@ docker compose up -d
 ```
 
 > 回滚时的停机决策见 Part C · 一。
+
+---
+
+### 开发约定（i18n 词条新增 / 新增 widget 注册）
+
+> 前端为 Next.js 16（App Router）+ next-intl + pnpm。以下为新功能接入的强制约定（BFF 视角，详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4 / Part B §2.1）。
+
+**包管理（强制 pnpm）**：`package.json` 设 `preinstall: "npx only-allow pnpm"`（npm/yarn 安装被拦截）、`packageManager: pnpm@9.0.0`、`engines.node: ">=22"`。本地开发：`pnpm install && pnpm dev`（自定义 `server.ts`，默认端口 **2333**）。
+
+**i18n 词条新增流程**（工作台相关文案）：
+
+1. 在 `src/i18n/messages/tools.ts` 的 `ToolsMessages.workbench` 接口新增 key（类型声明）；
+2. 在 `zhCN.workbench` 与 `en.workbench` 两处同步补中/英词条（三处缺一即 `tsc` 报错或运行时空文案）；
+3. 组件内用 `useTranslations('workbench')` 取值。
+
+**新增 widget 注册流程**（工作台卡片）：
+
+1. 在 `src/modules/workbench/widgets/` 新增组件（复用 `@/components/primitives/{Input,Button}` 与 `InlineTabs`；颜色仅用项目令牌 `var(--*)`；组件 < 500 行；hook 返回值不混入 ref）；
+2. 在 `src/modules/workbench/widget-registry.ts` 的 `WIDGETS` 数组声明 `id` / `slot`（`full` / `main` / `side`）/ `titleKey`（指向 `workbench` namespace）/ `component`——`workbench.tsx` 按 slot 分组 + `wb_widget_prefs`（localStorage）显隐自动渲染，**无需改骨架**；
+3. （可选）在布局设置显隐开关中暴露该 widget。
+
+> ⚠️ **部分就绪提醒**：`api-usage-stats` 后端路由 `/api/workbench/stats/api-usage` 与 i18n（`workbench.apiUsageTitle`）已就绪，但前端 widget 卡片尚未在 `WIDGETS` 注册、未渲染。接入须补齐第 1–2 步（详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4）。
 
 ---
 

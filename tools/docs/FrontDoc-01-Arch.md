@@ -1,12 +1,14 @@
-# 前端架构文档（FrontDoc-Arch）
+# 前端架构与业务模块（FrontDoc-Arch）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-07（BFF 视角，章节风格对齐 BackDoc-01-Arch）
+> 最后更新：2026-08-08（重构 Part A/B：业务模块契约统一模板（概述/接口/配置/安全要点/测试/前后端联动）；新增「前后端联动」映射；2.5/2.8 标题消歧；api-usage-stats 标注部分就绪）
 > 关联：后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/tools/docs/BackDoc-01-Arch.md](../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
 
-> **文档定位**：前端 BFF 层架构与 API 契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、状态码、事件总线、依赖矩阵。
+> **文档定位**：前端 BFF 层架构与业务模块契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、**业务模块契约（Part B：认证 / 个人资料 / 活动 / 社区论坛 / 社区文章 / 通知 / 管理后台 / 工具集 / 成员与入社 / 会话管理 / 工作台 / 学习助手）与前后端联动**、状态码、事件总线、依赖矩阵。
 
-> **当前进度 / 真实状态（2026-08-07）**：前端 `src/app/api/**` 已为**纯薄转发**（B1 验收闭环，2026-08-06 完成），不再含有业务数据存储；`src/modules/*/server/` 与 `src/shared/db/`（含 `src/shared/db.ts`）已于 2026-08-06 整体删除，2026-08-07 又移除遗留脚本（`create-user`/`seed-exam-data`/`migrate-sqlite-to-pg`）与 `better-sqlite3` 依赖，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）。后端事件总线已于 2026-08-06 支持跨实例（ADR-014 落地，arq/Redis 广播）。本文下述「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
+> **约定类文档边界**：前端专项约定以本文件（架构/工程）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
+
+> **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
 > **范围声明（BFF 视角）**：前端为 BFF（Backend-for-Frontend）薄转发层，基于 Next.js 16 App Router。业务数据、认证、邮件、OAuth、RBAC enforce 均由后端 FastAPI + PostgreSQL 承载。BFF API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
 > - **BFF 层（本文档覆盖）**：页面路由、UI 组件、API 路由薄转发、Origin/Content-Type 校验、JWT Cookie 托管、UI 层角色兜底
@@ -51,7 +53,7 @@ fztbucs-projects/
 | `/admin` `/notifications` | 管理后台 / 消息通知 |
 | `/community` `/community/community` `/community/community/[category]` `/community/community/[category]/[topicId]` `/community/community/new` | 社区聚合 / 社区首页 / 版块 / 主题详情 / 发帖 |
 | `/community/community/[slug]` | 社区详情（Markdown 渲染） |
-| `/tools` `/tools/exam` `/tools/exam/[id]` `/tools/resource` `/tools/task` `/tools/auxilio` | 工具集首页 / 题库 / 考试详情 / 资源库 / 任务板 / Auxilio |
+| `/tools` `/tools/exam` `/tools/exam/[id]` `/tools/resource` `/tools/task` `/tools/auxilio` `/tools/dev-center` | **工作台入口**（个人工作台挂于页顶，社区已收编进工具网格）/ 题库 / 考试详情 / 资源库 / 任务板 / Auxilio / 开发者中心 |
 | `/community/members` | 成员名录 |
 
 > BFF API 路由位于 `src/app/api/**/route.ts`，全部为薄转发（见 Part B）。
@@ -78,7 +80,7 @@ shared/
 
 > ★ = BFF 运行时核心 · ⚠️ = 迁移前单体遗留代码，运行时不被任何 API 路由引用，待清理
 
-**modules/ — 业务模块（9 个，UI + types；`server/` 遗留直连层已于 2026-08-06 B1 收口删除）**
+**modules/ — 业务模块（10 个，UI + types；`server/` 遗留直连层已于 2026-08-06 B1 收口删除；工作台 `workbench/` 为 0.9.8 新增）**
 
 > 迁移前单体遗留的 `server/` 子目录（直连 SQLite 的业务逻辑）已随 B1 收口整体删除；业务逻辑 100% 由后端承载，运行时 API 路由通过 `shared/backend-client.ts` 转发后端。
 
@@ -92,6 +94,7 @@ shared/
 | `notification/` | 通知（BFF 转发 + 遗留事件总线） | notifications（后端 PG） |
 | `announcement/` | 公告（BFF 转发） | announcements（后端 PG） |
 | `tools/` | 考试/资源/任务/组件注册表/Auxilio（BFF 转发 + UI） | exams, exam_questions, exam_question_options, exam_attempts, tasks, task_claims, resources, points_transactions（后端 PG） |
+| `workbench/` | 个人工作台（widget 注册表驱动 + 视图切换 + 数据备份；widget：greeting/tasks/notes/pomodoro/heatmap/llm-usage/exam-countdown/assistant-chat） | 无独立业务表（GitHub 贡献/考试/LLM 用量/专注会话/LLM 配置经 BFF 转发后端 PG） |
 | `user/` | 用户资料（BFF 转发） | users, activity_participations（后端 PG） |
 
 > community 是 community/community/members 扁平合并产物（详见 [§1.2.2](#122-community-模块内部结构)）。
@@ -108,6 +111,8 @@ shared/
 | 管理后台 | `/api/admin/{users,password-resets,events,notifications,actions,community,join,tools,announcements}/*` | `/api/v1/admin/*` |
 | 工具集 | `/api/tools/{exam,resource,task,points,auxilio,component-registry}/*` | `/api/v1/tools/*` |
 | 入社 / 会话 / 开发文档 / 健康检查 | `/api/join`、`/api/sessions`、`/api/dev-docs/*`、`/api/health` | `/api/v1/join`、`/api/v1/sessions`、(dev-docs 为前端本地)、`/api/v1/health` |
+| 工作台 | `/api/workbench/*` | `/api/v1/workbench/*` |
+| 学习助手 | `/api/tools/auxilio/*` | `/api/v1/tools/auxilio/*` |
 
 > `dev-docs` 路由为前端本地实现（读写 `tools/docs/` 下 .md 文件），不转发后端。
 
@@ -206,6 +211,63 @@ community/
 
 ---
 
+### 1.2.4 工作台模块内部结构
+
+> 新增模块（0.9.8）。`src/modules/workbench/` 为个人化信息聚合工作中心，挂在 `/tools` 页顶部（Hero 之后），社区已收编进工具网格。设计目标：配置即内容、用户可控布局、纯前端个人数据 + 必要的后端聚合。
+
+```
+workbench/
+├── workbench.tsx          # 工作台主体（registry 配置驱动渲染 + 视图切换 + 数据备份）
+├── widget-registry.ts     # widget 声明 → 配置 → 注册（slot 分组：full/main/side）
+├── index.ts               # 桶导出（目录即模块）
+├── types.ts               # 共享类型（PomodoroPhase / PomodoroSettings / PomodoroState / WorkTask / WorkNote / MediaItem）
+├── hooks/
+│   ├── use-clock.ts        # 时钟 + 本次会话在线时长
+│   ├── use-local-storage.ts # localStorage 持久化 state（useLocalStorage）
+│   └── use-idb-media.ts    # IndexedDB 上传音乐库
+├── lib/
+│   └── ambient-audio.ts    # WebAudio 环境音合成（雨/海浪/篝火/白噪音/提示音）
+└── widgets/
+    ├── greeting-bar.tsx        # 问候条：当前时间/日期/会话在线时长
+    ├── today-tasks.tsx         # 今日任务（localStorage，逾期标红置顶）
+    ├── quick-notes.tsx         # 快捷便签（localStorage）
+    ├── exam-countdown.tsx      # 考试倒计时（后端 exams 数据）
+    ├── github-heatmap.tsx      # GitHub 贡献热力图（53×7 CSS Grid，后端缓存 6h）
+    ├── llm-usage-stats.tsx     # LLM 用量统计（SVG 折线）+ 模型接入设置（API Key 加密存储）
+    ├── assistant-chat.tsx      # 学习助手对话（SSE 流式 + react-markdown + 工具状态卡 + 历史会话）
+    └── pomodoro/               # 番茄钟×播放器（目录即模块）
+        ├── pomodoro-player.tsx  # 组合件：番茄钟 + 播放器二合一
+        ├── use-pomodoro.ts       # 状态机（focus/shortBreak/longBreak，localStorage 持久化）
+        ├── music-panel.tsx       # 上传音乐（IndexedDB）
+        ├── settings-panel.tsx    # 番茄钟配置面板
+        └── constants.ts          # SVG stroke 色板（集中收口，注释来源）
+```
+
+**配置驱动（registry）**：`widget-registry.ts` 以声明数组 `WIDGETS` 描述每个 widget 的 `id` / `slot`（`full` 全宽 / `main` 左主列 / `side` 右栏）/ `titleKey`（i18n key）/ `component`。`workbench.tsx` 按 slot 分组 + 依据 `wb_widget_prefs`（localStorage）显隐过滤后自动渲染。**新增 widget 三步**：① 在 `WIDGETS` 声明（id/slot/titleKey）② 组装组件 ③（可选）加入布局设置显隐开关——无需改动骨架。
+
+**视图切换**：复用项目 `InlineTabs` 在「工作台（`workbench`）/ 学习助手（`assistant`）」间切换；`assistant` 视图渲染 `assistant-chat`，其余 widget 在 `workbench` 视图按 `full/main/side` 三栏网格布局。
+
+**数据备份**：`workbench.tsx` 顶部提供「导出 JSON / 导入恢复 / 清空」。`collectBackup()` 收集 `wb_tasks` `wb_notes` `wb_pomodoro_settings` `wb_pomodoro_state` 等 localStorage 键，输出 `{ app: 'fztbu-workbench', version: 1, exportedAt, data }`；导入校验 `data` 中 `wb_` 前缀键后写回并刷新；清空带二次确认。数据积累 ≥ 30 条提示导出。
+
+**设计约定（React Compiler 兼容）**：颜色仅用项目令牌 `var(--primary/--muted-foreground/--destructive/--chart-*)` 与 Tailwind 语义色板（emerald/amber/red/blue），无散落硬编码 hex；输入框/按钮复用项目原子件 `@/components/primitives/{Input,Button}` 与 `InlineTabs`；状态逻辑抽 hook（如 `use-pomodoro`），组件 < 500 行；hook 返回值不混入 ref、参数 ref 须进 `useCallback` deps（React Compiler 要求）。
+
+**widget 清单与职责**
+
+| widget | slot | 数据来源 | 职责 |
+|--------|------|----------|------|
+| greeting-bar | full | 本地时钟 / sessionStorage（`wb_session_started_at`） | 问候条：时间 / 日期 / 本次会话在线时长 |
+| today-tasks | main | localStorage `wb_tasks` | 个人待办；排序：逾期(红,`--destructive`) > 今天 > 明天 > 其他 > 已完成置底 |
+| github-heatmap | main | BFF `/api/workbench/contributions/github` | GitHub 贡献热力图（53×7 CSS Grid，后端缓存 6h，绑定 `wb_github_username`） |
+| llm-usage-stats | main | BFF `/api/workbench/stats/llm-usage` | LLM 调用次数 / token / 模型分布（SVG 折线）+ 模型接入设置（API Key 加密） |
+| quick-notes | main | localStorage `wb_notes` | 快捷便签 |
+| pomodoro | side | IndexedDB + localStorage（`wb_pomodoro_*`） | 番茄钟×播放器二合一：WebAudio 合成环境音 + IndexedDB 上传音乐 + 阶段自动切音 + 标题闪烁 |
+| exam-countdown | side | 后端 exams（`/api/tools/exam`，BFF 转发） | 考试倒计时 |
+| assistant-chat | assistant 视图 | BFF `/api/tools/auxilio/chat`（SSE）等 | 学习助手对话：SSE 流式打字机 + react-markdown 渲染 + 工具调用状态卡 + 历史会话 |
+| api-usage-stats | main（规划占位） | BFF `/api/workbench/stats/api-usage` | API 调用统计（近 N 天调用次数/趋势）⚠️ 部分就绪：后端路由与 i18n 已就绪，前端卡片尚未在 `widget-registry.ts` 注册，未渲染 |
+
+> 注：`assistant-chat` 不在 `WIDGETS` 注册表内，由 `workbench.tsx` 在 `assistant` 视图单独渲染（详见 Part B §2.19 学习助手模块）。
+> ⚠️ **部分就绪（api-usage-stats）**：后端路由 `src/app/api/workbench/stats/api-usage/route.ts` 已落地，i18n 词条 `workbench.apiUsageTitle`（中 `API 调用 · 近 {days} 天` / 英 `API calls · last {days} days`）已定义；但 `src/modules/workbench/widgets/` 下尚无对应组件，`widget-registry.ts` 的 `WIDGETS` 数组也未注册 `api-usage-stats`，故该卡片当前**不会渲染**。接入前端卡片须：① 在 `widgets/` 新增组件 ② 在 `WIDGETS` 声明（见上方「新增 widget 三步」）。
+
 ### 1.3 代码质量
 
 ### 1.3.1 历史问题收敛
@@ -220,11 +282,37 @@ community/
 
 > ℹ️ 待处理优化（P1/P2 项）已迁移至 `docs/项目待办事项.md`。剩余项详见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)。
 
+### 1.4 BFF 通用约定（架构层，内容见 Part B §2.1 / §2.12–2.17）
+
+> 以下约定属**架构层**事实，为减少章节重排对既有内部引用的破坏，正文保留在 Part B（§2.1 转发契约、§2.12 速率限制、§2.13 状态码、§2.14 错误响应、§2.15 事件总线、§2.16 版本化、§2.17 健康检查），此处仅作索引：
+
+| 约定 | 位置 | 一句话 |
+|---|---|---|
+| BFF 转发契约（proxyBackend / proxyStream） | Part B §2.1 | JWT 注入 · 401 静默刷新 · snake→camel 翻译 · Cookie 写回 |
+| 速率限制 | Part B §2.12 | BFF 单进程内存限流 + 后端 Redis 二次限流（权威在后端） |
+| 状态码约定 | Part B §2.13 | 200/201/302/400/401/403/404/409/413/429/500/502/504 |
+| 错误响应扩展 | Part B §2.14 | `{error, code, details}` + 错误码清单（BFF/后端责任层） |
+| 事件总线接口 | Part B §2.15 | ⚠️ 遗留机制：进程内通信，新增通知场景走 BFF→后端 |
+| 版本化与兼容性策略 | Part B §2.16 | BFF 无版本前缀，向后兼容演进 |
+| 健康检查端点 | Part B §2.17 | `GET /api/health` → 后端 `/health`（不泄露细节） |
+
+### 1.5 关键不变量（BFF 视角，贯穿全项目，勿打破）
+
+1. **纯薄转发**：`src/app/api/**/route.ts` 只做代理，**不含业务数据存储**；禁止重建 `src/modules/*/server/` 或 `shared/db`。
+2. **数据只走后端**：业务数据 / 认证 / 邮件 / OAuth / RBAC enforce 均由后端 FastAPI + PostgreSQL 承载（见后端 `BackDoc-01-Arch.md`）。
+3. **密钥不落地前端**：API Key 等敏感值由后端加密存储（`llm_configs` 等），前端只拿脱敏值（如 `apiKeyMasked`）。
+4. **BFF 鉴权是兜底**：UI 层 `requireAdmin`/`requireRoot` 仅做展示兜底，真实 enforce 在后端 `require_permission`。
+5. **跨模块引用**：业务模块间不直接 import server 代码；BFF 层经 `shared/backend-client.ts` 转发。
+6. **新增 BFF 路由须登记**：Part B 对应模块「接口」表 + 联动表同步更新（以 `openapi.baseline.json` 为契约权威）。
+
 ---
 
-## 2. Part B：BFF API 接口参考
+## 2. Part B · 业务模块契约与 BFF 通用约定
 
-> **范围说明**：本部分描述 **BFF 路由层**的端点与转发契约。所有端点（除 `/api/dev-docs` 与 `/api/health` 外）均通过 `shared/backend-client.ts` 转发到后端 FastAPI。后端真实业务逻辑、数据校验、RBAC enforce 见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`。
+> **范围说明**：本部分描述 **BFF 路由层**的端点与转发契约，并按统一模板组织业务模块。所有端点（除 `/api/dev-docs` 与 `/api/health` 外）均通过 `shared/backend-client.ts` 转发到后端 FastAPI。后端真实业务逻辑、数据校验、RBAC enforce 见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`（Part A 架构 + Part B 模块契约）。
+>
+> **模块契约统一模板**（与后端 `BackDoc-01-Arch.md` Part B 对齐）：**概述（职责/边界）→ 接口（路由表）→ 配置 → 安全要点（或降级）→ 测试 → 前后端联动**。其中「前后端联动」给出：前端页面 / BFF 路由 → 后端 API → 后端模块归属（见后端 Part B 对应节），用于双向影响面排查。
+> §2.1 / §2.12–2.17 为 **BFF 通用约定**（架构层，索引见 Part A §1.4）。
 
 ### 2.1 通用约定
 
@@ -258,6 +346,9 @@ community/
 
 > BFF 薄转发到后端 `/api/v1/auth/*`。JWT 由后端签发（access 15min / refresh 7day），BFF 以 HttpOnly Cookie 托管。
 
+### 概述
+登录 / 注册 / 验证码 / 密码重置 / 2FA / GitHub OAuth / 会话管理（前端 `/login`、`/register`、`/profile`）。
+
 **2.1 基础认证**
 
 | 方法 | 路径 | 鉴权 | 说明 |
@@ -283,6 +374,21 @@ community/
 
 > TOTP 加密、验证、限流、token 签发均由后端实现（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`）。BFF 转发时 `assertAllowedOrigin` + login 模式从 `__Host-oauth_2fa` cookie 读 `twoFactorToken`。
 
+### 配置
+- JWT Cookie 托管：`__Host-fztbu_access`（生产）/ `fztbu_access`（开发），见 `shared/backend-client.ts`；i18n `auth` namespace（见 `FrontDoc-i18n.md`）。
+- 无独立业务表；令牌 / 验证码 / 重置申请由后端承载（见后端 `BackDoc-01-Arch.md` Part B「一、认证」配置节）。
+
+### 安全要点
+- BFF 仅做 Origin / Content-Type / Zod 校验 + JWT Cookie 托管（UI 兜底）；密码策略、防枚举、2FA、OAuth state、限流均由后端 enforce（见 `FrontDoc-02-Sec.md`）。
+
+### 测试
+`tools/tests/e2e/auth.spec.ts`（认证 E2E）；后端侧见 `BackDoc-01-Arch.md` Part B「一、认证」测试节。
+
+### 前后端联动
+- 前端页面：`/login`、`/register`、`/profile`
+- BFF 路由：`/api/auth/*`（含 `/api/auth/2fa/*`、`/api/auth/oauth/*`）
+- 后端 API：`/api/v1/auth/*` → 后端模块归属：**「一、认证」**（`BackDoc-01-Arch.md` Part B）
+
 ### 2.3 个人资料模块（/api/profile/）
 
 | 方法 | 路径 | 鉴权 | 说明 |
@@ -294,6 +400,23 @@ community/
 | POST | `/api/profile/avatar/preset` | 登录 | 预设头像 |
 | GET | `/api/avatars/[filename]` | 公开 | 头像静态服务 |
 
+### 概述
+用户资料展示与自助维护（前端 `/profile` 页；公开主页 `/users/[id]`）。
+
+### 配置
+i18n `profile` namespace；头像预设常量 `shared/config/avatar-presets`。
+
+### 安全要点
+上传四重校验（大小 / MIME / 扩展名 / 文件头魔数）由后端 enforce；BFF 仅薄转发 FormData。
+
+### 测试
+`tools/tests/`（profile 相关并入各模块单测）；E2E 见 `e2e/core-flows.spec.ts`。
+
+### 前后端联动
+- 前端页面：`/profile`、`/users/[id]`
+- BFF 路由：`/api/profile/*`、`/api/avatars/*`
+- 后端 API：`/api/v1/profile/*`、`/api/v1/avatars/*` → 后端模块归属：**「二、用户管理」**（`BackDoc-01-Arch.md` Part B）
+
 ### 2.4 活动模块（/api/events/）
 
 | 方法 | 路径 | 鉴权 | 说明 |
@@ -304,7 +427,27 @@ community/
 | GET | `/api/events/[id]/registration` | 登录 | 我的报名状态 |
 | GET | `/api/events/me/registered` | 登录 | 已报名列表 |
 
-### 2.5 社区模块（/api/community/community/）
+### 概述
+活动浏览 / 详情 / 报名 / 我的报名（前端 `/events`、`/events/[id]`）。
+
+### 配置
+i18n `events` namespace。
+
+### 安全要点
+报名幂等与冲突处理由后端 enforce（见后端 `BackDoc-01-Arch.md` Part B「活动」）。
+
+### 测试
+`events.test.ts`（51）、`e2e/events.spec.ts`。
+
+### 前后端联动
+- 前端页面：`/events`、`/events/[id]`
+- BFF 路由：`/api/events/*`
+- 后端 API：`/api/v1/events/*`（`app/api/v1/events.py`；后端模块契约未在 `BackDoc-01-Arch.md` Part B 单列，以 `openapi.baseline.json` 为准）
+
+### 2.5 社区论坛模块（/api/community/ — 主题 / 回复 / 互动）
+
+### 概述
+社区论坛：版块 / 主题 / 回复（含楼中楼）/ 点赞收藏（前端 `/community/community` 系列页）。
 
 **5.1 版块**：`GET /categories`（公开）
 
@@ -334,6 +477,20 @@ community/
 
 **5.6 上传**：`POST /upload`（登录，5MB / JPEG·PNG·WebP·GIF）；`GET /images/[filename]`（公开）
 
+### 配置
+i18n `community` namespace。
+
+### 安全要点
+作者 / 管理员编辑权限、内容审核由后端 enforce（见后端 `BackDoc-02-Sec.md` 与 `openapi.baseline.json`）。
+
+### 测试
+`community-points.test.ts`、`e2e/community.spec.ts`。
+
+### 前后端联动
+- 前端页面：`/community/community`、`/community/community/[category]`、`/community/community/[category]/[topicId]`
+- BFF 路由：`/api/community/**`（topics / replies / like / favorite / upload）
+- 后端 API：`/api/v1/community/*`（`app/api/v1/community.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准）
+
 ### 2.6 通知模块（/api/notifications/）
 
 | 方法 | 路径 | 鉴权 | 说明 |
@@ -342,6 +499,23 @@ community/
 | GET | `/api/notifications/unread-count` | 登录 | 未读数 |
 | POST | `/api/notifications/[id]/read` | 登录 | 标记已读 |
 | POST | `/api/notifications/read-all` | 登录 | 全部已读 |
+
+### 概述
+站内通知：列表 / 未读数 / 已读标记（前端 `/notifications`）。
+
+### 配置
+i18n `notifications` namespace；⚠️ 遗留进程内事件总线（Part A §1.4.5）仅历史参考，新增通知场景走 BFF→后端。
+
+### 安全要点
+通知归属校验（只能读自己）由后端 enforce。
+
+### 测试
+[待填写]（前端通知模块未见专属测试文件；后端侧见 `openapi.baseline.json`）。
+
+### 前后端联动
+- 前端页面：`/notifications`
+- BFF 路由：`/api/notifications/*`
+- 后端 API：`/api/v1/notifications/*`（`app/api/v1/notifications.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准）
 
 ### 2.7 管理后台（/api/admin/）
 
@@ -397,7 +571,27 @@ community/
 
 **7.12 公告管理**：`GET /announcements`、`POST /announcements`、`GET/PUT/DELETE /announcements/[id]`（管理员）
 
-### 2.8 社区模块（/api/community/community/）
+### 概述
+管理后台聚合层：用户 / 角色 / 权限 / 审计 / 活动 / 通知 / 社区 / 入社 / 工具集管理（前端 `/admin`）。各子域管理端点为对应业务模块的越权复用（如社区管理复用 §2.5 端点）。
+
+### 配置
+i18n `admin` namespace。
+
+### 安全要点
+BFF `requireAdmin` / `requireRoot` 仅 UI 兜底；**后端 `require_permission` 为权威 enforce**（见 `FrontDoc-02-Sec.md`）；审计由后端写入 `admin_actions` 表。
+
+### 测试
+`permissions-hunt.test.ts`（权限兜底）；后端 RBAC 测试见 `BackDoc-01-Arch.md` Part B「三、RBAC」。
+
+### 前后端联动
+- 前端页面：`/admin/**`
+- BFF 路由：`/api/admin/*`
+- 后端 API：`/api/v1/admin/*`（`app/api/v1/admin_roles.py` 等；后端模块契约未在 Part B 单列，底层 RBAC / 用户 / 审计见 Part B「三、RBAC」「二、用户管理」「四、审计日志」）
+
+### 2.8 社区文章模块（/api/community/community/ — 长文 / 系列）
+
+### 概述
+社区长文发布 / 浏览 / 点赞 / 系列（前端 `/community/community/[slug]`、`/community/community/new`）。与 §2.5 社区论坛（主题/回复）为**两个不同资源**，均挂在 `/api/community/community` 下，注意区分。
 
 | 方法 | 路径 | 鉴权 | 说明 |
 |------|------|------|------|
@@ -409,6 +603,20 @@ community/
 | POST | `/api/community/community/[slug]/like` | 登录 | 点赞 |
 | GET | `/api/community/community/series` | 公开 | 系列列表 |
 | POST | `/api/community/community/series` | 登录 | 创建系列 |
+
+### 配置
+i18n `community` namespace（与论坛共用）。
+
+### 安全要点
+作者 / 管理员编辑权限由后端 enforce；Markdown 渲染在前端（`[slug]` 页）。
+
+### 测试
+`e2e/community.spec.ts`。
+
+### 前后端联动
+- 前端页面：`/community/community/[slug]`、`/community/community/new`
+- BFF 路由：`/api/community/community*`（长文）
+- 后端 API：`/api/v1/community/*`（`app/api/v1/community.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准）
 
 ### 2.9 工具集模块（/api/tools/）
 
@@ -433,10 +641,44 @@ community/
 
 安全：路径穿越防护（禁 `/` `..` `\`）+ `assertAllowedOrigin` + `adminActionsLimiter`。
 
+### 概述
+工具集：考试 / 资源 / 任务 / 积分 / 组件注册表 + 开发文档（前端 `/tools/*`、`/tools/dev-center`）。`/api/dev-docs` 为**前端本地实现**（读写 `tools/docs/` 下 .md），不转发后端。
+
+### 配置
+i18n `tools` namespace（含 exam / resource / task）；组件注册表（`component-registry`）。
+
+### 安全要点
+dev-docs：路径穿越防护 + `assertAllowedOrigin` + `adminActionsLimiter`（BFF 本地）；考试判分 / 积分 / 资源审核由后端 enforce。
+
+### 测试
+`exam.test.ts`（58）、`resource.test.ts`（48）、`task.test.ts`（63）、`e2e/exam.spec.ts`。
+
+### 前后端联动
+- 前端页面：`/tools/exam`、`/tools/exam/[id]`、`/tools/resource`、`/tools/task`、`/tools/dev-center`
+- BFF 路由：`/api/tools/{exam,resource,task,points,component-registry}/*`
+- 后端 API：`/api/v1/tools/*`（`app/api/v1/tools.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准；Auxilio 画像 `/api/v1/tools/auxilio` 见「学习助手」联动）
+
 ### 2.10 成员与入社模块
 
 - **10.1 成员名录**：`GET /api/community/members`（公开，按技术方向筛选）
 - **10.2 入社申请**：`POST /api/join`（公开，姓名/学号/专业/方向/联系方式）
+
+### 概述
+成员名录展示 + 入社申请（前端 `/community/members`、入社表单）。审批走管理后台（§2.7 7.9）。
+
+### 配置
+i18n `join` namespace。
+
+### 安全要点
+入社申请防刷与审批权限由后端 enforce。
+
+### 测试
+`join.test.ts`（38）。
+
+### 前后端联动
+- 前端页面：`/community/members`、入社表单页
+- BFF 路由：`/api/community/members`、`/api/join`
+- 后端 API：`/api/v1/community/members`、`/api/v1/join`（`app/api/v1/community.py`、`join.py`；后端模块契约未在 Part B 单列，以 `openapi.baseline.json` 为准）
 
 ### 2.11 会话管理模块（/api/sessions/）
 
@@ -444,6 +686,22 @@ community/
 |------|------|------|------|
 | GET | `/api/sessions` | 登录 | 活跃会话（设备/IP/最后活跃） |
 | DELETE | `/api/sessions` | 登录 | 远程登出指定会话 |
+
+### 概述
+活跃会话查看 / 远程登出（前端用户安全设置）。
+
+### 配置
+i18n `auth` namespace（sessions 词条）。
+
+### 安全要点
+远程登出归属校验（只能登出自己的会话）与 refresh token family 管理由后端 enforce。
+
+### 测试
+后端侧见 `BackDoc-01-Arch.md` Part B「一、认证」测试节。
+
+### 前后端联动
+- BFF 路由：`/api/sessions/*`
+- 后端 API：`/api/v1/sessions/*` → 后端模块归属：**「一、认证」**（会话管理小节，`BackDoc-01-Arch.md` Part B）
 
 ### 2.12 速率限制参考
 
@@ -613,5 +871,67 @@ return NextResponse.json({ ok: res.status === 200 });
 **17.2 安全健康检查（规划）**
 
 > ℹ️ 安全健康检查（`/api/health/events`、`/api/health/security`）规划等待办条目已迁移至 `docs/项目待办事项.md`。
+
+### 2.18 工作台模块（/api/workbench/）
+
+> 工作台前端为纯个人化聚合层，无独立业务库；需后端数据的 widget 经 BFF 统一转发（`proxyBackend`：注入 JWT、401 静默刷新、写回 Cookie）。widget 结构与注册机制见 Part A §1.2.4。
+
+| 方法 | 路径 | 鉴权 | 说明 | 后端转发目标 |
+|------|------|------|------|--------------|
+| GET | `/api/workbench/contributions/github` | 登录 | GitHub 贡献热力图（绑定 username，后端缓存 6h） | `/api/v1/workbench/contributions/github` |
+| GET | `/api/workbench/stats/api-usage` | 登录 | API 调用统计 | `/api/v1/workbench/stats/api-usage` |
+| GET | `/api/workbench/stats/pomodoro` | 登录 | 番茄钟专注会话统计 | `/api/v1/workbench/stats/pomodoro` |
+| GET | `/api/workbench/stats/llm-usage` | 登录 | LLM 用量统计 | `/api/v1/workbench/stats/llm-usage` |
+| POST | `/api/workbench/focus-sessions` | 登录 | 专注会话记录 | `/api/v1/workbench/focus-sessions` |
+| GET/PUT | `/api/workbench/llm-config` | 登录 | LLM 模型接入配置（API Key 加密存储） | `/api/v1/workbench/llm-config` |
+
+### 概述
+个人工作台：widget 注册表驱动渲染 + 「工作台 / 学习助手」视图切换 + 数据备份（导出 / 导入 / 清空，前端本地完成）。
+
+### 配置
+widget 注册 `widget-registry.ts`（`WIDGETS` 声明：id / slot / titleKey / component）；i18n `workbench` namespace（interface / zhCN / en 三处，均在 `src/i18n/messages/tools.ts`）；`api-usage-stats` 前端卡片**部分就绪**（后端路由与 i18n 已就绪、未注册，见 Part A §1.2.4）。
+
+### 安全要点
+无独立业务库；需后端数据的 widget 经 BFF 转发；API Key 不落前端（`llm-config` 脱敏回显，后端 AES-256-GCM 加密存储）。
+
+### 测试
+[待填写]（工作台新模块，未见专属测试文件；后端侧见 `BackDoc-01-Arch.md` Part B「五、工作台」测试节）。
+
+### 前后端联动
+- 前端页面：`/tools`（工作台视图）
+- BFF 路由：`/api/workbench/*`
+- 后端 API：`/api/v1/workbench/*` → 后端模块归属：**「五、工作台」**（`BackDoc-01-Arch.md` Part B）
+
+### 2.19 学习助手模块（/api/tools/auxilio/）
+
+> `assistant-chat` 对话走 SSE 流式透传（`proxyStream`）；其余走 `proxyBackend`。
+
+| 方法 | 路径 | 鉴权 | 说明 | 后端转发目标 |
+|------|------|------|------|--------------|
+| GET | `/api/tools/auxilio` | 登录 | Auxilio 薄弱点画像 + 资源推荐（401 时返回安全空结果） | `/api/v1/tools/auxilio` |
+| GET | `/api/tools/auxilio/conversations` | 登录 | 学习助手历史会话列表 | `/api/v1/auxilio/conversations` |
+| GET | `/api/tools/auxilio/conversations/[id]/messages` | 登录 | 会话消息 | `/api/v1/auxilio/conversations/[id]/messages` |
+| POST | `/api/tools/auxilio/chat` | 登录 | 学习助手对话（SSE 流式透传） | `/api/v1/auxilio/chat` |
+
+> 上表为**摘要**，方法 / 转发目标以实际 BFF 代码（`src/app/api/tools/auxilio/*`、`src/app/api/workbench/*`）与后端 `openapi.baseline.json` 为准；新增 BFF 路由须同步本表。
+
+### 概述
+Auxilio 学习助手：SSE 对话 + 薄弱点画像 + 资源推荐 + 会话历史（前端 `/tools/auxilio`、工作台 assistant 视图）。会话与消息落库后端 PG（`conversations` / `chat_messages`）。
+
+### 配置
+i18n `workbench` namespace（assistant-chat 词条）；LLM Key 由用户在前端「LLM 设置」填写，经 BFF `/api/workbench/llm-config` 转发后端加密存储（脱敏回显，不落前端）。
+
+### 安全要点
+- `/api/tools/auxilio` 在 401 时返回安全空结果（`weakTags: []` / `recommendedResources: []`，status 401），不直接透传后端错误。
+- `/api/tools/auxilio/chat` 为 SSE 流：BFF 仅注入 Authorization 后原样 pipe 后端 `text/event-stream`，不做 JSON 解析与 401 自动刷新（由前端处理）。
+- 会话归属校验（非本人 404）由后端 enforce（`_own_conversation`）。
+
+### 测试
+[待填写]（前端学习助手新模块未见专属测试；后端侧见 `BackDoc-01-Arch.md` Part B「六、学习助手」测试节：`test_phase5_tools.py::test_auxilio`）。
+
+### 前后端联动
+- 前端页面：`/tools/auxilio`、工作台 assistant 视图
+- BFF 路由：`/api/tools/auxilio/*`（含 chat SSE）
+- 后端 API：`/api/v1/auxilio/*`（chat / conversations）与 `/api/v1/tools/auxilio`（画像）→ 后端模块归属：**「六、学习助手」** + **「五、工作台」**（llm-config，`BackDoc-01-Arch.md` Part B）
 
 ---

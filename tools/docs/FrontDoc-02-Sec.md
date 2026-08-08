@@ -4,7 +4,7 @@
 > 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
 > Source of truth：**BFF 层**的安全审计发现、UI 层角色与权限矩阵、安全不变量、加固变更记录
 > 关联：**后端鉴权/RBAC/密码/2FA/限流/审计日志权威见 [CS-Web-Backend/tools/docs/BackDoc-02-Sec.md](../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)**；权限矩阵与部署模型见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；运维见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [FrontDoc-Evo.md](../../../docs/项目演变历史-0.9.1.md#附录前端演进路线图与迁移文档原-frontdocevomd)
-> 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任）
+> 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任）；新增 Part E（BFF 转发同源安全 / proxyBackend / workbench namespace 三处 i18n / 前端不持有密钥）
 > 更新人：3yearsZ
 > 变更触发：BFF 安全发现 / UI 层角色变更 / 后端鉴权契约变更 / 新漏洞类
 > Stale 信号：发现项状态与代码现状不一致 / 权限矩阵与实际 handler 不符 / 仍把后端职责（JWT 签发/密码哈希/TOTP/RBAC enforce/审计日志）写成前端职责
@@ -19,7 +19,7 @@
 - **Part A: 安全审计** - 对照 OWASP Top 10 (2021) 的历史发现与修复状态（28 项，全部已修复），每项标注当前责任层
 - **Part B: 角色与权限设计（BFF 视角）** - BFF UI 层角色展示与路由保护、权限矩阵（真实 RBAC enforce 在后端）
 - **Part C: 事件驱动安全与运行时监测** - 前端事件总线、BFF 转发链路监测、后端 2FA/限流/审计的边界
-- **Part D: 安全加固变更记录** - 可审计证据包（原 Devdocs-security-hardening-record.md）
+- **Part D: 安全加固变更记录** - 可审计证据包
 
 ---
 
@@ -350,3 +350,40 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 ---
 
 *本文档 Part D 由 2026-07-31 安全加固第二轮收尾生成，遵循 engineering-control-evidence 输出契约；2026-08-05 追加 BFF 视角责任层标注。*
+
+---
+
+# Part E: BFF 转发层与前端密钥/i18n 安全（补充）
+
+> 承接 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.1 转发契约与 §1.2.4 工作台模块。本节补充 BFF 转发层的安全属性、i18n 词条管理位置，以及"前端不持有密钥"的设计不变量。
+> 责任层：BFF 转发层为 **[BFF]**；密钥生成/加密存储为 **[后端]**。
+
+## 13. BFF 转发安全（proxyBackend 同源转发）
+
+- **同源转发、不暴露后端直连**：所有业务 API 由 `src/app/api/**/route.ts` 通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 的 `proxyBackend()` 转发到固定 `BACKEND_URL`（默认 `http://localhost:9000`，容器编排内 `http://backend:8000`）拼接 `/api/v1` 前缀。**前端不存在直连后端的客户端代码**——浏览器只与 BFF 同源通信，`BACKEND_URL`（含后端地址/端口）不出现在任何客户端 bundle，浏览器无从获知后端真实地址。
+- **不改写上游目标**：`proxyBackend()` 仅注入 `Authorization: Bearer <token>`、处理 401 静默刷新（调用后端 `/auth/refresh` 轮换并重试一次）、翻译 snake_case→camelCase、写回 `setAuthCookies`；请求目标固定为 `BACKEND_URL + /api/v1`，无用户可控 URL，**无 SSRF 风险**（对照发现 28）。
+- **SSE 流透传**：学习助手对话 `POST /api/tools/auxilio/chat` 由 `proxyStream()` 注入 Authorization 后原样 pipe 后端 `text/event-stream`，BFF 不做 JSON 解析与 401 自动刷新（由前端处理），详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.18。
+
+## 14. i18n 词条管理（workbench namespace）
+
+> 工作台全部前端文案走 next-intl，统一收纳于 [src/i18n/messages/tools.ts](../../src/i18n/messages/tools.ts) 的 `workbench` namespace，**三处须同步维护**：
+
+| 位置 | 行（约） | 说明 |
+|------|------|------|
+| `ToolsMessages.workbench` 接口 | ~376 | TypeScript 类型声明（所有 key 字符串约束，缺 key 即 `tsc` 报错） |
+| `zhCN.workbench` | ~830 | 简体中文词条 |
+| `en.workbench` | ~1284 | 英文词条 |
+
+- 新增/修改工作台文案：须在**类型 + 中 + 英**三处同时新增 key，缺任一会导致编译错误（类型）或运行时空文案（语言包）。
+- widget 与视图均通过 `useTranslations('workbench')` 取值；widget 的 `titleKey`（如 `wbTitle`/`examCountdown`）亦指向该 namespace。
+- 部分就绪词条示例：`workbench.apiUsageTitle`（中 `API 调用 · 近 {days} 天` / 英 `API calls · last {days} days`）已定义，但对应 `api-usage-stats` 前端卡片尚未注册（详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4）。
+
+## 15. 前端不持有密钥（不变量）
+
+- **API Key 不落地前端**：学习助手 LLM 接入的 OpenAI 兼容 / Anthropic API Key 由用户界面填写后，经 BFF `POST /api/workbench/llm-config` 转发后端，由**后端 AES-256-GCM 加密存储**（`llm_config` 表）。前端读取时仅拿到脱敏值 `apiKeyMasked`（如 `sk-****1234`），**不持有明文密钥**（见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4 与 widget `llm-usage-stats.tsx`）。
+- **JWT 由后端签发、BFF 仅托管**：access/refresh 由后端签发，BFF 以 HttpOnly Cookie（`__Host-` 前缀 + Secure + SameSite=Lax）托管；前端 JS 不可读，刷新/轮换由 `proxyBackend` 处理。
+- **无硬编码密钥**：前端源码无业务密钥常量；所有密钥（`SECRET_KEY` / `TOTP_ENCRYPTION_KEY` / `DATABASE_PASSWORD` 等）均属后端 `.env`，不在前端仓库。
+
+---
+
+*Part E 由 2026-08-08 据 0.9.8 代码现状补充（proxyBackend 同源转发、workbench namespace 三处 i18n、前端不持有密钥）。*

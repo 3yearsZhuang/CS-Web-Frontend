@@ -4,7 +4,8 @@
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
-> 最后更新：2026-08-06（规范收口迭代：圆角/阴影 token 化 + 胶囊可发现性增强 + next/font 字体自托管 + §5 组件清单/四态规范补全）
+> 2026-08-09 并入原 `FrontDoc-MDE.md`（Markdown 编辑器指南，现为第 14 章，原文件删除）
+> 最后更新：2026-08-09（并入 Markdown 编辑器指南 §14）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -19,6 +20,7 @@
 - **§8–10** 移动端适配 / 交互规范 / 代码规范
 - **§11–12** 禁止清单 / 新增页面 Checklist
 - **§13 / 附录 A** 参考文件 / 侧边栏备选方案（未采用）
+- **§14** Markdown 编辑器（原 FrontDoc-MDE.md 并入）
 
 ---
 
@@ -210,8 +212,6 @@
 ---
 
 ## 4. 悬浮折叠胶囊（Floating Capsule Sidebar）
-
-> 原 sidebar-design.md 全量内容，合并后作为第 4 章。
 
 ### 4.1 概述
 
@@ -613,6 +613,181 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ---
 
+## 14. Markdown 编辑器（原 FrontDoc-MDE.md 并入）
+
+> 文档定位：Markdown 编辑器组件使用指南（how-to；2026-08-09 并入本文，原 `FrontDoc-MDE.md` 已删除）。
+> 受众：前端开发者 / 需要接入富文本编辑的模块负责人。所有组件位于 `src/modules/community/ui/` 目录（文件名以 community- 前缀）。
+
+### 14.1 组件架构
+
+项目采用三层架构统一全文的 Markdown 编辑与渲染：
+
+```
+MarkdownRenderer              - 只读渲染（react-markdown + 插件链）
+    ↑
+    ├── MarkdownEditorBase    - 基础编辑器（编辑/预览 Tab 切换）
+    │       ↑
+    │       └── MarkdownEditor - 完整编辑器（工具栏 + 图片上传）
+    │
+    └── CommunityReplyItem        - 回复项渲染（主回复 + 楼中楼）
+```
+
+### 14.2 组件详情
+
+#### 14.2.1 MarkdownRenderer - 渲染器
+
+文件：`src/modules/community/ui/community-markdown-renderer.tsx`
+
+定位：只读 Markdown 渲染，用于展示主题正文、回复内容等。
+
+依赖：
+
+| 包 | 用途 |
+|----|------|
+| `react-markdown` | Markdown 解析与渲染 |
+| `remark-gfm` | GFM 扩展（表格、删除线、任务列表等） |
+| `rehype-sanitize` | 安全过滤（白名单机制） |
+| `rehype-highlight` | 代码语法高亮 |
+
+安全策略：基于 `defaultSchema` 自定义 sanitize schema，允许 `class`、`href`、`src`、`alt` 等属性，禁止所有 `on*` 事件和 `javascript:` 协议。
+
+支持的 Markdown 语法：标题（h1-h6）、段落、强调（粗体/斜体）、行内代码、代码块、引用、列表、链接、图片、表格、水平线、删除线。
+
+Props：
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `content` | `string` | Markdown 原文 |
+| `className` | `string`（可选） | 容器额外样式 |
+
+使用示例：
+
+```tsx
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
+
+<MarkdownRenderer content={topic.contentMarkdown} />
+```
+
+#### 14.2.2 MarkdownEditorBase - 基础编辑器
+
+文件：`src/modules/community/ui/community-markdown-editor-base.tsx`
+
+定位：纯编辑/预览切换，无工具栏和图片上传。
+
+功能：
+- 编辑 / 预览 Tab 切换
+- 键盘快捷键：`Cmd/Ctrl+B` 加粗、`Cmd/Ctrl+I` 斜体
+- 字数统计（chars）
+- 预览模式复用 `MarkdownRenderer`
+
+适用场景：不需要工具栏的 Markdown 编辑场景，如管理后台的活动详情编辑。
+
+Props：
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `value` | `string` | - | 编辑器内容 |
+| `onChange` | `(value: string) => void` | - | 内容变更回调 |
+| `placeholder` | `string`（可选） | - | 占位文本 |
+| `rows` | `number`（可选） | `12` | 编辑区行数 |
+| `textareaClassName` | `string`（可选） | - | textarea 额外样式 |
+| `className` | `string`（可选） | - | 容器额外样式 |
+
+使用示例：
+
+```tsx
+import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
+
+<MarkdownEditorBase
+  value={eventDetailMarkdown}
+  onChange={setEventDetailMarkdown}
+  placeholder="输入活动详情..."
+  rows={10}
+/>
+```
+
+#### 14.2.3 MarkdownEditor - 完整编辑器
+
+文件：`src/modules/community/ui/community-markdown-editor.tsx`
+
+定位：社区发主题 / 回复的完整编辑器。
+
+继承关系：基于 `MarkdownEditorBase`，额外提供工具栏和图片上传。
+
+工具栏按钮：
+
+| 按钮 | 功能 | Markdown 语法 |
+|------|------|--------------|
+| `B` | 加粗 | `**text**` |
+| `I` | 斜体 | `*text*` |
+| `S` | 删除线 | `~~text~~` |
+| `H` | 标题 | `## text` |
+| 链接 | 插入链接 | `[text](url)` |
+| `</>` | 行内代码 | `` `code` `` |
+| `{ }` | 代码块 | ```` ``` ```` |
+| `"` | 引用 | `> text` |
+| `-` | 无序列表 | `- item` |
+| `1.` | 有序列表 | `1. item` |
+
+图片上传：调用 `/api/community/community/upload`，支持 JPEG / PNG / WebP / GIF，限制 5MB。
+
+Props：
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `value` | `string` | - | 编辑器内容 |
+| `onChange` | `(value: string) => void` | - | 内容变更回调 |
+| `placeholder` | `string`（可选） | - | 占位文本 |
+| `minHeight` | `string`（可选） | `'280px'` | 编辑区最小高度 |
+| `className` | `string`（可选） | - | 容器额外样式 |
+
+使用示例：
+
+```tsx
+import { MarkdownEditor } from '@/modules/community/ui/community-markdown-editor';
+
+<MarkdownEditor
+  value={content}
+  onChange={setContent}
+  placeholder="写下你的想法..."
+  minHeight="320px"
+/>
+```
+
+### 14.3 使用场景对照表
+
+| 场景 | 页面 / 组件 | 使用组件 |
+|------|-----------|---------|
+| 社区发帖 | `/community/community/new` | `MarkdownEditor` |
+| 编辑主题 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
+| 撰写回复 | `/community/community/[category]/[topicId]` | `MarkdownEditor` |
+| 活动详情编辑 | `/admin`（活动创建 / 编辑弹窗） | `MarkdownEditorBase` |
+| 主题正文渲染 | `/community/community/[category]/[topicId]` | `MarkdownRenderer` |
+| 回复内容渲染 | `reply-item.tsx` | `MarkdownRenderer` |
+
+### 14.4 内容长度限制
+
+内容长度限制统一在 `src/shared/utils/ui-constants.ts` 的 `FORM_LIMITS` 中定义：
+
+| 常量 | 值 | 适用范围 |
+|------|-----|---------|
+| `COMMUNITY_MARKDOWN_MIN` | `10` | 社区发帖最小长度 |
+| `COMMUNITY_MARKDOWN_MAX` | `20000` | 社区主题 / 回复最大长度 |
+| `EVENT_MARKDOWN_MAX` | `10000` | 活动详情最大长度 |
+
+### 14.5 已知待统一项
+
+[events/[id]/page.tsx](../../src/app/events/[id]/page.tsx) 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未使用项目封装的 `MarkdownRenderer`，也没有配置 `rehype-sanitize` 安全过滤。后续迭代建议统一替换为 `MarkdownRenderer`。
+
+### 14.6 新增页面接入指南
+
+1. 纯展示 Markdown 内容 -> 使用 `MarkdownRenderer`，已含安全过滤和代码高亮
+2. 带编辑预览的编辑器 + 不需要工具栏 -> 使用 `MarkdownEditorBase`
+3. 完整编辑器 + 工具栏 + 图片上传 -> 使用 `MarkdownEditor`
+4. 所有组件均接收 `className` 以适配不同页面的样式需求
+
+---
+
 ## 附录 A：侧边栏备选方案（未采用）
 
 ### A.1 Scheme A - 可伸缩抽屉式（Sliding Drawer）
@@ -635,5 +810,6 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-09 | 并入原 `FrontDoc-MDE.md`（Markdown 编辑器使用指南）为 §14，原文件删除 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |
