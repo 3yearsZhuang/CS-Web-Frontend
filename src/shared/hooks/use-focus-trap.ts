@@ -30,8 +30,11 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
   const containerRef = useRef<T | null>(null);
   const onCloseRef = useRef(onClose);
   const triggerRefRef = useRef(triggerRef);
-  onCloseRef.current = onClose;
-  triggerRefRef.current = triggerRef;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    triggerRefRef.current = triggerRef;
+  }, [onClose, triggerRef]);
 
   useEffect(() => {
     if (!active) return;
