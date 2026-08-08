@@ -53,6 +53,8 @@ export async function PUT(
       techTags: Array.isArray(body.techTags) ? body.techTags : undefined,
       githubUrl: body.githubUrl,
       websiteUrl: body.websiteUrl,
+      role: typeof body.role === 'string' ? body.role : undefined,
+      isActive: typeof body.isActive === 'boolean' ? body.isActive : undefined,
     },
   });
 

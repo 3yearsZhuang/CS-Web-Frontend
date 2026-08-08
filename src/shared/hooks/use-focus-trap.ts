@@ -28,6 +28,13 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
   lockScroll = true,
 }: UseFocusTrapOptions): RefObject<T | null> {
   const containerRef = useRef<T | null>(null);
+  const onCloseRef = useRef(onClose);
+  const triggerRefRef = useRef(triggerRef);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    triggerRefRef.current = triggerRef;
+  }, [onClose, triggerRef]);
 
   useEffect(() => {
     if (!active) return;
@@ -44,11 +51,12 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
 
     // ---------- 2. 打开时聚焦首个可聚焦元素 ----------
     const focusables = container.querySelectorAll<HTMLElement>(FOCUSABLE);
+    let focusRaf = 0;
     if (focusables.length > 0) {
       // 优先聚焦第一个非禁用元素
-      const first = focusables[0];
+      const first = container.querySelector<HTMLElement>('[autofocus]') ?? focusables[0];
       // 延迟一帧确保 DOM 布局完成（动画/过渡可能还未结束）
-      requestAnimationFrame(() => {
+      focusRaf = requestAnimationFrame(() => {
         first.focus({ preventScroll: true });
       });
     } else {
@@ -61,7 +69,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
 
@@ -103,8 +111,10 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
       }
 
       // 恢复焦点到触发元素
-      if (triggerRef?.current) {
-        triggerRef.current.focus({ preventScroll: true });
+      cancelAnimationFrame(focusRaf);
+
+      if (triggerRefRef.current?.current) {
+        triggerRefRef.current.current.focus({ preventScroll: true });
       }
 
       // 清理容器上的临时 tabindex
@@ -112,7 +122,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
         container.removeAttribute('tabindex');
       }
     };
-  }, [active, lockScroll, onClose, triggerRef]);
+  }, [active, lockScroll]);
 
   return containerRef;
 }
