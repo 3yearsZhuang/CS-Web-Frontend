@@ -15,9 +15,11 @@ export async function POST(
   if (originErr) return originErr;
 
   const { id } = await params;
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const proxy = await proxyBackend(req, {
     path: `/admin/users/${encodeURIComponent(id)}/reset-password`,
     method: 'POST',
+    jsonBody: { password: typeof body.password === 'string' ? body.password : undefined },
   });
 
   if (proxy.status !== 200) {
@@ -26,8 +28,7 @@ export async function POST(
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const newPassword = (proxy.body as { new_password?: string })?.new_password ?? null;
-  const res = NextResponse.json({ newPassword });
+  const res = NextResponse.json({ ok: true });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

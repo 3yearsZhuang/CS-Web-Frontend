@@ -18,6 +18,7 @@ import {
   type PasswordResetRequest,
 } from '@/modules/admin/ui/types';
 import { isValidHttpUrl as isValidUrl } from '@/modules/user/types';
+import { passwordSchema } from '@/shared/security/schemas/auth-schemas';
 import { useUserList } from './use-user-list';
 import { useUserResets } from './use-user-resets';
 import type {
@@ -228,8 +229,9 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     if (modal.type !== 'reset') return;
     const target = modal.user;
 
-    if (resetPassword.length < LIMITS.PASSWORD_MIN) {
-      setResetError(`密码至少 ${LIMITS.PASSWORD_MIN} 位`);
+    const passwordValidation = passwordSchema.safeParse(resetPassword);
+    if (!passwordValidation.success) {
+      setResetError(passwordValidation.error.issues[0]?.message || '密码不符合安全要求');
       return;
     }
 
