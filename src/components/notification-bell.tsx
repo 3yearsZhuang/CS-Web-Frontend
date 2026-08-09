@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bell } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
+import { useAuth } from '@/shared/hooks/use-auth';
 
 /** 通知类型 */
 type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
@@ -103,22 +104,16 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  // 登录态以 useAuth 为唯一事实来源，不再另起探测请求。
+  const { isLoggedIn } = useAuth();
   const bellRef = useRef<HTMLDivElement>(null);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
       const res = await fetch('/api/notifications/unread-count');
-      if (!res.ok) {
-        if (res.status === 401) {
-          setIsLoggedIn(false);
-          return;
-        }
-        return;
-      }
+      if (!res.ok) return;
       const data: UnreadCountResponse = await res.json();
       setUnreadCount(data.unreadCount ?? 0);
-      setIsLoggedIn(true);
     } catch {
       // 静默失败
     }
@@ -217,20 +212,9 @@ export function NotificationBell() {
 
   const displayCount = unreadCount > 99 ? '99+' : unreadCount;
 
-  if (isLoggedIn === false) {
+  // 未登录或登录态加载中：不渲染铃铛（以 useAuth 为唯一来源）
+  if (!isLoggedIn) {
     return null;
-  }
-
-  if (isLoggedIn === null) {
-    return (
-      <button
-        type="button"
-        className="flex items-center justify-center w-8 h-8 text-[var(--muted-foreground)] opacity-50"
-        aria-hidden
-      >
-        <Bell className="w-3.5 h-3.5" strokeWidth={1.5} />
-      </button>
-    );
   }
 
   return (

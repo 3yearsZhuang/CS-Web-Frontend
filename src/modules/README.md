@@ -1,7 +1,7 @@
 # src/modules — 业务域模块
 
-> 遵循 `../../docs/RootDoc-FEArch.md`（按业务域模块化，3.4）。
-> 每个业务域自包含 `server/ types/ ui/` 三层，域内复用就地建子目录，不往外推。
+> 遵循 `../../docs/RootDoc-FEArch.md`（按业务域模块化，§3.4）。
+> 每个业务域自包含 `types/`（集中类型）+ `ui/`（组件）两层（`server/` 遗留直连层已于 2026-08-06 B1 收口删除，服务端逻辑由后端承载），域内复用就地建子目录，不往外推。
 
 ## 域清单
 
@@ -16,10 +16,11 @@
 | `notification/` | 通知 | 通知相关 |
 | `tools/` | 工具集 | 资源/考试/任务管理（含管理员工具面板） |
 | `user/` | 用户 | 用户资料类型与逻辑 |
+| `workbench/` | 工作台 | 个人化信息聚合工作中心（registry 驱动 + widgets + hooks + lib，见域内 README） |
 
 ## 目录即模块约定
 
-- 每域 `server/`（数据访问，与 UI 解耦）`types/`（集中类型）`ui/`（组件）
+- 每域 `types/`（集中类型）`ui/`（组件）；数据访问统一经 BFF API（`src/app/api/**/route.ts` → `shared/backend-client.ts`），模块内不再有 `server/`
 - 域内复用 Hook 落 `ui/hooks/`；`ui/` 建议补 `index.ts` 桶导出（GENERAL 3.3）
 - 复杂面板（如 admin 各 panel）已按 GENERAL 2.4 拆分为独立子组件，主文件 < 500 行
 

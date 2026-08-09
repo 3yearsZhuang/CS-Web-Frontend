@@ -10,7 +10,9 @@
 
 import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/shared/hooks/use-auth';
 import { useAuthForm } from '@/modules/auth/ui/hooks/use-auth-form';
 import { AuthForm } from './auth-form';
 import { TwoFactorForm } from './two-factor-form';
@@ -22,9 +24,27 @@ export const dynamic = 'force-dynamic';
 function LoginContent() {
   const auth = useAuthForm();
   const { t, in2FAFlow, isLogin } = auth;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // 登录态守卫：已登录用户访问 /login 应被拒绝，除非走「切换账号」流程（先 logout 再带 ?switch=1 进入）。
+  const { user } = useAuth();
+
+  const switching = searchParams.get('switch') === '1';
+
+  useEffect(() => {
+    if (switching) return;
+    if (user !== null) {
+      router.replace('/');
+    }
+  }, [switching, user, router]);
 
   const heading = in2FAFlow ? t('twoFactorTitle') : isLogin ? t('welcomeBack') : t('createAccount');
   const subtitle = in2FAFlow ? t('twoFactorSubtitle') : isLogin ? t('loginSubtitle') : t('registerSubtitle');
+
+  // 已登录（非切换模式）：直接拒绝访问登录页，不渲染表单，由上方 effect 跳回首页。
+  if (!switching && user !== null) {
+    return null;
+  }
 
   return (
     <main className="relative min-h-screen pt-16 flex items-center justify-center px-6 py-20">

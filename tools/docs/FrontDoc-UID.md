@@ -3,22 +3,48 @@
 > 文档定位：前端视觉与交互设计规范（reference）
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
-> 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
-> 最后更新：2026-08-06（规范收口迭代：圆角/阴影 token 化 + 胶囊可发现性增强 + next/font 字体自托管 + §5 组件清单/四态规范补全）
+> 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
+> 最后更新：2026-08-09（§10 代码规范迁出 FrontDoc-Conv）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
 > Stale 信号：组件清单与实际文件不一致 / Checklist 与实际组件不符
 
+
+
+
+## 章节速查（导航）
+
+- [文档结构](#文档结构)
+- [0. 设计哲学](#0-设计哲学)
+- [1. 颜色系统](#1-颜色系统)
+- [2. 字体系统](#2-字体系统)
+- [3. 布局系统](#3-布局系统)
+- [4. 悬浮折叠胶囊（Floating Capsule Sidebar）](#4-悬浮折叠胶囊floating-capsule-sidebar)
+- [5. 组件规范](#5-组件规范)
+- [6. 动效系统](#6-动效系统)
+- [7. 视觉装饰](#7-视觉装饰)
+- [8. 移动端适配](#8-移动端适配)
+- [9. 交互规范](#9-交互规范)
+- [10. 代码规范](#10-代码规范)
+- [11. UI 专属禁止清单](#11-ui-专属禁止清单)
+- [12. 新增页面 Checklist](#12-新增页面-checklist)
+- [13. 参考文件](#13-参考文件)
+- [14. Markdown 编辑器](#14-markdown-编辑器)
+- [变更记录](#变更记录)
+
 ## 文档结构
 
 - **§0 设计哲学** — 三条不可妥协原则
 - **§1–3** 颜色 / 字体 / 布局系统
-- **§4** 悬浮折叠胶囊（Floating Capsule Sidebar）
+- **§4** 悬浮折叠胶囊（Floating Capsule Sidebar；Tab 配置见 [capsule-tabs.md](capsule-tabs.md)）
+- **§5.0** 全局组件体系与复用契约（新增）
 - **§5–7** 组件规范 / 动效系统 / 视觉装饰
-- **§8–10** 移动端适配 / 交互规范 / 代码规范
-- **§11–12** 禁止清单 / 新增页面 Checklist
-- **§13 / 附录 A** 参考文件 / 侧边栏备选方案（未采用）
+- **§8–9** 移动端适配 / 交互规范（代码规范已迁至 [FrontDoc-Conv.md](FrontDoc-Conv.md)）
+- **§11–12** UI 专属禁止清单 / 新增页面 Checklist
+- **§13** 参考文件
+- **§14** Markdown 编辑器（契约下沉至 Arch §2.5.7）
 
 ---
 
@@ -211,8 +237,6 @@
 
 ## 4. 悬浮折叠胶囊（Floating Capsule Sidebar）
 
-> 原 sidebar-design.md 全量内容，合并后作为第 4 章。
-
 ### 4.1 概述
 
 项目中 [01] [02] … 编号式导航统一升级为悬浮折叠胶囊（Floating Capsule Sidebar）。胶囊以独立形态固定在内容区左侧，完全脱离文档流，折叠时仅显示编号 + active 圆点指示器，hover / 键盘 focus / 首次访问演示时平滑展开显示完整标签（见 §4.5 交互补充）。
@@ -298,17 +322,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 4.8 各页面 Tab 配置
 
-| 路由 | 页面 | Tab 列表 |
-|------|------|---------|
-| `/community/community` | 社区首页 | `[01] 最近 / Latest`, `[02] 发现 / Discover` |
-| `/community/community/[category]` | 版块详情 | `[01] 主题 / Topics`, `[02] 规则 / Rules`, `[03] 下一步 / Next` |
-| `/community/community/[category]/[topicId]` | 主题详情 | `[01] 回复 / Replies`, `[02] 你的回复 / Reply` |
-| `/about` | 关于 / 加入 | `[01] 信念 / Belief`, `[02] 方向 / Directions`, `[03] 期望 / Expectation`, `[04] 流程 / Process`, `[05] 加入 / Join` |
-| `/events` | 活动 | `[01] 时间线 / Timeline`, `[02] 归档 / Archive`, `[03] 下一步 / Next` |
-| `/profile` | 个人主页 | `[01] 资料 / Profile`, `[02] 安全 / Security`, `[03] 活动 / Activity`, `[04] 社区 / Community` |
-| `/admin` | 管理后台 | `[01] 用户 / Users`, `[02] 活动 / Activities`, `[03] 通知 / Notifications`, `[04] 社区 / Community`, `[05] 工具 / Tools` |
-| `/tools` | 工具集 | `[01] 可用`, `[02] 即将上线`, `[03] 规划中` |
-| `/tools/resource` | 资源站 | `[00] 全部`, `[01] 文章`, `[02] 视频`, … |
+各页面的 `tabs` 配置随功能增减高频变动，统一维护在独立数据文件 [capsule-tabs.md](capsule-tabs.md#1-各页面-tab-配置表)；新增页面须同步该表并在 `FloatingCapsuleSidebar` 传入 `CapsuleTab[]`（接口见 §4.5）。
 
 ### 4.9 实现文件清单
 
@@ -321,6 +335,25 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 ---
 
 ## 5. 组件规范
+
+### 5.0 全局组件体系与复用契约
+
+前端组件分两层：**全局设计系统**（`src/components/`，零业务依赖，全站复用）与**模块局部组件**（`src/modules/*/ui/`，仅本模块使用）。全局组件按职责分四层 + 顶层跨层，复用层级见 §5.7：
+
+| 复用层级 | 目录 | 职责 | 代表组件 |
+|---------|------|------|---------|
+| 原子 primitives | `components/primitives` | 无业务的通用原子件 | button / input / spinner / section-nav / inline-tabs / confirm-dialog |
+| 结构 layout | `components/layout` | 页面骨架与导航 | navbar / footer / collapsing-hero / floating-capsule-sidebar |
+| 动效 effects | `components/effects` | 入场/过渡动效原语 | motion-primitives / mobius-ring / page-transition / scroll-indicator |
+| 反馈 feedback | `components/feedback` | 加载/空/错/成功四态 | toast / empty-state / fallback / announcement-banner |
+| 跨层 root-level | `components/`（顶层） | 跨页面全局件 | avatar / user-menu / notification-bell / theme / tech-tag-selector |
+
+**依赖方向（单向）**：`模块组件 → 全局组件`；全局组件**禁止反向 import 任何 `src/modules/*`**（保持零业务依赖，详见 Arch Part A §1.2.3 依赖矩阵）。
+
+**复用契约（新增页面/组件必须遵守）**：
+1. 一律从 `primitives` 取按钮/输入/焦点环，禁止在模块里重造原子组件（补充进 §11 禁止清单）。
+2. 模块组件可 import 全局组件；全局组件不得 import 模块组件。
+3. 模块内组件若被 ≥2 个模块复用，应评审后提升为全局 `primitives`（新增全局原语须评审）。
 
 ### 5.1 卡片
 
@@ -392,25 +425,17 @@ const INPUT_CLASS =
 - 表单提交中 `disabled` + 文案变"提交中..."；提交失败保留用户输入
 - 页面级错误由 `feedback/fallback.tsx` 兜底；组件级局部错误就地展示 + 重试按钮
 
-### 5.7 组件全清单
+### 5.7 组件全清单（复用层级）
 
-与 `src/components/` 目录一一对应（新增组件须同步更新本清单，Stale 信号见文档头）。
+与 `src/components/` 目录一一对应（新增组件须同步更新本清单，Stale 信号见文档头）。各组件文件路径与参考实现见 §13；分层与复用边界见 §5.0。
 
-| 分类 | 组件 | 说明 |
-|------|------|------|
-| 根级 | `avatar` | 方形头像，首字母回退 |
-| 根级 | `user-menu` / `notification-bell` | 用户下拉 / 通知铃铛（浮层阴影走 `--shadow-popover`） |
-| 根级 | `theme-toggle` / `theme-provider` | 主题切换（`.dark` 类） |
-| 根级 | `tech-tag-selector` / `swr-provider` | 标签选择 / SWR 全局配置 |
-| effects | `motion-primitives` | StaggerContainer / RevealTitle / RevealItem |
-| effects | `mobius-ring` / `page-transition` / `scroll-indicator` | 首页粒子 / 路由过渡 / 横向滚动提示 |
-| layout | `navbar` / `footer` | 全局导航 / 页脚 |
-| layout | `collapsing-hero` / `floating-capsule-sidebar` / `use-collapsing-hero` | 折叠 Hero / 悬浮胶囊 / 联动 hook |
-| layout | `language-switcher` / `page-header-background` | 语言切换 / 页头背景装饰 |
-| primitives | `button` / `input` / `spinner` / `loading` | 基础控件封装 |
-| primitives | `section-nav` / `inline-tabs` / `filter-bar` | 编号导航 / 内联 Tab / 筛选条 |
-| primitives | `confirm-dialog` | 确认弹窗（Modal） |
-| feedback | `announcement-banner` / `toast` / `empty-state` / `fallback` | 四态与提示 |
+| 复用层级 | 组件 |
+|---------|------|
+| 根级 root-level | `avatar` · `user-menu` · `notification-bell` · `theme-toggle` · `theme-provider` · `tech-tag-selector` · `swr-provider` |
+| effects | `motion-primitives` · `mobius-ring` · `page-transition` · `scroll-indicator` |
+| layout | `navbar` · `footer` · `collapsing-hero` · `floating-capsule-sidebar` · `use-collapsing-hero` · `language-switcher` · `page-header-background` |
+| primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` |
+| feedback | `announcement-banner` · `toast` · `empty-state` · `fallback` |
 
 ---
 
@@ -500,51 +525,11 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ## 10. 代码规范
 
-### 10.1 文件头注释
-
-每个组件/页面必须有 JSDoc 头注释：
-
-```tsx
-/**
- * @file 组件/页面名称 - 一句话描述
- *
- * 设计原则：
- *   - 原则 1
- *   - 原则 2
- *
- * 视觉层次：
- *   [ 00 ] - SectionName -> 描述
- *   [ 01 ] - SectionName -> 描述
- *
- * 数据流：
- *   - GET /api/xxx -> 数据
- *
- * 移动端兼容：
- *   - 适配说明
- */
-```
-
-补充约定：`'use client'` 指令位于文件头 JSDoc 之后（注释允许出现在指令之前，指令仍被正确识别）；禁止 `'use client'` 出现在 import 语句之后。
-
-### 10.2 样式实现
-
-- 必须用 Tailwind 工具类，禁止内联 `style`（动态计算例外）
-- CSS 变量通过 `var(--xxx)` 在 Tailwind 任意值中引用
-- 动态 className 用模板字符串 + 三元，不引入 `clsx`/`classnames`
-
-### 10.3 客户端/服务端边界
-
-- `'use client'` 仅用于需要 hooks/交互的组件
-- 数据获取在客户端 `useEffect` 中用 `fetch`
-- API 路由遵循 Next.js App Router 约定
-
-### 10.4 中文文本规则
-
-> 通用中文排版规则（汉字间不留空格、中英文间留空格、中文与数字间留空格）已提炼到根仓库 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §九，此处不再重复。
+> 前端编码规范（TS/React/Next.js 约定、React Compiler 红线、文件头 JSDoc、样式实现、客户端/服务端边界、`'use client'` 位置、组件复用契约、widget 注册表、i18n、测试、Git、编码侧禁止项）已整体迁至 [FrontDoc-Conv.md](FrontDoc-Conv.md)，本文档只保留视觉与交互规范。中文排版规则见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §九。
 
 ---
 
-## 11. 禁止清单
+## 11. UI 专属禁止清单
 
 | 禁止 | 原因 |
 |------|------|
@@ -556,13 +541,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `hover:-translate-y-1` 浮起 | 卡片只有边框变色 |
 | 渐变背景（logo 装饰例外） | 违背极简原则 |
 | 自行实现入场动画 | 必须复用 motion-primitives |
-| `console.log` 留在生产代码 | 用专门日志或删除 |
-| 中文之间加空格 | 排版规范 |
-| 不写文件头 JSDoc | 工程规范 |
-| CSS `@import` 拉取 Google Fonts | 字体必须走 next/font 自托管 |
-| 用 `.sh` 脚本 | 用 `.mjs` Node 脚本 |
-| 引入 react-dev-inspector | 与 Turbopack 不兼容 |
-| 引入 Vite 依赖 | 使用 Next.js + Turbopack |
+
+> 编码侧禁止项（`console.log` 留生产代码、中文间加空格、不写 JSDoc、CSS `@import` 拉 Google Fonts、`.sh` 脚本、react-dev-inspector、Vite 依赖等）已迁至 [FrontDoc-Conv.md §12](FrontDoc-Conv.md#12-禁止事项汇总)，**本 §11 仅保留 UI 视觉专属禁止**，此处不重复。
 
 **圆角例外白名单**（仅限以下语义，新增须评审）：
 
@@ -584,12 +564,12 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - [ ] 所有颜色用 `var(--xxx)`
 - [ ] 所有标题用 `clamp()` 自适应
 - [ ] 所有动效用 `cubic-bezier(0.16, 1, 0.3, 1)`
-- [ ] 文件头 JSDoc 完整，`'use client'` 在 JSDoc 之后
+- [ ] 文件头 JSDoc 完整，`'use client'` 在 JSDoc 之后（见 [FrontDoc-Conv.md §3.2/§6](FrontDoc-Conv.md#6-文件头注释jsdoc)）
 - [ ] 所有可交互元素挂 `focus-ring`
 - [ ] 圆角/阴影只走 §3.5 / §11 白名单 token
 - [ ] 列表/表单四态显式处理（加载/空/错误/成功，见 §5.6）
 - [ ] 移动端 `<md` 单列堆叠，触控区 ≥44px
-- [ ] `tsc --noEmit` + `eslint` 0 错误
+- [ ] `tsc --noEmit` + `eslint` 0 错误（编码侧自查见 [FrontDoc-Conv.md §10/§13](FrontDoc-Conv.md#13-检查清单提交前自查)）
 - [ ] 如需 Tab 切换，使用 `FloatingCapsuleSidebar` 组件
 - [ ] 如有 Hero，胶囊与 `useCollapsingHero` 联动
 - [ ] 如是子页面，`[ 00 ]` 下方放 `← 返回` 按键（见 §3.4）
@@ -609,25 +589,16 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/components/layout/navbar.tsx` | 全局导航 |
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
-| `tools/docs/FrontDoc-UID.md` | 本文档 - 完整设计规范 |
+| `tools/docs/FrontDoc-UID.md` | 本文档 - 视觉与交互设计规范 |
+| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，原 §10 迁出） |
 
 ---
 
-## 附录 A：侧边栏备选方案（未采用）
+## 14. Markdown 编辑器
 
-### A.1 Scheme A - 可伸缩抽屉式（Sliding Drawer）
+> 原 `FrontDoc-MDE.md` 已并入本规范 §14，现进一步下沉为社区模块契约（避免全局 UI 规范膨胀）。完整组件架构 / Props / 使用场景 / 安全策略见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.5.7。
 
-折叠态 56px 仅显示编号，hover 展开至 200px。
-- 优点：实现极简，直觉性强，不破坏 12 栏栅格
-- 缺点：仍占用布局空间，hover 触发展开在移动端无效
-- 适用：Tab 较多（≥5 项）、需要快速识别当前区域
-
-### A.2 Scheme C - 磁吸边缘标签（Magnetic Edge Tabs）
-
-标签吸附在左边缘，仅露出半截编号 pill（~28px），hover 时标签向外弹出。
-- 优点：极致节省空间
-- 缺点：标签太小（28px），移动端几乎无法触控
-- 适用：极简主义工具型页面，桌面端为主
+本规范仅保留结论：社区 Markdown 编辑/渲染统一使用 `src/modules/community/ui/` 下的三层组件——`MarkdownRenderer`（只读渲染）/ `MarkdownEditorBase`（基础编辑）/ `MarkdownEditor`（完整编辑，含工具栏 + 图片上传）；安全渲染走 `rehype-sanitize`；内容长度限制统一在 `src/shared/utils/ui-constants.ts` 的 `FORM_LIMITS`。新增页面接入见 Arch §2.5.7。
 
 ---
 
@@ -635,5 +606,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
+| 2026-08-09 | 文档瘦身重构：① 原 §14 Markdown 编辑器（并入自 `FrontDoc-MDE.md`）契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

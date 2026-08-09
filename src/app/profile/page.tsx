@@ -24,6 +24,7 @@ import { ProfileTab } from './profile-tab';
 import { SecurityTab } from './security-tab';
 import { ActivityTab } from './activity-tab';
 import { JoinTab } from './join-tab';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type ProfileTabKey = 'profile' | 'activity' | 'join';
 
@@ -103,7 +104,8 @@ function ProfileContent() {
   }
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="profile">
+      <main className="relative pt-16">
       {/* ============ [00] Hero — 身份信息（1s 后自动收缩悬浮） ============ */}
       <CollapsingHero
         index="00"
@@ -266,6 +268,7 @@ function ProfileContent() {
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }
 

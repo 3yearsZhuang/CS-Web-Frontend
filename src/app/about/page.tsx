@@ -12,6 +12,7 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button } from '@/components';
 import Link from 'next/link';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type AboutTab = 'belief' | 'directions' | 'process';
 
@@ -70,7 +71,8 @@ export default function AboutPage() {
   };
 
   return (
-    <main className="relative pt-16">
+    <VisibilityGate componentKey="about">
+      <main className="relative pt-16">
       {/* ============ Hero ============ */}
       <CollapsingHero
         index="00"
@@ -329,5 +331,6 @@ export default function AboutPage() {
         </div>
       </section>
     </main>
+    </VisibilityGate>
   );
 }

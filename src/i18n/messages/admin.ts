@@ -17,11 +17,13 @@ export interface AdminMessages {
     tabMessages: string;
     tabJoin: string;
     tabLogs: string;
+    tabFeatureVisibility: string;
     tabTitleRoles: string;
     tabTitleUsers: string;
     tabTitleMessages: string;
     tabTitleJoin: string;
     tabTitleLogs: string;
+    tabTitleFeatureVisibility: string;
     adminEn: string;
     verifying: string;
     accessDenied: string;
@@ -519,6 +521,39 @@ export interface AdminMessages {
     statPosts: string;
     statCategories: string;
     statAnnouncements: string;
+  },
+  adminFeatureVisibility: {
+    title: string;
+    description: string;
+    twoFactorNote: string;
+    colModule: string;
+    colGuest: string;
+    colMember: string;
+    colAdmin: string;
+    colAction: string;
+    moduleAbout: string;
+    moduleEvents: string;
+    moduleTools: string;
+    moduleAdmin: string;
+    descAbout: string;
+    descEvents: string;
+    descTools: string;
+    descAdmin: string;
+    save: string;
+    saving: string;
+    reset: string;
+    visible: string;
+    hidden: string;
+    pendingChanges: string;
+    confirmTitle: string;
+    confirmDesc: string;
+    totpLabel: string;
+    totpPlaceholder: string;
+    confirm: string;
+    cancel: string;
+    updateSuccess: string;
+    updateFailed: string;
+    loading: string;
   }
 }
 
@@ -536,11 +571,13 @@ export const zhCN: AdminMessages = {
     tabMessages: '消息 / Messages',
     tabJoin: '入社申请 / Join',
     tabLogs: '日志 / Logs',
+    tabFeatureVisibility: '功能可见性 / Visibility',
     tabTitleRoles: '角色权限',
     tabTitleUsers: '用户管理',
     tabTitleMessages: '消息管理',
     tabTitleJoin: '入社申请',
     tabTitleLogs: '日志管理',
+    tabTitleFeatureVisibility: '功能模块可见性',
     adminEn: '/ Admin',
     verifying: '验证中 / Verifying...',
     accessDenied: '[ 拒绝访问 / Access Denied ]',
@@ -1038,6 +1075,39 @@ export const zhCN: AdminMessages = {
     statPosts: '文章内容',
     statCategories: '版块',
     statAnnouncements: '公告',
+  },
+  adminFeatureVisibility: {
+    title: '功能模块可见性 / Feature Visibility',
+    description: '控制各功能模块对不同用户类型（访客 / 成员 / 管理员）的展示。修改需两步验证确认，仅超级管理员可操作。',
+    twoFactorNote: '修改需启用两步验证（2FA）并输入验证码确认。',
+    colModule: '模块 / Module',
+    colGuest: '访客 / Guest',
+    colMember: '成员 / Member',
+    colAdmin: '管理员 / Admin',
+    colAction: '操作 / Action',
+    moduleAbout: '关于 / About',
+    moduleEvents: '活动 / Events',
+    moduleTools: '工具 / Tools',
+    moduleAdmin: '管理后台 / Admin',
+    descAbout: '站点介绍页',
+    descEvents: '活动列表与详情',
+    descTools: '工作台与工具集（需登录）',
+    descAdmin: '管理员控制台入口',
+    save: '保存 / Save',
+    saving: '保存中... / Saving...',
+    reset: '撤销 / Reset',
+    visible: '显示',
+    hidden: '隐藏',
+    pendingChanges: '有 {count} 项未保存修改',
+    confirmTitle: '确认修改可见性',
+    confirmDesc: '将对「{module}」应用以上可见性规则，此操作影响全站，请输入两步验证码确认。',
+    totpLabel: '两步验证码 / 2FA Code',
+    totpPlaceholder: '000000',
+    confirm: '确认修改 / Confirm',
+    cancel: '取消 / Cancel',
+    updateSuccess: '可见性已更新 / Visibility updated',
+    updateFailed: '更新失败，请稍后再试 / Update failed',
+    loading: '加载中... / Loading...',
   }
 };
 
@@ -1055,11 +1125,13 @@ export const en: AdminMessages = {
     tabMessages: 'Messages / 消息',
     tabJoin: 'Join / 入社申请',
     tabLogs: 'Logs / 日志',
+    tabFeatureVisibility: 'Visibility / 功能可见性',
     tabTitleRoles: 'Roles & Permissions',
     tabTitleUsers: 'User Management',
     tabTitleMessages: 'Message Management',
     tabTitleJoin: 'Join Requests',
     tabTitleLogs: 'Log Management',
+    tabTitleFeatureVisibility: 'Feature Module Visibility',
     adminEn: '/ Admin',
     verifying: 'Verifying / 验证中...',
     accessDenied: '[ Access Denied / 拒绝访问 ]',
@@ -1557,5 +1629,38 @@ export const en: AdminMessages = {
     statPosts: 'Community Posts',
     statCategories: 'Sections',
     statAnnouncements: 'Announcements',
+  },
+  adminFeatureVisibility: {
+    title: 'Feature Visibility / 功能模块可见性',
+    description: 'Control which feature modules are shown to each user type (guest / member / admin). Changes require two-factor verification; super-admin only.',
+    twoFactorNote: 'Editing requires two-factor authentication (2FA) enabled and a verification code.',
+    colModule: 'Module / 模块',
+    colGuest: 'Guest / 访客',
+    colMember: 'Member / 成员',
+    colAdmin: 'Admin / 管理员',
+    colAction: 'Action / 操作',
+    moduleAbout: 'About / 关于',
+    moduleEvents: 'Events / 活动',
+    moduleTools: 'Tools / 工具',
+    moduleAdmin: 'Admin Console / 管理后台',
+    descAbout: 'Site introduction page',
+    descEvents: 'Event list and details',
+    descTools: 'Workbench and toolset (login required)',
+    descAdmin: 'Admin console entry',
+    save: 'Save / 保存',
+    saving: 'Saving... / 保存中...',
+    reset: 'Reset / 撤销',
+    visible: 'Visible',
+    hidden: 'Hidden',
+    pendingChanges: '{count} unsaved change(s)',
+    confirmTitle: 'Confirm Visibility Change',
+    confirmDesc: 'Applying the above visibility rule to "{module}" affects the whole site. Enter your 2FA code to confirm.',
+    totpLabel: '2FA Code / 两步验证码',
+    totpPlaceholder: '000000',
+    confirm: 'Confirm / 确认修改',
+    cancel: 'Cancel / 取消',
+    updateSuccess: 'Visibility updated / 可见性已更新',
+    updateFailed: 'Update failed, please try again / 更新失败',
+    loading: 'Loading... / 加载中...',
   }
 };

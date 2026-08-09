@@ -8,8 +8,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Notification } from '@/app/notifications/use-notifications';
+import { useAuth } from '@/shared/hooks/use-auth';
 
 interface NotificationsResponse {
   notifications: Notification[];
@@ -20,15 +20,28 @@ interface NotificationsResponse {
   unreadCount: number;
 }
 
-export function useNotificationsPreview(previewSize = 5) {
-  const router = useRouter();
+/**
+ * @param previewSize 预览条数
+ * @param enabled     是否启用拉取。默认 true；建议传 `open && isLoggedIn`，
+ *                    仅当用户已登录且菜单展开时才请求，避免未登录时对公开页发起
+ *                    通知请求（旧逻辑会在 401 时直接 router.push('/login')，把访客/已登录用户踢出）。
+ */
+export function useNotificationsPreview(previewSize = 5, enabled = true) {
+  // 登录态以 useAuth 为唯一事实来源，不再另起探测请求。
+  const { isLoggedIn } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   const fetchNotifications = useCallback(async () => {
+    // 未启用或未登录：清空并静默退出，绝不发起请求、绝不跳转登录。
+    if (!enabled || !isLoggedIn) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -37,11 +50,14 @@ export function useNotificationsPreview(previewSize = 5) {
       params.set('page_size', String(previewSize));
 
       const res = await fetch(`/api/notifications?${params.toString()}`);
-      if (res.status === 401) {
-        router.push('/login');
+      // 仅以 useAuth 的登录态为准；通知接口异常（含 401）一律静默处理，
+      // 避免一个后台通知请求失败就把已登录用户踢出登录页。
+      if (!res.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+        setLoading(false);
         return;
       }
-      if (!res.ok) throw new Error('load failed');
 
       const data: NotificationsResponse = await res.json();
       setNotifications(data.notifications);
@@ -51,28 +67,17 @@ export function useNotificationsPreview(previewSize = 5) {
     } finally {
       setLoading(false);
     }
-  }, [previewSize, router]);
+  }, [previewSize, enabled, isLoggedIn]);
 
   useEffect(() => {
+    if (!enabled || !isLoggedIn) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setLoading(false);
+      return;
+    }
     fetchNotifications();
-  }, [fetchNotifications]);
-
-  // 登录态探测：未登录（401）则不渲染通知区块
-  useEffect(() => {
-    const checkLogin = async () => {
-      try {
-        const res = await fetch('/api/notifications/unread-count');
-        if (res.status === 401) {
-          setIsLoggedIn(false);
-          return;
-        }
-        if (res.ok) setIsLoggedIn(true);
-      } catch {
-        // 网络错误时保守视为已登录，避免误隐藏
-      }
-    };
-    checkLogin();
-  }, []);
+  }, [fetchNotifications, enabled, isLoggedIn]);
 
   const markRead = useCallback(
     async (id: string) => {

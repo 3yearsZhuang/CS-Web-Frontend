@@ -1,7 +1,7 @@
 # 工作台模块（src/modules/workbench）
 
 个人化信息聚合工作中心，挂在 `/tools` 页顶部（Hero 之后）。对照
-[`docs/RootDoc-FEArch.md`](../../../docs/RootDoc-FEArch.md) 分层准则组织。
+[`docs/RootDoc-FEArch.md`](../../../../docs/RootDoc-FEArch.md) 分层准则组织。
 
 ## 组件清单
 

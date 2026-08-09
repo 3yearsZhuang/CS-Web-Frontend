@@ -10,6 +10,7 @@ import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
 import { setLocaleCookie } from '@/shared/utils/locale';;
 import { useAuth } from '@/shared/hooks/use-auth';
+import { useFeatureVisibility, DEFAULT_VISIBILITY, useComponentVisible } from '@/shared/hooks/use-feature-visibility';
 import { useNotificationsPreview } from '@/components/use-notifications-preview';
 import { TYPE_STYLES } from '@/components/notification-bell';
 import { Avatar } from '@/components/avatar';
@@ -84,7 +85,13 @@ export function UserMenu({ size = 32 }: { size?: number }) {
   const tCommon = useTranslations('common');
   const tNotif = useTranslations('notifications');
 
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, logout } = useAuth();
+  const { rules } = useFeatureVisibility();
+  const adminRule = rules['admin'] ?? DEFAULT_VISIBILITY['admin'];
+  const showAdminEntry = isLoggedIn && (user?.role === 'admin' || user?.role === 'root') && adminRule.admin;
+  const showProfile = useComponentVisible('profile');
+  const showNotifications = useComponentVisible('notifications');
+  const showLangSwitch = useComponentVisible('chrome-language-switcher');
   const { confirm } = useConfirm();
 
   const [open, setOpen] = useState(false);
@@ -94,10 +101,9 @@ export function UserMenu({ size = 32 }: { size?: number }) {
     notifications,
     loading: notifLoading,
     unreadCount,
-    isLoggedIn: notifLoggedIn,
     markRead,
     markAllRead,
-  } = useNotificationsPreview(5);
+  } = useNotificationsPreview(5, open && isLoggedIn);
 
   const handleLogout = async () => {
     const ok = await confirm({
@@ -107,11 +113,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
       confirmLabel: tUserMenu('logoutConfirm'),
     });
     if (!ok) return;
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // 忽略失败，仍跳转首页
-    }
+    await logout();
     setOpen(false);
     router.push('/');
   };
@@ -124,13 +126,10 @@ export function UserMenu({ size = 32 }: { size?: number }) {
       confirmLabel: tUserMenu('switchConfirm'),
     });
     if (!ok) return;
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // 忽略失败
-    }
+    await logout();
     setOpen(false);
-    router.push('/login');
+    // 带 switch=1 进入登录页，绕过「已登录拒绝访问 /login」的守卫，用于切换账号。
+    router.push('/login?switch=1');
   };
 
   useEffect(() => {
@@ -153,8 +152,8 @@ export function UserMenu({ size = 32 }: { size?: number }) {
     return () => document.removeEventListener('keydown', handler);
   }, [open]);
 
-  /** 登录态：本地 store 或通知探测二者任一登录即视为已登录 */
-  const loggedIn = isLoggedIn || notifLoggedIn === true;
+  /** 登录态以 useAuth 为唯一事实来源（不再叠加通知预览的探测结果） */
+  const loggedIn = isLoggedIn;
 
   const LANGUAGE_OPTIONS = [
     { value: 'zh-CN', label: '中文' },
@@ -307,7 +306,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
                 </button>
               )}
 
-              {loggedIn && (
+              {loggedIn && showNotifications && (
                 <div className="px-4 py-2 text-right">
                   <Link
                     href="/notifications"
@@ -321,6 +320,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
             </motion.div>
 
             {/* 语言切换区块 */}
+            {showLangSwitch && (
             <motion.div
               variants={itemVariants}
               className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)]"
@@ -349,10 +349,12 @@ export function UserMenu({ size = 32 }: { size?: number }) {
                 })}
               </div>
             </motion.div>
+            )}
 
             {/* 菜单项（已登录显示） */}
             {loggedIn && (
               <>
+                {showProfile && (
                 <motion.div variants={itemVariants}>
                   <MenuItem
                     href="/profile"
@@ -361,6 +363,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
                     onClick={() => setOpen(false)}
                   />
                 </motion.div>
+                )}
                 <motion.div variants={itemVariants}>
                   <MenuItem
                     href="/create"
@@ -370,7 +373,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
                   />
                 </motion.div>
 
-                {user?.role === 'admin' || user?.role === 'root' ? (
+                {showAdminEntry ? (
                   <motion.div variants={itemVariants}>
                     <MenuItem
                       href="/admin"

@@ -17,9 +17,11 @@ import { AdminMessagesPanel } from '@/modules/admin/ui/admin-messages-panel';
 import { AdminLogsPanel } from '@/modules/admin/ui/admin-logs-panel';
 import { AdminRolesPanel } from '@/modules/admin/ui/admin-roles-panel';
 import { AdminJoinPanel } from '@/modules/admin/ui/admin-join-panel';
+import { AdminFeatureVisibilityPanel } from '@/modules/admin/ui/admin-feature-visibility-panel';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { SectionNav } from '@/components/primitives/section-nav';
 import { type AdminTab, type SafeUser } from '@/modules/admin/ui/types';
+import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 /* ============= 工具函数 ============= */
 
@@ -36,6 +38,8 @@ function tabTitleKey(tab: AdminTab): string {
       return 'tabTitleJoin';
     case 'logs':
       return 'tabTitleLogs';
+    case 'feature-visibility':
+      return 'tabTitleFeatureVisibility';
   }
 }
 
@@ -113,6 +117,7 @@ export default function AdminPage() {
     { key: 'messages', num: '02', label: t('tabMessages') },
     { key: 'join', num: '03', label: t('tabJoin') },
     ...(isRootAdmin ? [{ key: 'logs', num: '04', label: t('tabLogs') }] : []),
+    ...(isRootAdmin ? [{ key: 'feature-visibility', num: '05', label: t('tabFeatureVisibility') }] : []),
   ];
 
   /* ============= 渲染：加载中 ============= */
@@ -147,6 +152,7 @@ export default function AdminPage() {
   /* ============= 渲染：主页面 ============= */
   return (
     <ToastProvider>
+      <VisibilityGate componentKey="admin">
       <main className="relative pt-16">
         <CollapsingHero
           index="00"
@@ -230,9 +236,15 @@ export default function AdminPage() {
             {activeTab === 'logs' && isRootAdmin && (
               <AdminLogsPanel onForbidden={handleForbidden} />
             )}
+
+            {/* ============ Tab 05 — 功能模块可见性（仅 root） ============ */}
+            {activeTab === 'feature-visibility' && isRootAdmin && (
+              <AdminFeatureVisibilityPanel onForbidden={handleForbidden} />
+            )}
           </div>
         </section>
       </main>
+      </VisibilityGate>
     </ToastProvider>
   );
 }
