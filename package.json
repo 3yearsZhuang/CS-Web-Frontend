@@ -65,7 +65,7 @@
     "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.1.10",
-    "yaml": "1.10.3"
+    "yaml": "2.9.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
