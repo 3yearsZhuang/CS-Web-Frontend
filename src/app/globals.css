@@ -10,20 +10,19 @@
  * 主题色：浅色模式深蓝 #1e40af / 深色模式琥珀金 #d4a574
  */
 
-/* 字体加载 — Google Fonts CDN（@import 运行时拉取）
+/* 字体加载（CodeGov-F1）— 拉丁字族本地托管 + CJK 经 @import
  *
  * 字体策略（编辑式技术极简）：
- * - Fraunces (variable serif) — 英文展示衬线
- * - Noto Serif SC — 中文展示衬线（与 Fraunces 配对，保证中英衬线视觉一致）
- * - Manrope — 英文正文（几何人文 sans，比 Inter 更有性格）
- * - Noto Sans SC — 中文正文（思源黑体，跨平台一致，比系统字体更有设计感）
- * - JetBrains Mono — 等宽元数据
+ * - Fraunces (variable serif) — 英文展示衬线（next/font/local 本地托管，CSS 变量 --font-fraunces）
+ * - Noto Serif SC — 中文展示衬线（与 Fraunces 配对；体积大，经 @import 从 Google CDN 拉取）
+ * - Manrope — 英文正文（next/font/local 本地托管，CSS 变量 --font-manrope）
+ * - Noto Sans SC — 中文正文（思源黑体；体积大，经 @import 从 Google CDN 拉取）
+ * - JetBrains Mono — 等宽元数据（next/font/local 本地托管，CSS 变量 --font-jetbrains）
  *
- * 通过 @import 在编译期注入 <link>，运行时由浏览器从 Google Fonts CDN 拉取。
+ * 拉丁字族已自托管（消除外链依赖）；仅 CJK 两个字族保留 @import（本地全量托管体积过大不现实）。
  * display=swap 保证字体加载期间不阻塞首屏渲染（使用 fallback 字体过渡）。
- * 注意：CJK（Noto SC）整包较大，首次访问会有下载开销。
  */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Manrope:wght@400..700&family=JetBrains+Mono:wght@400..600&family=Noto+Sans+SC:wght@300..700&family=Noto+Serif+SC:wght@300..600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Serif+SC:wght@300..600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -83,15 +82,15 @@
   --duration-epic: var(--duration-epic);
   --ease-ark: var(--ease-ark);
   --font-sans:
-    'Manrope', 'Noto Sans SC', 'PingFang SC',
+    var(--font-manrope), 'Noto Sans SC', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
   --font-mono:
-    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
   --font-serif:
-    'Fraunces', 'Noto Serif SC', 'Songti SC', ui-serif,
+    var(--font-fraunces), 'Noto Serif SC', 'Songti SC', ui-serif,
     Georgia, Cambria, 'Times New Roman', Times, serif;
 }
 
@@ -100,15 +99,15 @@
  * 故此处显式定义一份，保证 var(--font-sans/mono/serif) 必然可解析） */
 :root {
   --font-sans:
-    'Manrope', 'Noto Sans SC', 'PingFang SC',
+    var(--font-manrope), 'Noto Sans SC', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
   --font-mono:
-    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
   --font-serif:
-    'Fraunces', 'Noto Serif SC', 'Songti SC', ui-serif,
+    var(--font-fraunces), 'Noto Serif SC', 'Songti SC', ui-serif,
     Georgia, Cambria, 'Times New Roman', Times, serif;
 }
 

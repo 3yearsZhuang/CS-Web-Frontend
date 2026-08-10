@@ -1,5 +1,5 @@
 # ============ Stage 1: Builder ============
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 
 # Next.js 生产构建需要 Origin 白名单；由 Compose build.args 注入
 ARG ALLOWED_ORIGINS
@@ -38,17 +38,17 @@ RUN pnpm next build
 # 删除 Turbopack/Next 增量编译缓存（可再生；避免镜像层膨胀到数 GB）
 RUN rm -rf .build/cache
 
-# 打包自定义服务器（CJS 格式，目标 node20）
+# 打包自定义服务器（CJS 格式，目标 node22）
 RUN pnpm tsup src/server.ts \
   --format cjs \
   --platform node \
-  --target node20 \
+  --target node22 \
   --outDir dist \
   --no-splitting \
   --no-minify
 
 # ============ Stage 2: Runner ============
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 
 RUN npm install -g pnpm@9.0.0
 
