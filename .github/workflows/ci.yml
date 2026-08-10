@@ -5,13 +5,9 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-  # 手动触发：用于运行 E2E 测试等需要完整环境的验证
+  # 手动触发：用于按需跑 Type Check + Lint + Test + Build + Audit
+  # E2E 已迁移至根仓 .github/workflows/e2e.yml（需全栈环境）
   workflow_dispatch:
-    inputs:
-      run_e2e:
-        description: '运行 Playwright E2E 测试'
-        type: boolean
-        default: true
 
 jobs:
   validate:
@@ -38,8 +34,29 @@ jobs:
       - name: Lint
         run: pnpm run lint:build
 
-      - name: Test
-        run: pnpm test -- --run
+      - name: BFF security boundary (AL-1)
+        # 边界硬约束：'use client' 文件禁止从 @/shared/security（非 schemas 子树）导入
+        # 密码哈希/权限判定/JWT 签发等权威安全逻辑（后端为认证/授权唯一权威）。
+        run: pnpm run check:bff-boundary
+
+      - name: Test (with coverage gate)
+        # ER-13：跑覆盖率并执行 thresholds 门禁（基线地板，防下滑），低于阈值则 CI 失败
+        run: pnpm test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Diff coverage gate (ER-13)
+        # PR 级新增代码覆盖率门禁：新增 src/** 代码覆盖率 < 80% 则 CI 失败
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          node tools/scripts/diff-coverage.mjs --base origin/${{ github.base_ref }} --threshold 80
 
   build:
     name: Build Verification
@@ -109,50 +126,7 @@ jobs:
           echo "## Dependency Audit" >> $GITHUB_STEP_SUMMARY
           echo "生产依赖审计（moderate+ 阻断）。出现中危以上漏洞时 CI 已失败，须修复或经团队评审豁免后方可合并。" >> $GITHUB_STEP_SUMMARY
 
-  e2e:
-    name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
-    needs: validate
-    # 仅手动触发时运行（E2E 需要完整环境，不在常规 push/PR 中执行）
-    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: pnpm/action-setup@v5
-        with:
-          version: 9.0.0
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Build
-        run: pnpm run build
-        env:
-          AUTH_SESSION_SECRET: ci-e2e-placeholder-secret-32bytes-minimum
-          NEXT_PUBLIC_SITE_URL: http://localhost:2333
-          ALLOWED_ORIGINS: http://localhost:2333
-          PASSWORD_RESET_DEFAULT: CI_E2E_PLACEHOLDER
-
-      - name: Run E2E tests
-        run: pnpm test:e2e --project=chromium
-        env:
-          AUTH_SESSION_SECRET: ci-e2e-placeholder-secret-32bytes-minimum
-          NEXT_PUBLIC_SITE_URL: http://localhost:2333
-          ALLOWED_ORIGINS: http://localhost:2333
-          PASSWORD_RESET_DEFAULT: CI_E2E_PLACEHOLDER
-
-      - name: Upload E2E report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+  # E2E 已迁移至根仓 .github/workflows/e2e.yml（ER-14 方案C）。
+  # E2E 需前端+后端+DB 全栈，前端子仓 CI 无法独立起后端；全量 E2E
+  # （nightly cron + workflow_dispatch）改在根仓经 docker-compose 起全栈后运行，
+  # 不进常规 PR。本地手跑仍可用：pnpm test:e2e（需先起后端+DB）。

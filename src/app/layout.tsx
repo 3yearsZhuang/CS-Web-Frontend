@@ -7,6 +7,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import Script from 'next/script';
+import localFont from 'next/font/local';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
 import { Navbar } from '@/components/layout/navbar';
@@ -17,6 +18,30 @@ import { PageTransition } from '@/components/effects/page-transition';
 import { AnnouncementBanner } from '@/components/feedback/announcement-banner';
 import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
 import './globals.css';
+
+/**
+ * 字体自托管（CodeGov-F1）— 拉丁字族用 next/font/local 本地托管，
+ * 消除对外链 Google Fonts 的运行时依赖（隐私/性能/离线）。
+ * CJK（Noto Sans/Serif SC）体积过大不做本地托管，仍经 globals.css 的
+ * @import 加载（仅保留 CJK 两个字族）。
+ *
+ * 各字体暴露 CSS 变量，供 globals.css 的 --font-sans/mono/serif 引用。
+ */
+const fraunces = localFont({
+  src: './fonts/fraunces-latin.woff2',
+  variable: '--font-fraunces',
+  display: 'swap',
+});
+const manrope = localFont({
+  src: './fonts/manrope-latin.woff2',
+  variable: '--font-manrope',
+  display: 'swap',
+});
+const jetbrainsMono = localFont({
+  src: './fonts/jetbrains-latin.woff2',
+  variable: '--font-jetbrains',
+  display: 'swap',
+});
 
 /** 全局 SEO 元数据 */
 export async function generateMetadata(): Promise<Metadata> {
@@ -127,7 +152,12 @@ export default async function RootLayout({
   const nonce = (await headers()).get('x-nonce') ?? '';
 
   return (
-    <html lang="zh-CN" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="zh-CN"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+    >
       <body
         className="antialiased bg-background text-foreground"
       >

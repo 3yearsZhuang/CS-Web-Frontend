@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { Bot, Plus, Send, Wrench } from 'lucide-react';
 import { Button } from '@/components/primitives/button';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import ReactMarkdown from 'react-markdown';
+import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ToolCallEvent {
@@ -275,7 +275,7 @@ export default function AssistantChat() {
               >
                 {msg.role === 'assistant' ? (
                   <div className="prose-invert [&_p]:m-0 [&_pre]:bg-[var(--background)] [&_pre]:p-2 [&_pre]:rounded [&_code]:text-[12px]">
-                    <ReactMarkdown>{msg.content || (streaming && i === messages.length - 1 ? '…' : '')}</ReactMarkdown>
+                    <MarkdownRenderer content={msg.content || (streaming && i === messages.length - 1 ? '…' : '')} />
                   </div>
                 ) : (
                   <span className="whitespace-pre-wrap">{msg.content}</span>

@@ -41,7 +41,7 @@ function main() {
 
   console.log('▶ Bundling custom server with tsup...');
   run(
-    'pnpm tsup src/server.ts --format cjs --platform node --target node20 --outDir dist --no-splitting --no-minify',
+    'pnpm tsup src/server.ts --format cjs --platform node --target node22 --outDir dist --no-splitting --no-minify',
   );
 
   console.log('✓ Build completed successfully!');
