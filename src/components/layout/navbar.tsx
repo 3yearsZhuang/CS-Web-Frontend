@@ -20,7 +20,6 @@ import type { NavMessageKey } from '@/i18n/types';
 const NAV_LINKS: Array<{ href: string; key: NavMessageKey; requireAuth?: boolean }> = [
   { href: '/about', key: 'about' },
   { href: '/events', key: 'events' },
-  { href: '/community', key: 'community' },
   { href: '/tools', key: 'tools', requireAuth: true },
 ];
 

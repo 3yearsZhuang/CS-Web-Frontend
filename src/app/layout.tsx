@@ -158,30 +158,30 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
     >
-      <body
-        className="antialiased bg-background text-foreground"
-      >
-        {/*
-         * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
-         * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
-         */}
-        <SWRProvider>
+      <head>
         {/*
           防闪烁：SSR 默认深色，首帧由下方内联脚本按 next-themes 存储值校正主题类，
           避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
 
-          suppressHydrationWarning：浏览器 CSP 在校验后会把 DOM 中 <script> 的
-          nonce 属性移除（DOM 中 nonce=""），但 React 服务端 HTML 带 nonce="值"，
-          导致水合时属性不匹配。该脚本属一次性内联副作用，无需 React 协调其属性，
-          故抑制该元素的水合告警（与 <html suppressHydrationWarning> 同理）。
+          置于 <head> 中的内联 <script> 是 React 19 / Next 16 中消除“Encountered a
+          script tag”告警的规范做法（next-themes 同理）：<head> 内的脚本会被 React
+          识别为文档级一次性副作用，不会再触发该渲染告警。
         */}
         <script
           nonce={nonce}
-          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
           }}
         />
+      </head>
+      <body
+        className="antialiased bg-background text-foreground"
+      >
+        {/*
+        * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
+        * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
+        */}
+        <SWRProvider>
         <Script
           id="sw-register"
           strategy="afterInteractive"
