@@ -27,7 +27,7 @@
     "deploy:logs": "docker compose -f tools/deploy/docker-compose.yml logs -f"
   },
   "dependencies": {
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^1.30.0",
     "motion": "^12.42.2",
     "next": "16.3.0",
     "next-intl": "^4.13.5",
