@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
 import {
+  BackendTokenPair,
   clearAuthCookies,
   fetchMeWithPair,
   normalizeError,
@@ -68,15 +69,13 @@ export async function POST(req: Request) {
     return res;
   }
 
-  const pairBody = proxy.body as { accessToken?: string; refreshToken?: string };
+  const pairBody = proxy.body as BackendTokenPair;
   const hasPair = Boolean(pairBody.accessToken && pairBody.refreshToken);
-  const me = hasPair
-    ? await fetchMeWithPair(pairBody as { accessToken: string; refreshToken: string })
-    : null;
+  const me = hasPair ? await fetchMeWithPair(pairBody) : null;
 
   const res = NextResponse.json({ user: me?.user ?? null });
   if (hasPair) {
-    setAuthCookies(res, pairBody as { accessToken: string; refreshToken: string });
+    setAuthCookies(res, pairBody);
   } else {
     clearAuthCookies(res);
   }

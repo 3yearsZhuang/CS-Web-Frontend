@@ -1,6 +1,6 @@
 {
   "name": "projects",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "private": true,
   "scripts": {
     "build": "node ./tools/scripts/build-app.mjs",
@@ -17,6 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "ts-check": "tsc -p tsconfig.json",
     "validate": "pnpm run --parallel '/^(ts-check|lint:build)$/'",
+    "gen:api-types": "openapi-typescript ../openapi.baseline.json -o src/shared/api/backend-api.d.ts",
     "e2e": "playwright test",
     "test:e2e": "playwright test",
     "check:bff-boundary": "node ./tools/scripts/check-bff-boundary.mjs",
@@ -59,13 +60,14 @@
     "eslint-config-next": "16.3.0",
     "jsdom": "^30.0.1",
     "only-allow": "^1.2.2",
+    "openapi-typescript": "^7.13.0",
     "postgres": "^3.4.9",
     "tailwindcss": "^4",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.1.10",
-    "yaml": "1.10.3"
+    "yaml": "^2.4.2"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

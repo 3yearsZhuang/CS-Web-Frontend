@@ -14,6 +14,10 @@ import 'server-only';
 import { NextResponse } from 'next/server';
 import { getCookieValue } from '@/shared/security/security';
 import type { SafeUser, UserRole } from '@/shared/types';
+import type { components } from '@/shared/api/backend-api';
+
+/** 后端 OpenAPI 组件 schema（由 openapi.baseline.json 生成，ER-47 契约对齐） */
+type Api = components['schemas'];
 
 /** 后端基地址 */
 export const BACKEND_URL = (process.env.BACKEND_URL || 'http://localhost:9000').replace(/\/+$/, '');
@@ -37,32 +41,11 @@ export interface BackendErrorBody {
   tracebackId?: string;
 }
 
-/** 后端 TokenPair（camelCase 传输契约） */
-export interface BackendTokenPair {
-  accessToken: string;
-  refreshToken: string;
-  tokenType?: string;
-  expiresIn?: number;
-}
+/** 后端 TokenPair（camelCase 传输契约，对齐 OpenAPI TokenPair） */
+export type BackendTokenPair = Api['TokenPair'];
 
-/** 后端 UserOut（camelCase 传输契约，与后端 Pydantic alias 对齐） */
-export interface BackendUser {
-  id: number;
-  username: string;
-  email: string;
-  fullName?: string | null;
-  displayName?: string | null;
-  bio?: string | null;
-  avatarUrl?: string | null;
-  avatarType?: string;
-  githubUrl?: string | null;
-  websiteUrl?: string | null;
-  techTags?: string[];
-  isActive?: boolean;
-  isSuperuser?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+/** 后端 UserOut（camelCase 传输契约，对齐 OpenAPI UserOut） */
+export type BackendUser = Api['UserOut'];
 
 /** 代理结果：body + 需要应用到响应的 cookie 操作 */
 export interface ProxyResult {
@@ -327,20 +310,8 @@ export function toAnnouncement(b: unknown): Record<string, unknown> { const r = 
   };
 }
 
-export interface AnnouncementOutLike {
-  id: number;
-  title: string;
-  content?: string | null;
-  level?: string;
-  is_active?: boolean;
-  is_dismissible?: boolean;
-  priority?: number;
-  expires_at?: string | null;
-  target_roles?: string[] | null;
-  created_by?: number;
-  created_at?: string;
-  updated_at?: string;
-}
+/** 后端 AnnouncementOut（对齐 OpenAPI） */
+export type AnnouncementOutLike = Api['AnnouncementOut'];
 
 export function toNotification(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
@@ -355,16 +326,8 @@ export function toNotification(b: unknown): Record<string, unknown> { const r = 
   };
 }
 
-export interface NotificationOutLike {
-  id: number;
-  user_id: number;
-  type: string;
-  title: string;
-  content?: string | null;
-  is_read?: boolean;
-  sender_id?: number | null;
-  created_at?: string;
-}
+/** 后端 NotificationOut（对齐 OpenAPI） */
+export type NotificationOutLike = Api['NotificationOut'];
 
 export function toJoinApplication(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
@@ -385,22 +348,8 @@ export function toJoinApplication(b: unknown): Record<string, unknown> { const r
   };
 }
 
-export interface JoinApplicationOutLike {
-  id: number;
-  applicant_name: string;
-  student_id: string;
-  major: string;
-  tech_tags?: string[];
-  reason: string;
-  contact_qq?: string | null;
-  contact_phone?: string | null;
-  user_id?: number | null;
-  status?: string;
-  reviewed_by?: number | null;
-  review_note?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+/** 后端 JoinApplicationOut（对齐 OpenAPI） */
+export type JoinApplicationOutLike = Api['JoinApplicationOut'];
 
 /** 管理员用户列表：后端分页结构 → 前端契约（pageSize/totalPages + SafeUser + roles） */
 export function toAdminUserList(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
@@ -434,19 +383,8 @@ export function backendNameToFrontendKey(name: string): string {
   return `${name.slice(0, idx).replace(/_/g, '.')}.${name.slice(idx + 1)}`;
 }
 
-export interface AdminRoleLike {
-  id: number;
-  name: string;
-  display_name?: string | null;
-  description?: string | null;
-  is_system?: boolean;
-  is_protected?: boolean;
-  sort_order?: number;
-  permissions?: string[];
-  user_count?: number;
-  created_at?: string;
-  updated_at?: string;
-}
+/** 后端 AdminRoleOut（对齐 OpenAPI） */
+export type AdminRoleLike = Api['AdminRoleOut'];
 
 /** 后端 AdminRoleOut → 前端 RoleRecord（权限名映射回前端 key，仅保留已知权限点） */
 export function toAdminRole(b: unknown, knownKeys: Set<string> = new Set()): Record<string, unknown> { const r = b as Record<string, unknown>;
@@ -467,18 +405,8 @@ export function toAdminRole(b: unknown, knownKeys: Set<string> = new Set()): Rec
   };
 }
 
-export interface AuditLogLike {
-  id: number;
-  actor_id?: number | null;
-  actor_username?: string | null;
-  action: string;
-  resource_type?: string;
-  resource_id?: string | null;
-  detail?: Record<string, unknown> | null;
-  ip_address?: string | null;
-  user_agent?: string | null;
-  created_at?: string | null;
-}
+/** 后端 AuditLogItem（对齐 OpenAPI） */
+export type AuditLogLike = Api['AuditLogItem'];
 
 /** 后端 AuditLogItem → 前端 AdminAction */
 export function toAdminAction(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
@@ -515,25 +443,8 @@ export function toAdminAction(b: unknown): Record<string, unknown> { const r = b
   };
 }
 
-export interface EventOutLike {
-  id: number;
-  month?: string | null;
-  date?: string | null;
-  title: string;
-  description?: string | null;
-  status?: string | null;
-  year?: string | null;
-  topics?: string[];
-  tags?: string[];
-  is_pinned?: boolean;
-  capacity?: number;
-  content_markdown?: string | null;
-  registration_fields?: Array<Record<string, unknown>>;
-  created_by?: number | null;
-  created_at?: string;
-  updated_at?: string;
-  registered_count?: number | null;
-}
+/** 后端 EventOut（对齐 OpenAPI） */
+export type EventOutLike = Api['EventOut'];
 
 /** 后端 EventOut → 前端 EventItem */
 export function toEventItem(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
@@ -559,15 +470,8 @@ export function toEventItem(b: unknown): Record<string, unknown> { const r = b a
   };
 }
 
-export interface EventRegistrationOutLike {
-  id: number;
-  user_id: number;
-  event_id: number;
-  status: string;
-  form_data?: Record<string, string> | null;
-  registered_at?: string;
-  cancelled_at?: string | null;
-}
+/** 后端 EventRegistrationOut（对齐 OpenAPI） */
+export type EventRegistrationOutLike = Api['EventRegistrationOut'];
 
 /** 后端 EventRegistrationOut → 前端 EventRegistration */
 export function toEventRegistration(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;

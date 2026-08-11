@@ -2,7 +2,7 @@
  * @file GitHub OAuth 回调 — GET /api/auth/oauth/github/callback（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { BACKEND_URL, setAuthCookies } from '@/shared/backend-client';
+import { BACKEND_URL, BackendTokenPair, setAuthCookies } from '@/shared/backend-client';
 import { OAUTH_2FA_COOKIE_NAME, OAUTH_2FA_COOKIE_MAX_AGE } from '@/modules/auth/types/constants';
 
 export const runtime = 'nodejs';
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
   const profileUrl = publicUrl('/profile', req.url);
   const res2 = NextResponse.redirect(profileUrl, { status: 302 });
   if (body.accessToken && body.refreshToken) {
-    setAuthCookies(res2, { accessToken: body.accessToken, refreshToken: body.refreshToken });
+    setAuthCookies(res2, body as BackendTokenPair);
   }
   return res2;
 }
