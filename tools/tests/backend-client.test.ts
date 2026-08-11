@@ -127,7 +127,12 @@ describe('proxyBackend', () => {
 
 describe('fetchMeWithPair', () => {
   it('用 JWT 对换取用户信息与角色', async () => {
-    const me = await fetchMeWithPair({ accessToken: 'x', refreshToken: 'y' });
+    const me = await fetchMeWithPair({
+      accessToken: 'x',
+      refreshToken: 'y',
+      expiresIn: 900,
+      tokenType: 'bearer',
+    });
     expect(me?.user.email).toBe('t@test.dev');
     expect(me?.roles).toEqual(['user']);
     expect(me?.user.id).toBe('1');
@@ -144,10 +149,21 @@ describe('角色解析', () => {
   });
 
   it('toSafeUserFromBackend 兜底 is_superuser → root', () => {
-    const user = toSafeUserFromBackend({ id: 2, username: 'r', email: 'r@t.dev' }, []);
+    const baseUser = {
+      id: 2,
+      username: 'r',
+      email: 'r@t.dev',
+      isActive: true,
+      isSuperuser: false,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      avatarType: 'initial',
+      techTags: [],
+    };
+    const user = toSafeUserFromBackend(baseUser, []);
     expect(user.role).toBe('user');
     const superUser = toSafeUserFromBackend(
-      { id: 3, username: 's', email: 's@t.dev', isSuperuser: true },
+      { ...baseUser, id: 3, username: 's', email: 's@t.dev', isSuperuser: true },
       [],
     );
     expect(superUser.role).toBe('root');
