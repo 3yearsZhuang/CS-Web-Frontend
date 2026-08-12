@@ -599,7 +599,7 @@ i18n `community` namespace。
 
 ### 2.5.7 社区 Markdown 编辑器（UI 组件）
 
-> 社区全文 Markdown 编辑/渲染统一组件，位于 `src/modules/community/ui/`（文件名 `community-` 前缀）。本组件为**前端 UI 关注点**，API 转发仍走 §2.5 社区论坛端点与 §2.8 社区文章端点；其指南原属 `FrontDoc-UID.md` §14，2026-08-09 下沉至本模块契约以避免 UID 膨胀。
+> 社区全文 Markdown 编辑/渲染统一组件，位于 `src/modules/community/ui/`（文件名 `community-` 前缀）。本组件为**前端 UI 关注点**，API 转发仍走 §2.5 社区论坛端点与 §2.8 社区文章端点；其指南已下沉至本模块契约以避免 UID 膨胀。
 
 **概述**
 

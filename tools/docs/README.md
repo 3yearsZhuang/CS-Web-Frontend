@@ -28,7 +28,7 @@
 | [FrontDoc-UID.md](FrontDoc-UID.md) | UI 设计规范 | reference | 颜色/字体/布局/组件/动效/交互规范 + 全局组件体系（§5.0）；编码规范已迁出至 FrontDoc-Conv.md；Markdown 编辑器契约已下沉至 Arch §2.5.7 |
 | [capsule-tabs.md](capsule-tabs.md) | 胶囊 Tab 配置 + 设计决策 | data + decision | 悬浮折叠胶囊各页面 Tab 配置数据 + 未采用备选方案（从 UID §4.8 / 附录 A 迁出） |
 
-> PG 迁移归档（原 `FrontDoc-PGMig.md`）已于 2026-08-09 并入根 `docs/RootDoc-MigEval.md` §八。
+> PG 迁移归档已于 2026-08-09 归入根 `docs/RootDoc-MigEval.md` §八。
 
 ## 如何新增文档
 

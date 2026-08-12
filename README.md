@@ -213,7 +213,7 @@ tools/tests/
 | [演进与 ADR](../docs/RootDoc-ADR.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/FrontDoc-01-Arch.md#257-社区-markdown-编辑器ui-组件) | 编辑器使用指南（Arch §2.5.7） |
 | [入职指南 + 项目规则](../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
-| [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节原-frontdoc-pgmigmd-并入已归档) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
+| [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
 | [变更日志](CHANGELOG.md) | 版本变更记录 |
 

@@ -590,13 +590,13 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
 | `tools/docs/FrontDoc-UID.md` | 本文档 - 视觉与交互设计规范 |
-| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，原 §10 迁出） |
+| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，§10 迁出） |
 
 ---
 
 ## 14. Markdown 编辑器
 
-> 原 `FrontDoc-MDE.md` 已并入本规范 §14，现进一步下沉为社区模块契约（避免全局 UI 规范膨胀）。完整组件架构 / Props / 使用场景 / 安全策略见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.5.7。
+> Markdown 编辑器契约已下沉为社区模块契约（避免全局 UI 规范膨胀）。完整组件架构 / Props / 使用场景 / 安全策略见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.5.7。
 
 本规范仅保留结论：社区 Markdown 编辑/渲染统一使用 `src/modules/community/ui/` 下的三层组件——`MarkdownRenderer`（只读渲染）/ `MarkdownEditorBase`（基础编辑）/ `MarkdownEditor`（完整编辑，含工具栏 + 图片上传）；安全渲染走 `rehype-sanitize`；内容长度限制统一在 `src/shared/utils/ui-constants.ts` 的 `FORM_LIMITS`。新增页面接入见 Arch §2.5.7。
 
@@ -607,6 +607,6 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 日期 | 变更 |
 |------|------|
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
-| 2026-08-09 | 文档瘦身重构：① 原 §14 Markdown 编辑器（并入自 `FrontDoc-MDE.md`）契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
+| 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

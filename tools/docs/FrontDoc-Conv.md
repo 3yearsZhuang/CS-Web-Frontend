@@ -1,7 +1,7 @@
 # 前端编码规范（FrontDoc-Conv）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-09（新建：对标后端 BackDoc-Conv.md，收拢原 RootDoc-EngConv.md §十 与 FrontDoc-UID.md §10 的前端编码约定，形成前端专项编码规范）
+> 最后更新：2026-08-09（新建：对标后端 BackDoc-Conv.md，收拢 RootDoc-EngConv.md §十 与 FrontDoc-UID.md §10 的前端编码约定，形成前端专项编码规范）
 > 关联：通用工程规范见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md)；架构与业务模块契约见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；视觉与交互规范见 [FrontDoc-UID.md](FrontDoc-UID.md)；目录设计方法论见根 [RootDoc-FEArch.md](../../../docs/RootDoc-FEArch.md)；面向新人的聚合摘要见根 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 
 本项目的编码规范、目录组织与通用约定。**所有前端贡献者（含 AI Agent）在写代码前必须先读本文档**。
