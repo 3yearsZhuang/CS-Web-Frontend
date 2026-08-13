@@ -369,9 +369,15 @@ export interface ToolsMessages {
     storeUnknownError: string;
     storeToggleFailed: string;
     storeUpdateStatusFailed: string;
+    storePresetFailed: string;
     storeUpdateGuideFailed: string;
     storeCreateFailed: string;
     storeDeleteFailed: string;
+    visibilityLabel: string;
+    visibilityOpen: string;
+    visibilityClosed: string;
+    statusDoneAutoOpen: string;
+    slugInvalidHint: string;
   },
   workbench: {
     wbTitle: string;
@@ -823,9 +829,15 @@ export const zhCN: ToolsMessages = {
     storeUnknownError: '未知错误',
     storeToggleFailed: '切换变体失败',
     storeUpdateStatusFailed: '更新状态失败',
+    storePresetFailed: '应用变体预设失败',
     storeUpdateGuideFailed: '更新规范失败',
     storeCreateFailed: '创建失败',
     storeDeleteFailed: '删除失败',
+    visibilityLabel: '可见性',
+    visibilityOpen: '已开放（对所有角色可见）',
+    visibilityClosed: '未开放',
+    statusDoneAutoOpen: '迁移完成 → 已自动开放可见性',
+    slugInvalidHint: 'slug 必须是已知的可见性模块 key',
   },
   workbench: {
     wbTitle: '工作台',
@@ -1277,9 +1289,15 @@ export const en: ToolsMessages = {
     storeUnknownError: 'Unknown error',
     storeToggleFailed: 'Toggle variant failed',
     storeUpdateStatusFailed: 'Update status failed',
+    storePresetFailed: 'Apply variant preset failed',
     storeUpdateGuideFailed: 'Update guide failed',
     storeCreateFailed: 'Create failed',
     storeDeleteFailed: 'Delete failed',
+    visibilityLabel: 'Visibility',
+    visibilityOpen: 'Opened (visible to all roles)',
+    visibilityClosed: 'Not opened',
+    statusDoneAutoOpen: 'Migration done → visibility auto-opened',
+    slugInvalidHint: 'slug must be a known visibility module key',
   },
   workbench: {
     wbTitle: 'Workbench',

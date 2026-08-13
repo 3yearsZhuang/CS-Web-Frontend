@@ -9,28 +9,16 @@
 import { createServer } from 'http';
 import { randomUUID } from 'node:crypto';
 import { parse } from 'url';
-import fs from 'node:fs';
 import path from 'node:path';
 import next from 'next';
+import { config as loadEnv } from 'dotenv';
 import { sanitizeProxyHeaders } from '@/shared/security/proxy-headers';
 import { logger } from '@/shared/logger';
 
-// 手动加载 .env（自定义 server 不支持自动加载），不覆盖已有 shell 环境变量
-const envPath = path.join(process.cwd(), '.env');
-if (fs.existsSync(envPath)) {
-  const content = fs.readFileSync(envPath, 'utf-8');
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx < 0) continue;
-    const key = trimmed.slice(0, eqIdx).trim();
-    const value = trimmed.slice(eqIdx + 1).trim();
-    if (!(key in process.env)) {
-      process.env[key] = value;
-    }
-  }
-}
+// 自定义 server 不自动加载 .env，需手动加载。
+// override:false 保持「不覆盖已有 shell 环境变量」语义（与原手写解析一致），
+// 且 dotenv 原生处理 # 注释 / 引号 / 多行值等边界，避免手写解析的疏漏。
+loadEnv({ path: path.join(process.cwd(), '.env'), override: false });
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || 'localhost';

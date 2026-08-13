@@ -81,3 +81,32 @@ export async function DELETE(
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
+
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const { id } = await params;
+
+  const proxy = await proxyBackend(req, {
+    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    method: 'PATCH',
+    jsonBody: {
+      migration_status: body.migrationStatus,
+    },
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '更新迁移状态失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ component: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}

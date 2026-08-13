@@ -130,6 +130,7 @@ export interface UserMessages {
     logoutAllTitle: string;
     logoutAllConfirm: string;
     logoutAllConfirmLabel: string;
+    logoutAllFailed: string;
     cancel: string;
     loadingSessions: string;
     loading: string;
@@ -507,6 +508,7 @@ export const zhCN: UserMessages = {
     logoutAllTitle: '登出全部设备',
     logoutAllConfirm: '此操作将注销你所有设备上的登录状态（包括当前设备），需要重新登录。确定继续吗？',
     logoutAllConfirmLabel: '确认登出全部',
+    logoutAllFailed: '登出全部设备失败，请稍后再试',
     cancel: '取消',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',
@@ -884,6 +886,7 @@ export const en: UserMessages = {
     logoutAllTitle: 'Log out all devices',
     logoutAllConfirm: 'This will sign you out on all devices (including the current one). You will need to sign in again. Continue?',
     logoutAllConfirmLabel: 'Log out all',
+    logoutAllFailed: 'Failed to log out all devices, please try again later',
     cancel: 'Cancel',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',

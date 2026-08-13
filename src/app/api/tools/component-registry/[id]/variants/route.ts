@@ -1,5 +1,8 @@
 /**
- * @file 组件变体开关 API — POST /api/tools/component-registry/[id]/variants/toggle（BFF 薄转发）
+ * @file 组件变体开关 API — PATCH /api/tools/component-registry/[id]/variants（BFF 薄转发）
+ *
+ * 与后端 PATCH /tools/component-registry/{item_id}/variants 对齐：
+ * 复用 Pydantic 校验（variantId/enabled），成功后返回该 item 的最新变体列表。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -7,23 +10,23 @@ import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '
 
 export const runtime = 'nodejs';
 
-export async function POST(
+export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const originErr = assertAllowedOrigin(req);
   if (originErr) return originErr;
 
-  const body = (await req.json().catch(() => ({}))) as { variantId?: string; enabled?: boolean };
+  const body = (await req.json().catch(() => ({}))) as { variantId?: number; enabled?: boolean };
   const { id } = await params;
-  if (!body.variantId) {
+  if (body.variantId == null) {
     return NextResponse.json({ error: '缺少变体 ID', code: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}/variants/${encodeURIComponent(body.variantId)}/toggle`,
-    method: 'POST',
-    jsonBody: { enabled: body.enabled ?? true },
+    path: `/tools/component-registry/${encodeURIComponent(id)}/variants`,
+    method: 'PATCH',
+    jsonBody: { variantId: body.variantId, enabled: body.enabled ?? true },
   });
 
   if (proxy.status !== 200) {
@@ -32,7 +35,8 @@ export async function POST(
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const res = NextResponse.json({ component: proxy.body });
+  // 后端直接返回变体数组，透传给前端 store 做 SYNC_VARIANTS。
+  const res = NextResponse.json(proxy.body);
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

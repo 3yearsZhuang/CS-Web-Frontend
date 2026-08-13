@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, RefreshCw, User, PenLine, Shield } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
-import { setLocaleCookie } from '@/shared/utils/locale';;
+import { setLocaleCookie } from '@/shared/utils/locale';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useFeatureVisibility, DEFAULT_VISIBILITY, useComponentVisible } from '@/shared/hooks/use-feature-visibility';
 import { useNotificationsPreview } from '@/components/use-notifications-preview';

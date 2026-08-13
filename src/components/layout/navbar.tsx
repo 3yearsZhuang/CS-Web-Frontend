@@ -40,12 +40,23 @@ export function Navbar() {
     lockScroll: true,
   });
 
+  // Hydration 守卫：可见性规则 / 登录态来自异步源（SWR + useAuth），SSR 与客户端
+  // 首帧必须渲染一致的结构，否则导航链接列表会因 /tools 等受控项出现 hydration
+  // mismatch。mounted 前统一用确定性基线（DEFAULT_VISIBILITY + guest 视角），
+  // 客户端 hydrate 完成后再切换为真实 rules / 用户类别。
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const effectiveRules = mounted ? rules : DEFAULT_VISIBILITY;
+  const effectiveUserClass: UserClass = mounted ? userClass : 'guest';
+  const effectiveLoggedIn = mounted ? isLoggedIn : false;
+
   const visibleLinks = NAV_LINKS.filter((link) => {
     const moduleKey = link.href.slice(1);
-    const rule = rules[moduleKey] ?? DEFAULT_VISIBILITY[moduleKey];
+    const rule = effectiveRules[moduleKey] ?? DEFAULT_VISIBILITY[moduleKey];
     // 配置缺失或未知模块：回退原 requireAuth 行为（fail-open，保证可用性）
-    if (!rule) return !link.requireAuth || isLoggedIn;
-    return rule[userClass];
+    if (!rule) return !link.requireAuth || effectiveLoggedIn;
+    return rule[effectiveUserClass];
   });
 
   useEffect(() => {
