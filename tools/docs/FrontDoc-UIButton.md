@@ -1,6 +1,6 @@
 # FZTBUCS-按钮样式统一设计（审计 + 扩展方案）
 
-> 最后更新：2026-08-17｜类型：reference + decision｜状态：基础设施已落地（button.tsx 扩展 + globals.css 新增类 + 共享 Pagination 替换 topics/users-manager 两处 + 测试 15 passed）；39 文件迁移待分批
+> 最后更新：2026-08-17｜类型：reference + decision｜状态：基础设施已落地；Batch-1（app/components 段：4 处分页→`<Pagination>` + 标记全部已读/移除/上传/拒绝→`Button` 新变体）+ Batch-2（modules 段：community/admin/tools/auth/announcement 真操作按钮散落描边→`Button` 变体、`user-list-view`/`community-topic-replies` 分页→`<Pagination>`）已迁；各批 eslint 0 error、测试 15 passed。剩余：primary-outline（`border-[var(--primary)]`）按钮、amber 关闭键、filled 保存键、`btn-inverted`、图标按钮 `.btn-icon`、特殊分页（resource/page 全量页码 / notification-center 省略号）、`<span>` 徽章、文本/链接按钮、筛选 Tab —— 均按 §5.2 / 本文范围保留或另立变体延后。
 > 更新人：3yearsZ
 > 受众：前端贡献者 / reviewer
 > Source of truth：本文与 `FrontDoc-UID.md §5.2 按钮` 互为补充（本文为 §5.2 的"落地收紧"细则）；按钮类最终定义以 `src/app/globals.css` 为准。
@@ -173,3 +173,69 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 4. 逐模块迁移 39 文件（按 admin / community / tools / app 分组，每组可独立 review）。
 5. 图标按钮收口 `.btn-icon`（低优先级，可后续）。
 6. 补测试 + 目视抽查 + 提交。
+
+---
+
+## 7. 迁移进度（Batch 跟踪）
+
+### Batch-1 — app/components 段（已完成）
+- `community/page.tsx`、`community-profile-tab.tsx`、`modules/community/ui/topics-manager.tsx`、`users-manager.tsx`：4 处重复手搓分页 → 共享 `<Pagination>`（移除各自 `pageNums` IIFE）。
+- `notifications/notification-center.tsx`：标记全部已读 → `<Button variant="outline" size="sm">`。
+- `tools/resource/submit-resource-modal.tsx`：移除文件 → `outline-danger xs`、上传 → `outline sm`（保留图标 flex）。
+- `tools/task/board-tab.tsx`：拒绝 → `outline-danger sm`、claim 尺寸覆盖 → `size="sm"`。
+
+### Batch-2 — modules 段（已完成）
+| 文件 | 改动 |
+|---|---|
+| community/ui/announcements-manager | 删除 → `outline-danger sm` |
+| community/ui/categories-manager | 编辑 → `outline sm`、删除 → `outline-danger sm` |
+| community/ui/topics-manager | 隐藏 → `outline-danger sm`（去 hover 覆盖）、硬删 → `outline-danger sm` |
+| community/ui/users-manager | 禁言 → `outline-danger sm`（去 hover 覆盖） |
+| community/ui/community-topic-replies | 楼中楼分页（prev/next）→ `<Pagination>`（新增导入） |
+| community/ui/reports-manager | 处理 → `outline sm`、驳回 → `outline-danger sm`（新增导入） |
+| admin/ui/user-resets-view | 驳回 → `outline-danger sm`（去 hover 覆盖 ×2） |
+| admin/ui/role-permission-matrix | 编辑 → `outline sm`、删除 → `outline-danger sm`（新增导入） |
+| admin/ui/user-list-view | 用户列表 prev/next 分页 → `<Pagination>`（新增导入） |
+| tools/ui/tool-task-manage | 删除（表格 + 卡片）×2 → `outline-danger sm`（新增导入） |
+| tools/ui/component-registry-detail | 回退 / 变体预设 / 编辑全部变体 → `outline sm`（新增导入） |
+| tools/ui/component-registry-drawer | 关闭 → `outline sm`（新增导入） |
+| auth/ui/two-factor-settings | 关闭 2FA → `outline-danger sm`（保留图标 flex） |
+| announcement/ui/admin-announcements-panel | 取消 → `outline sm`（新增 Button 导入；保存 filled 键保留） |
+
+### Batch-3 — 尺寸契约修复（已完成，2026-08-17）
+**问题**：用户反馈工作台「导出备份」(`outline`+`sm`) 与「清空」(`danger`+`sm`) 尺寸不一致。
+**根因**：`variantClass` 映射中 `danger` 的 `sm`/`xs` 误指向 MD 类 `btn-danger`（缺 `btn-danger-sm`），而 `outline`/`primary`/`outline-danger` 均有独立 `-sm` 类（`padding: 0.375rem 0.75rem` vs MD `0.75rem 1.5rem`）。故 `danger`+`sm` 静默渲染为 MD 尺寸，比同排 `outline`+`sm` 更高更宽。
+**修复（源头契约，非逐按钮打补丁）**：
+- `globals.css`：新增 `.btn-danger-sm`（对齐 `btn-primary-sm` 的 padding/gap/font-size，配 destructive 色 + hover/disabled opacity）。
+- `button.tsx`：`danger: { md:'btn-danger', sm:'btn-danger-sm', xs:'btn-danger-sm' }`。
+- `button.test.tsx`：新增 `danger`+`sm`/`xs` 回归测试（断言 `btn-danger-sm` 且不再含 `btn-danger`）。
+- **二次修复（18:48）**：消除残留 ~2px 高度差——`.btn-outline-sm` 带 `1px` 可见边框而 `.btn-danger-sm`（及 `primary`/`danger`/`primary-sm`）无边框，盒模型高度差 2px。给四个实色变体补 `border: 1px solid transparent`，使实色/描边变体盒模型高度完全一致（透明边框不影响外观）。
+**影响面**：仅 `workbench.tsx:172`「清空」显式 `danger`+`sm`；其余 `danger`（无 size 或默认 md）不受影响。修复后全站 `danger`+`sm`/`xs` 尺寸与同排其他变体一致（含边框对齐）。
+**验证**：ESLint 0 error；button.test 12 passed（原 11）；tsc 改动模块零新增错误（既有 baseline 错误在 navbar/component-registry-store/两处 test，与本批无关）。
+
+### Batch-4 — 变体收口（Step1–4，已完成 2026-08-17）
+**Step1 `primary-outline` 主色描边收口**：
+- `button.tsx` 新增 `variant="primary-outline"`；`globals.css` 新增 `.btn-primary-outline` / `.btn-primary-outline-sm`（尺寸/padding/font 对齐 outline，颜色 primary，hover `primary 5%` 底）。
+- 迁移 11 文件 16 处：dev-docs-viewer（编辑/保存）、tool-exam-manage（新建/创建）、create-role-form（创建）、role-modals（保存）、admin-feature-visibility-panel（确认）、admin-roles-panel（新建角色）、submit-resource-modal（关闭/提交）、community/page（选中标签）、role-permission-matrix（保存变更）、tool-task-manage（发布 ×2）、community-actions（点赞/收藏 active 态：去掉手写 `border-[var(--primary)] !text-... bg-.../5` 覆盖，改用 `active` prop 联动 `.btn-active`）。
+- `button.test.tsx` 新增 primary-outline 回归（md/sm/xs）。
+
+**Step2 `amber` + `filled` 变体收口**：
+- 新增变体与 `.btn-amber`/`.btn-amber-sm`（`#f59e0b` 主色，50% 描边 + 10% hover 底）、`.btn-filled`/`.btn-filled-sm`（`bg-foreground` 反色，`border:1px solid transparent` 对齐盒模型）。
+- 迁移：tool-task-manage「关闭」×2 → `amber sm`；admin-announcements-panel「保存」→ `filled sm`（保留 Loader2/Save 图标）。
+- 甄别保留（非按钮）：amber 状态徽章 `<span>`（tool-exam-manage / tools/page / exam/page / admin-join-panel）、component-registry-shell 筛选 chip 选中态、assistant-chat 聊天气泡。
+
+**Step3 `.btn-icon` 图标按钮收口**：
+- 新增 `.btn-icon`（2rem×2rem 方形、居中、描边 + hover 主色）。
+- community-markdown-editor 工具栏 2 个图标键（含图片上传）→ `btn-icon focus-ring`（去掉手写 `w-8 h-8` + `focus-amber`）。
+
+**Step4 特殊分页并入共享 `<Pagination>`**：
+- 扩展 `Pagination`：`variant: 'window'(默认)|'ellipsis'|'all'`、`activeVariant: 'outline'(默认)|'filled'`、`showTopBorder?: boolean`；省略号逻辑抽 `buildEllipsisPages`。
+- resource/page → `<Pagination variant="all" />`；notification-center → `<Pagination variant="ellipsis" activeVariant="filled" showTopBorder={false} className="mt-10" />`。
+- `pagination.test.tsx` 新增 3 用例（all 全量 / ellipsis 首尾+省略号 / filled 实色选中）。
+
+**验证**：ESLint 0 error（仅既有 warning：exhaustive-deps / 个别 unused）；button.test 15 + pagination.test 7 = **22 passed**；tsc 改动模块零新增错误。改动未提交（按协议）。
+
+### 保留 / 延后（剩余，非本次强制迁移范围）
+- **半透明主色描边**（`border-[var(--primary)]/30`，component-registry-detail「advance」）：刻意弱化的次要键，并入 primary-outline 会改变视觉，保留。
+- **导航类图标按钮**（Navbar/ThemeToggle/Bell/UserMenu 关闭键等）：未并入 `.btn-icon`，保留（导航语义）。
+- **`<span>` 徽章 / 文本链接（underline-grow）/ 筛选 Tab / 胶囊 Tab**：§5.2 保留，不并入 `btn-*`。

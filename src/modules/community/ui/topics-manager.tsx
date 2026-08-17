@@ -368,7 +368,7 @@ export function TopicsManager() {
                     {topic.isFeatured ? t('unfeatBtn') : t('featBtn')}
                   </Button>
                   {topic.status === 'published' ? (
-                    <Button variant="outline" size="sm" type="button" onClick={() => handleHide(topic)} disabled={busy} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]">
+                    <Button variant="outline-danger" size="sm" type="button" onClick={() => handleHide(topic)} disabled={busy}>
                       {t('hideBtn')}
                     </Button>
                   ) : (
@@ -376,14 +376,7 @@ export function TopicsManager() {
                       {t('restoreBtn')}
                     </Button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => handleHardDelete(topic)}
-                    disabled={busy}
-                    className="px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber disabled:opacity-50"
-                  >
-                    {t('deleteBtn')}
-                  </button>
+                  <Button variant="outline-danger" size="sm" type="button" onClick={() => handleHardDelete(topic)} disabled={busy}>{t('deleteBtn')}</Button>
                 </div>
               </div>
             );

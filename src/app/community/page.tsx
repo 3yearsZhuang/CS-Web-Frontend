@@ -18,7 +18,7 @@ import { CommunitySidebarTrending } from '@/modules/community/ui/community-sideb
 import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip';
 import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
-import { Button, SectionLoading } from '@/components';
+import { Button, Pagination, SectionLoading } from '@/components';
 import { useCommunityFeed } from './use-community-feed';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -64,7 +64,6 @@ function CommunityPageContent() {
     activeMembers,
     featuredTopics,
     searchInputRef,
-    pageNums,
     hasSearch,
     isInitialLoading,
     handleTabChange,
@@ -274,12 +273,14 @@ function CommunityPageContent() {
               {selectedTag && (
                 <div className="mb-8 flex items-center gap-3">
                   <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('selectedTag')}</span>
-                  <button
+                  <Button
+                    variant="primary-outline"
+                    size="sm"
+                    type="button"
                     onClick={() => handleTagClick(selectedTag)}
-                    className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors focus-amber"
                   >
                     {selectedTag} ✕
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -336,37 +337,7 @@ function CommunityPageContent() {
               )}
 
               {/* 分页 */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 py-8 mt-4 border-t border-[var(--border)]">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-                  >
-                    ←
-                  </button>
-                  {pageNums.map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={`font-mono text-[12px] px-3 py-1.5 border transition-colors focus-amber ${
-                        page === n
-                          ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                          : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {String(n).padStart(2, '0')}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
               </>
               )}

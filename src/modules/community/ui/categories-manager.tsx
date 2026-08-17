@@ -296,12 +296,8 @@ export function CategoriesManager() {
                     {cat.postCount}
                   </div>
                   <div className="md:col-span-2 flex gap-2 md:justify-end">
-                    <button type="button" onClick={() => startEdit(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber">
-                      {t('editBtn')}
-                    </button>
-                    <button type="button" onClick={() => handleDelete(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber">
-                      {t('deleteBtn')}
-                    </button>
+                    <Button variant="outline" size="sm" type="button" onClick={() => startEdit(cat)}>{t('editBtn')}</Button>
+                    <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDelete(cat)}>{t('deleteBtn')}</Button>
                   </div>
                 </>
               )}

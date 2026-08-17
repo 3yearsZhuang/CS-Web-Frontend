@@ -5,6 +5,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { Check, X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import { VariantCell } from './component-registry-variant-renderer';
@@ -111,15 +112,10 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           </div>
           <div className="flex items-center gap-2">
             {canRetreat && (
-              <button
-                onClick={() => {
+              <Button variant="outline" size="sm" type="button" onClick={() => {
                   const target = PREV_STATUS[item.migrationStatus];
                   if (target) setMigrationStatus(item.id, target);
-                }}
-                className="px-3 py-1 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)] transition-colors uppercase"
-              >
-                {t('retreat')}
-              </button>
+                }}>{t('retreat')}</Button>
             )}
             {canAdvance && (
               <button
@@ -150,15 +146,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
         {/* 变体矩阵预设：一键批量翻转 is_enabled */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {VARIANT_PRESETS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => applyVariantPreset(item.id, p.key)}
-              title={p.hint}
-              className="px-2.5 py-1 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors uppercase"
-            >
-              {p.label}
-            </button>
+              <Button key={p.key} variant="outline" size="sm" type="button" onClick={() => applyVariantPreset(item.id, p.key)} title={p.hint}>{p.label}</Button>
           ))}
         </div>
         <div className="mt-3 overflow-x-auto">
@@ -219,12 +207,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           </table>
         </div>
 
-        <button
-          onClick={() => onOpenDrawer(item.id)}
-          className="mt-4 px-4 py-1.5 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors uppercase"
-        >
-          {t('editAllVariants')}
-        </button>
+        <Button variant="outline" size="sm" type="button" onClick={() => onOpenDrawer(item.id)} className="mt-4">{t('editAllVariants')}</Button>
       </div>
 
       {/* ============ [4] 使用规范 ============ */}

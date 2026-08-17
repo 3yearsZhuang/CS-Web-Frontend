@@ -50,9 +50,67 @@ describe('Button', () => {
     expect(screen.getByRole('button')).toHaveClass('btn-outline-danger-sm');
   });
 
+  it('danger 变体支持 sm 尺寸（渲染 btn-danger-sm，修复 MD 误用）', () => {
+    const { rerender } = render(<Button variant="danger">删除</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn-danger');
+    rerender(
+      <Button variant="danger" size="sm">
+        清空
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-danger-sm');
+    expect(screen.getByRole('button')).not.toHaveClass('btn-danger');
+    rerender(
+      <Button variant="danger" size="xs">
+        清空
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-danger-sm');
+  });
+
+  it('支持 amber 变体（md / sm）', () => {
+    const { rerender } = render(<Button variant="amber">关闭</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn-amber');
+    rerender(
+      <Button variant="amber" size="sm">
+        关闭
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-amber-sm');
+  });
+
+  it('支持 filled 变体（md / sm）', () => {
+    const { rerender } = render(<Button variant="filled">保存</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn-filled');
+    rerender(
+      <Button variant="filled" size="sm">
+        保存
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-filled-sm');
+  });
+
   it('支持 ghost 变体', () => {
     render(<Button variant="ghost">取消</Button>);
     expect(screen.getByRole('button')).toHaveClass('btn-ghost');
+  });
+
+  it('支持 primary-outline 变体（md / sm / xs）', () => {
+    const { rerender } = render(<Button variant="primary-outline">新建</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn-primary-outline');
+    rerender(
+      <Button variant="primary-outline" size="sm">
+        新建
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-primary-outline-sm');
+    expect(screen.getByRole('button')).not.toHaveClass('btn-primary-outline');
+    rerender(
+      <Button variant="primary-outline" size="xs">
+        新建
+      </Button>,
+    );
+    expect(screen.getByRole('button')).toHaveClass('btn-primary-outline-sm');
   });
 
   it('size="xs" 复用 sm 视觉类（outline → btn-outline-sm）', () => {

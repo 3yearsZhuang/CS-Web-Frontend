@@ -171,7 +171,7 @@ export function UsersManager() {
                 <div className="lg:col-span-2 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(user.createdAt)}</div>
                 <div className="lg:col-span-3 flex flex-wrap gap-1.5 lg:justify-end">
                   {user.isActive ? (
-                    <Button variant="outline" size="sm" type="button" onClick={() => handleDisable(user)} disabled={busy} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]">
+                    <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDisable(user)} disabled={busy}>
                       {t('mute')} / Mute
                     </Button>
                   ) : (

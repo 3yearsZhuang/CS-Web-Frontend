@@ -15,7 +15,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SectionLoading } from '@/components';
+import { Button, Pagination, SectionLoading } from '@/components';
 import { motion } from 'motion/react';
 import { useResources } from './use-resources';
 import { ResourceCard } from './resource-card';
@@ -207,37 +207,14 @@ export default function ResourcePage() {
                   ))}
                 </motion.div>
 
-                {/* 分页 */}
+                {/* 分页（共享组件，全量页码） */}
                 {res.pages > 1 && (
-                  <div className="flex items-center justify-center gap-2 py-8 mt-4 border-t border-[var(--border)]">
-                    <button
-                      onClick={() => res.setPage((p) => Math.max(1, p - 1))}
-                      disabled={res.page <= 1}
-                      className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30"
-                    >
-                      ←
-                    </button>
-                    {Array.from({ length: res.pages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => res.setPage(p)}
-                        className={`font-mono text-[12px] px-3 py-1.5 border transition-colors ${
-                          p === res.page
-                            ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                            : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'
-                        }`}
-                      >
-                        {String(p).padStart(2, '0')}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => res.setPage((p) => Math.min(res.pages, p + 1))}
-                      disabled={res.page >= res.pages}
-                      className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30"
-                    >
-                      →
-                    </button>
-                  </div>
+                  <Pagination
+                    page={res.page}
+                    totalPages={res.pages}
+                    onPageChange={res.setPage}
+                    variant="all"
+                  />
                 )}
               </>
             )}

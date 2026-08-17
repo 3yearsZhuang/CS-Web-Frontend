@@ -1,11 +1,12 @@
 /**
- * @file Button — 统一按钮组件，封装 primary / outline / danger 三套样式
+ * @file Button — 统一按钮组件，封装 primary / outline / primary-outline / danger /
+ * outline-danger / ghost / amber / filled 八套变体（FrontDoc-UIButton.md §7）
  */
 
 import { forwardRef } from 'react';
 import { Spinner } from '@/components/primitives/spinner';
 
-type ButtonVariant = 'primary' | 'outline' | 'danger' | 'outline-danger' | 'ghost';
+type ButtonVariant = 'primary' | 'outline' | 'primary-outline' | 'danger' | 'outline-danger' | 'ghost' | 'amber' | 'filled';
 type ButtonSize = 'md' | 'sm' | 'xs';
 
 /** Button 组件 Props */
@@ -23,9 +24,12 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const variantClass: Record<ButtonVariant, Record<ButtonSize, string>> = {
   primary: { md: 'btn-primary', sm: 'btn-primary-sm', xs: 'btn-primary-sm' },
   outline: { md: 'btn-outline', sm: 'btn-outline-sm', xs: 'btn-outline-sm' },
-  danger: { md: 'btn-danger', sm: 'btn-danger', xs: 'btn-danger' },
+  'primary-outline': { md: 'btn-primary-outline', sm: 'btn-primary-outline-sm', xs: 'btn-primary-outline-sm' },
+  danger: { md: 'btn-danger', sm: 'btn-danger-sm', xs: 'btn-danger-sm' },
   'outline-danger': { md: 'btn-outline-danger', sm: 'btn-outline-danger-sm', xs: 'btn-outline-danger-sm' },
   ghost: { md: 'btn-ghost', sm: 'btn-ghost', xs: 'btn-ghost' },
+  amber: { md: 'btn-amber', sm: 'btn-amber-sm', xs: 'btn-amber-sm' },
+  filled: { md: 'btn-filled', sm: 'btn-filled-sm', xs: 'btn-filled-sm' },
 };
 
 /** 通用按钮组件 — 支持 variant/size/active/loading 等变体 */

@@ -6,7 +6,7 @@
 
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Pagination } from '@/components';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
@@ -310,24 +310,7 @@ export function UserListView({
             <div className="meta-mono text-[var(--muted-foreground)]">
               {t('totalPages', { total, page, pages: Math.max(1, totalPages) })}
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                disabled={page <= 1 || listLoading}
-                onClick={() => onFetch({ page: page - 1 })}
-                className="focus-amber meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                {t('prevPage')}
-              </button>
-              <button
-                type="button"
-                disabled={page >= totalPages || listLoading}
-                onClick={() => onFetch({ page: page + 1 })}
-                className="focus-amber meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                {t('nextPage')}
-              </button>
-            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={(p) => onFetch({ page: p })} />
           </div>
         )}
       </RevealItem>

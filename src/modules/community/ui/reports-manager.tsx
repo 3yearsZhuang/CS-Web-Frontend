@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
+import { Button } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { getError } from './community-admin-utils';
 
@@ -156,22 +157,12 @@ export function ReportsManager() {
                 </div>
                 {r.status === 'pending' && (
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      disabled={busyIds.has(r.id)}
-                      onClick={() => handleAction(r.id, 'resolve')}
-                      className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-                    >
-                      {busyIds.has(r.id) ? '...' : t('resolveBtn')}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busyIds.has(r.id)}
-                      onClick={() => handleAction(r.id, 'dismiss')}
-                      className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors disabled:opacity-30 focus-amber"
-                    >
-                      {busyIds.has(r.id) ? '...' : t('dismissBtn')}
-                    </button>
+                  <Button variant="outline" size="sm" type="button" disabled={busyIds.has(r.id)} onClick={() => handleAction(r.id, 'resolve')}>
+                    {busyIds.has(r.id) ? '...' : t('resolveBtn')}
+                  </Button>
+                  <Button variant="outline-danger" size="sm" type="button" disabled={busyIds.has(r.id)} onClick={() => handleAction(r.id, 'dismiss')}>
+                    {busyIds.has(r.id) ? '...' : t('dismissBtn')}
+                  </Button>
                   </div>
                 )}
                 {r.status !== 'pending' && (

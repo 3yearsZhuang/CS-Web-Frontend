@@ -128,7 +128,7 @@ export function MarkdownEditor({
             type="button"
             title={t(btn.titleKey)}
             onClick={() => handleToolbar(btn)}
-            className="shrink-0 w-8 h-8 flex items-center justify-center text-[12px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber"
+            className="shrink-0 btn-icon focus-ring"
           >
             {btn.label}
           </button>
@@ -139,7 +139,7 @@ export function MarkdownEditor({
           title={t('editorUploadImage')}
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="shrink-0 w-8 h-8 flex items-center justify-center text-[14px] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber disabled:opacity-50"
+          className="shrink-0 btn-icon focus-ring"
         >
           {uploading ? t('editorUploading') : '🖼'}
         </button>

@@ -9,7 +9,7 @@
 
 import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
-import { EmptyState, SectionLoading } from '@/components';
+import { Button, EmptyState, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { filterTabs, TYPE_STYLES, type NotificationsState } from './use-notifications';
 
@@ -33,60 +33,16 @@ export function NotificationCenter(props: NotificationsState) {
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
-
-    const pages: (number | 'ellipsis')[] = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible + 2) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      let start = Math.max(2, page - 1);
-      let end = Math.min(totalPages - 1, page + 1);
-      if (page <= 3) end = maxVisible - 1;
-      else if (page >= totalPages - 2) start = totalPages - maxVisible + 2;
-      if (start > 2) pages.push('ellipsis');
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (end < totalPages - 1) pages.push('ellipsis');
-      pages.push(totalPages);
-    }
-
     return (
-      <div className="flex items-center justify-center gap-1 sm:gap-2 mt-10">
-        <button
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 1}
-          className="meta-mono px-3 py-2 text-[12px] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          ←
-        </button>
-        {pages.map((p, idx) =>
-          p === 'ellipsis' ? (
-            <span key={`ellipsis-${idx}`} className="meta-mono px-2 text-[var(--muted-foreground)] text-[12px]">
-              ...
-            </span>
-          ) : (
-            <button
-              key={p}
-              onClick={() => handlePageChange(p)}
-              className={`meta-mono min-w-[36px] sm:min-w-[40px] px-2 py-2 text-[12px] border transition-colors ${
-                page === p
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                  : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-              }`}
-            >
-              {p}
-            </button>
-          ),
-        )}
-        <button
-          onClick={() => handlePageChange(page + 1)}
-          disabled={page === totalPages}
-          className="meta-mono px-3 py-2 text-[12px] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          →
-        </button>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        variant="ellipsis"
+        activeVariant="filled"
+        showTopBorder={false}
+        className="mt-10"
+      />
     );
   };
 
@@ -94,13 +50,14 @@ export function NotificationCenter(props: NotificationsState) {
     <>
       <RevealItem>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleMarkAllRead}
             disabled={unreadCount === 0}
-            className="meta-mono text-[12px] px-4 py-2.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed w-fit"
           >
             {t('markAllRead')}
-          </button>
+          </Button>
           <div className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('total', { total })}</div>
         </div>
       </RevealItem>

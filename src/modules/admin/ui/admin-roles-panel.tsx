@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { RolePermissionMatrix } from './role-permission-matrix';
+import { Button } from '@/components';
 import { RoleModals } from './role-modals';
 import { roleBadgeClass, roleBadgeLabel } from './roles-types';
 import type { PermissionModule, RoleModal, RoleRecord } from './roles-types';
@@ -332,13 +333,13 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
               {t('panelDesc')}
             </p>
           </div>
-          <button
+          <Button
+            variant="primary-outline"
             type="button"
             onClick={openCreateModal}
-            className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors focus-amber"
           >
             {t('createRoleBtn')}
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">

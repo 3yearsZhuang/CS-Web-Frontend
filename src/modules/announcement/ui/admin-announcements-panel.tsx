@@ -10,7 +10,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 
 type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
@@ -328,17 +328,17 @@ export function AnnouncementsPanel() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={resetForm} className="px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-                {t('cancel')}
-              </button>
-              <button
+              <Button variant="outline" size="sm" type="button" onClick={resetForm}>{t('cancel')}</Button>
+              <Button
+                variant="filled"
+                size="sm"
+                type="button"
                 onClick={handleAnnSubmit}
                 disabled={submitting || !form.title.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 disabled:opacity-50 transition-colors"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 {editingId ? t('saveChanges') : t('createBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

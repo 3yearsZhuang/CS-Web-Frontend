@@ -329,17 +329,11 @@ export function TwoFactorSettings() {
                 <Key size={14} />
                 {t('regenerateBackupCodes')}
               </button>
-              <button
-                onClick={() => {
+              <Button variant="outline-danger" size="sm" type="button" onClick={() => {
                   setActionMode('disable');
                   setActionCode('');
                   setError(null);
-                }}
-                className="px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--destructive)]/40 text-[var(--destructive)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)] transition-colors focus-amber"
-              >
-                <Shield size={14} />
-                {t('disable2fa')}
-              </button>
+                }} className="flex items-center gap-1.5"><Shield size={14} />{t('disable2fa')}</Button>
             </div>
           ) : (
             <div className="p-5 border border-[var(--border)] space-y-4">

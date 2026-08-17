@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CommunityTopicItem } from './community-topic-item';
 import { formatDateTime } from '@/shared/utils/utils';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Pagination } from '@/components';
 import { SectionNav } from '@/components/primitives/section-nav';
 import type {
   CommunityPost,
@@ -114,16 +114,7 @@ export function ProfileCommunityTab({ userId }: ProfileCommunityTabProps) {
     setPage(1);
   };
 
-  /** 当前页码范围（最多显示 5 个） */
-  const pageNums = (() => {
-    const max = totalPages;
-    const cur = page;
-    const range: number[] = [];
-    const start = Math.max(1, Math.min(cur - 2, max - 4));
-    const end = Math.min(max, start + 4);
-    for (let i = start; i <= end; i++) range.push(i);
-    return range;
-  })();
+  /** 当前页码范围由 Pagination 组件内部处理，无需本地 pageNums */
 
   return (
     <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">
@@ -294,37 +285,7 @@ export function ProfileCommunityTab({ userId }: ProfileCommunityTabProps) {
         )}
 
         {/* 分页 */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 py-8 mt-4 border-t border-[var(--border)]">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-            >
-              ←
-            </button>
-            {pageNums.map((n) => (
-              <button
-                key={n}
-                onClick={() => setPage(n)}
-                className={`font-mono text-[12px] px-3 py-1.5 border transition-colors focus-amber ${
-                  page === n
-                    ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                    : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'
-                }`}
-              >
-                {String(n).padStart(2, '0')}
-              </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-            >
-              →
-            </button>
-          </div>
-        )}
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>
   );

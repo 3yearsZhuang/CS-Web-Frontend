@@ -10,6 +10,7 @@ import type {
   NestedCommentsResult,
 } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
+import { Pagination } from '@/components';
 
 interface TopicRepliesProps {
   replies: CommunityCommentDetail[];
@@ -66,28 +67,7 @@ export function TopicReplies({
         </div>
       )}
 
-      {/* 分页 */}
-      {replyTotalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 py-8 mt-8 border-t border-[var(--border)]">
-          <button
-            onClick={() => onSetReplyPage(Math.max(1, replyPage - 1))}
-            disabled={replyPage <= 1}
-            className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-          >
-            ←
-          </button>
-          <span className="meta-mono text-[var(--muted-foreground)]">
-            {String(replyPage).padStart(2, '0')} / {String(replyTotalPages).padStart(2, '0')}
-          </span>
-          <button
-            onClick={() => onSetReplyPage(Math.min(replyTotalPages, replyPage + 1))}
-            disabled={replyPage >= replyTotalPages}
-            className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-          >
-            →
-          </button>
-        </div>
-      )}
+      <Pagination page={replyPage} totalPages={replyTotalPages} onPageChange={onSetReplyPage} />
     </div>
   );
 }

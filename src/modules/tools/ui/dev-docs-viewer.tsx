@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
+import { Button } from '@/components';
 import { formatDate } from './tool-types';
 
 interface DevDoc {
@@ -233,13 +234,14 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                   </button>
                 </div>
                 {isRoot && (
-                  <button
+                  <Button
+                    variant="primary-outline"
+                    size="sm"
                     type="button"
                     onClick={() => { setEditContent(detail.content); setEditing(true); }}
-                    className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
                   >
                     {t('edit')}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -271,14 +273,15 @@ export function DevDocsViewer({ isRoot }: { isRoot: boolean }) {
                 >
                   {tc('cancel')}
                 </button>
-                <button
+                <Button
+                  variant="primary-outline"
+                  size="sm"
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors disabled:opacity-50"
                 >
                   {saving ? t('saving') : t('saveBtn')}
-                </button>
+                </Button>
               </div>
             </div>
 

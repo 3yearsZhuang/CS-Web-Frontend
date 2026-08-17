@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import {
   roleBadgeClass,
   roleBadgeLabel,
@@ -86,20 +87,8 @@ export function RolePermissionMatrix({
           </div>
           {!role.isSystem && (
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onEdit}
-                className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
-              >
-                {t('edit')}
-              </button>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--border)] text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber"
-              >
-                {t('delete')}
-              </button>
+              <Button variant="outline" size="sm" type="button" onClick={onEdit}>{t('edit')}</Button>
+              <Button variant="outline-danger" size="sm" type="button" onClick={onDelete}>{t('delete')}</Button>
             </div>
           )}
         </div>
@@ -119,14 +108,15 @@ export function RolePermissionMatrix({
               >
                 {t('reset')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
+                size="sm"
                 type="button"
                 onClick={onSave}
                 disabled={!dirty || saving}
-                className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-40"
               >
                 {saving ? t('saving') : t('saveChanges')}
-              </button>
+              </Button>
             </div>
           </div>
         )}

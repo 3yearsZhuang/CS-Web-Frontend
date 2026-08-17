@@ -11,6 +11,7 @@ import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useToast } from '@/components/feedback/toast';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { Button } from '@/components';
 import {
   formatDate,
   EXAM_PAGE_SIZE,
@@ -131,13 +132,14 @@ export function ExamManagePanel() {
       <div className="flex items-center justify-between mb-4">
         <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('examCount', { count: examTotal })}</span>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="primary-outline"
+            size="sm"
             type="button"
             onClick={() => setExamModalOpen(true)}
-            className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
           >
             {t('newExam')}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => fetchExams(examPage)}
@@ -363,14 +365,14 @@ export function ExamManagePanel() {
               >
                 {tc('cancel')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
                 type="button"
                 onClick={handleCreateExam}
                 disabled={examCreating}
-                className="focus-amber meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors disabled:opacity-50"
               >
                 {examCreating ? t('creating') : t('createExamBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>

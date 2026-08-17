@@ -193,13 +193,14 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 >
                   {t('reviewPass')}
                 </button>
-                <button
+                <Button
+                  variant="outline-danger"
+                  size="sm"
                   onClick={() => handleReview(c.id, false)}
                   disabled={reviewingId === c.id}
-                  className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors"
                 >
                   {t('reviewReject')}
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -273,9 +274,9 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                     <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
                       {user && task.status === 'published' && (
                         <Button
+                          size="sm"
                           onClick={(e) => { e.stopPropagation(); handleClaim(task.id); }}
                           disabled={claimingId === task.id || task.claimCount >= task.maxClaimants}
-                          className="text-[11px] px-4 py-2"
                         >
                           {task.claimCount >= task.maxClaimants ? t('claimFull') : claimingId === task.id ? t('claiming') : t('claimTask')}
                         </Button>

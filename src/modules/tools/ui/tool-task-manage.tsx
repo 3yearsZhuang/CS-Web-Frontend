@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { Check, X } from 'lucide-react';
 import {
   formatDate,
@@ -267,33 +268,30 @@ export function TaskManagePanel() {
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       {task.status === 'draft' && (
-                        <button
+                        <Button
+                          variant="primary-outline"
+                          size="sm"
                           type="button"
                           onClick={() => handlePublishTask(task.id)}
                           disabled={taskActingId === task.id}
-                          className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-30"
                         >
                           {t('publish')}
-                        </button>
+                        </Button>
                       )}
                       {task.status === 'published' && (
-                        <button
+                        <Button
+                          variant="amber"
+                          size="sm"
                           type="button"
                           onClick={() => handleCloseTask(task.id)}
                           disabled={taskActingId === task.id}
-                          className="text-[11px] font-mono px-2.5 py-1.5 border border-amber-500/50 text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-30"
                         >
                           {t('close')}
-                        </button>
+                        </Button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTask(task.id)}
-                        disabled={taskActingId === task.id}
-                        className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors disabled:opacity-30"
-                      >
-                          {t('delete')}
-                        </button>
+                <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDeleteTask(task.id)} disabled={taskActingId === task.id}>
+                  {t('delete')}
+                </Button>
                     </div>
                   </td>
                 </tr>
@@ -350,33 +348,30 @@ export function TaskManagePanel() {
               <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-3">{t('taskClaimCount', { count: task.claimCount, max: task.maxClaimants })}</div>
               <div className="flex items-center gap-2">
                 {task.status === 'draft' && (
-                  <button
+                  <Button
+                    variant="primary-outline"
+                    size="sm"
                     type="button"
                     onClick={() => handlePublishTask(task.id)}
                     disabled={taskActingId === task.id}
-                    className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-30"
                   >
                     发布
-                  </button>
+                  </Button>
                 )}
                 {task.status === 'published' && (
-                  <button
+                  <Button
+                    variant="amber"
+                    size="sm"
                     type="button"
                     onClick={() => handleCloseTask(task.id)}
                     disabled={taskActingId === task.id}
-                    className="text-[11px] font-mono px-2.5 py-1.5 border border-amber-500/50 text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-30"
                   >
                     关闭
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTask(task.id)}
-                  disabled={taskActingId === task.id}
-                  className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors disabled:opacity-30"
-                >
+                <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDeleteTask(task.id)} disabled={taskActingId === task.id}>
                   删除
-                </button>
+                </Button>
               </div>
             </div>
           ))}

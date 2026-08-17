@@ -233,9 +233,7 @@ export function AnnouncementsManager() {
                   <Button variant="outline" size="sm" type="button" onClick={() => handleToggleActive(item)} disabled={busy}>
                     {item.isActive ? t('disable') : t('enable')}
                   </Button>
-                  <button type="button" onClick={() => handleDelete(item)} disabled={busy} className="px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber disabled:opacity-50">
-                    Del
-                  </button>
+                  <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDelete(item)} disabled={busy}>Del</Button>
                 </div>
               </div>
             );

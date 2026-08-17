@@ -24,6 +24,7 @@ import {
   COMPONENT_REGISTRY,
   type ComponentMeta,
 } from '@/shared/feature-visibility/registry';
+import { Button } from '@/components';
 
 type UserField = 'guest' | 'member' | 'admin';
 
@@ -326,13 +327,14 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
               >
                 {t('cancel')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
+                type="button"
                 onClick={submitUpdate}
                 disabled={submitting || !/^\d{6}$/.test(totpCode)}
-                className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors focus-amber disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? t('saving') : t('confirm')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

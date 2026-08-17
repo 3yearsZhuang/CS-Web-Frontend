@@ -6,6 +6,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import {
@@ -181,12 +182,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
               />
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 border border-[var(--border)] meta-mono text-[11px] text-[var(--foreground)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
-          >
-            {t('closeBtn')}
-          </button>
+          <Button variant="outline" size="sm" type="button" onClick={onClose}>{t('closeBtn')}</Button>
         </div>
       </aside>
 
