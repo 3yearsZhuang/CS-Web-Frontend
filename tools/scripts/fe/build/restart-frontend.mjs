@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/restart-frontend.mjs — 前端 dev server 冷重启脚本
+ * @file tools/scripts/fe/build/restart-frontend.mjs — 前端 dev server 冷重启脚本
  *
  * 用途：B1 收口等大规模删除代码后，tsx watch 的热重载缓存可能损坏，
  * 导致所有 BFF 路由（/api/events、/api/community/*、/api/auth/login 等）
@@ -10,8 +10,8 @@
  * 行为：释放 2333 端口（SIGKILL 占用进程）→ 重新 `pnpm dev` → 轮询探活直到 200。
  *
  * 用法：
- *   node ./tools/scripts/restart-frontend.mjs
- *   PORT=2333 node ./tools/scripts/restart-frontend.mjs   # 端口可覆盖
+ *   node ./tools/scripts/fe/build/restart-frontend.mjs
+ *   PORT=2333 node ./tools/scripts/fe/build/restart-frontend.mjs   # 端口可覆盖
  */
 
 import { spawn, execFileSync } from 'node:child_process';

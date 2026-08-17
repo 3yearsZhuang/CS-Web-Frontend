@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/cloudflare-tunnel.mjs — Cloudflare Tunnel 内网穿透启动脚本
+ * @file tools/scripts/fe/deploy/cloudflare-tunnel.mjs — Cloudflare Tunnel 内网穿透启动脚本
  *
  * 启动 cloudflared 将本地端口暴露为 trycloudflare.com 公网地址，并可选更新 .env 中的相关配置。
  */

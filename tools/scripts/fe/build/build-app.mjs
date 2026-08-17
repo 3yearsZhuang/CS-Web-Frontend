@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/build-app.mjs — 应用构建脚本
+ * @file tools/scripts/fe/build/build-app.mjs — 应用构建脚本
  *
  * 安装依赖、构建 Next.js 生产版本、打包自定义服务器到 dist/server.js。
  *

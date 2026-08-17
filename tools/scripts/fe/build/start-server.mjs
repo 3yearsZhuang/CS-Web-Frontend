@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/start-server.mjs — 启动打包后的生产服务器
+ * @file tools/scripts/fe/build/start-server.mjs — 启动打包后的生产服务器
  *
  * 检查 dist/server.js 是否存在并通过 node 启动；默认端口 2333。
  */

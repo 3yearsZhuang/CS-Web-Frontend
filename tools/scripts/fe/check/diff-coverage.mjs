@@ -6,7 +6,7 @@
  * 计算新增代码（src/**）的行覆盖率，低于阈值则 exit 1。
  *
  * 用法：
- *   node tools/scripts/diff-coverage.mjs --base origin/main --threshold 80 \
+ *   node tools/scripts/fe/check/diff-coverage.mjs --base origin/main --threshold 80 \
  *     --lcov coverage/lcov.info --src src
  *
  * 退出码：0 通过（或无新增行）；1 覆盖率不足 / 运行错误。

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/dev-server.mjs — 开发服务器启动脚本
+ * @file tools/scripts/fe/build/dev-server.mjs — 开发服务器启动脚本
  *
  * 释放目标端口后通过 pnpm tsx watch 启动 src/server.ts，文件变更自动重启；默认端口 2333。
  */
