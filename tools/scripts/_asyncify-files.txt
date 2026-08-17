@@ -1,2 +1,0 @@
-tools/tests/join.test.ts
-tools/tests/permissions-hunt.test.ts
