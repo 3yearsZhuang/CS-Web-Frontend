@@ -6,6 +6,7 @@
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import type { EventItem } from '@/modules/events/types';
+import { Badge } from '@/components';
 import { EventStatusBadge } from './event-status-badge';
 
 interface EventCardProps {
@@ -37,9 +38,7 @@ export function EventCard({ event, isLeft }: EventCardProps) {
                 {'//'} {event.date || event.month || event.year || '—'}
               </span>
               {event.isPinned && (
-                <span className="font-mono uppercase tracking-wider px-2 py-0.5 border text-[10px] border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5">
-                  [PINNED]
-                </span>
+                <Badge variant="primary">[PINNED]</Badge>
               )}
               <EventStatusBadge status={event.status} />
             </div>

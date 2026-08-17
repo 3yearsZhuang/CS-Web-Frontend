@@ -378,6 +378,12 @@ export interface UserMessages {
     est: string;
     codeTagline: string;
     unnamed: string;
+    /** 开机遮罩 — 系统启动序列文案 */
+    bootTitle: string;
+    bootEst: string;
+    bootMembers: string;
+    bootRing: string;
+    bootEnter: string;
   }
 }
 
@@ -756,6 +762,11 @@ export const zhCN: UserMessages = {
     est: 'Computer Association / Est. 2017',
     codeTagline: '2026 / Autumn',
     unnamed: '未命名',
+    bootTitle: 'FZTBU·CS — SYSTEM BOOT',
+    bootEst: 'est. 2017 · uptime 8 years',
+    bootMembers: '298 members loaded · 47 events indexed',
+    bootRing: 'mobius ring ready · grid 12-col online',
+    bootEnter: './enter',
   }
 };
 
@@ -1134,5 +1145,10 @@ export const en: UserMessages = {
     est: 'Computer Association / Est. 2017',
     codeTagline: '2026 / Autumn',
     unnamed: 'Unnamed',
+    bootTitle: 'FZTBU·CS — SYSTEM BOOT',
+    bootEst: 'est. 2017 · uptime 8 years',
+    bootMembers: '298 members loaded · 47 events indexed',
+    bootRing: 'mobius ring ready · grid 12-col online',
+    bootEnter: './enter',
   }
 };

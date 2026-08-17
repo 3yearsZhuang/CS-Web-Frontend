@@ -9,6 +9,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Badge } from '@/components';
+import type { BadgeVariant } from '@/components';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils/utils';
 
@@ -55,10 +57,8 @@ export function JoinTab() {
 
   const statusLabel = (s: string) =>
     s === 'pending' ? t('statusPending') : s === 'approved' ? t('statusApproved') : t('statusRejected');
-  const statusClass = (s: string) =>
-    s === 'pending' ? 'border-amber-500/40 text-amber-500'
-    : s === 'approved' ? 'border-emerald-500/40 text-emerald-500'
-    : 'border-red-400/40 text-red-400';
+  const statusVariant = (s: string): BadgeVariant =>
+    s === 'pending' ? 'amber' : s === 'approved' ? 'success' : 'danger';
 
   if (loading) {
     return (
@@ -109,9 +109,9 @@ export function JoinTab() {
                   <span className="meta-mono text-[var(--primary)] text-[12px]">
                     {formatDate(app.createdAt)}
                   </span>
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${statusClass(app.status)}`}>
+                  <Badge variant={statusVariant(app.status)}>
                     {statusLabel(app.status)}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="text-[15px] text-[var(--foreground)] mb-2">
                   {app.applicantName} · {t('studentId', { id: app.studentId })} · {app.major}

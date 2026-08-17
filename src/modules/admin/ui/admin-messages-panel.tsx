@@ -109,11 +109,7 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
               <button
                 key={meta.key}
                 onClick={() => setSubTab(meta.key)}
-                className={`meta-mono text-[11px] px-4 py-2 transition-colors focus-amber whitespace-nowrap ${
-                  subTab === meta.key
-                    ? 'border-b-2 border-[var(--primary)] text-[var(--primary)]'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                }`}
+                className={`tab-underline focus-ring whitespace-nowrap ${subTab === meta.key ? 'tab-underline-active' : ''}`}
               >
                 [ {meta.num} ] {t(meta.label)}
               </button>

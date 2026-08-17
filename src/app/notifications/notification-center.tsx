@@ -69,16 +69,9 @@ export function NotificationCenter(props: NotificationsState) {
               <button
                 key={tab.value}
                 onClick={() => handleFilterChange(tab.value)}
-                className={`relative meta-mono text-[12px] px-4 py-3 transition-colors ${
-                  filter === tab.value
-                    ? 'text-[var(--primary)]'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                }`}
+                className={`tab-underline focus-ring ${filter === tab.value ? 'tab-underline-active' : ''}`}
               >
                 {tab.label}
-                {filter === tab.value && (
-                  <span className="absolute left-0 right-0 bottom-0 h-[2px] bg-[var(--primary)]" />
-                )}
               </button>
             ))}
           </div>

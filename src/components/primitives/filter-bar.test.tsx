@@ -43,10 +43,11 @@ describe('FilterBar', () => {
     expect(dot?.className).toContain('bg-emerald-500');
   });
 
-  it('选中项高亮 primary 填充', () => {
+  it('选中项高亮 tab-chip-active（描边选中，与全站 Tab 同源）', () => {
     render(<FilterBar options={options} value="open" onChange={() => {}} />);
     const btn = screen.getByRole('button', { name: '进行中' });
-    expect(btn.className).toContain('bg-[var(--primary)]');
+    expect(btn.className).toContain('tab-chip');
+    expect(btn.className).toContain('tab-chip-active');
   });
 
   it('点击非选中项触发 onChange 携带其值', () => {

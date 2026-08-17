@@ -10,6 +10,7 @@
 import Link from 'next/link';
 import { Button } from '@/components';
 import { Github } from 'lucide-react';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { AuthFormState } from '@/modules/auth/ui/hooks/use-auth-form';
 
 export function AuthForm(props: AuthFormState) {
@@ -59,8 +60,8 @@ export function AuthForm(props: AuthFormState) {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className={`flex-1 px-4 py-3 bg-transparent border text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors ${
-                emailValid === false ? 'border-[var(--destructive)]' : 'border-[var(--border)]'
+              className={`${INPUT_CLASS} flex-1 px-4 py-3 text-[14px] ${
+                emailValid === false ? 'border-[var(--destructive)]' : ''
               }`}
               placeholder={t('emailPlaceholder')}
             />
@@ -96,7 +97,7 @@ export function AuthForm(props: AuthFormState) {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete={isLogin ? 'current-password' : 'new-password'}
-              className="w-full px-4 py-3 pr-16 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
+              className={`${INPUT_CLASS} w-full px-4 py-3 pr-16 text-[14px]`}
               placeholder={t('passwordPlaceholder')}
             />
             <button
@@ -145,10 +146,10 @@ export function AuthForm(props: AuthFormState) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className={`w-full px-4 py-3 pr-16 bg-transparent border text-[var(--foreground)] text-[14px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors ${
+                className={`${INPUT_CLASS} w-full px-4 py-3 pr-16 text-[14px] ${
                   confirmPassword && password !== confirmPassword
                     ? 'border-[var(--destructive)]'
-                    : 'border-[var(--border)]'
+                    : ''
                 }`}
                 placeholder={t('confirmPlaceholder')}
               />
@@ -180,7 +181,7 @@ export function AuthForm(props: AuthFormState) {
               required
               inputMode="numeric"
               maxLength={6}
-              className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono tracking-[0.5em] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors text-center"
+              className={`${INPUT_CLASS} w-full px-4 py-3 text-[14px] tracking-[0.5em] text-center`}
               placeholder={t('codePlaceholder')}
             />
           </div>

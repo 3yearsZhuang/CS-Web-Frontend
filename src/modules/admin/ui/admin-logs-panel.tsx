@@ -174,11 +174,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                       setLogsActionFilter(s.v);
                       fetchLogs(s.v);
                     }}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      logsActionFilter === s.v
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${logsActionFilter === s.v ? 'tab-chip-active' : ''}`}
                   >
                     {s.label}
                   </button>

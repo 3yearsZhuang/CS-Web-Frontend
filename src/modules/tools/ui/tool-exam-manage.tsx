@@ -11,7 +11,7 @@ import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useToast } from '@/components/feedback/toast';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
-import { Button } from '@/components';
+import { Badge, Button } from '@/components';
 import {
   formatDate,
   EXAM_PAGE_SIZE,
@@ -193,15 +193,11 @@ export function ExamManagePanel() {
                     </Link>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                      exam.status === 'published' ? 'border-emerald-500/40 text-emerald-500' :
-                      exam.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
-                      'border-[var(--border)] text-[var(--muted-foreground)]'
-                    }`}>
+                    <Badge variant={exam.status === 'published' ? 'success' : exam.status === 'draft' ? 'amber' : 'muted'}>
                       {exam.status === 'published' ? t('statusPublished') :
                        exam.status === 'draft' ? t('statusDraft') :
                        exam.status === 'ended' ? t('statusEnded') : exam.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
                     {exam.start_time ? new Date(exam.start_time + 'Z').toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}

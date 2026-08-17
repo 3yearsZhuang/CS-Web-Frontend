@@ -129,11 +129,7 @@ export function UserModals({
                     key={r}
                     type="button"
                     onClick={() => setEditForm((f) => ({ ...f!, role: r }))}
-                    className={`focus-amber px-4 py-2 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      editForm.role === r
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${editForm.role === r ? 'tab-chip-active' : ''}`}
                   >
                     {roleLabel(r)}
                   </button>
@@ -147,22 +143,14 @@ export function UserModals({
                 <button
                   type="button"
                   onClick={() => setEditForm((f) => ({ ...f!, isActive: true }))}
-                  className={`focus-amber px-4 py-2 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                    editForm.isActive
-                      ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                      : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                  }`}
+                  className={`tab-chip focus-ring ${editForm.isActive ? 'tab-chip-active' : ''}`}
                 >
                   {t('enable')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditForm((f) => ({ ...f!, isActive: false }))}
-                  className={`focus-amber px-4 py-2 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                    !editForm.isActive
-                      ? 'border-[var(--destructive)] bg-[var(--destructive)]/[0.06] text-[var(--destructive)]'
-                      : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--destructive)]/60 hover:text-[var(--foreground)]'
-                  }`}
+                  className={`tab-chip focus-ring ${!editForm.isActive ? 'tab-chip-danger-active' : ''}`}
                 >
                   {t('disable')}
                 </button>

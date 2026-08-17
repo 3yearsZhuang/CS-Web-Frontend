@@ -7,6 +7,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Badge } from '@/components';
 import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -246,17 +247,15 @@ export default function ToolsPage() {
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="text-[var(--primary)]">{tool.icon}</div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`meta-mono text-[10px] px-2 py-0.5 border ${
+                        <Badge variant={
                           tool.status === 'available'
-                            ? 'border-emerald-500/40 text-emerald-500'
+                            ? 'success'
                             : tool.status === 'developing'
-                              ? 'border-amber-500/40 text-amber-500'
-                              : 'border-[var(--border)] text-[var(--muted-foreground)]'
-                          }`}
-                        >
+                              ? 'amber'
+                              : 'muted'
+                        }>
                           {t(statusLabelKey(tool.status) as Parameters<typeof t>[0])}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
 

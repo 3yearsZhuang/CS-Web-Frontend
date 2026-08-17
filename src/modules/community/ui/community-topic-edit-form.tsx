@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { MarkdownEditor } from './community-markdown-editor';
 import { Button } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { CommunityPostDetail } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
 
@@ -58,7 +59,7 @@ export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) 
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             maxLength={120}
-            className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[16px] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
+            className={`${INPUT_CLASS} w-full px-4 py-3 text-[16px]`}
           />
         </div>
         <div>

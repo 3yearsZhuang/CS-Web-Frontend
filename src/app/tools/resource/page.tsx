@@ -131,10 +131,10 @@ export default function ResourcePage() {
                   <button
                     key={tab.key}
                     onClick={() => res.setTag(tab.key)}
-                    className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
+                    className={`tab-chip focus-ring whitespace-nowrap ${
                       (tab.key === '__all__' && !res.activeTag) || tab.key === res.activeTag
-                        ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                        : 'bg-transparent border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
+                        ? 'tab-chip-active'
+                        : ''
                     }`}
                   >
                     {tab.label}
@@ -148,21 +148,13 @@ export default function ResourcePage() {
               <div className="flex gap-0">
                 <button
                   onClick={() => res.setSortAndReset('latest')}
-                  className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    res.sort === 'latest'
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${res.sort === 'latest' ? 'tab-chip-active' : ''}`}
                 >
                   {t('sortLatest')}
                 </button>
                 <button
                   onClick={() => res.setSortAndReset('popular')}
-                  className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    res.sort === 'popular'
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${res.sort === 'popular' ? 'tab-chip-active' : ''}`}
                 >
                   {t('sortPopular')}
                 </button>

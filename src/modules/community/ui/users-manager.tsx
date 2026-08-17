@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, Pagination, SectionLoading } from '@/components';
+import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
@@ -159,14 +159,14 @@ export function UsersManager() {
                   <span className="font-mono text-[12px] text-[var(--muted-foreground)] truncate block">{user.email}</span>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.role === 'root' ? 'border-[var(--destructive)] text-[var(--destructive)]' : user.role === 'admin' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
+                  <Badge variant={user.role === 'root' ? 'danger' : user.role === 'admin' ? 'primary' : 'muted'}>
                     {user.role === 'root' ? 'ROOT' : user.role === 'admin' ? 'ADMIN' : 'USER'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.isActive ? 'border-[var(--border)] text-[var(--muted-foreground)]' : 'border-[var(--destructive)] text-[var(--destructive)]'}`}>
+                  <Badge variant={user.isActive ? 'muted' : 'danger'}>
                     {user.isActive ? 'ACTIVE' : 'MUTED'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-2 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(user.createdAt)}</div>
                 <div className="lg:col-span-3 flex flex-wrap gap-1.5 lg:justify-end">

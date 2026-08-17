@@ -19,6 +19,7 @@ import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip'
 import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
 import { Button, Pagination, SectionLoading } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCommunityFeed } from './use-community-feed';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -204,7 +205,7 @@ function CommunityPageContent() {
                       maxLength={80}
                       placeholder={t('searchPlaceholderFull')}
                       aria-label={t('searchPlaceholderFull')}
-                      className="w-full px-4 py-4 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[16px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors pr-12"
+                      className={`${INPUT_CLASS} w-full px-4 py-4 text-[16px] pr-12`}
                     />
                     {searchQuery && (
                       <button

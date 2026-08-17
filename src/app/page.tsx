@@ -13,6 +13,7 @@ import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
 import { Button } from '@/components';
+import { BootScreen } from '@/components/effects/boot-screen';
 import { RevealItem, RevealTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
@@ -86,6 +87,9 @@ export default function Home() {
   const mobius = MOBIUS_CONFIGS[breakpoint];
   const { isLoggedIn } = useAuth();
   const t = useTranslations('home');
+
+  // 开机遮罩 — 启动序列完成后才挂载 Hero 入场动画（保持现有视觉，仅改变加载时序）
+  const [bootDone, setBootDone] = useState(false);
 
   // ============ 彩蛋：全页点击触发头像 ============
   // 数据源：配置文件中的管理员角色 + 所有已注册用户
@@ -177,6 +181,8 @@ export default function Home() {
   return (
     <VisibilityGate componentKey="home">
       <main className="relative" onClick={handlePageClick}>
+      {/* 开机遮罩 — 全屏启动序列（双主题 CSS 变量适配），完成后触发 Hero 入场 */}
+      {!bootDone && <BootScreen onRevealComplete={() => setBootDone(true)} />}
       {/* 键盘可达的彩蛋入口 — 视觉隐藏，仅供屏幕阅读器与 Tab 键盘用户发现 */}
       <button
         type="button"
@@ -250,8 +256,9 @@ export default function Home() {
           />
         </div>
 
-        {/* 顶部右对齐元数据 — 季节 + 招新状态
+        {/* 顶部右对齐元数据 — 季节 + 招新状态（boot 完成后随 Hero 入场）
          * pointer-events-none: 纯展示元素，不拦截莫比乌斯环点击 */}
+        {bootDone && (
         <motion.div
           className="absolute top-28 sm:top-32 right-4 sm:right-6 md:right-8 hidden sm:block z-[var(--z-base)] pointer-events-none"
           initial={{ opacity: 0, x: 16 }}
@@ -264,10 +271,12 @@ export default function Home() {
             <span>{t('recruiting')}</span>
           </div>
         </motion.div>
+        )}
 
-        {/* 主标题区 — 交错入场
+        {/* 主标题区 — 交错入场（boot 完成后才挂载，保证入场动画不被遮罩覆盖）
          * pointer-events-none: 让点击穿透到下层莫比乌斯环（z-auto），使环可点击
          * CTA 按钮单独 pointer-events-auto 恢复可点击 */}
+        {bootDone && (
         <StaggerContainer
           className="relative max-w-[1600px] mx-auto w-full z-[var(--z-base)] pointer-events-none"
         >
@@ -332,6 +341,7 @@ export default function Home() {
             style={{ width: '40%' }}
           />
         </StaggerContainer>
+        )}
       </section>
 
       {/* ============ 彩蛋：头像浮层 — 跟随点击位置出现 ============

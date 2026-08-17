@@ -1,12 +1,12 @@
 # FZTBUCS-按钮样式统一设计（审计 + 扩展方案）
 
-> 最后更新：2026-08-17｜类型：reference + decision｜状态：基础设施已落地；Batch-1（app/components 段：4 处分页→`<Pagination>` + 标记全部已读/移除/上传/拒绝→`Button` 新变体）+ Batch-2（modules 段：community/admin/tools/auth/announcement 真操作按钮散落描边→`Button` 变体、`user-list-view`/`community-topic-replies` 分页→`<Pagination>`）已迁；各批 eslint 0 error、测试 15 passed。剩余：primary-outline（`border-[var(--primary)]`）按钮、amber 关闭键、filled 保存键、`btn-inverted`、图标按钮 `.btn-icon`、特殊分页（resource/page 全量页码 / notification-center 省略号）、`<span>` 徽章、文本/链接按钮、筛选 Tab —— 均按 §5.2 / 本文范围保留或另立变体延后。
+> 最后更新：2026-08-17｜类型：reference + decision｜状态：**全量收口完成（2026-08-17）**——基础设施 + Batch-1（app/components 段）+ Batch-2（modules 段）+ Batch-3（danger-sm 尺寸契约 + 透明边框盒模型）+ Batch-4（primary-outline/amber/filled/btn-icon 变体 + Pagination 扩展）+ Batch-5（输入框/Badge/Tab/Modal/z-index 控件收口）+ Batch-5b（ModalShell 全局化 + FilterBar 同源）均已迁移并验证；**最终用法规范见 [FrontDoc-UIStandard.md](FrontDoc-UIStandard.md)（SSOT）**，本文仅保留审计与迁移史。
 > 更新人：3yearsZ
 > 受众：前端贡献者 / reviewer
-> Source of truth：本文与 `FrontDoc-UID.md §5.2 按钮` 互为补充（本文为 §5.2 的"落地收紧"细则）；按钮类最终定义以 `src/app/globals.css` 为准。
-> 关联：`FrontDoc-UID.md`（全局 UI 规范）、`components/primitives/button.tsx`（按钮组件）、`src/app/globals.css`（按钮类实现）
-> 变更触发：本文任何按钮令牌 / 变体变更须同步到 `globals.css` 与 `button.tsx`
-> Stale 信号：§5.2 与本文变体清单不一致；某模块仍出现未登记的散落描边按钮写法
+> Source of truth：**用法规范以 `FrontDoc-UIStandard.md` 为准**；实现以 `src/app/globals.css` 与 `components/primitives/*` 为准；本文为审计与迁移决策记录。
+> 关联：`FrontDoc-UIStandard.md`（组件统一规范 SSOT）、`FrontDoc-UID.md`（全局 UI 规范）、`components/primitives/*`（组件实现）、`src/app/globals.css`（类实现）
+> 变更触发：任何按钮 / 控件令牌变更须同步 `globals.css`、`primitives/*` 组件与 `FrontDoc-UIStandard.md`
+> Stale 信号：`FrontDoc-UIStandard.md` 变体清单与 `button.tsx`/`globals.css` 不一致；本文迁移史与代码现状不符
 
 ## 0. 摘要
 
@@ -235,7 +235,24 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 **验证**：ESLint 0 error（仅既有 warning：exhaustive-deps / 个别 unused）；button.test 15 + pagination.test 7 = **22 passed**；tsc 改动模块零新增错误。改动未提交（按协议）。
 
+### Batch-5 — 控件收口（输入框/Badge/Tab/Modal/z-index，2026-08-17 完成）
+**Step1 输入框统一（INPUT_CLASS 唯一权威）**：14 处手写 `bg-transparent border border-[var(--border)]...` 字符串 → 引用 `INPUT_CLASS` + 各自覆盖类（padding/字号/tracking 保留）；`<Input>` 组件维持（内部即 INPUT_CLASS，分层无冲突）。覆盖：auth-form×4、forgot-password-form、two-factor-form、two-factor-settings（本地 CODE_INPUT_CLASS 改基于 INPUT_CLASS）、tool-resource-review、admin-feature-visibility-panel、community-topic-edit-form、report-button、user-list-view、community/page、submit-resource-modal×4、event-filter-bar。**修复命名冲突**：`task-shared.tsx` 本地导出同名 `INPUT_CLASS`（内容不同）→ 改为 `TASK_INPUT_CLASS = INPUT_CLASS + px-4 py-2.5 text-[13px]`，board-tab 6 处引用同步。
+**Step2 共享 `<Badge>` 徽章**：新增 `components/primitives/badge.tsx`（variant: muted/primary/success/amber/danger，统一 10px 等宽 uppercase 直角）+ `.badge*` CSS 类 + 测试；迁移 14 文件（PIN/FEAT 标签 ×6、用户角色/状态、公告 level/active、考试/工具/申请状态、event-status-badge 改造为基于 Badge）。色名统一：`green`→success、`amber-500/40|/50|实色`→amber、`red-400/40`→danger。保留：admin-announcements-panel levelBadge（填充圆角徽章，全站唯一风格）、event-list/component-registry-detail 的 `primary/30` 半透明弱化标签、github-heatmap/dev-center rounded-full 胶囊徽章。
+**Step3 Tab/筛选控件**：新增 `.tab-chip`/`.tab-chip-active`/`.tab-chip-danger-active`（胶囊描边选中式）与 `.tab-underline`/`.tab-underline-active`（下划线式）；迁移 13 文件——描边胶囊 6（user-list-view、user-modals、event-modals×4、admin-logs-panel、admin-join-panel）、实心填充 3 统一为描边式（topics-manager×2、resource/page×3、board-tab×2）、下划线 2（notification-center、admin-messages-panel）。保留：component-registry-shell 反色实心筛选（域内自洽）、FilterBar/InlineTabs 共享组件不变。**顺带补漏**：tool-resource-review 手写全量分页 → `<Pagination variant="all">`（Batch-4 遗漏）。
+**Step4 Modal 遮罩对齐 ModalShell 规范**：submit-resource-modal / report-button 遮罩 `bg-black/50` → `bg-black/70 backdrop-blur-sm`；component-registry-drawer 遮罩 `z-40 bg-black/40` → `z-[var(--z-header)] bg-black/70`（**修复层级 bug**：原 z-40 低于 navbar z-50，遮罩盖不住顶部导航）。动画/布局特色保留，不强换组件。
+**Step5 z-index 改用 CSS 变量**：JSX 裸写 `z-50` → `z-[var(--z-header)]`、`z-40` → `z-[var(--z-banner)]`，共 13 处（navbar、notification-bell、user-menu、announcement-banner、confirm-dialog、ModalShell、event-modals、question-list、exam/[id]/page、drawer×2、submit-resource-modal、report-button）。保留：navbar 汉堡遮罩 `z-[45]`（有注释的刻意例外：盖 banner 留 header，体系无 45 档）。`ui-constants.ts` Z 常量与 globals.css `--z-*` 变量为同一体系镜像。
+**验证**：ESLint 0 error（仅既有 warning）；button 15 + pagination 7 + badge 3 + input 6 = **31 passed**；tsc 改动模块零新增错误（navbar `UserClass` 为既有基线）。改动未提交（按协议）。
+
+### Batch-5b — 收尾：ModalShell 全局化 + FilterBar 同源（2026-08-17 完成）
+- **ModalShell 提升为全局原语**：新建 `components/primitives/modal-shell.tsx`（focus trap / Escape / 遮罩关闭 / 滚动锁定，z 用 `--z-header`）；`admin/ui/shared.tsx` 改为 re-export 兼容（admin 7 处引用零改动）；`components/index.ts` barrel 导出。**report-button 手写 modal → `<ModalShell>`**（拿到 focus trap/Escape/遮罩关闭）。submit-resource-modal 保留 AnimatePresence 动画特色（记录，不强迁）。
+- **FilterBar 视觉同源 `.tab-chip`**：内部按钮从"实心填充式"（`bg-[var(--primary)]` 选中）收敛为 `tab-chip`/`tab-chip-active` 描边选中式——共享组件与全站手写 Tab 同源，events 筛选栏视觉与全局一致；测试断言同步更新（`tab-chip-active`）。label/showNumber/dotClassName/wrap/ScrollIndicator 功能不变。
+- 验证：ESLint 0 error；filter-bar 6 passed；tsc 零新增（ModalShell 提升后 admin 引用经 re-export 全通）。未提交。
+
 ### 保留 / 延后（剩余，非本次强制迁移范围）
-- **半透明主色描边**（`border-[var(--primary)]/30`，component-registry-detail「advance」）：刻意弱化的次要键，并入 primary-outline 会改变视觉，保留。
+- **半透明主色描边/标签**（`border-[var(--primary)]/30`，component-registry-detail「advance」、event-list 标签）：刻意弱化的次要键/标签，并入全色会改变视觉，保留。
 - **导航类图标按钮**（Navbar/ThemeToggle/Bell/UserMenu 关闭键等）：未并入 `.btn-icon`，保留（导航语义）。
-- **`<span>` 徽章 / 文本链接（underline-grow）/ 筛选 Tab / 胶囊 Tab**：§5.2 保留，不并入 `btn-*`。
+- **填充圆角徽章**（admin-announcements-panel levelBadge：`bg-blue-100 rounded` 等）：全站唯一填充式徽章风格，与 Badge 直角描边不同，保留。
+- **rounded-full 胶囊徽章**（github-heatmap、dev-center）：圆形徽章形态，保留。
+- **反色实心筛选**（component-registry-shell 分类/状态）：域内自洽（6 处同模式），保留。
+- **navbar 汉堡遮罩 `z-[45]`**：刻意例外（盖 banner z-40、留 header z-50 汉堡可点），体系无 45 档，注释说明保留。
+- **`<span>` 徽章 / 文本链接（underline-grow）/ FilterBar/InlineTabs 共享组件**：§5.2 保留。

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { FollowButton } from './follow-button';
 import type { CommunityPostDetail } from '@/modules/community/types';
@@ -68,14 +69,10 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId
           <RevealItem>
             <div className="flex gap-2 mb-4">
               {topic.isPinned && (
-                <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                  PIN
-                </span>
+                <Badge variant="primary">PIN</Badge>
               )}
               {topic.isFeatured && (
-                <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                  FEAT
-                </span>
+                <Badge variant="primary">FEAT</Badge>
               )}
             </div>
           </RevealItem>

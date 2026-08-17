@@ -10,7 +10,8 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Badge } from '@/components';
+import type { BadgeVariant } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 
@@ -61,15 +62,15 @@ function statusLabel(s: AppStatus): string {
   }
 }
 
-/** 状态徽章样式 */
-function statusBadgeClass(s: AppStatus): string {
+/** 状态徽章语义色 */
+function statusBadgeVariant(s: AppStatus): BadgeVariant {
   switch (s) {
     case 'pending':
-      return 'border-amber-500/40 text-amber-500';
+      return 'amber';
     case 'approved':
-      return 'border-emerald-500/40 text-emerald-500';
+      return 'success';
     case 'rejected':
-      return 'border-red-400/40 text-red-400';
+      return 'danger';
   }
 }
 
@@ -197,11 +198,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                     key={s.v}
                     type="button"
                     onClick={() => setStatusFilter(s.v)}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      statusFilter === s.v
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${statusFilter === s.v ? 'tab-chip-active' : ''}`}
                   >
                     {t(s.label)}
                   </button>
@@ -258,9 +255,9 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                       <h3 className="display-serif text-[18px] text-[var(--foreground)]">
                         {app.applicantName}
                       </h3>
-                      <span className={`meta-mono text-[10px] px-2 py-0.5 border ${statusBadgeClass(app.status)}`}>
+                      <Badge variant={statusBadgeVariant(app.status)}>
                         {t(statusLabel(app.status))}
-                      </span>
+                      </Badge>
                     </div>
                     <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">
                       <span>{t('studentIdLabel', { id: app.studentId })}</span>

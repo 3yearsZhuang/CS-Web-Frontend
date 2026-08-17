@@ -9,7 +9,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
+import { Button, ModalShell } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 type TargetType = 'topic' | 'reply';
 
@@ -86,64 +87,55 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
       </Button>
 
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="w-full max-w-md border border-[var(--border)] bg-[var(--background)] p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">{t('dialogTitle')}</div>
-            {done ? (
-              <div className="py-8 text-center meta-mono text-[var(--primary)]">
-                {t('successMessage')}
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2 mb-4">
-                  {REASONS.map((r) => (
-                    <label
-                      key={r.id}
-                      className="flex items-center gap-3 cursor-pointer meta-mono text-[13px] text-[var(--foreground)]"
-                    >
-                      <input
-                        type="radio"
-                        name="report-reason"
-                        checked={reason === r.id}
-                        onChange={() => setReason(r.id)}
-                        className="accent-[var(--primary)]"
-                      />
-                      {t(r.key)}
-                    </label>
-                  ))}
-                </div>
-                <textarea
-                  value={detail}
-                  onChange={(e) => setDetail(e.target.value.slice(0, 1000))}
-                  rows={3}
-                  placeholder={t('detailPlaceholder')}
-                  className="w-full px-3 py-2 bg-transparent border border-[var(--border)] text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-                />
-                {error && (
-                  <div className="mt-3 meta-mono text-[12px] text-[var(--destructive)]">{error}</div>
-                )}
-                <div className="flex items-center gap-3 mt-5">
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpen(false)}
-                    disabled={submitting}
+        <ModalShell title={t('dialogTitle')} onClose={() => setOpen(false)}>
+          {done ? (
+            <div className="py-8 text-center meta-mono text-[var(--primary)]">
+              {t('successMessage')}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2 mb-4">
+                {REASONS.map((r) => (
+                  <label
+                    key={r.id}
+                    className="flex items-center gap-3 cursor-pointer meta-mono text-[13px] text-[var(--foreground)]"
                   >
-                    {t('cancel')}
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={submitting}>
-                    {submitting ? t('submitting') : t('submit')}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+                    <input
+                      type="radio"
+                      name="report-reason"
+                      checked={reason === r.id}
+                      onChange={() => setReason(r.id)}
+                      className="accent-[var(--primary)]"
+                    />
+                    {t(r.key)}
+                  </label>
+                ))}
+              </div>
+              <textarea
+                value={detail}
+                onChange={(e) => setDetail(e.target.value.slice(0, 1000))}
+                rows={3}
+                placeholder={t('detailPlaceholder')}
+                className={`${INPUT_CLASS} w-full px-3 py-2 text-[13px]`}
+              />
+              {error && (
+                <div className="mt-3 meta-mono text-[12px] text-[var(--destructive)]">{error}</div>
+              )}
+              <div className="flex items-center gap-3 mt-5">
+                <Button
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  disabled={submitting}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? t('submitting') : t('submit')}
+                </Button>
+              </div>
+            </>
+          )}
+        </ModalShell>
       )}
     </>
   );

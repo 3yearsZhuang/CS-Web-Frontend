@@ -129,7 +129,7 @@ export function AnnouncementBanner() {
   if (activeAnnouncements.length === 0) return null;
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-40 w-full space-y-1 px-4 pb-1">
+    <div className="fixed top-16 left-0 right-0 z-[var(--z-banner)] w-full space-y-1 px-4 pb-1">
       {activeAnnouncements.map((a) => {
         const config = levelConfig[a.level] || levelConfig.info;
         const Icon = config.icon;

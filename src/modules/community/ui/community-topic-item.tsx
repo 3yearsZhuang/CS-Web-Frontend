@@ -7,6 +7,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import type { CommunityPost } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
@@ -47,14 +48,10 @@ export function CommunityTopicItem({
           {num && <div className="section-marker">[ {num} ]</div>}
           <div className="flex flex-wrap gap-1.5">
             {topic.isPinned && (
-              <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                PIN
-              </span>
+              <Badge variant="primary">PIN</Badge>
             )}
             {topic.isFeatured && (
-              <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                FEAT
-              </span>
+              <Badge variant="primary">FEAT</Badge>
             )}
           </div>
         </div>

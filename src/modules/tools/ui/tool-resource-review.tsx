@@ -7,6 +7,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X, ExternalLink, BookOpen } from 'lucide-react';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { Pagination } from '@/components';
 import {
   formatDate,
   RESOURCE_PAGE_SIZE,
@@ -162,7 +164,7 @@ export function ResourceReviewPanel() {
                     onChange={(e) => setReviewNote((prev) => ({ ...prev, [r.id]: e.target.value }))}
                     placeholder={t('reviewNotePlaceholder')}
                     maxLength={500}
-                    className="flex-1 bg-transparent border border-[var(--border)] px-3 py-1.5 text-[12px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
+                    className={`${INPUT_CLASS} flex-1 px-3 py-1.5 text-[12px]`}
                   />
                   <button
                     type="button"
@@ -184,22 +186,12 @@ export function ResourceReviewPanel() {
           })}
 
           {resourcePages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              {Array.from({ length: resourcePages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setResourcePage(p)}
-                  className={`text-[11px] font-mono px-3 py-1.5 border transition-colors ${
-                    p === resourcePage
-                      ? 'border-[var(--primary)] text-[var(--primary)]'
-                      : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/40'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <Pagination
+              page={resourcePage}
+              totalPages={resourcePages}
+              onPageChange={setResourcePage}
+              variant="all"
+            />
           )}
         </div>
       )}

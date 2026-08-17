@@ -70,7 +70,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
   return (
     <main className="relative pt-16 min-h-screen">
       {/* Header */}
-      <div className="border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm sticky top-16 z-40">
+      <div className="border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm sticky top-16 z-[var(--z-banner)]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0">
             <Link

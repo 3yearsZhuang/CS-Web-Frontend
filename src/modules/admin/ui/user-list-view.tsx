@@ -7,6 +7,7 @@
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
 import { SectionLoading, Pagination } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
@@ -79,7 +80,7 @@ export function UserListView({
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full px-4 py-2.5 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[13px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors"
+                className={`${INPUT_CLASS} w-full px-4 py-2.5 text-[13px]`}
                 placeholder={t('searchPlaceholder')}
               />
             </div>
@@ -92,11 +93,7 @@ export function UserListView({
                     key={r}
                     type="button"
                     onClick={() => setRoleFilter(r)}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      roleFilter === r
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${roleFilter === r ? 'tab-chip-active' : ''}`}
                   >
                     {r === 'all' ? t('all') : r === 'admin' ? t('admin') : t('user')}
                   </button>
@@ -118,11 +115,7 @@ export function UserListView({
                     key={s.v}
                     type="button"
                     onClick={() => setActiveFilter(s.v)}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      activeFilter === s.v
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${activeFilter === s.v ? 'tab-chip-active' : ''}`}
                   >
                     {t(s.labelKey)}
                   </button>

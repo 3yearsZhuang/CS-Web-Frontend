@@ -5,6 +5,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Badge } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -238,17 +239,9 @@ export default function ExamListPage() {
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-center gap-2">
                           <GraduationCap className="w-4 h-4 text-[var(--primary)]" />
-                          <span
-                            className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                              activeTab === 'ongoing'
-                                ? 'border-emerald-500/40 text-emerald-500'
-                                : activeTab === 'upcoming'
-                                  ? 'border-amber-500/40 text-amber-500'
-                                  : 'border-[var(--border)] text-[var(--muted-foreground)]'
-                            }`}
-                          >
+                          <Badge variant={activeTab === 'ongoing' ? 'success' : activeTab === 'upcoming' ? 'amber' : 'muted'}>
                             {activeTab === 'ongoing' ? t('badgeOngoing') : activeTab === 'upcoming' ? t('badgeUpcoming') : t('badgeEnded')}
-                          </span>
+                          </Badge>
                         </div>
                         {exam.startTime && (
                           <span className="meta-mono text-[10px] text-[var(--muted-foreground)] shrink-0">

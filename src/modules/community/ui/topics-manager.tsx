@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Avatar } from '@/components/avatar';
-import { Button, Pagination, SectionLoading } from '@/components';
+import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
@@ -221,11 +221,7 @@ export function TopicsManager() {
                     setStatusFilter(opt.value);
                     setPage(1);
                   }}
-                  className={`whitespace-nowrap px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    statusFilter === opt.value
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${statusFilter === opt.value ? 'tab-chip-active' : ''}`}
                 >
                   {opt.label}
                 </button>
@@ -260,11 +256,7 @@ export function TopicsManager() {
                     setSort(opt.value);
                     setPage(1);
                   }}
-                  className={`whitespace-nowrap px-3 py-2 text-[10px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    sort === opt.value
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${sort === opt.value ? 'tab-chip-active' : ''}`}
                 >
                   {opt.label}
                 </button>
@@ -314,10 +306,10 @@ export function TopicsManager() {
                 <div className="lg:col-span-5 min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5 mb-1">
                     {topic.isPinned && (
-                      <span className="meta-mono text-[9px] px-1.5 py-0.5 border border-[var(--primary)] text-[var(--primary)]">PIN</span>
+                      <Badge variant="primary">PIN</Badge>
                     )}
                     {topic.isFeatured && (
-                      <span className="meta-mono text-[9px] px-1.5 py-0.5 border border-[var(--primary)] text-[var(--primary)]">FEAT</span>
+                      <Badge variant="primary">FEAT</Badge>
                     )}
                   </div>
                   <Link href={topicHref} target="_blank" className="display-serif text-[14px] sm:text-[15px] text-[var(--foreground)] hover:text-[var(--primary)] transition-colors line-clamp-1">

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
 import type { ResourcesState, TFn, ResourceType } from './use-resources';
@@ -36,7 +37,7 @@ export function SubmitResourceModal(props: ResourcesState) {
     <AnimatePresence>
       {showSubmit && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-[var(--z-header)] flex items-center justify-center bg-black/70 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -85,7 +86,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     required
                     maxLength={200}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                     placeholder={t('phTitle')}
                   />
                 </div>
@@ -98,7 +99,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                     required
                     maxLength={2000}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                     placeholder="https://..."
                   />
                 </div>
@@ -110,7 +111,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     maxLength={5000}
                     rows={3}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none resize-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px] resize-none`}
                     placeholder={t('phDesc')}
                   />
                 </div>
@@ -120,7 +121,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                   <select
                     value={form.resourceType}
                     onChange={(e) => setForm((f) => ({ ...f, resourceType: e.target.value as ResourceType }))}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px] appearance-none pr-8 cursor-pointer`}
                   >
                     {(['article', 'video', 'course', 'tool', 'book', 'other'] as const).map((key) => (
                       <option key={key} value={key}>{resourceTypeLabel(t, key)}</option>

@@ -5,7 +5,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Badge, Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
@@ -215,17 +215,17 @@ export function AnnouncementsManager() {
                   {item.content && <p className="text-[11px] text-[var(--muted-foreground)] line-clamp-1 mt-0.5">{item.content}</p>}
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                    item.level === 'error' ? 'border-[var(--destructive)] text-[var(--destructive)]' :
-                    item.level === 'warning' ? 'border-amber-500 text-amber-400' :
-                    item.level === 'success' ? 'border-green-500 text-green-400' :
-                    'border-[var(--border)] text-[var(--muted-foreground)]'
-                  }`}>{item.level.toUpperCase()}</span>
+                  <Badge variant={
+                    item.level === 'error' ? 'danger' :
+                    item.level === 'warning' ? 'amber' :
+                    item.level === 'success' ? 'success' :
+                    'muted'
+                  }>{item.level.toUpperCase()}</Badge>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${item.isActive ? 'border-green-500 text-green-400' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
+                  <Badge variant={item.isActive ? 'success' : 'muted'}>
                     {item.isActive ? 'ACTIVE' : 'INACTIVE'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-1 font-mono text-[12px] text-[var(--foreground)] tabular-nums">{item.priority}</div>
                 <div className="lg:col-span-3 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(item.createdAt)}</div>

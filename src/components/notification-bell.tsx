@@ -242,7 +242,7 @@ export function NotificationBell() {
             animate="visible"
             exit="exit"
             variants={listVariants}
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(85vw,360px)] max-h-[70vh] border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
+            className="absolute right-0 top-[calc(100%+8px)] z-[var(--z-header)] w-[min(85vw,360px)] max-h-[70vh] border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
           >
             <motion.div
               variants={itemVariants}

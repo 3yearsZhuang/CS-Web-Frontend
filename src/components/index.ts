@@ -27,6 +27,9 @@ export type {
 } from './primitives/loading';
 export { Spinner } from './primitives/spinner';
 export type { SpinnerProps } from './primitives/spinner';
+export { Badge } from './primitives/badge';
+export type { BadgeProps, BadgeVariant } from './primitives/badge';
+export { ModalShell } from './primitives/modal-shell';
 export { ConfirmDialog, ConfirmProvider, useConfirm } from './primitives/confirm-dialog';
 export type { ConfirmDialogProps, ConfirmOptions, ConfirmVariant } from './primitives/confirm-dialog';
 export { FilterBar } from './primitives/filter-bar';
@@ -49,6 +52,8 @@ export type { HeroState, CollapsingHeroProps } from './layout/collapsing-hero';
 export { MobiusRing } from './effects/mobius-ring';
 export { PageTransition } from './effects/page-transition';
 export { ScrollIndicator } from './effects/scroll-indicator';
+export { BootScreen } from './effects/boot-screen';
+export type { BootScreenProps } from './effects/boot-screen';
 export {
   HERO_TIMING,
   StaggerContainer,

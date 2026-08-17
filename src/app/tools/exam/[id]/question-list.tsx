@@ -17,7 +17,7 @@ export function QuestionList(props: ExamState) {
   return (
     <aside
       className={`${
-        sidebarOpen ? 'fixed inset-0 z-50 bg-[var(--background)] pt-32' : 'hidden'
+        sidebarOpen ? 'fixed inset-0 z-[var(--z-header)] bg-[var(--background)] pt-32' : 'hidden'
       } lg:relative lg:block lg:w-72 lg:min-w-[288px] border-r border-[var(--border)] lg:min-h-[calc(100vh-4rem)]`}
     >
       {sidebarOpen && (
