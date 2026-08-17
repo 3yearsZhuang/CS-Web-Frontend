@@ -39,7 +39,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-[var(--border)] rounded w-1/3" />
@@ -53,7 +53,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
 
   if (error && !detail) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24 text-center">
           <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ ERROR ]</div>
           <h1 className="display-serif text-4xl mb-4">{error}</h1>
@@ -68,7 +68,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
   if (!detail) return null;
 
   return (
-    <main className="relative pt-16 min-h-screen">
+    <main className="relative pt-16 min-h-screen pixel-page">
       {/* Header */}
       <div className="border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm sticky top-16 z-[var(--z-banner)]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">

@@ -50,7 +50,7 @@ export default function TaskPage() {
   }, [activeTab, loadMyClaims, loadPoints]);
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"

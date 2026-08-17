@@ -160,7 +160,7 @@ export default function ToolsPage() {
 
   return (
     <VisibilityGate componentKey="tools">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -238,9 +238,9 @@ export default function ToolsPage() {
 
                 const CardContent = (
                   <div
-                    className={`relative p-6 border border-[var(--border)] transition-colors ${
+                    className={`dna-card ${
                       isAvailable
-                        ? 'card-minimal cursor-pointer hover:bg-[var(--primary)]/[0.03]'
+                        ? 'cursor-pointer hover:bg-[var(--primary)]/[0.03]'
                         : 'opacity-40 cursor-default'
                     }`}
                   >

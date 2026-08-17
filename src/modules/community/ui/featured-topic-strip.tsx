@@ -40,7 +40,7 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
                 href={href}
                 className="block group focus-amber flex-shrink-0 w-[260px] sm:w-[300px]"
               >
-                <article className="border border-[var(--border)] p-4 sm:p-5 card-minimal hover:border-[var(--primary)] transition-colors h-full flex flex-col">
+                <article className="dna-card h-full flex flex-col">
                   {/* 标签行 */}
                   <div className="flex items-center gap-1.5 mb-3">
                     {topic.isPinned && (

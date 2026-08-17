@@ -21,6 +21,14 @@ const TECH_TAG_OPTIONS = [
   '前端', '后端', 'AI', '安全', '设计', '移动端', '运维', '数据科学', '嵌入式', '游戏开发',
 ];
 
+// 加入流程（复用 about 的 4 步流程语义，落地为列表选项 B · DNA 行卡）
+const JOIN_STEPS = [
+  { num: '01', titleKey: 'step1Title', duration: '5 min', descKey: 'step1Desc' },
+  { num: '02', titleKey: 'step2Title', duration: '15 min', descKey: 'step2Desc' },
+  { num: '03', titleKey: 'step3Title', duration: '20 min', descKey: 'step3Desc' },
+  { num: '04', titleKey: 'step4Title', duration: '1 day', descKey: 'step4Desc' },
+] as const;
+
 interface ExistingApplication {
   id: string;
   applicantName: string;
@@ -32,6 +40,7 @@ interface ExistingApplication {
 export default function JoinPage() {
   const router = useRouter();
   const t = useTranslations('join');
+  const tAbout = useTranslations('about');
   const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
 
   const hero: HeroState = {
@@ -160,7 +169,7 @@ export default function JoinPage() {
   // 未完成认证检查时的加载状态
   if (!authChecked) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="meta-mono text-[var(--muted-foreground)]">{t('loading')}</div>
       </main>
     );
@@ -168,7 +177,7 @@ export default function JoinPage() {
 
   return (
     <VisibilityGate componentKey="join">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ Hero ============ */}
       <CollapsingHero
         index="00"
@@ -217,6 +226,45 @@ export default function JoinPage() {
           </div>
         </RevealItem>
       </CollapsingHero>
+
+      {/* ============ 加入流程（列表选项 B · DNA 行卡）============ */}
+      <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
+        <div className="max-w-[1600px] mx-auto w-full">
+          <div className="grid grid-cols-12 gap-0 mb-10 sm:mb-16">
+            <div className="col-span-12 md:col-span-2">
+              <div className="section-marker">[ 02 ]</div>
+            </div>
+            <div className="col-span-12 md:col-span-10">
+              <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] leading-[1.05]">
+                {tAbout('processTitle1')}
+                <span className="text-[var(--primary)]">{tAbout('processTitle2')}</span>
+                <span className="text-[var(--muted-foreground)]">{tAbout('processTitle3')}</span>
+              </h2>
+              <p className="mt-4 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
+                {tAbout('processDesc')}
+              </p>
+            </div>
+          </div>
+          <ul className="lst-dna max-w-3xl">
+            {JOIN_STEPS.map((step, idx) => (
+              <li key={step.num}>
+                <span className="dna-corner" aria-hidden="true">{step.num}</span>
+                <div className="min-w-0">
+                  <h3 className="dna-ttl">{tAbout(step.titleKey as Parameters<typeof tAbout>[0])}</h3>
+                  <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                    {tAbout(step.descKey as Parameters<typeof tAbout>[0])}
+                  </p>
+                  <div className="dna-mt">
+                    <span className="k">{tAbout('step', { current: idx + 1, total: JOIN_STEPS.length })}</span>
+                    <span>{step.duration}</span>
+                  </div>
+                </div>
+                <span className="dna-arw" aria-hidden="true">→</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       {/* ============ 申请表单 ============ */}
       <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
@@ -397,6 +445,7 @@ export default function JoinPage() {
                 <div className="flex items-center gap-4">
                   <Button
                   type="submit"
+                  variant="pixel"
                   disabled={submitting}
                 >
                   {submitting ? t('submitting') : t('submit')}

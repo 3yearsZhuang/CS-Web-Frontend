@@ -5,6 +5,8 @@
 // ---- primitives：通用 UI 原子（无业务语义） ----
 export { Button } from './primitives/button';
 export type { ButtonProps } from './primitives/button';
+export { DnaCard } from './primitives/dna-card';
+export type { DnaCardProps } from './primitives/dna-card';
 export { Pagination } from './primitives/pagination';
 export type { PaginationProps } from './primitives/pagination';
 export { Input } from './primitives/input';

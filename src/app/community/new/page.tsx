@@ -21,7 +21,7 @@ export default function ComposePage() {
   return (
     <Suspense
       fallback={
-        <main className="relative pt-16 min-h-screen flex items-center justify-center">
+        <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
           <SectionLoading label="Loading..." />
         </main>
       }
@@ -46,7 +46,7 @@ function ComposePageContent() {
   // 鉴权未完成 — 显示 Loading
   if (!c.authChecked || c.loadingCats) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -55,7 +55,7 @@ function ComposePageContent() {
   // 未登录 — 提示登录
   if (!c.isLoggedIn) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <section className="px-4 sm:px-6 md:px-8 py-20 sm:py-32 min-h-[60vh] flex items-center justify-center">
           <div className="text-center max-w-md">
             <div className="section-marker mb-6">[ 00 ]</div>
@@ -73,7 +73,7 @@ function ComposePageContent() {
   }
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero — 1s 后自动收缩悬浮 ============ */}
       <CollapsingHero index="00" label="Compose" hero={hero} pageKey="posts-new">
         <RevealTitle>

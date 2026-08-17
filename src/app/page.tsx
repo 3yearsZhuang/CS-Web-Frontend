@@ -295,15 +295,25 @@ export default function Home() {
                 <span className="typewriter-cursor" aria-hidden="true">▌</span>
               </RevealItem>
 
-              <TypewriterTitle
-                className="ark-corner-bracket inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] mb-0 leading-[1.05] tracking-tight"
-                style={{ fontWeight: 300 }}
-              >
-                {t('titleExplore')}
-                <span className="text-[var(--primary)]">{t('titleTech')}</span>
-                <br />
-                {t('titleRest')}
-              </TypewriterTitle>
+              {/* 标题底部虚影（选项 A · 像素错位虚影）：衬线真标题背后叠一份像素同文副本，
+               * 向右下硬偏移、低透明度，纯装饰（aria-hidden / pointer-events:none）。仅 Hero 主标题使用。 */}
+              <div className="ghost-title inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] leading-[1.05] tracking-tight">
+                <span className="ghost-title__echo" aria-hidden="true">
+                  {t('titleExplore')}
+                  <span>{t('titleTech')}</span>
+                  <br />
+                  {t('titleRest')}
+                </span>
+                <TypewriterTitle
+                  className="ark-corner-bracket inline-block"
+                  style={{ fontWeight: 300 }}
+                >
+                  {t('titleExplore')}
+                  <span className="text-[var(--primary)]">{t('titleTech')}</span>
+                  <br />
+                  {t('titleRest')}
+                </TypewriterTitle>
+              </div>
 
               <div className="mt-8 sm:mt-12 md:mt-16 grid grid-cols-12 gap-6 sm:gap-8 items-start">
                 <RevealItem className="col-span-12 md:col-span-6" duration={0.9}>

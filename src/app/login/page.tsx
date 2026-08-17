@@ -47,7 +47,7 @@ function LoginContent() {
   }
 
   return (
-    <main className="relative min-h-screen pt-16 flex items-center justify-center px-6 py-20">
+    <main className="relative min-h-screen pt-16 flex items-center justify-center px-6 py-20 pixel-page">
       <div className="relative w-full max-w-md">
         {/* 顶部元数据 */}
         <StaggerContainer>

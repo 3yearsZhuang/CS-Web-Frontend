@@ -27,7 +27,7 @@ export default function CommunityPage() {
   return (
     <Suspense
       fallback={
-        <main className="relative pt-16 min-h-screen flex items-center justify-center">
+        <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
           <SectionLoading label="Loading..." />
         </main>
       }
@@ -83,7 +83,7 @@ function CommunityPageContent() {
 
   if (isInitialLoading) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -91,7 +91,7 @@ function CommunityPageContent() {
 
   return (
     <VisibilityGate componentKey="community">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"

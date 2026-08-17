@@ -6,6 +6,7 @@
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import type { EventItem } from '@/modules/events/types';
+import { DnaCard } from '@/components';
 import { EventStatusBadge } from './event-status-badge';
 
 interface EventCardProps {
@@ -19,7 +20,6 @@ interface EventCardProps {
 export function EventCard({ event, isLeft, index }: EventCardProps) {
   const t = useTranslations('eventsAdmin');
   const isArchived = event.status === 'ended';
-  const cornerNum = String(index + 1).padStart(2, '0');
 
   return (
     <div
@@ -30,10 +30,12 @@ export function EventCard({ event, isLeft, index }: EventCardProps) {
       <div className="absolute left-[12px] md:left-1/2 top-[34px] md:-translate-x-1/2 z-10 w-[15px] h-[15px] rounded-full border-2 bg-[var(--background)] transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none group-hover:shadow-[0_0_0_4px_var(--primary)]/20 shrink-0 border-[var(--primary)] pointer-events-none" aria-hidden="true" />
       <div className={`relative z-20 w-full md:w-[calc(50%-32px)] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0`}>
         <Link href={`/events/${event.id}`} className="block focus-amber group/link relative z-20">
-          <article className={`dna-card transition-opacity ${
-            isArchived ? 'opacity-70 hover:opacity-100' : ''
-          }`}>
-            <span className="dna-corner" aria-hidden="true">{cornerNum}</span>
+          <DnaCard
+            corner={index + 1}
+            className={`transition-opacity ${
+              isArchived ? 'opacity-70 hover:opacity-100' : ''
+            }`}
+          >
             <div className={`dna-meta ${isLeft ? 'md:justify-end' : ''}`}>
               <span className="dna-dim">
                 {'//'} {event.date || event.month || event.year || '—'}
@@ -70,7 +72,7 @@ export function EventCard({ event, isLeft, index }: EventCardProps) {
                 ))}
               </div>
             )}
-          </article>
+          </DnaCard>
         </Link>
       </div>
       <div className="hidden md:block md:w-[calc(50%-32px)]" />

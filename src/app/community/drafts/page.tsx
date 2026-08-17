@@ -40,7 +40,7 @@ export default function DraftsPage() {
   }, []);
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Drafts" hero={hero} pageKey="drafts">
         <RevealTitle>
           <h1

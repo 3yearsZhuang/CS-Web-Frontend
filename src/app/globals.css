@@ -343,9 +343,14 @@ body {
   text-transform: uppercase;
 }
 
-/* 页面级像素元数据层 — 关于/活动页按 kimi-pixel 标准，将元数据层（编号/标签/角标/章节标记）
- * 从 JetBrains Mono 切换为 Fusion Pixel，仅作用于 .about-page / .events-page 作用域，不影响其他页面。
- * 选择器特异度 (0,2,0) 高于 .meta-mono / .tag-badge / Tailwind .font-mono (0,1,0)，可稳定覆盖。 */
+/* 页面级像素元数据层 — 按 kimi-pixel 标准，将元数据层（编号/标签/角标/章节标记）
+ * 从 JetBrains Mono 切换为 Fusion Pixel。统一 opt-in：在页面根节点加 .pixel-page 即生效；
+ * 历史页面 .about-page / .events-page 一并兼容。
+ * 选择器特异度 (0,2,0) 高于 .meta-mono / .tag-badge / Tailwind .font-mono (0,1,0)，可稳定覆盖。
+ * 管理员后台（/admin）不接入，保持其高密度数据表格可读性。 */
+.pixel-page .meta-mono,
+.pixel-page .tag-badge,
+.pixel-page .font-mono,
 .about-page .meta-mono,
 .about-page .tag-badge,
 .about-page .font-mono,
@@ -355,13 +360,13 @@ body {
   font-family: var(--font-pixel);
 }
 
-/* ============ 像素 DNA 卡（方案B）— 方向/活动卡片 ============
+/* ============ 像素 DNA 卡（方案B）— 共享组件皮肤（全局生效） ============
  * 参照「风格四要素拆解」DNA 卡 + 「融合示范」fusion-frame：
  * 表面底色 + 边框 + 默认硬阴影 + 悬停抬升 + 右上角像素编号。
- * 仅作用于 .about-page / .events-page 下的 .dna-card，不影响其他页面。
+ * 由 <DnaCard>（src/components/primitives/dna-card.tsx）渲染，全局生效——
+ * 任何页面使用 DnaCard 即得此皮肤，无需 page 作用域。
  * 阴影用 color-mix 走主题令牌（深色琥珀 / 浅色蓝），双主题自适应。 */
-.about-page .dna-card,
-.events-page .dna-card {
+.dna-card {
   position: relative;
   /* 表面底色：foreground 8% 抬升（深色 ≈ #141414 接近 demo #131313；浅色 ≈ 微染近白） */
   background: color-mix(in srgb, var(--foreground) 8%, var(--background));
@@ -371,15 +376,13 @@ body {
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
   transition: transform 0.15s steps(3), box-shadow 0.15s steps(3), border-color 0.2s ease;
 }
-.about-page .dna-card:hover,
-.events-page .dna-card:hover {
+.dna-card:hover {
   transform: translate(-3px, -3px);
   box-shadow: 7px 7px 0 color-mix(in srgb, var(--primary) 30%, transparent);
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
 /* 右上角像素编号（DNA 卡同款 .no） */
-.about-page .dna-card .dna-corner,
-.events-page .dna-card .dna-corner {
+.dna-card .dna-corner {
   position: absolute;
   top: 14px;
   right: 16px;
@@ -389,13 +392,11 @@ body {
   color: var(--muted-foreground);
   transition: color 0.2s ease;
 }
-.about-page .dna-card:hover .dna-corner,
-.events-page .dna-card:hover .dna-corner {
+.dna-card:hover .dna-corner {
   color: var(--primary);
 }
 /* 元数据行 — tag + nameEn / date（像素字体，同 demo 融合示范 meta 行） */
-.about-page .dna-card .dna-meta,
-.events-page .dna-card .dna-meta {
+.dna-card .dna-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 16px;
@@ -405,13 +406,201 @@ body {
   letter-spacing: 0.1em;
   margin-bottom: 12px;
 }
-.about-page .dna-card .dna-meta .dna-tag,
-.events-page .dna-card .dna-meta .dna-tag {
+.dna-card .dna-meta .dna-tag {
   color: var(--primary);
 }
-.about-page .dna-card .dna-meta .dna-dim,
-.events-page .dna-card .dna-meta .dna-dim {
+.dna-card .dna-meta .dna-dim {
   color: var(--muted-foreground);
+}
+
+/* ============ 索引铁路列表（列表选项 A · Index Railway）============
+ * 左侧像素编号 + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移。
+ * 无盒装、无浮起，与既有章节/时间轴语言同源；列表行（border-b 密度优先）不套 DnaCard。
+ * 应用：/about 的信念与期望索引列表（FrontDoc-UID §15.9）。 */
+.idx-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.idx-rail > li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 20px;
+  align-items: baseline;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--border);
+}
+.idx-rail > li::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--foreground) 14%, var(--background));
+}
+.idx-rail .idx {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  background: var(--background);
+  padding: 2px 0;
+  transition: color 0.2s ease;
+}
+.idx-rail .idx-ttl {
+  font-family: var(--font-serif);
+  font-weight: 350;
+  font-size: clamp(17px, 2.2vw, 24px);
+  color: var(--foreground);
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+.idx-rail .idx-mt {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.idx-rail .idx-mt .k {
+  color: var(--primary);
+}
+.idx-rail .idx-arw {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--muted-foreground);
+  transition: transform 0.25s var(--ease-ark), color 0.2s ease;
+}
+.idx-rail > li:hover .idx-ttl,
+.idx-rail > li:hover .idx {
+  color: var(--primary);
+}
+.idx-rail > li:hover .idx-arw {
+  color: var(--primary);
+  transform: translateX(5px);
+}
+
+/* ============ 标题底部虚影（标题选项 A · 像素错位虚影 Pixel Offset Echo）============
+ * 真实标题用衬线，背后叠一份像素字体的相同文本，向右下硬偏移、低透明度。
+ * 衬线 × 像素的错位 = 最贴切的「融合」表达。虚影 z-index 低于真标题、pointer-events:none、
+ * aria-hidden，纯装饰；仅展开态/Hero 主标题使用（折叠态保持纯净）。
+ * 应用：首页 Hero 主标题（FrontDoc-UID §15.10）。 */
+.ghost-title {
+  position: relative;
+  display: inline-block;
+}
+.ghost-title__echo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  transform: translate(8px, 12px);
+  font-family: var(--font-pixel);
+  font-size: 1em;
+  line-height: inherit;
+  letter-spacing: 0.02em;
+  color: var(--muted-foreground);
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.ghost-title > :last-child {
+  position: relative;
+  z-index: 1;
+}
+
+/* ============ DNA 行卡列表（列表选项 B · DNA Row-Card）============
+ * 把 DNA 卡语言压扁为「横向行卡」：左侧主色硬边条 + 右上角像素编号 + 硬阴影 hover 抬升
+ * （与 DnaCard 同款 steps(3) 跳变）。列表密度 + 像素交互兼得。
+ * 应用：/join 加入流程列表（FrontDoc-UID §15.9）。 */
+.lst-dna {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lst-dna > li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  padding: 20px 24px 20px 28px;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, var(--background));
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
+  transition: transform 0.15s steps(3), box-shadow 0.15s steps(3), border-color 0.2s ease;
+}
+.lst-dna > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--primary);
+}
+.lst-dna .dna-corner {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  transition: color 0.2s ease;
+}
+.lst-dna .dna-ttl {
+  font-family: var(--font-serif);
+  font-weight: 350;
+  font-size: clamp(17px, 2.2vw, 23px);
+  color: var(--foreground);
+  line-height: 1.25;
+}
+.lst-dna .dna-mt {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.lst-dna .dna-mt .k {
+  color: var(--primary);
+}
+.lst-dna .dna-arw {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--muted-foreground);
+  transition: transform 0.2s var(--ease-ark), color 0.2s ease;
+}
+.lst-dna > li:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0 color-mix(in srgb, var(--primary) 30%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.lst-dna > li:hover .dna-corner {
+  color: var(--primary);
+}
+.lst-dna > li:hover .dna-ttl {
+  color: var(--primary);
+}
+.lst-dna > li:hover .dna-arw {
+  color: var(--primary);
+  transform: translateX(5px);
 }
 
 /* 12 栏栅格 — 可见栅格线（用于背景） */

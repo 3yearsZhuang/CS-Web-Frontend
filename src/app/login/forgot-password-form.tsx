@@ -62,7 +62,7 @@ export function ForgotPasswordForm(props: AuthFormState) {
             className={`${INPUT_CLASS} w-full px-4 py-3 text-[14px]`}
             placeholder={t('emailPlaceholder')}
           />
-          <Button type="submit" disabled={forgotLoading} className="w-full">
+          <Button type="submit" variant="pixel" disabled={forgotLoading} className="w-full">
             {forgotLoading ? t('processing') : t('submitRequest')}
           </Button>
         </form>

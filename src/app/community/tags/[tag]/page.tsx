@@ -29,7 +29,7 @@ export default function TagDetailPage() {
   };
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Tag" hero={hero} pageKey={`tag-${tag}`}>
         <RevealTitle>
           <h1

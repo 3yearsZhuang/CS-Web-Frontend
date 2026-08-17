@@ -41,7 +41,7 @@ export default function ResourcePage() {
   const typeTabs: CapsuleTab[] = res.typeTabs as CapsuleTab[];
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"

@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§11 登记像素融合白名单例外）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 Hero 标题虚影；§11 登记像素融合白名单例外）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -633,21 +633,23 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ### 15.2 页面作用域（像素元数据层）
 
-`.about-page` / `.events-page` 两个页面级作用域下，元数据类统一切换为像素字体（globals.css 作用域选择器，特异度 (0,2,0) 高于 `.meta-mono` 等 (0,1,0)）：
+统一 opt-in：在页面根节点 `<main>` 加 `.pixel-page` 即把元数据层切换为像素字体（globals.css 作用域选择器，特异度 (0,2,0) 高于 `.meta-mono` 等 (0,1,0)）；历史 `.about-page` / `.events-page` 一并兼容：
 
 ```css
+.pixel-page .meta-mono, .pixel-page .tag-badge, .pixel-page .font-mono,
 .about-page .meta-mono, .about-page .tag-badge, .about-page .font-mono,
 .events-page .meta-mono, .events-page .tag-badge, .events-page .font-mono {
   font-family: var(--font-pixel);
 }
 ```
 
-- 新增页面若需像素元数据层：给 `<main>` 加对应作用域类复用该选择器；**不要**在无关页面全局替换 `.meta-mono`
+- **接入新页面**：给 `<main>` 加 `pixel-page` 即可（已覆盖 join / login / profile / users/[id] / notifications / events/[id] / community* / tools*）。**不要**在无关页面全局替换 `.meta-mono`
+- **排除**：管理员后台 `/admin` 不接入，保持其高密度数据表格可读性（Fusion Pixel 为 12px 位图字体，不利长数字密集排版）
 - 首页是特例：用内联 `style={{ fontFamily: 'var(--font-pixel)' }}` 选择性像素化（本项目自定义类优先级高于 Tailwind 工具类，改字体族用内联 style，勿用 `font-pixel` 工具类）
 
-### 15.3 DNA 卡（方向 / 活动卡片）
+### 15.3 DNA 卡（共享组件）
 
-参照 demo「风格四要素拆解」DNA 卡 +「融合示范」fusion-frame，作用域于 `.about-page` / `.events-page` 下：
+参照 demo「风格四要素拆解」DNA 卡 +「融合示范」fusion-frame。**已提炼为共享组件** `src/components/primitives/dna-card.tsx` 的 `<DnaCard>`（props：`corner?: string|number` 自动补零两位、`className?`、`as?: 'article'|'div'`、children），皮肤样式全局生效（不再限页面作用域）：
 
 | 类 | 用途 | 规格 |
 |----|------|------|
@@ -655,7 +657,12 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `.dna-corner` | 右上角像素编号 | `position:absolute; top:14px; right:16px`；`--font-pixel` 11px；muted，hover 转 primary；`aria-hidden`（装饰性编号） |
 | `.dna-meta` | 元数据行 | flex wrap；`--font-pixel` 11px；`.dna-tag` = primary / `.dna-dim` = muted |
 
-使用方：`/about` 方向卡片（`article.dna-card`，无链接）；`/events` 活动时间轴卡片（`Link > article.dna-card`，`isLeft` 交替 + 右上角标 `String(index+1).padStart(2,'0')`，archived 透明度降级）。
+使用方（均经 `<DnaCard>` 或直接 `.dna-card` 类）：
+- `/about` 方向卡片（`<DnaCard corner={d.num}>` 无链接）
+- `/events` 活动时间轴卡片（`<DnaCard corner={index+1}>` 内嵌 `Link`，`isLeft` 交替 + archived 透明度降级）
+- `/community` 精选横滑卡 `featured-topic-strip`（盒装卡 → `dna-card`）
+- `/tools` 工具卡（`dna-card`，available 态保留 `hover:bg` 微染）
+- **不适用**：Feed / 主题列表项 `feed-item-card` / `community-topic-item` 是「列表行」（`border-b` 分隔 + 紧凑 padding），非盒装卡，保持列表样式、由 `.pixel-page` 像素化其元数据即可，勿套 `.dna-card`（会撑大行高、破坏列表密度）
 
 ### 15.4 像素按钮
 
@@ -672,24 +679,47 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 时间线 + 日历**同屏**展示（2026-08-18 起，替代原「时间轴 / 日历」切换）：
 
 ```tsx
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-start">
-  <div className="lg:sticky lg:top-24"><MonthCalendar events={events} /></div>
-  <YearAccordionTimeline ... />
+{/* 日历列收窄为固定 320px，时间线占剩余空间；显式分层避免 sticky 日历覆盖卡片 hover */}
+<div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
+  <div className="relative z-0 lg:sticky lg:top-24"><MonthCalendar events={events} /></div>
+  <div className="relative z-10"><YearAccordionTimeline ... /></div>
 </div>
 ```
 
 - 移动端（单列）：DOM 顺序日历在前 → **日历在上、时间线在下**
-- 桌面（`lg:grid-cols-2`）：**左日历、右时间线**（保持「日历优先」阅读顺序）；日历列 `lg:sticky lg:top-24` 随滚动固定（需栅格容器 `items-start` 配合）
+- 桌面（`lg:grid-cols-[320px_1fr]`）：**左日历、右时间线**（保持「日历优先」阅读顺序）；日历列固定 320px（进一步压缩占比，时间线主导），`lg:sticky lg:top-24` 随滚动固定（需栅格容器 `items-start` 配合）
+- **分层与 hover 安全（2026-08-18 修订）**：日历列 `relative z-0`、时间线列 `relative z-10` 显式分层，保证 sticky 日历**永不覆盖**时间轴 DNA 卡的 `translate(-3px,-3px)` 抬升与 `7px 7px` 硬阴影（§15.3/§15.7）；`lg:gap-12`（48px）留白进一步隔离两列，左列卡片 hover 位移亦不会触及日历
 - 顶部筛选栏同时驱动两个视图（共享 `events` 状态）；若调整桌面比例/左右对调，改栅格与 `order-*` 即可
 
 ### 15.7 与既有规范的豁免（必读）
 
 像素融合层的**硬阴影、hover translate、steps() 跳变**违反 §0「不浮起」与 §11「禁止 hover:-translate-y-1 / 默认阴影」，属**有意引入的白名单例外**，仅限以下类：`.dna-card`、`.dna-corner`（hover 变色）、`.btn-pixel*`、`.typewriter-ch/.typewriter-cursor`。其余卡片/按钮仍受 §0/§11 约束（§11 已登记例外）。
 
-### 15.8 组件化决策（2026-08-18）
+### 15.8 组件化决策（更新 2026-08-18）
 
-DNA 卡**暂不提炼为共享组件**，保持 CSS 类契约：皮肤样式已在 `globals.css` 单点共享；两个使用方内容结构异构（about 无链接 / events Link + `isLeft` 交替 + archived 降级），组件抽象收益低且会为差异妥协。
-**提升条件**：出现第 3 处内容同构使用方（如 calendar 选中日列表统一皮肤）→ 按 §5.0 复用契约评审提升为 `primitives/DnaCard`（props 建议：`corner?` / `meta?` / `hoverable?` + children）。
+- **按钮**：像素按钮 `pixel` / `pixel-outline` 变体已沉淀于共享 `Button` 组件（`primitives/button.tsx`，映射 `.btn-pixel*`），全站 CTA 均经此组件，无需额外封装。
+- **卡片**：已按用户要求**提炼为共享组件** `<DnaCard>`（`primitives/dna-card.tsx`，见 §15.3）；`/about` 与 `/events` 现经该组件渲染，新增盒装卡直接复用 `<DnaCard corner={…}>`。皮肤仍由 `globals.css` 单点定义，组件只负责结构 + 角标，符合「样式单点 + 结构复用」的复用契约。
+- **范围边界**：列表行（Feed / 主题项）不套 `<DnaCard>`，见 §15.3「不适用」；管理员后台不接入像素层，见 §15.2「排除」。
+
+### 15.9 列表（列表行）选型落地
+
+像素融合列表三档（`tools/demo/list-and-title-demos.html`）已按页面选型落地。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
+
+| 页面 | 选型 | 共享类 | 视觉特征 |
+|------|------|--------|----------|
+| `/about`（信念 / 期望索引列表） | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移 |
+| `/join`（加入流程） | **B DNA 行卡** | `.lst-dna`（`.dna-corner` / `.dna-ttl` / `.dna-mt` / `.dna-arw`） | 左主色硬边条 + 右上角像素编号 + 同款 `steps(3)` 抬升硬阴影；复用 about 四步流程语义 |
+| （待定） | C 像素终端 | `.lst-term` | 全像素字体 + 状态点 + 游标，适合数据/日志型列表 |
+
+- **选型边界**：盒装卡 → `<DnaCard>`（§15.3）；列表行 → A/B/C 三档之一（不套 DnaCard）。`/about` 的「六大方向」仍为 DNA **盒装卡**（B 卡片，非列表），「流程行」仍为 C 流程行，二者**不在**本列表选型范围。
+- `/join` 的「加入流程」为新增引导区（Hero 与表单之间），`JOIN_STEPS` 复用 about 的 `step1~4Title/Desc` + `duration` 文案（`useTranslations('about')`）。
+
+### 15.10 标题底部虚影（Hero 专用）
+
+- **选型**：**A 像素错位虚影**——衬线真标题背后叠一份像素同文副本，向右下硬偏移、低透明度（衬线 × 像素的错位，最贴切「融合」表达）。
+- **落地范围**：**仅首页 Hero 主标题**（`src/app/page.tsx` 的 `TypewriterTitle` 外包 `.ghost-title` + 子 `.ghost-title__echo`）。折叠态 / Hero 以外章节标题保持纯净，未启用虚影。
+- **安全约束**：虚影 `z-index` 低于真标题、`pointer-events:none`、`aria-hidden`，纯装饰；颜色走 `--muted-foreground` 低透明度、双主题自适应；`clamp()` 控字号、小偏移避免移动端显脏。
+- **后续复用**：`.ghost-title` 为通用工具类，若需扩展到其他章节标题，直接套用即可（当前默认仅 Hero）。
 
 ---
 
@@ -697,7 +727,9 @@ DNA 卡**暂不提炼为共享组件**，保持 CSS 类契约：皮肤样式已�
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join` 新增「加入流程」引导区选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
 | 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
+| 2026-08-18 | 像素融合全站化：① 新建共享组件 `<DnaCard>`（`primitives/dna-card.tsx`），`/about`、`/events` 重构其使用，DNA 卡皮肤改全局生效（§15.3/§15.8 更新）；② 像素元数据层 opt-in 统一为 `.pixel-page`（兼容 about/events），覆盖 join/login/profile/users/[id]/notifications/events/[id]/community*/tools*，`/admin` 排除（§15.2）；③ 上述页面主 CTA 切 `pixel`/`pixel-outline`；④ 盒装卡 `featured-topic-strip`、tools 工具卡转 `dna-card`，Feed/主题列表行保持列表样式 |
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
 | 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |

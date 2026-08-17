@@ -195,7 +195,7 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -203,7 +203,7 @@ export default function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error || t('notFound')}</div>
           <Link
@@ -218,7 +218,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero
         index="01"
         label="Event"
@@ -440,7 +440,7 @@ export default function EventDetailPage() {
                       )}
 
                       {isLoggedIn === false ? (
-                        <Button onClick={() => router.push('/login')}>
+                        <Button variant="pixel" onClick={() => router.push('/login')}>
                           <span>{t('loginToRegister')}</span>
                           <span>→</span>
                         </Button>
@@ -465,6 +465,7 @@ export default function EventDetailPage() {
                         </Button>
                       ) : (
                         <Button
+                          variant="pixel"
                           onClick={handleRegister}
                           disabled={actionLoading}
                         >

@@ -41,7 +41,7 @@ function NotificationsContent() {
 
   if (n.loading && n.notifications.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -49,7 +49,7 @@ function NotificationsContent() {
 
   if (n.error && n.notifications.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{n.error}</div>
           <button onClick={() => n.fetchNotifications()} className="meta-mono text-[var(--primary)] underline-grow">
@@ -62,7 +62,7 @@ function NotificationsContent() {
 
   return (
     <VisibilityGate componentKey="notifications">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       <section
         data-section-nav="00|Notifications"
         className={`relative px-4 sm:px-6 md:px-8 overflow-hidden transition-all hero-reveal ${

@@ -29,7 +29,7 @@ export default function SeriesDetailPage() {
   };
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Series" hero={hero} pageKey={`series-${id}`}>
         <RevealTitle>
           <h1

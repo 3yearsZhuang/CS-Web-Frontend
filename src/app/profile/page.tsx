@@ -77,7 +77,7 @@ function ProfileContent() {
   // 加载中状态
   if (loading) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -86,7 +86,7 @@ function ProfileContent() {
   // 加载错误状态
   if (loadError || !user) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center px-6">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center px-6 pixel-page">
         <div className="max-w-md w-full text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{t('errorTitle')}</div>
           <p className="text-[14px] text-[var(--muted-foreground)] mb-8">
@@ -105,7 +105,7 @@ function ProfileContent() {
 
   return (
     <VisibilityGate componentKey="profile">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ [00] Hero — 身份信息（1s 后自动收缩悬浮） ============ */}
       <CollapsingHero
         index="00"

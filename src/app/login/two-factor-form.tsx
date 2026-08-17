@@ -40,7 +40,7 @@ export function TwoFactorForm(props: AuthFormState) {
         </div>
       )}
 
-      <Button type="submit" disabled={loading} loading={loading} className="w-full py-4">
+      <Button type="submit" variant="pixel" disabled={loading} loading={loading} className="w-full py-4">
         {loading ? t('verifying') : t('verify')}
       </Button>
 

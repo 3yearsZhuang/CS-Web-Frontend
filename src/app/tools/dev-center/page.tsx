@@ -59,7 +59,7 @@ export default function DevCenterPage() {
   const isRoot = currentUser?.role === 'root';
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"

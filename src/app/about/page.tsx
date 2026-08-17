@@ -10,7 +10,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button } from '@/components';
+import { Button, DnaCard } from '@/components';
 import Link from 'next/link';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -143,60 +143,42 @@ export default function AboutPage() {
                 <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
                   {t('beliefSection')}
                 </h3>
-                <div className="border-t border-[var(--border)]">
+                {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
+                <ul className="idx-rail border-t border-[var(--border)]">
                   {BELIEFS.map((b) => (
-                    <article
-                      key={b.num}
-                      className="grid grid-cols-12 gap-2 sm:gap-4 py-6 sm:py-8 border-b border-[var(--border)] card-minimal"
-                    >
-                      <div className="col-span-2 md:col-span-1">
-                        <span className="meta-mono text-[var(--primary)]">{b.num}</span>
-                      </div>
-                      <div className="col-span-10 md:col-span-4">
-                        <h3 className="text-[16px] sm:text-[18px] text-[var(--foreground)] tracking-tight">
-                          {t(b.titleKey as Parameters<typeof t>[0])}
-                        </h3>
-                      </div>
-                      <div className="col-span-12 md:col-span-6">
-                        <p className="text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                    <li key={b.num}>
+                      <span className="idx">// {b.num}</span>
+                      <div className="min-w-0">
+                        <h3 className="idx-ttl">{t(b.titleKey as Parameters<typeof t>[0])}</h3>
+                        <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
                           {t(b.descKey as Parameters<typeof t>[0])}
                         </p>
+                        <div className="idx-mt"><span className="k">{b.tag}</span></div>
                       </div>
-                      <div className="col-span-12 md:col-span-1 text-right">
-                        <span className="meta-mono text-[var(--muted-foreground)]">{b.tag}</span>
-                      </div>
-                    </article>
+                      <span className="idx-arw" aria-hidden="true">→</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
                 {/* 子区块 2：期望 */}
                 <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 mt-16 sm:mt-20 uppercase tracking-widest">
                   {t('expectationSection')}
                 </h3>
-                <div className="border-t border-[var(--border)]">
+                {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
+                <ul className="idx-rail border-t border-[var(--border)]">
                   {REQUIREMENTS.map((req) => (
-                    <article
-                      key={req.num}
-                      className="grid grid-cols-12 gap-2 sm:gap-4 py-6 sm:py-8 border-b border-[var(--border)] card-minimal"
-                    >
-                      <div className="col-span-2 md:col-span-1">
-                        <span className="meta-mono text-[var(--primary)]">{req.num}</span>
-                      </div>
-                      <div className="col-span-10 md:col-span-4">
-                        <h3 className="text-[16px] sm:text-[18px] text-[var(--foreground)] tracking-tight">
-                          {t(req.titleKey as Parameters<typeof t>[0])}
-                        </h3>
-                      </div>
-                      <div className="col-span-12 md:col-span-6">
-                        <p className="text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                    <li key={req.num}>
+                      <span className="idx">// {req.num}</span>
+                      <div className="min-w-0">
+                        <h3 className="idx-ttl">{t(req.titleKey as Parameters<typeof t>[0])}</h3>
+                        <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
                           {t(req.descKey as Parameters<typeof t>[0])}
                         </p>
+                        <div className="idx-mt"><span className="k">{req.tag}</span></div>
                       </div>
-                      <div className="col-span-12 md:col-span-1 text-right">
-                        <span className="meta-mono text-[var(--muted-foreground)]">{req.tag}</span>
-                      </div>
-                    </article>
+                      <span className="idx-arw" aria-hidden="true">→</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             )}
 
@@ -215,11 +197,11 @@ export default function AboutPage() {
                   </RevealItem>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                     {DIRECTIONS.map((d) => (
-                      <article
+                      <DnaCard
                         key={d.num}
-                        className="group dna-card flex flex-col"
+                        corner={d.num}
+                        className="group flex flex-col"
                       >
-                        <span className="dna-corner" aria-hidden="true">{d.num}</span>
                         <h3 className="display-serif text-[17px] sm:text-[18px] text-[var(--foreground)] leading-[1.45] mb-3">
                           {t(d.nameKey as Parameters<typeof t>[0])}
                         </h3>
@@ -239,7 +221,7 @@ export default function AboutPage() {
                             ))}
                           </div>
                         )}
-                      </article>
+                      </DnaCard>
                     ))}
                   </div>
                 </div>

@@ -133,7 +133,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24">
           <SkeletonBlock rows={2} />
         </div>
@@ -143,11 +143,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
 
   if (error || !user) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24 text-center">
           <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 404 ]</div>
           <h1 className="display-serif text-4xl mb-4">{error || t('notFound')}</h1>
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Button variant="pixel-outline" onClick={() => router.push('/')}>
             {t('backHome')}
           </Button>
         </div>
@@ -158,7 +158,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
   const displayName = user.displayName || user.email.split('@')[0];
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* [00] Hero — 用户身份 */}
       <CollapsingHero
         index="00"

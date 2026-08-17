@@ -256,18 +256,22 @@ export default function EventsPage() {
                   onStatusChange={setStatusFilter}
                 />
 
-                {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线） */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-start">
-                  <div className="lg:sticky lg:top-24">
+                {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线）
+                 * 日历列收窄为固定 320px（进一步压缩占比，时间线占剩余空间）；
+                 * 日历层 z-0、时间线层 z-10 显式分层，sticky 日历永不覆盖时间轴卡片的 hover 抬升/硬阴影。 */}
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
+                  <div className="relative z-0 lg:sticky lg:top-24">
                     <MonthCalendar events={events} />
                   </div>
-                  <YearAccordionTimeline
-                    uncategorized={uncategorized}
-                    yearGroups={yearGroups}
-                    expandedYears={expandedYears}
-                    loading={loading}
-                    onToggleYear={toggleYear}
-                  />
+                  <div className="relative z-10">
+                    <YearAccordionTimeline
+                      uncategorized={uncategorized}
+                      yearGroups={yearGroups}
+                      expandedYears={expandedYears}
+                      loading={loading}
+                      onToggleYear={toggleYear}
+                    />
+                  </div>
                 </div>
               </div>
             )}
