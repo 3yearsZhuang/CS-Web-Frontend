@@ -9,10 +9,15 @@
 > - 未完成待办 → [`项目待办事项.md`](../docs/项目待办事项.md)
 >
 > 本文件仅保留版本号锚点，便于 release 引用；不再在子仓库内重复维护变更条目，避免双份漂移。
+> 跨项目权威变更记录以根仓 [CHANGELOG.md](../CHANGELOG.md) 为准，本文件仅留版本锚点。
 
 ## [Unreleased]
 
 详见 `docs/项目演变历史.md`（2026-08-05 起的条目）。
+
+## [0.9.9]
+
+详见 `docs/项目演变历史.md`（0.9.9 起条目）。
 
 ## [0.9.8] - 2026-08-07
 
@@ -40,6 +45,7 @@
 
 ## 链接
 
+[0.9.9]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.9
 [0.9.8]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.8
 [0.9.7]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.7
 [0.9.6]: https://github.com/your-org/fztbucs-projects/releases/tag/v0.9.6

@@ -11,8 +11,11 @@
 # 日志
 *.log
 
-# 临时文件（运行时生成的 _tmp_* 噪声产物，不入库）
-_tmp_*
+# 开发日志目录（含非 .log 文件时整体排除）
+.devlogs/
+
+# 本地 dev 后台进程 PID 文件（make dev-up 生成，dev-down 清理）
+.dev.pid
 
 # IDE / 编辑器 / 工具数据
 .vscode/
@@ -22,6 +25,8 @@ _tmp_*
 *.swo
 *~
 .codebuddy/
+.trae-cn/
+.workbuddy/
 
 # OS
 .DS_Store
@@ -43,6 +48,9 @@ appendonlydir/
 # 不落在工作区目录，无需在此忽略。
 
 # ---- Node / Next.js 专属段 ----
+
+# 临时文件（运行时生成的 _tmp_* 噪声产物，不入库；仅前端，不属于公共段）
+_tmp_*
 
 # 依赖
 node_modules/
