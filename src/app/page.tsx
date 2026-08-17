@@ -9,12 +9,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { MobiusRing } from '@/components/effects/mobius-ring';
+import { StarfieldCanvas } from '@/components/effects/starfield-canvas';
 import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
 import { Button } from '@/components';
 import { BootScreen } from '@/components/effects/boot-screen';
-import { RevealItem, RevealTitle, StaggerContainer } from '@/components/effects/motion-primitives';
+import { RevealItem, TypewriterTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -224,6 +225,8 @@ export default function Home() {
          * 冒泡到 <main> 的 onClick 彩蛋处理器。CTA 按钮通过 pointer-events-auto
          * 恢复可点击，彩蛋 handler 中通过 closest('a, button') 跳过这些点击。 */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          {/* 像素星空底层 — 叠于莫比乌斯环之下，营造暗夜氛围（Kimi 风格融合 M3） */}
+          <StarfieldCanvas className="absolute inset-0" />
           <div className={mobius.positionClass} style={mobius.sizeStyle}>
             <MobiusRing
               className={`w-full h-full ${mobius.opacity}`}
@@ -261,6 +264,7 @@ export default function Home() {
         {bootDone && (
         <motion.div
           className="absolute top-28 sm:top-32 right-4 sm:right-6 md:right-8 hidden sm:block z-[var(--z-base)] pointer-events-none"
+          style={{ fontFamily: 'var(--font-pixel)' }}
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: EASE, delay: 0.6 }}
@@ -282,23 +286,31 @@ export default function Home() {
         >
           <div className="grid grid-cols-12 gap-0">
             <div className="col-span-12 md:col-span-9">
-              <RevealItem className="ark-divider mb-6 sm:mb-8 md:mb-10" duration={0.9}>
+              <RevealItem
+                className="ark-divider mb-6 sm:mb-8 md:mb-10"
+                style={{ fontFamily: 'var(--font-pixel)' }}
+                duration={0.9}
+              >
                 {t('tagline')}
+                <span className="typewriter-cursor" aria-hidden="true">▌</span>
               </RevealItem>
 
-              <RevealTitle
+              <TypewriterTitle
                 className="ark-corner-bracket inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] mb-0 leading-[1.05] tracking-tight"
-                duration={1.4}
+                style={{ fontWeight: 300 }}
               >
                 {t('titleExplore')}
                 <span className="text-[var(--primary)]">{t('titleTech')}</span>
                 <br />
                 {t('titleRest')}
-              </RevealTitle>
+              </TypewriterTitle>
 
               <div className="mt-8 sm:mt-12 md:mt-16 grid grid-cols-12 gap-6 sm:gap-8 items-start">
                 <RevealItem className="col-span-12 md:col-span-6" duration={0.9}>
-                  <p className="text-[var(--muted-foreground)] text-[clamp(14px,1.2vw,17px)] leading-[1.8] max-w-xl">
+                  <p
+                    className="text-[var(--muted-foreground)] text-[clamp(14px,1.2vw,17px)] leading-[1.8] max-w-xl"
+                    style={{ fontFamily: 'var(--font-pixel)' }}
+                  >
                     {t('introBefore')}
                     <span className="text-[var(--foreground)] font-medium">
                       {' '}
@@ -312,7 +324,7 @@ export default function Home() {
                     href={isLoggedIn ? '/profile' : '/login'}
                     className="pointer-events-auto flex-1 md:flex-none md:max-w-[260px]"
                   >
-                    <Button className="w-full">
+                    <Button variant="pixel" className="w-full">
                       <span>{t('joinNow')}</span>
                       <span>→</span>
                     </Button>
@@ -321,7 +333,7 @@ export default function Home() {
                     href="/about"
                     className="pointer-events-auto flex-1 md:flex-none md:max-w-[260px]"
                   >
-                    <Button variant="outline" className="w-full">
+                    <Button variant="pixel-outline" className="w-full">
                       <span>{t('learnMore')}</span>
                       <span>→</span>
                     </Button>

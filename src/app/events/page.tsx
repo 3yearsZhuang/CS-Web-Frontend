@@ -23,9 +23,6 @@ import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type EventTab = 'timeline' | 'next' | 'admin';
 
-/** 时间轴子视图模式：时间轴 / 日历 */
-type TimelineViewMode = 'timeline' | 'calendar';
-
 /** 将活动列表按 year 降序分组 */
 function groupByYear(events: EventItem[], uncategorizedLabel: string): YearGroup[] {
   const map = new Map<string, EventItem[]>();
@@ -94,9 +91,6 @@ export default function EventsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
 
-  // 时间轴子视图模式：时间轴 / 日历（M3 活动日历视图）
-  const [viewMode, setViewMode] = useState<TimelineViewMode>('timeline');
-
   // 年份手风琴：展开的年份集合（默认全部展开）
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
@@ -158,7 +152,7 @@ export default function EventsPage() {
 
   if (loading && events.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="events-page relative pt-16 min-h-screen flex items-center justify-center">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -166,7 +160,7 @@ export default function EventsPage() {
 
   if (error && events.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="events-page relative pt-16 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error}</div>
           <button
@@ -182,7 +176,7 @@ export default function EventsPage() {
 
   return (
     <VisibilityGate componentKey="events">
-      <main className="relative pt-16">
+      <main className="events-page relative pt-16">
       {/* ============ Hero — 1s 后自动收缩悬浮（亚克力框） ============ */}
       <CollapsingHero
         index="00"
@@ -244,44 +238,17 @@ export default function EventsPage() {
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           {/* 内容区 */}
           <div>
-            {/* Tab 01 — 统一时间轴（年份手风琴 + 铁路线终端日志节点）/ 日历视图 */}
+            {/* Tab 01 — 时间线 + 日历同屏（桌面左右布局，移动端日历在上、时间线在下） */}
             {activeTab === 'timeline' && (
               <div>
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
+                <div className="mb-10 sm:mb-16">
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]">
                     {t('sectionTitle1')}
-                    <span className="text-[var(--primary)]">
-                      {viewMode === 'calendar' ? t('calendarLabel') : t('sectionTitle2')}
-                    </span>
+                    <span className="text-[var(--primary)]">{t('sectionTitle2')}</span>
                   </h2>
-                  {/* 视图切换 — 时间轴 / 日历 */}
-                  <div className="flex gap-0">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('timeline')}
-                      className={`meta-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border transition-colors ${
-                        viewMode === 'timeline'
-                          ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                          : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {t('timelineLabel')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('calendar')}
-                      className={`meta-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border-l-0 transition-colors ${
-                        viewMode === 'calendar'
-                          ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                          : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {t('calendarLabel')}
-                    </button>
-                  </div>
                 </div>
 
-                {/* 筛选区域 */}
+                {/* 筛选区域 — 同时作用于日历与时间线 */}
                 <EventFilterBar
                   searchInput={searchInput}
                   statusFilter={statusFilter}
@@ -289,8 +256,11 @@ export default function EventsPage() {
                   onStatusChange={setStatusFilter}
                 />
 
-                {/* 视图内容：时间轴（年份手风琴 + 铁路线）或日历 */}
-                {viewMode === 'timeline' ? (
+                {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线） */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-start">
+                  <div className="lg:sticky lg:top-24">
+                    <MonthCalendar events={events} />
+                  </div>
                   <YearAccordionTimeline
                     uncategorized={uncategorized}
                     yearGroups={yearGroups}
@@ -298,9 +268,7 @@ export default function EventsPage() {
                     loading={loading}
                     onToggleYear={toggleYear}
                   />
-                ) : (
-                  <MonthCalendar events={events} />
-                )}
+                </div>
               </div>
             )}
 
@@ -317,6 +285,7 @@ export default function EventsPage() {
                     {t('nextDesc')}
                   </p>
                   <Button
+                    variant="pixel"
                     onClick={() => router.push('/about')}
                   >
                     <span>{t('joinUs')}</span>

@@ -1,12 +1,15 @@
 /**
  * @file Button — 统一按钮组件，封装 primary / outline / primary-outline / danger /
- * outline-danger / ghost / amber / filled 八套变体（FrontDoc-UIButton.md §7）
+ * outline-danger / ghost / amber / filled / pixel / pixel-outline 十套变体（FrontDoc-UIButton.md §7）
+ *
+ * pixel 对：Kimi 风格硬阴影 + steps(2) 按压位移，用于首页 Hero CTA 等像素元数据层场景；
+ * 主次按钮统一实色硬阴影，颜色走双主题令牌。
  */
 
 import { forwardRef } from 'react';
 import { Spinner } from '@/components/primitives/spinner';
 
-type ButtonVariant = 'primary' | 'outline' | 'primary-outline' | 'danger' | 'outline-danger' | 'ghost' | 'amber' | 'filled';
+type ButtonVariant = 'primary' | 'outline' | 'primary-outline' | 'danger' | 'outline-danger' | 'ghost' | 'amber' | 'filled' | 'pixel' | 'pixel-outline';
 type ButtonSize = 'md' | 'sm' | 'xs';
 
 /** Button 组件 Props */
@@ -30,6 +33,8 @@ const variantClass: Record<ButtonVariant, Record<ButtonSize, string>> = {
   ghost: { md: 'btn-ghost', sm: 'btn-ghost', xs: 'btn-ghost' },
   amber: { md: 'btn-amber', sm: 'btn-amber-sm', xs: 'btn-amber-sm' },
   filled: { md: 'btn-filled', sm: 'btn-filled-sm', xs: 'btn-filled-sm' },
+  pixel: { md: 'btn-pixel', sm: 'btn-pixel-sm', xs: 'btn-pixel-sm' },
+  'pixel-outline': { md: 'btn-pixel-outline', sm: 'btn-pixel-outline-sm', xs: 'btn-pixel-outline-sm' },
 };
 
 /** 通用按钮组件 — 支持 variant/size/active/loading 等变体 */

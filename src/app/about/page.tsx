@@ -72,7 +72,7 @@ export default function AboutPage() {
 
   return (
     <VisibilityGate componentKey="about">
-      <main className="relative pt-16">
+      <main className="about-page relative pt-16">
       {/* ============ Hero ============ */}
       <CollapsingHero
         index="00"
@@ -213,27 +213,21 @@ export default function AboutPage() {
                       <span className="serif-italic text-[var(--foreground)]"> {t('directionsDesc2')}</span>
                     </p>
                   </RevealItem>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                     {DIRECTIONS.map((d) => (
                       <article
                         key={d.num}
-                        className="group card-minimal border border-[var(--border)] p-5 sm:p-6 hover:border-[var(--primary)]/40 transition-colors flex flex-col"
+                        className="group dna-card flex flex-col"
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="display-serif text-[clamp(28px,4vw,44px)] text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors leading-none">
-                            {d.num}
-                          </div>
-                          <div className="meta-mono text-[var(--muted-foreground)] text-[11px] sm:text-[12px]">
-                            {d.nameEn}
-                          </div>
-                        </div>
-                        <h3 className="display-serif text-[clamp(18px,2vw,22px)] text-[var(--foreground)] mb-2">
+                        <span className="dna-corner" aria-hidden="true">{d.num}</span>
+                        <h3 className="display-serif text-[17px] sm:text-[18px] text-[var(--foreground)] leading-[1.45] mb-3">
                           {t(d.nameKey as Parameters<typeof t>[0])}
                         </h3>
-                        <div className="meta-mono text-[var(--primary)] text-[11px] sm:text-[12px] mb-3">
-                          {d.tag}
+                        <div className="dna-meta">
+                          <span className="dna-tag">{d.tag}</span>
+                          <span className="dna-dim">{d.nameEn}</span>
                         </div>
-                        <p className="text-[13px] text-[var(--muted-foreground)] leading-[1.7] flex-1">
+                        <p className="text-[12px] sm:text-[13px] text-[var(--muted-foreground)] leading-[1.9] flex-1">
                           {t(d.descKey as Parameters<typeof t>[0])}
                         </p>
                         {d.stack.length > 0 && (
@@ -314,11 +308,11 @@ export default function AboutPage() {
                       {t('processDesc')}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <Button onClick={() => router.push('/join')}>
+                      <Button variant="pixel" onClick={() => router.push('/join')}>
                         <span>{t('fillForm')}</span>
                         <span>→</span>
                       </Button>
-                      <Button variant="outline" onClick={() => router.push('/login')}>
+                      <Button variant="pixel-outline" onClick={() => router.push('/login')}>
                         <span>{t('login')}</span>
                         <span>→</span>
                       </Button>

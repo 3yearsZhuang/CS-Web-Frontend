@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-09（§10 代码规范迁出 FrontDoc-Conv）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§11 登记像素融合白名单例外）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -32,6 +32,7 @@
 - [12. 新增页面 Checklist](#12-新增页面-checklist)
 - [13. 参考文件](#13-参考文件)
 - [14. Markdown 编辑器](#14-markdown-编辑器)
+- [15. 像素融合层（Pixel Fusion / Kimi 风格）](#15-像素融合层pixel-fusion--kimi-风格)
 - [变更记录](#变更记录)
 
 ## 文档结构
@@ -565,6 +566,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 悬浮胶囊容器 / 胶囊内 Tab 项 | `--radius-capsule`（28px）/ `--radius-capsule-item`（22px） |
 | 圆形元素：头像、状态点、spinner、角标徽章、胶囊 active 指示点 | `rounded-full` |
 
+**像素融合层例外（§15，2026-08-18）**：DNA 卡（`.dna-card`）与像素按钮（`.btn-pixel*`）的硬阴影、hover `translate` 位移与 `steps()` 跳变属**白名单例外**，仅限这些像素融合类使用；普通卡片/按钮仍遵守上表（仅边框变色、禁浮起、禁阴影）。
+
 ---
 
 ## 12. 新增页面 Checklist
@@ -615,10 +618,86 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ---
 
+## 15. 像素融合层（Pixel Fusion / Kimi 风格）
+
+> 2026-08 引入：从 careers.kimi.com（月之暗面招聘站）提取视觉语言，与「编辑式技术极简」做**平衡融合**。
+> 核心原则：像素语言只注入**元数据层与交互**（标签 / 编号 / 角标 / 按钮 / 卡片皮肤），**不动** Fraunces 衬线标题与正文栈。全站像素化与 scroll-jacking 不采用。
+> 参照 demo：`tools/demo/kimi-pixel-style-demo.html`（风格 DNA + 融合示范）、`tools/demo/cards-pixel-options.html`（卡片方案对照）。
+
+### 15.1 字体令牌
+
+| 令牌 | 值 | 说明 |
+|------|-----|------|
+| `--font-fusion-pixel` | `src/app/fonts/fusion-pixel-zh_hans.woff2`（layout.tsx `localFont` 自托管） | Fusion Pixel 12px Mono zh_hans，OFL-1.1 |
+| `--font-pixel` | `var(--font-fusion-pixel), ui-monospace, ...` | 像素元数据组合栈（globals.css 双写：`@theme inline` + `:root`） |
+
+### 15.2 页面作用域（像素元数据层）
+
+`.about-page` / `.events-page` 两个页面级作用域下，元数据类统一切换为像素字体（globals.css 作用域选择器，特异度 (0,2,0) 高于 `.meta-mono` 等 (0,1,0)）：
+
+```css
+.about-page .meta-mono, .about-page .tag-badge, .about-page .font-mono,
+.events-page .meta-mono, .events-page .tag-badge, .events-page .font-mono {
+  font-family: var(--font-pixel);
+}
+```
+
+- 新增页面若需像素元数据层：给 `<main>` 加对应作用域类复用该选择器；**不要**在无关页面全局替换 `.meta-mono`
+- 首页是特例：用内联 `style={{ fontFamily: 'var(--font-pixel)' }}` 选择性像素化（本项目自定义类优先级高于 Tailwind 工具类，改字体族用内联 style，勿用 `font-pixel` 工具类）
+
+### 15.3 DNA 卡（方向 / 活动卡片）
+
+参照 demo「风格四要素拆解」DNA 卡 +「融合示范」fusion-frame，作用域于 `.about-page` / `.events-page` 下：
+
+| 类 | 用途 | 规格 |
+|----|------|------|
+| `.dna-card` | 卡片皮肤 | 表面 `color-mix(fg 8%, bg)`；边框 `color-mix(fg 14%, bg)`；**默认硬阴影** `4px 4px 0 color-mix(fg 10%, transparent)`；hover `translate(-3px,-3px)` + `7px 7px 0 color-mix(primary 30%)` + 边框主色 45%，`transition: transform/box-shadow .15s steps(3)`；padding 26px 24px |
+| `.dna-corner` | 右上角像素编号 | `position:absolute; top:14px; right:16px`；`--font-pixel` 11px；muted，hover 转 primary；`aria-hidden`（装饰性编号） |
+| `.dna-meta` | 元数据行 | flex wrap；`--font-pixel` 11px；`.dna-tag` = primary / `.dna-dim` = muted |
+
+使用方：`/about` 方向卡片（`article.dna-card`，无链接）；`/events` 活动时间轴卡片（`Link > article.dna-card`，`isLeft` 交替 + 右上角标 `String(index+1).padStart(2,'0')`，archived 透明度降级）。
+
+### 15.4 像素按钮
+
+`Button` 组件新增 `pixel` / `pixel-outline` 变体（映射 `.btn-pixel*`）：实色硬阴影 `4px 4px 0 var(--muted-foreground)`（主/次按钮统一）、hover `translate(-2px,-2px)`、active `translate(2px,2px)`、`transition steps(2)`、全令牌适配双主题。首页 CTA、`/about` 与 `/events` 的 CTA 均使用。
+
+### 15.5 首页 Hero 像素层
+
+- `TypewriterTitle`（`effects/motion-primitives`）：字符级 `steps(6)` 逐字入场 + `▌` 闪烁光标（`.typewriter-cursor`，`var(--primary)`）；遵守 StaggerContainer register/unregister/notifyComplete 协议；SSR 渲染原文
+- `StarfieldCanvas`（`effects/starfield-canvas`）：像素点星空，叠于 `MobiusRing` 之下；DPR≤2、`prefers-reduced-motion` 静态帧、`document.hidden` 暂停 RAF、星色跟随主题
+- 标题字重：像素标题用内联 `fontWeight: 300` 覆盖 `.display-serif` 350（CJK 350 会落到 400 显粗）
+
+### 15.6 活动页同屏双视图（/events）
+
+时间线 + 日历**同屏**展示（2026-08-18 起，替代原「时间轴 / 日历」切换）：
+
+```tsx
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-start">
+  <div className="lg:sticky lg:top-24"><MonthCalendar events={events} /></div>
+  <YearAccordionTimeline ... />
+</div>
+```
+
+- 移动端（单列）：DOM 顺序日历在前 → **日历在上、时间线在下**
+- 桌面（`lg:grid-cols-2`）：**左日历、右时间线**（保持「日历优先」阅读顺序）；日历列 `lg:sticky lg:top-24` 随滚动固定（需栅格容器 `items-start` 配合）
+- 顶部筛选栏同时驱动两个视图（共享 `events` 状态）；若调整桌面比例/左右对调，改栅格与 `order-*` 即可
+
+### 15.7 与既有规范的豁免（必读）
+
+像素融合层的**硬阴影、hover translate、steps() 跳变**违反 §0「不浮起」与 §11「禁止 hover:-translate-y-1 / 默认阴影」，属**有意引入的白名单例外**，仅限以下类：`.dna-card`、`.dna-corner`（hover 变色）、`.btn-pixel*`、`.typewriter-ch/.typewriter-cursor`。其余卡片/按钮仍受 §0/§11 约束（§11 已登记例外）。
+
+### 15.8 组件化决策（2026-08-18）
+
+DNA 卡**暂不提炼为共享组件**，保持 CSS 类契约：皮肤样式已在 `globals.css` 单点共享；两个使用方内容结构异构（about 无链接 / events Link + `isLeft` 交替 + archived 降级），组件抽象收益低且会为差异妥协。
+**提升条件**：出现第 3 处内容同构使用方（如 calendar 选中日列表统一皮肤）→ 按 §5.0 复用契约评审提升为 `primitives/DnaCard`（props 建议：`corner?` / `meta?` / `hoverable?` + children）。
+
+---
+
 ## 变更记录
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
 | 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |

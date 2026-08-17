@@ -42,6 +42,16 @@ const jetbrainsMono = localFont({
   variable: '--font-jetbrains',
   display: 'swap',
 });
+/**
+ * 缝合像素字体（Fusion Pixel 12px Monospaced zh_hans，OFL-1.1）— 自托管。
+ * 用于像素元数据层（标签/编号/按钮文案/装饰文字），经 --font-pixel 令牌引用。
+ * 全字符 CJK 像素字族 641KB，可接受；不改变正文/展示字体栈。
+ */
+const fusionPixel = localFont({
+  src: './fonts/fusion-pixel-zh_hans.woff2',
+  variable: '--font-fusion-pixel',
+  display: 'swap',
+});
 
 /** 全局 SEO 元数据 */
 export async function generateMetadata(): Promise<Metadata> {
@@ -156,7 +166,7 @@ export default async function RootLayout({
       lang="zh-CN"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable} ${fusionPixel.variable}`}
     >
       <head>
         {/*

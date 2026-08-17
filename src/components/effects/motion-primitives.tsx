@@ -5,9 +5,12 @@
  */
 import { motion, type Variants } from 'motion/react';
 import {
+  cloneElement,
   createContext,
+  isValidElement,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -209,5 +212,121 @@ export function RevealTitle({
     >
       {children}
     </motion.div>
+  );
+}
+
+interface TypewriterTitleProps {
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+  /** 单字符入场时长（秒，默认 0.5，CSS steps(6) 擦除） */
+  charDuration?: number;
+  /** 字符间延迟（秒，默认 0.09） */
+  charDelay?: number;
+}
+
+/**
+ * 打字机大标题 — 字符级 steps(6) 逐字入场（Kimi 风格融合 M4）
+ *
+ * 与 RevealTitle 同级原语，遵守同一 StaggerContainer 协议：
+ * - 挂载 register / 卸载 unregister
+ * - 全部字符入场完成后 notifyComplete（用总时长定时兜底，兼容 reduced-motion
+ *   下 CSS 动画不触发 animationend 的场景）
+ * - 保留子节点中的 <span>（如强调色）与 <br>，仅对文本节点逐字拆分
+ * - SSR 阶段渲染原文（不拆字），挂载后下一帧再拆分，避免无 JS 时整屏不可见
+ */
+export function TypewriterTitle({
+  children,
+  className,
+  style,
+  charDuration = 0.5,
+  charDelay = 0.09,
+}: TypewriterTitleProps) {
+  const ctx = useContext(StaggerCompleteContext);
+  const [split, setSplit] = useState(false);
+
+  useEffect(() => {
+    ctx?.register();
+    return () => ctx?.unregister();
+  }, [ctx]);
+
+  // 挂载后拆分字符（延迟一帧，保证 SSR 原文先可见）
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setSplit(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  /** 统计字符总数（沿 ReactNode 树遍历，仅统计文本节点） */
+  const countChars = (node: ReactNode): number => {
+    if (typeof node === 'string') return [...node].length;
+    if (Array.isArray(node)) return node.reduce((acc, n) => acc + countChars(n), 0);
+    if (node && typeof node === 'object' && 'props' in node) {
+      const el = node as { props?: { children?: ReactNode } };
+      return countChars(el.props?.children);
+    }
+    return 0;
+  };
+
+  const rendered = useMemo(() => {
+    if (!split) return children;
+    const total = countChars(children);
+    let index = 0;
+    const walk = (node: ReactNode): ReactNode => {
+      if (typeof node === 'string') {
+        return [...node].map((ch, i) => {
+          const isLast = index + 1 === total;
+          const delay = charDelay * index;
+          index += 1;
+          return (
+            <span
+              key={`${i}-${index}`}
+              className="typewriter-ch"
+              style={{
+                animationDuration: `${charDuration}s`,
+                animationDelay: `${delay}s`,
+              }}
+              {...(isLast ? { onAnimationEnd: () => ctx?.notifyComplete() } : {})}
+            >
+              {ch}
+            </span>
+          );
+        });
+      }
+      if (Array.isArray(node)) {
+        return node.map((child, i) => {
+          const walked = walk(child);
+          // 字符串子节点 walk 后返回的是带 key 的 span 数组；元素节点克隆后若缺 key 补索引 key
+          if (isValidElement(walked) && walked.key == null) {
+            return cloneElement(walked, { key: i });
+          }
+          return walked;
+        });
+      }
+      if (isValidElement(node)) {
+        const { children: nodeChildren } = (node.props as { children?: ReactNode });
+        return cloneElement(node, {}, walk(nodeChildren));
+      }
+      return node;
+    };
+    return walk(children);
+  }, [split, children, charDuration, charDelay, ctx]);
+
+  // 完成兜底：reduced-motion 下 CSS 动画被禁用、animationend 不触发，
+  // 用预估总时长定时通知（正常路径由最后一个字符的 animationend 幂等触发）
+  useEffect(() => {
+    if (!split) return;
+    const total = countChars(children);
+    if (total === 0) return;
+    const timeout = setTimeout(
+      () => ctx?.notifyComplete(),
+      (charDelay * (total - 1) + charDuration) * 1000 + 250,
+    );
+    return () => clearTimeout(timeout);
+  }, [split, children, charDuration, charDelay, ctx]);
+
+  return (
+    <div className={className} style={style}>
+      {rendered}
+    </div>
   );
 }
