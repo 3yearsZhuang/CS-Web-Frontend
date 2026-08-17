@@ -310,7 +310,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 ## 4.1 变更记录包
 
-> ℹ️ 安全加固变更记录（第一轮/第二轮共 20 项）已迁移至 `docs/项目演变历史.md`。
+> ℹ️ 安全加固变更记录（第一轮/第二轮共 20 项）已迁移至根仓 [`CHANGELOG.md`](../../../CHANGELOG.md)。
 
 ## 4.2 记分卡（Scorecard）
 

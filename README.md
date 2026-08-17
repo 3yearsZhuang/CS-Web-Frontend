@@ -215,7 +215,7 @@ tools/tests/
 | [入职指南 + 项目规则](../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
 | [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
-| [变更日志](CHANGELOG.md) | 版本变更记录 |
+| [变更日志](../CHANGELOG.md) | 版本变更记录（根仓唯一权威，前端不再维护独立 CHANGELOG） |
 
 ---
 

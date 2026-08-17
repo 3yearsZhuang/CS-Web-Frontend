@@ -183,7 +183,7 @@ src/
 > 通用 Git 约定（提交格式 `<type>(<scope>): <subject>`、不主动 commit / push、侵入性操作先说明范围）见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §七。
 
 - **禁止提交**：`*.db`、`logs/`、`test-results/`、密钥、本地环境覆盖文件（`.env.local` 等）。
-- 前端子仓库有独立 `CHANGELOG.md`（前端侧变更、可选维护），跨项目版本锚点以根 `CHANGELOG.md` 为准。
+- 前端子仓库**无独立 CHANGELOG.md**（薄锚点已于 2026-08-17 删除），版本锚点一律以根仓 [`CHANGELOG.md`](../../../CHANGELOG.md) 为准。
 
 ---
 
