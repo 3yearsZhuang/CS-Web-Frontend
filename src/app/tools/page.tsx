@@ -1,7 +1,7 @@
 /**
  * @file 工具集入口页（/tools）— 工作台 + 工具入口收编
  * 顶部为个人工作台（问候条/今日任务/番茄钟×播放器/倒计时/便签），
- * 底部保留原工具入口网格（可用/即将上线/规划中/管理）。
+ * 底部保留原工具入口网格（可用/开发中/管理）。
  */
 
 'use client';
@@ -19,7 +19,7 @@ import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useEffect, useMemo, useState } from 'react';
 
-type ToolTab = 'available' | 'coming-soon' | 'planned' | 'admin';
+type ToolTab = 'available' | 'developing' | 'admin';
 
 interface ToolCard {
   href: string;
@@ -93,7 +93,7 @@ const TOOLS: ToolCard[] = [
     titleKey: 'chatTitle',
     enKey: 'chatEn',
     descKey: 'chatDesc',
-    status: 'planned',
+    status: 'developing',
     visibilityKey: 'tools-chat',
   },
 ];
@@ -103,10 +103,8 @@ function statusLabelKey(status: ToolTab): string {
   switch (status) {
     case 'available':
       return 'statusAvailable';
-    case 'coming-soon':
-      return 'statusComingSoon';
-    case 'planned':
-      return 'statusPlanned';
+    case 'developing':
+      return 'statusDeveloping';
     default:
       return '';
   }
@@ -157,8 +155,7 @@ export default function ToolsPage() {
   const toolsTabs: CapsuleTab[] = useMemo(
     () => [
       { key: 'available', num: '01', label: t('tabAvailable') },
-      { key: 'coming-soon', num: '02', label: t('tabComingSoon') },
-      { key: 'planned', num: '03', label: t('tabPlanned') },
+      { key: 'developing', num: '02', label: t('tabDeveloping') },
       ...(isAdmin ? [{ key: 'admin', num: '99', label: t('tabAdmin') }] : []),
     ],
     [isAdmin, t],
@@ -236,13 +233,11 @@ export default function ToolsPage() {
           <div>
             <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
               {activeTab === 'available' && wt('allTools')}
-              {activeTab === 'coming-soon' && t('sectionTitleComingSoon')}
-              {activeTab === 'planned' && t('sectionTitlePlanned')}
+              {activeTab === 'developing' && t('sectionTitleDeveloping')}
             </h2>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'available' && wt('toolsHint')}
-              {activeTab === 'coming-soon' && t('sectionDescComingSoon')}
-              {activeTab === 'planned' && t('sectionDescPlanned')}
+              {activeTab === 'developing' && t('sectionDescDeveloping')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -262,11 +257,11 @@ export default function ToolsPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                            tool.status === 'available'
-                              ? 'border-emerald-500/40 text-emerald-500'
-                              : tool.status === 'coming-soon'
-                                ? 'border-amber-500/40 text-amber-500'
-                                : 'border-[var(--border)] text-[var(--muted-foreground)]'
+                          tool.status === 'available'
+                            ? 'border-emerald-500/40 text-emerald-500'
+                            : tool.status === 'developing'
+                              ? 'border-amber-500/40 text-amber-500'
+                              : 'border-[var(--border)] text-[var(--muted-foreground)]'
                           }`}
                         >
                           {t(statusLabelKey(tool.status) as Parameters<typeof t>[0])}

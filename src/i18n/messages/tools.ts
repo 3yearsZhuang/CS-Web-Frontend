@@ -6,23 +6,19 @@
 export interface ToolsMessages {
   tools: {
     tabAvailable: string;
-    tabComingSoon: string;
-    tabPlanned: string;
+    tabDeveloping: string;
     tabAdmin: string;
     heroTitle: string;
     heroTitleEn: string;
     heroDesc1: string;
     heroDesc2: string;
     sectionTitleAvailable: string;
-    sectionTitleComingSoon: string;
-    sectionTitlePlanned: string;
+    sectionTitleDeveloping: string;
     sectionDescAvailable: string;
-    sectionDescComingSoon: string;
-    sectionDescPlanned: string;
+    sectionDescDeveloping: string;
     enter: string;
     statusAvailable: string;
-    statusComingSoon: string;
-    statusPlanned: string;
+    statusDeveloping: string;
     communityTitle: string;
     communityEn: string;
     communityDesc: string;
@@ -466,23 +462,19 @@ export interface ToolsMessages {
 export const zhCN: ToolsMessages = {
   tools: {
     tabAvailable: '可用',
-    tabComingSoon: '即将上线',
-    tabPlanned: '规划中',
+    tabDeveloping: '开发中',
     tabAdmin: '管理 / Admin',
     heroTitle: '工具集',
     heroTitleEn: '/ Tools',
     heroDesc1: '考试评测 · 资源分享 · 任务协作',
     heroDesc2: '。每一个工具，都让社团更近一步',
     sectionTitleAvailable: '可用工具',
-    sectionTitleComingSoon: '即将上线',
-    sectionTitlePlanned: '规划中',
+    sectionTitleDeveloping: '开发中',
     sectionDescAvailable: '// 当前可用的工具，点击卡片进入',
-    sectionDescComingSoon: '// 正在开发中，敬请期待',
-    sectionDescPlanned: '// 未来规划的功能，优先级由高到低',
+    sectionDescDeveloping: '// 正在规划与开发中，敬请期待',
     enter: '进入 →',
     statusAvailable: '可用',
-    statusComingSoon: '即将上线',
-    statusPlanned: '规划中',
+    statusDeveloping: '开发中',
     communityTitle: '社区',
     communityEn: 'Community',
     communityDesc: '社团交流、问答与内容分享',
@@ -926,23 +918,19 @@ export const zhCN: ToolsMessages = {
 export const en: ToolsMessages = {
   tools: {
     tabAvailable: 'Available',
-    tabComingSoon: 'Coming Soon',
-    tabPlanned: 'Planned',
+    tabDeveloping: 'In Development',
     tabAdmin: 'Admin / 管理',
     heroTitle: 'Toolset',
     heroTitleEn: '/ Tools',
     heroDesc1: 'Exams · Resources · Tasks',
     heroDesc2: '. Every tool brings the community one step closer',
     sectionTitleAvailable: 'Available Tools',
-    sectionTitleComingSoon: 'Coming Soon',
-    sectionTitlePlanned: 'Planned',
+    sectionTitleDeveloping: 'In Development',
     sectionDescAvailable: '// Tools available now — click a card to open',
-    sectionDescComingSoon: '// In development, stay tuned',
-    sectionDescPlanned: '// Future features, prioritized high to low',
+    sectionDescDeveloping: '// In planning and development, stay tuned',
     enter: 'Enter →',
     statusAvailable: 'Available',
-    statusComingSoon: 'Coming Soon',
-    statusPlanned: 'Planned',
+    statusDeveloping: 'In Development',
     communityTitle: 'Community',
     communityEn: 'Community',
     communityDesc: 'Discussion, Q&A and community sharing',
