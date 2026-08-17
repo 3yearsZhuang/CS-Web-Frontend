@@ -1,8 +1,8 @@
 /**
  * @file 工作台主体 — 由 widget-registry 纯配置驱动渲染（§2.3 配置即内容数据）。
- * - 视图切换复用项目 InlineTabs；操作按钮复用项目 Button
  * - 布局设置：widget 显隐开关（localStorage 持久化，§2.6 声明→配置→注册）
  * - 顶部提供「导出 JSON / 导入恢复 / 清空」数据备份入口
+ * - LLM 用量与学习助手对话已合并为单张卡片（widgets/llm-widget），无独立视图切换
  */
 'use client';
 
@@ -10,13 +10,9 @@ import { useTranslations } from 'next-intl';
 import { Download, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { InlineTabs } from '@/components/primitives/inline-tabs';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS } from './widget-registry';
-import AssistantChat from './widgets/assistant-chat';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
-
-type WorkbenchView = 'workbench' | 'assistant';
 
 const BACKUP_PREFIX = 'wb_';
 const BACKUP_KEYS = ['wb_tasks', 'wb_notes', 'wb_pomodoro_settings', 'wb_pomodoro_state'];
@@ -62,7 +58,6 @@ export function Workbench() {
   const t = useTranslations('workbench');
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [view, setView] = useState<WorkbenchView>('workbench');
   const [showLayout, setShowLayout] = useState(false);
   const [tasksCount] = useLocalStorage<unknown[]>('wb_tasks', []);
   const [notesCount] = useLocalStorage<unknown[]>('wb_notes', []);
@@ -118,15 +113,19 @@ export function Workbench() {
     window.location.reload();
   }, [t]);
 
-  /** 按槽位分组 + 显隐过滤（registry 纯驱动） */
-  const { full, main, side } = useMemo(() => {
+  /** 按槽位分组 + 显隐过滤（registry 纯驱动）：full 顶部全宽 / primary 左主列 / main+side 右栏 */
+  const { full, primary, right } = useMemo(() => {
     const hidden = new Set(prefs.hidden);
-    const group = (slot: 'full' | 'main' | 'side') =>
-      WIDGETS.filter((w) => w.slot === slot && !hidden.has(w.id)).map((w) => ({
+    const pick = (slots: Array<'full' | 'primary' | 'main' | 'side'>) =>
+      WIDGETS.filter((w) => slots.includes(w.slot) && !hidden.has(w.id)).map((w) => ({
         id: w.id,
         component: w.component,
       }));
-    return { full: group('full'), main: group('main'), side: group('side') };
+    return {
+      full: pick(['full']),
+      primary: pick(['primary']),
+      right: pick(['main', 'side']),
+    };
   }, [prefs.hidden]);
 
   const toggleWidget = useCallback(
@@ -191,16 +190,8 @@ export function Workbench() {
             </VisibilityGate>
           ))}
 
-          {/* 视图切换 + 布局设置 */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <InlineTabs
-              options={[
-                { value: 'workbench', label: t('wbTitle') },
-                { value: 'assistant', label: '学习助手' },
-              ]}
-              value={view}
-              onChange={(v) => setView(v as WorkbenchView)}
-            />
+          {/* 布局设置 */}
+          <div className="flex items-center justify-end gap-3 flex-wrap">
             <Button size="sm" variant="outline" onClick={() => setShowLayout((v) => !v)}>
               <Settings2 className="w-4 h-4" />
               布局设置
@@ -229,28 +220,22 @@ export function Workbench() {
             </div>
           )}
 
-          {view === 'assistant' ? (
-            <VisibilityGate componentKey="wb-assistant-chat">
-              <AssistantChat />
-            </VisibilityGate>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-              <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
-                {main.map(({ id, component: C }) => (
-                  <VisibilityGate key={id} componentKey={id}>
-                    <C />
-                  </VisibilityGate>
-                ))}
-              </div>
-              <div className="lg:col-span-4 flex flex-col gap-4 min-w-0">
-                {side.map(({ id, component: C }) => (
-                  <VisibilityGate key={id} componentKey={id}>
-                    <C />
-                  </VisibilityGate>
-                ))}
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            <div className="lg:col-span-8 flex flex-col gap-4 min-w-0">
+              {primary.map(({ id, component: C }) => (
+                <VisibilityGate key={id} componentKey={id}>
+                  <C />
+                </VisibilityGate>
+              ))}
             </div>
-          )}
+            <div className="lg:col-span-4 flex flex-col gap-4 min-w-0">
+              {right.map(({ id, component: C }) => (
+                <VisibilityGate key={id} componentKey={id}>
+                  <C />
+                </VisibilityGate>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

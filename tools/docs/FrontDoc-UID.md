@@ -367,7 +367,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 5.2 按钮
 
-5 种统一按钮类，定义在 `src/app/globals.css`：
+8 类统一按钮，定义在 `src/app/globals.css`（详见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)）：
 
 ```css
 .btn-primary          /* 主按钮 - primary 纯色背景 */
@@ -375,9 +375,14 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 .btn-danger           /* 危险操作 - destructive 纯色背景 */
 .btn-outline          /* 描边按钮 - 透明背景 + 边框 hover */
 .btn-outline-sm       /* 描边按钮（小号）- 行内次要操作 */
+.btn-outline-danger   /* 描边危险 - 透明背景 + destructive 边框，hover 转危险色（替代手搓 hover:text-[var(--destructive)]） */
+.btn-ghost            /* 纯文字按钮 - 无边框，primary 文字，hover 转 foreground */
+.btn-xs               /* 紧凑尺寸（11px→10px 视觉）用于关注 compact / 极小操作 */
+.btn-page            /* 分页专用（共享），active 复用 .btn-active */
+.btn-active           /* 选中/按下态修饰（与 outline/ghost/page 组合，solid 变体勿用） */
 ```
 
-规格：`font-mono text-[12px] uppercase tracking-wider`，大按钮 `py-3 px-6`，小按钮 `py-1.5 px-3`，`transition-opacity/colors`，`disabled:opacity-30`，必须追加 `focus-ring`
+规格：`font-mono uppercase tracking-wider`；大按钮 `py-3 px-6`、小按钮 `py-1.5 px-3`（**outline-sm 字号 11px**，非 12px）、紧凑 `py-0.25rem px-0.5rem 10px`；`transition-colors`，`disabled:opacity-30`，焦点环统一 **`focus-ring`**（`focus-amber` 为历史别名，已废弃）。
 
 ```tsx
 <button className="btn-primary focus-ring">Save Changes -></button>
@@ -385,11 +390,19 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 <button className="btn-danger focus-ring">Delete</button>
 <button className="btn-outline focus-ring">Cancel</button>
 <button className="btn-outline-sm focus-ring">Pin</button>
+{/* 推荐经 components/primitives/button.tsx 封装：自动附加 focus-ring、支持 active/loading、outline-danger/ghost/xs */}
+<Button variant="outline-danger" size="sm">Delete</Button>
+<Button variant="ghost" size="sm">Cancel</Button>
+<Button variant="outline" size="sm" active={pinned}>Pinned</Button>
+<Button variant="outline" size="xs">Follow</Button>
+<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 ```
 
 推荐经 `src/components/primitives/button.tsx` 封装使用（自动附加 `focus-ring` 并处理 loading 态）。
 
-不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、分页按钮、筛选标签、悬浮胶囊 Tab 保持原有设计。
+> 落地收紧细则见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)：扩展变体（`outline-danger` / `ghost` / `xs` / `active`）、分页共享件、规范↔代码字体/焦点环漂移修订、39 文件迁移映射与反模式。
+
+不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、筛选标签、悬浮胶囊 Tab 保持原有设计；分页按钮允许保留方形描边视觉，但重复出现须抽成共享 `.btn-page`（禁止多处复制手搓）。
 
 ### 5.3 输入框
 

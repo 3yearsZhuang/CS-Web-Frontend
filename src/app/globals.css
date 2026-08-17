@@ -1041,6 +1041,133 @@ body,
   cursor: not-allowed;
 }
 
+/* ─── 按钮系统扩展（FrontDoc-UIButton.md §3.2）───
+ * 在原有 primary / outline / danger 三套基础上补齐：
+ *   btn-outline-danger — 描边危险（hover 转 destructive，替代手搓 hover:text-[var(--destructive)]）
+ *   btn-ghost          — 纯文字按钮（替代 meta-mono 文本操作按钮）
+ *   btn-xs             — 紧凑尺寸（对齐 font-[10px] compact / 关注按钮）
+ *   btn-active         — 选中/按下态修饰（与 Button active prop 联动，替代散落 className 覆盖）
+ *   btn-page           — 分页专用（共享，active 复用 .btn-active）
+ * 风格一致：直角方形、等宽字体、无圆角、transition-colors。
+ */
+
+.btn-outline-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--destructive);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--destructive);
+  transition: background 0.2s, opacity 0.2s;
+}
+.btn-outline-danger:hover {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+.btn-outline-danger:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-outline-danger-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  color: var(--destructive);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--destructive);
+  transition: background 0.2s, opacity 0.2s;
+}
+.btn-outline-danger-sm:hover {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+.btn-outline-danger-sm:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 0.2s, opacity 0.2s;
+}
+.btn-ghost:hover {
+  color: var(--foreground);
+}
+.btn-ghost:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-xs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-xs:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-xs:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 选中/按下态修饰 — 与 outline / ghost / page 组合使用（solid 变体请勿套用） */
+.btn-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.btn-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.375rem 0.75rem;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border: 1px solid var(--border);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.btn-page:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-page:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* Hero 入场统一过渡 — 替代全站散落的 duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)]
  *
  * 所有子页面的 Hero 标题/副标题/描述块均使用：

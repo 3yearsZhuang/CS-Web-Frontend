@@ -28,9 +28,6 @@ export interface ToolsMessages {
     resourceTitle: string;
     resourceEn: string;
     resourceDesc: string;
-    auxilioTitle: string;
-    auxilioEn: string;
-    auxilioDesc: string;
     taskTitle: string;
     taskEn: string;
     taskDesc: string;
@@ -110,33 +107,6 @@ export interface ToolsMessages {
     loadFailed: string;
     actionFailed: string;
     createFailed: string;
-  },
-  toolsAuxilio: {
-    heroTitle1: string;
-    heroDesc1: string;
-    heroDesc2: string;
-    notLoggedIn: string;
-    loginPrompt: string;
-    login: string;
-    back: string;
-    analysisTitle1: string;
-    analysisTitle2: string;
-    analysisTitleEn: string;
-    statTotal: string;
-    statCorrect: string;
-    statAccuracy: string;
-    weakTitle1: string;
-    weakTitle2: string;
-    correctLabel: string;
-    noExam: string;
-    goExam: string;
-    retry: string;
-    resTypeArticle: string;
-    resTypeVideo: string;
-    resTypeCourse: string;
-    resTypeTool: string;
-    resTypeBook: string;
-    resTypeOther: string;
   },
   toolsDevCenter: {
     heroLabel: string;
@@ -456,6 +426,7 @@ export interface ToolsMessages {
     llmSaved: string;
     llmMaskedHint: string;
     llmNoData: string;
+    llmUsageEntry: string;
   }
 }
 
@@ -484,9 +455,6 @@ export const zhCN: ToolsMessages = {
     resourceTitle: '学习资源站',
     resourceEn: 'Resource Hub',
     resourceDesc: '按技术领域分类浏览，用户提交资源链接，管理员审核后公开。',
-    auxilioTitle: 'Auxilio 学习助手',
-    auxilioEn: 'Auxilio Agent',
-    auxilioDesc: '基于考试数据的薄弱点分析，规则引擎推荐个性化学习路径。',
     taskTitle: '任务发布板',
     taskEn: 'Quest Board',
     taskDesc: '管理员发布任务，成员领取并完成，获得积分与徽章奖励。',
@@ -566,33 +534,6 @@ export const zhCN: ToolsMessages = {
     loadFailed: '加载失败',
     actionFailed: '操作失败',
     createFailed: '创建失败',
-  },
-  toolsAuxilio: {
-    heroTitle1: '学习助手',
-    heroDesc1: '基于考试结果分析薄弱点，',
-    heroDesc2: '推荐学习路径',
-    notLoggedIn: '需要登录',
-    loginPrompt: 'Auxilio 需要基于你的考试数据进行分析，请先登录。',
-    login: '登录',
-    back: '返回',
-    analysisTitle1: '学习',
-    analysisTitle2: '分析',
-    analysisTitleEn: ' / Analysis',
-    statTotal: '总答题数',
-    statCorrect: '正确数',
-    statAccuracy: '正确率',
-    weakTitle1: '薄弱',
-    weakTitle2: '方向',
-    correctLabel: '正确',
-    noExam: '还没有考试记录。去参加考试来获得个性化推荐。',
-    goExam: '前往考试 →',
-    retry: '重试',
-    resTypeArticle: '文章',
-    resTypeVideo: '视频',
-    resTypeCourse: '课程',
-    resTypeTool: '工具',
-    resTypeBook: '书籍',
-    resTypeOther: '其他',
   },
   toolsDevCenter: {
     heroLabel: '开发者中心',
@@ -912,6 +853,7 @@ export const zhCN: ToolsMessages = {
     llmSaved: '已保存',
     llmMaskedHint: '当前 Key：{masked}',
     llmNoData: '暂无用量数据，先和学习助手聊几句',
+    llmUsageEntry: '用量与设置',
   }
 };
 
@@ -940,9 +882,6 @@ export const en: ToolsMessages = {
     resourceTitle: 'Resource Hub',
     resourceEn: 'Resource Hub',
     resourceDesc: 'Browse by tech domain. Users submit resource links, admins review and publish.',
-    auxilioTitle: 'Auxilio Learning Assistant',
-    auxilioEn: 'Auxilio Agent',
-    auxilioDesc: 'Weakness analysis based on exam data, with a rule engine recommending personalized learning paths.',
     taskTitle: 'Quest Board',
     taskEn: 'Quest Board',
     taskDesc: 'Admins publish tasks; members claim and complete them for points and badges.',
@@ -1022,33 +961,6 @@ export const en: ToolsMessages = {
     loadFailed: 'Failed to load',
     actionFailed: 'Action failed',
     createFailed: 'Failed to create',
-  },
-  toolsAuxilio: {
-    heroTitle1: 'Study Assistant',
-    heroDesc1: 'Analyze weak points from exam results,',
-    heroDesc2: 'recommend a learning path',
-    notLoggedIn: 'Login required',
-    loginPrompt: 'Auxilio analyzes your exam data. Please sign in first.',
-    login: 'Sign In',
-    back: 'Back',
-    analysisTitle1: 'Study',
-    analysisTitle2: 'Analysis',
-    analysisTitleEn: ' / Analysis',
-    statTotal: 'Total Questions',
-    statCorrect: 'Correct',
-    statAccuracy: 'Accuracy',
-    weakTitle1: 'Weak',
-    weakTitle2: 'Areas',
-    correctLabel: 'correct',
-    noExam: 'No exam records yet. Take an exam to get personalized recommendations.',
-    goExam: 'Go to Exams →',
-    retry: 'Retry',
-    resTypeArticle: 'Article',
-    resTypeVideo: 'Video',
-    resTypeCourse: 'Course',
-    resTypeTool: 'Tool',
-    resTypeBook: 'Book',
-    resTypeOther: 'Other',
   },
   toolsDevCenter: {
     heroLabel: 'Dev Center',
@@ -1368,5 +1280,6 @@ export const en: ToolsMessages = {
     llmSaved: 'Saved',
     llmMaskedHint: 'Current key: {masked}',
     llmNoData: 'No usage yet — chat with the assistant first',
+    llmUsageEntry: 'Usage & Settings',
   }
 };

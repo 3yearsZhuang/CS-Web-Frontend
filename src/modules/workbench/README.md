@@ -7,16 +7,17 @@
 
 | 层级 | 文件 | 职责 |
 |------|------|------|
-| 组合 | `workbench.tsx` | 组装全部 widget；数据备份（导出/导入/清空）；视图切换（工作台/学习助手）；布局显隐设置 |
-| 注册表 | `widget-registry.ts` | widget 声明 → 配置 → 注册（§2.6），slot 分组渲染 |
+| 组合 | `workbench.tsx` | 组装全部 widget；数据备份（导出/导入/清空）；布局显隐设置（问候条顶部全宽 + Auxilio v1 左主列 + 其余右栏） |
+| 注册表 | `widget-registry.ts` | widget 声明 → 配置 → 注册（§2.6），slot 分组渲染（full / primary / main+side） |
 | 桶导出 | `index.ts` | 模块对外出口（§3.3） |
 | widget | `widgets/greeting-bar.tsx` | 问候条：当前时间 / 日期 / 本次会话在线时长 |
 | widget | `widgets/today-tasks.tsx` | 今日任务：个人待办（localStorage），逾期置顶标红 |
 | widget | `widgets/quick-notes.tsx` | 快捷便签（localStorage） |
 | widget | `widgets/exam-countdown.tsx` | 考试倒计时（后端 exams 数据） |
 | widget | `widgets/github-heatmap.tsx` | GitHub 贡献热力图（后端缓存 6h） |
-| widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（API Key 加密存储） |
-| widget | `widgets/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态） |
+| widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：对话优先左主列（类 DeepSeek 网页版），头部「用量与设置」统一入口展开用量统计 + 模型接入设置面板；取代旧 /tools/auxilio 分析页 |
+| widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（embedded 时无内部按钮、设置表单常显） |
+| widget | `widgets/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态；embedded 内嵌于 llm-widget） |
 | 模块 | `widgets/pomodoro/` | 番茄钟×播放器（目录即模块：use-pomodoro 状态机 + settings/music 面板） |
 | hook | `hooks/use-clock.ts` | 时钟 + 会话时长 |
 | hook | `hooks/use-local-storage.ts` | localStorage 持久化 state |

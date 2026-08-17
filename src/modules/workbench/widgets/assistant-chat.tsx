@@ -30,7 +30,12 @@ interface ConversationMeta {
 
 const MAX_HISTORY = 20;
 
-export default function AssistantChat() {
+interface AssistantChatProps {
+  /** 嵌入合并卡片（llm-widget）时去掉左右栏 card-minimal 外壳，仅保留内容与交互 */
+  embedded?: boolean;
+}
+
+export default function AssistantChat({ embedded = false }: AssistantChatProps) {
   const t = useTranslations('workbench');
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
@@ -227,7 +232,13 @@ export default function AssistantChat() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 items-start">
       {/* 会话列表 */}
-      <div className="card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto">
+      <div
+        className={
+          embedded
+            ? 'flex flex-col gap-2 max-h-[60vh] overflow-y-auto lg:border-r lg:border-[var(--border)] lg:pr-3'
+            : 'card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto'
+        }
+      >
         <Button size="sm" variant="outline" className="justify-center" onClick={newConversation}>
           <Plus className="w-4 h-4" /> {t('newChat')}
         </Button>
@@ -249,7 +260,13 @@ export default function AssistantChat() {
       </div>
 
       {/* 对话区 */}
-      <div className="card-minimal flex flex-col min-h-[520px] max-h-[72vh]">
+      <div
+        className={
+          embedded
+            ? 'flex flex-col min-h-[480px] max-h-[60vh]'
+            : 'card-minimal flex flex-col min-h-[520px] max-h-[72vh]'
+        }
+      >
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
           {messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center py-12">

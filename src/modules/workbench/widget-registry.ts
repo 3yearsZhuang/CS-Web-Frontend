@@ -6,7 +6,7 @@
 'use client';
 
 import type { ComponentType } from 'react';
-import LlmUsageStats from './widgets/llm-usage-stats';
+import LlmWidget from './widgets/llm-widget';
 import ExamCountdown from './widgets/exam-countdown';
 import GithubHeatmap from './widgets/github-heatmap';
 import GreetingBar from './widgets/greeting-bar';
@@ -19,8 +19,8 @@ export interface WorkbenchWidget {
   /** i18n 词条 key（workbench namespace，布局设置面板展示用） */
   titleKey: string;
   component: ComponentType;
-  /** 网格槽位：full（全宽）/ main（左主列）/ side（右栏） */
-  slot: 'full' | 'main' | 'side';
+  /** 网格槽位：full（顶部全宽）/ primary（左主列）/ main + side（合并入右栏） */
+  slot: 'full' | 'primary' | 'main' | 'side';
 }
 
 /** 声明顺序即默认渲染顺序 */
@@ -28,7 +28,7 @@ export const WIDGETS: WorkbenchWidget[] = [
   { id: 'greeting', titleKey: 'wbTitle', component: GreetingBar, slot: 'full' },
   { id: 'today-tasks', titleKey: 'todayTasks', component: TodayTasks, slot: 'main' },
   { id: 'github-heatmap', titleKey: 'examCountdown', component: GithubHeatmap, slot: 'main' },
-  { id: 'llm-usage', titleKey: 'examCountdown', component: LlmUsageStats, slot: 'main' },
+  { id: 'llm-usage', titleKey: 'llmUsageTitle', component: LlmWidget, slot: 'primary' },
   { id: 'quick-notes', titleKey: 'quickNotes', component: QuickNotes, slot: 'main' },
   { id: 'pomodoro', titleKey: 'pomodoro', component: PomodoroPlayer, slot: 'side' },
   { id: 'exam-countdown', titleKey: 'examCountdown', component: ExamCountdown, slot: 'side' },

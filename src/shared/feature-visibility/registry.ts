@@ -228,10 +228,10 @@ export const COMPONENT_REGISTRY: ComponentMeta[] = [
   {
     key: 'wb-llm-usage',
     group: 'workbench',
-    label: 'LLM 用量',
-    labelEn: 'LLM Usage',
-    description: '模型调用统计',
-    descriptionEn: 'Model usage stats',
+    label: 'Auxilio v1',
+    labelEn: 'Auxilio v1',
+    description: '学习助手对话 + LLM 用量与设置（合并卡片）',
+    descriptionEn: 'Assistant chat + LLM usage & settings (merged card)',
     default: { guest: true, member: true, admin: true },
   },
   {
@@ -261,15 +261,6 @@ export const COMPONENT_REGISTRY: ComponentMeta[] = [
     descriptionEn: 'Exam countdown',
     default: { guest: true, member: true, admin: true },
   },
-  {
-    key: 'wb-assistant-chat',
-    group: 'workbench',
-    label: '学习助手',
-    labelEn: 'Learning Assistant',
-    description: 'AI 对话',
-    descriptionEn: 'AI chat',
-    default: { guest: true, member: true, admin: true },
-  },
 
   // ===================== 工具子功能 =====================
   {
@@ -288,15 +279,6 @@ export const COMPONENT_REGISTRY: ComponentMeta[] = [
     labelEn: 'Resources',
     description: '学习资源',
     descriptionEn: 'Learning resources',
-    default: { guest: true, member: true, admin: true },
-  },
-  {
-    key: 'tools-auxilio',
-    group: 'tools',
-    label: '学习助手入口',
-    labelEn: 'Auxilio',
-    description: '智能问答',
-    descriptionEn: 'Smart Q&A',
     default: { guest: true, member: true, admin: true },
   },
   {

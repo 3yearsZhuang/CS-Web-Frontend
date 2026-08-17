@@ -292,37 +292,6 @@ export interface ResourceListResult {
   techTagCounts: Record<string, number>;
 }
 
-// ============= Auxilio Agent =============
-
-/** 薄弱标签分析结果 */
-export interface WeaknessTag {
-  tag: string;
-  total: number;
-  correct: number;
-  accuracy: number;
-}
-
-/** 推荐资源 */
-export interface RecommendedResource {
-  id: string;
-  title: string;
-  url: string;
-  description: string | null;
-  resourceType: string;
-  techTags: string[];
-  matchedTag: string;
-}
-
-/** 学习画像分析结果 */
-export interface AuxilioAnalysis {
-  summary: string;
-  totalQuestions: number;
-  totalCorrect: number;
-  overallAccuracy: number;
-  weaknesses: WeaknessTag[];
-  recommendations: RecommendedResource[];
-}
-
 // ============= 积分系统 =============
 
 /** 积分交易记录 */

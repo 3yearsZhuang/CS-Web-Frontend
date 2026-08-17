@@ -26,6 +26,7 @@
 | [FrontDoc-Conv.md](FrontDoc-Conv.md) | 前端编码规范 | reference | TS/React/Next.js 约定、React Compiler 红线、样式令牌、JSDoc、组件复用契约、widget 注册表、i18n、测试、Git、编码侧禁止项（对标后端 BackDoc-Conv.md） |
 | [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md) | 安全 | reference | 前端安全约束、CSP、Origin 校验 |
 | [FrontDoc-UID.md](FrontDoc-UID.md) | UI 设计规范 | reference | 颜色/字体/布局/组件/动效/交互规范 + 全局组件体系（§5.0）；编码规范已迁出至 FrontDoc-Conv.md；Markdown 编辑器契约已下沉至 Arch §2.5.7 |
+| [FrontDoc-UIButton.md](FrontDoc-UIButton.md) | 按钮样式统一设计 | reference + decision | §5.2 的"落地收紧"细则：审计 39 文件散落描边按钮 + 扩展 Button API（outline-danger/ghost/xs/active）+ 分页共享 + 规范↔代码漂移修订 |
 | [capsule-tabs.md](capsule-tabs.md) | 胶囊 Tab 配置 + 设计决策 | data + decision | 悬浮折叠胶囊各页面 Tab 配置数据 + 未采用备选方案（从 UID §4.8 / 附录 A 迁出） |
 
 > PG 迁移归档已于 2026-08-09 归入根 `docs/RootDoc-MigEval.md` §八。

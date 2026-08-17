@@ -7,7 +7,7 @@
 'use client';
 
 import Link from 'next/link';
-import { GraduationCap, BookOpen, Bot, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
+import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -50,15 +50,6 @@ const TOOLS: ToolCard[] = [
     descKey: 'resourceDesc',
     status: 'available',
     visibilityKey: 'tools-resource',
-  },
-  {
-    href: '/tools/auxilio',
-    icon: <Bot className="w-5 h-5" />,
-    titleKey: 'auxilioTitle',
-    enKey: 'auxilioEn',
-    descKey: 'auxilioDesc',
-    status: 'available',
-    visibilityKey: 'tools-auxilio',
   },
   {
     href: '/tools/task',

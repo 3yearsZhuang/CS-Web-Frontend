@@ -34,7 +34,12 @@ const W = 300;
 const H = 90;
 const PAD = 6;
 
-export default function LlmUsageStats() {
+interface LlmUsageStatsProps {
+  /** 嵌入合并卡片（llm-widget）时去掉外层 card-minimal 与标题，仅渲染内容主体 */
+  embedded?: boolean;
+}
+
+export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) {
   const t = useTranslations('workbench');
   const [data, setData] = useState<LlmUsage | null>(null);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
@@ -135,16 +140,18 @@ export default function LlmUsageStats() {
   }
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
-          {t('llmUsageTitle', { days: data?.days ?? 30 })}
-        </h3>
-        <Button size="sm" variant="outline" onClick={() => setShowSettings((v) => !v)}>
-          <Settings2 className="w-4 h-4" />
-          {t('llmSettings')}
-        </Button>
-      </div>
+    <div className={embedded ? 'flex flex-col gap-4' : 'card-minimal p-5 flex flex-col gap-4'}>
+      {!embedded && (
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+            {t('llmUsageTitle', { days: data?.days ?? 30 })}
+          </h3>
+          <Button size="sm" variant="outline" onClick={() => setShowSettings((v) => !v)}>
+            <Settings2 className="w-4 h-4" />
+            {t('llmSettings')}
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded p-3 bg-[var(--border)]/30">
@@ -220,7 +227,7 @@ export default function LlmUsageStats() {
         </div>
       )}
 
-      {showSettings && (
+      {(showSettings || embedded) && (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-3">
           {masked && (
             <p className="text-[12px] text-[var(--muted-foreground)]">
