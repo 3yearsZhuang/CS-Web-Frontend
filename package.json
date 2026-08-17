@@ -64,7 +64,7 @@
     "postgres": "^3.4.9",
     "tailwindcss": "^4",
     "tsup": "^8.3.5",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.12",
     "typescript": "^5",
     "vitest": "^4.1.10",
     "yaml": "^2.4.2"
