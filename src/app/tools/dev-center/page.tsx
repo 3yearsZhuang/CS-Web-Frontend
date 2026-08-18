@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { GhostTitle } from '@/components';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { DevDocsViewer } from '@/modules/tools/ui/dev-docs-viewer';
 import { ComponentRegistryShell } from '@/modules/tools/ui/component-registry-shell';
@@ -69,13 +70,15 @@ export default function DevCenterPage() {
         minHeight="50vh"
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${t('heroTitle')} / Dev Center`}
           >
             {t('heroTitle')}
             <span
@@ -87,7 +90,7 @@ export default function DevCenterPage() {
             >
               / Dev Center
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div

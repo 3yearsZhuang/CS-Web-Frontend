@@ -13,6 +13,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { GhostTitle } from '@/components';
 
 export default function SeriesDetailPage() {
   const params = useParams<{ id: string }>();
@@ -32,16 +33,18 @@ export default function SeriesDetailPage() {
     <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Series" hero={hero} pageKey={`series-${id}`}>
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo="Series"
           >
             Series
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div

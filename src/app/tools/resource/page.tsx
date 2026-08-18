@@ -15,7 +15,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, Pagination, SectionLoading } from '@/components';
+import { Button, Pagination, SectionLoading, GhostTitle } from '@/components';
 import { motion } from 'motion/react';
 import { useResources } from './use-resources';
 import { ResourceCard } from './resource-card';
@@ -64,13 +64,15 @@ export default function ResourcePage() {
         }
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${t('pageTitle')}`}
           >
             {t('pageTitle')}
             <span
@@ -82,7 +84,7 @@ export default function ResourcePage() {
             >
               / {t('pageTitleEn')}
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div
@@ -112,12 +114,13 @@ export default function ResourcePage() {
       >
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+              echo={`${res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}`}>
               {res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}
               <span className="ark-divider ml-2">
                 {res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}
               </span>
-            </h2>
+            </GhostTitle>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {res.loading
                 ? '// 加载中...'

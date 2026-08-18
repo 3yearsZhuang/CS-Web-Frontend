@@ -7,7 +7,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge } from '@/components';
+import { Badge, GhostTitle } from '@/components';
 import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -175,13 +175,15 @@ export default function ToolsPage() {
         }}
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${wt('wbTitle')}`}
           >
             {wt('wbTitle')}
             <span
@@ -193,7 +195,7 @@ export default function ToolsPage() {
             >
               {wt('wbSubtitle')}
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div
@@ -223,10 +225,11 @@ export default function ToolsPage() {
       <section data-section-nav="01|工具列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+              echo={`${activeTab === 'available' ? wt('allTools') : t('sectionTitleDeveloping')}`}>
               {activeTab === 'available' && wt('allTools')}
               {activeTab === 'developing' && t('sectionTitleDeveloping')}
-            </h2>
+            </GhostTitle>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'available' && wt('toolsHint')}
               {activeTab === 'developing' && t('sectionDescDeveloping')}

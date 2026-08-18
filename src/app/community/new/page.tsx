@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SectionLoading } from '@/components';
+import { Button, SectionLoading, GhostTitle } from '@/components';
 import { useCompose } from './use-compose';
 import { ComposeForm } from './compose-form';
 
@@ -59,9 +59,13 @@ function ComposePageContent() {
         <section className="px-4 sm:px-6 md:px-8 py-20 sm:py-32 min-h-[60vh] flex items-center justify-center">
           <div className="text-center max-w-md">
             <div className="section-marker mb-6">[ 00 ]</div>
-            <h1 className="display-serif text-[clamp(28px,5vw,48px)] text-[var(--foreground)] leading-[1.1] mb-6">
+            <GhostTitle
+              as="h1"
+              className="display-serif text-[clamp(28px,5vw,48px)] text-[var(--foreground)] leading-[1.1] mb-6"
+              echo={`${t('loginRequiredTitle1')} ${t('loginRequiredTitle2')}`}
+            >
               {t('loginRequiredTitle1')}<span className="text-[var(--primary)]">{t('loginRequiredTitle2')}</span>
-            </h1>
+            </GhostTitle>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] leading-[1.8] mb-8">
               {t('loginRequiredDesc')}
             </p>
@@ -77,13 +81,15 @@ function ComposePageContent() {
       {/* ============ [ 00 ] Hero — 1s 后自动收缩悬浮 ============ */}
       <CollapsingHero index="00" label="Compose" hero={hero} pageKey="posts-new">
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2] mb-0'
                 : 'text-[clamp(36px,7vw,88px)] leading-[1.05] mb-4'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${t('heroTitle1')}${t('heroTitle2')}`}
           >
             {t('heroTitle1')}<span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             <span
@@ -95,7 +101,7 @@ function ComposePageContent() {
             >
               / Compose
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <div
           className={`overflow-hidden transition-all hero-reveal ${
@@ -133,9 +139,10 @@ function ComposePageContent() {
               <div className="meta-mono mt-2">{t('hintsLabel')}</div>
             </div>
             <div className="col-span-12 md:col-span-10">
-              <h2 className="display-serif text-[clamp(24px,4vw,40px)] text-[var(--foreground)] mb-8">
+              <GhostTitle as="h2" className="display-serif text-[clamp(24px,4vw,40px)] text-[var(--foreground)] mb-8"
+                echo={`${t('hintsTitle1')}${t('hintsTitle2')}`}>
                 {t('hintsTitle1')}<span className="text-[var(--primary)]">{t('hintsTitle2')}</span>
-              </h2>
+              </GhostTitle>
               <div className="border-t border-[var(--border)] pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 max-w-3xl">
                 <div>
                   <div className="ark-divider mb-3">{t('hint01Title')}</div>

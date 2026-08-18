@@ -9,6 +9,7 @@
 'use client';
 
 import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
+import { GhostTitle } from '@/components';
 import Link from 'next/link';
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -54,9 +55,13 @@ function LoginContent() {
           <div className="mb-12">
             <div className="meta-mono mb-4 text-[var(--primary)]">[ Auth ]</div>
             <RevealTitle>
-              <h1 className="display-serif text-[clamp(36px,8vw,64px)] text-[var(--foreground)] leading-[1.05] sm:leading-[0.95]">
+              <GhostTitle
+                as="h1"
+                className="display-serif text-[clamp(36px,8vw,64px)] text-[var(--foreground)] leading-[1.05] sm:leading-[0.95]"
+                echo={heading}
+              >
                 {heading}
-              </h1>
+              </GhostTitle>
             </RevealTitle>
             <RevealItem>
               <p className="mt-4 text-[13px] text-[var(--muted-foreground)]">{subtitle}</p>

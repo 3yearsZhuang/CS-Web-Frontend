@@ -13,7 +13,7 @@ import { StarfieldCanvas } from '@/components/effects/starfield-canvas';
 import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
-import { Button } from '@/components';
+import { Button, GhostTitle } from '@/components';
 import { BootScreen } from '@/components/effects/boot-screen';
 import { RevealItem, TypewriterTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
@@ -296,14 +296,22 @@ export default function Home() {
               </RevealItem>
 
               {/* 标题底部虚影（选项 A · 像素错位虚影）：衬线真标题背后叠一份像素同文副本，
-               * 向右下硬偏移、低透明度，纯装饰（aria-hidden / pointer-events:none）。仅 Hero 主标题使用。 */}
-              <div className="ghost-title inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] leading-[1.05] tracking-tight">
-                <span className="ghost-title__echo" aria-hidden="true">
-                  {t('titleExplore')}
-                  <span>{t('titleTech')}</span>
-                  <br />
-                  {t('titleRest')}
-                </span>
+               * 向右下硬偏移、低透明度，纯装饰（aria-hidden / pointer-events:none）。
+               * 经共享组件 <GhostTitle> 实现（wrapContent=false：TypewriterTitle 为块级组件，
+               * 由 CSS :last-child 规则保证真标题 z-index 高于虚影）。 */}
+              <GhostTitle
+                as="div"
+                className="inline-block display-serif text-[clamp(38px,10vw,180px)] text-[var(--foreground)] leading-[1.05] tracking-tight"
+                wrapContent={false}
+                echo={
+                  <>
+                    {t('titleExplore')}
+                    <span>{t('titleTech')}</span>
+                    <br />
+                    {t('titleRest')}
+                  </>
+                }
+              >
                 <TypewriterTitle
                   className="ark-corner-bracket inline-block"
                   style={{ fontWeight: 300 }}
@@ -313,7 +321,7 @@ export default function Home() {
                   <br />
                   {t('titleRest')}
                 </TypewriterTitle>
-              </div>
+              </GhostTitle>
 
               <div className="mt-8 sm:mt-12 md:mt-16 grid grid-cols-12 gap-6 sm:gap-8 items-start">
                 <RevealItem className="col-span-12 md:col-span-6" duration={0.9}>

@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 Hero 标题虚影；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -716,12 +716,14 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - **步骤 / 表单同屏双栏**：process 标签页内，左栏「加入流程（步骤 · B DNA 行卡，`.lg:col-span-5`）」与右栏「报名表（`.lg:col-span-7`）」在 `lg+` 采用 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` **左右布局**；移动端单列（步骤在上、表单在下）。对应栅格代码位于 `src/app/about/page.tsx` 的 process 分支。
 - 原 `/join` 页面已于 2026-08-18 合并入 `/about` 的「加入 / Join」标签页（process 标签 → 加入子区块）：其「加入流程」DNA 行卡与**完整报名表填写逻辑**（认证检查 / 已有申请状态 / 校验 / 提交 / 成功·待审态）全部迁入 `src/app/about/page.tsx`，随后删除 `src/app/join/`。`JOIN_STEPS` 复用 about 的 `step1~4Title/Desc` + `duration` 文案（`useTranslations('about')`）；报名表字段沿用 `join` 命名空间（`useTranslations('join')`）。`/profile` 的 `join-tab` 链接由 `/join` 改为 `/about`。
 
-### 15.10 标题底部虚影（Hero 专用）
+### 15.10 标题底部虚影（全站主标题）
 
 - **选型**：**A 像素错位虚影**——衬线真标题背后叠一份像素同文副本，向右下硬偏移、低透明度（衬线 × 像素的错位，最贴切「融合」表达）。
-- **落地范围**：**仅首页 Hero 主标题**（`src/app/page.tsx` 的 `TypewriterTitle` 外包 `.ghost-title` + 子 `.ghost-title__echo`）。折叠态 / Hero 以外章节标题保持纯净，未启用虚影。
-- **安全约束**：虚影 `z-index` 低于真标题、`pointer-events:none`、`aria-hidden`，纯装饰；颜色走 `--muted-foreground` 低透明度、双主题自适应；`clamp()` 控字号、小偏移避免移动端显脏。
-- **后续复用**：`.ghost-title` 为通用工具类，若需扩展到其他章节标题，直接套用即可（当前默认仅 Hero）。
+- **共享组件**：已提炼为 `<GhostTitle>`（`src/components/primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`）。API：`as`（默认 `h2`）、`className`、`children`（**纯字符串时自动复用为虚影**）、`echo`（复杂节点显式传虚影内容，如含 `<br/>`/彩色 `span`/`TypewriterTitle`）、`wrapContent`（默认 `true`，把 children 包进 `.ghost-title__content` 抬到虚影之上；块级子节点如 `TypewriterTitle` 渲染的 h1 传 `false`，靠 CSS `:last-child` 保证层级）、`...rest` 透传 `onClick` 等 HTML 属性以支持折叠 Hero。
+- **落地范围**：**全站主标题**——所有页面 Hero 主标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 等）+ 大号章节标题（section h2、`/tools/task` 三个 tab 区标题等）。虚影由 `.ghost-title` 通用工具类承载。
+- **排除项**：admin 后台、卡片 / 列表项标题、统计数字、navbar、弹窗内小标题、markdown 生成标题——避免显噪且违背「虚影仅大号衬线主标题」原则。
+- **安全约束**：虚影 `z-index` 低于真标题、`pointer-events:none`、`aria-hidden`，纯装饰；颜色走 `--muted-foreground` 低透明度、双主题自适应；`clamp()` 控字号、小偏移 `translate(8px,12px)` 避免移动端显脏；折叠态标题虚影随真标题同步收缩。
+- **CSS**：`globals.css` 中 `.ghost-title{position:relative}`、`.ghost-title__echo`（绝对定位 z-0、像素字体、offset、opacity 0.2）、`.ghost-title__content`（z-1）、`.ghost-title > :last-child`（z-1）。
 
 ---
 
@@ -729,6 +731,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-18 | **标题虚影全量应用 + 提炼共享组件 `<GhostTitle>`**：① 新建 `<GhostTitle>`（`primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`），支持纯文本自动虚影 / 复杂节点 `echo` / 块级 `wrapContent=false` / `...rest` 透传 `onClick`（折叠 Hero）；② 虚影由 Hero 专用扩展至**全站主标题**——所有页面 Hero 主标题与大号章节标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 各 tab 区等）；`globals.css` `.ghost-title` 去掉强制 `inline-block`、新增 `.ghost-title__content`；③ 排除 admin / 卡片·列表项 / 统计数字 / navbar / 弹窗小标题 / markdown 标题。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 已更新） |
 | 2026-08-18 | **`/about` process 标签页精简 + 步骤/表单左右布局**：① 删除「详细步骤文章（C 流程行）」——`STEPS` 常量与 `StepItem` 接口一并移除，`processSection` 子标题不再渲染；② 仅保留「加入流程」**B DNA 行卡**（`JOIN_STEPS`）作为步骤呈现；③ process 标签页改为 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` 同屏双栏——左栏「加入流程（`.lg:col-span-5`）」、右栏「报名表（`.lg:col-span-7`）」，移动端单列（步骤在上、表单在下）。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.9 选型边界 / 双栏说明已更新） |
 | 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
 | 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |

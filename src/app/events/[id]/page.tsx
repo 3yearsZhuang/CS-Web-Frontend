@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Button, SectionLoading, GhostTitle } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -234,13 +234,15 @@ export default function EventDetailPage() {
         }
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${event.title} / Event`}
           >
             {event.title}
             <span
@@ -252,7 +254,7 @@ export default function EventDetailPage() {
             >
               / Event
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <div
           className={`overflow-hidden transition-all hero-reveal ${

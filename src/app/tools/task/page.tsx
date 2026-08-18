@@ -12,6 +12,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
+import { GhostTitle } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTasks } from './use-tasks';
 import { BoardTab } from './board-tab';
@@ -71,16 +72,18 @@ export default function TaskPage() {
           </Link>
         }
       >
-        <h1
+        <GhostTitle
+          as="h1"
           className={`display-serif cursor-pointer transition-all hero-reveal origin-left ${
             hero.collapsed
               ? 'text-[clamp(22px,4vw,36px)] leading-tight'
               : 'text-[clamp(36px,9vw,120px)] leading-[1.1]'
           }`}
           onClick={onTitleClick}
+          echo={`${t('heroTitle1')} ${t('heroTitle2')}`}
         >
           {t('heroTitle1')}<button className="text-[var(--primary)] focus-amber" onClick={onTitleClick}>{t('heroTitle2')}</button>
-        </h1>
+        </GhostTitle>
         <p className="mt-4 sm:mt-6 text-[14px] sm:text-[15px] text-[var(--muted-foreground)] leading-[1.8] max-w-2xl">
           {t('heroDesc1')}
           <span className="serif-italic text-[var(--foreground)]">{t('heroDesc2')}</span>

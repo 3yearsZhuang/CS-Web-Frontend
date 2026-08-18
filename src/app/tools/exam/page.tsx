@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge } from '@/components';
+import { Badge, GhostTitle } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -126,13 +126,15 @@ export default function ExamListPage() {
         }
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${t('heroTitle')} ${t('heroTitleEn')}`}
           >
             {t('heroTitle')}
             <span
@@ -144,7 +146,7 @@ export default function ExamListPage() {
             >
               {t('heroTitleEn')}
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div
@@ -173,7 +175,11 @@ export default function ExamListPage() {
       <section data-section-nav="01|考试列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <GhostTitle
+              as="h2"
+              className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+              echo={activeTab === 'ongoing' ? `${t('listOngoing')} ${t('listOngoingEn')}` : activeTab === 'upcoming' ? `${t('listUpcoming')} ${t('listUpcomingEn')}` : `${t('listEnded')} ${t('listEndedEn')}`}
+            >
               {activeTab === 'ongoing' && t('listOngoing')}
               {activeTab === 'upcoming' && t('listUpcoming')}
               {activeTab === 'ended' && t('listEnded')}
@@ -182,7 +188,7 @@ export default function ExamListPage() {
                 {activeTab === 'upcoming' && t('listUpcomingEn')}
                 {activeTab === 'ended' && t('listEndedEn')}
               </span>
-            </h2>
+            </GhostTitle>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'ongoing' && t('countOngoing', { count: filteredExams.length })}
               {activeTab === 'upcoming' && t('countUpcoming', { count: filteredExams.length })}

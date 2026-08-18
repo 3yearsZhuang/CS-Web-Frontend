@@ -12,7 +12,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
-import { SectionLoading } from '@/components';
+import { SectionLoading, GhostTitle } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 
 export default function DraftsPage() {
@@ -43,16 +43,18 @@ export default function DraftsPage() {
     <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Drafts" hero={hero} pageKey="drafts">
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={t('heroTitle')}
           >
             {t('heroTitle')}
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div

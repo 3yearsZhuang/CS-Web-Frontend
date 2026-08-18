@@ -491,11 +491,12 @@ body {
 /* ============ 标题底部虚影（标题选项 A · 像素错位虚影 Pixel Offset Echo）============
  * 真实标题用衬线，背后叠一份像素字体的相同文本，向右下硬偏移、低透明度。
  * 衬线 × 像素的错位 = 最贴切的「融合」表达。虚影 z-index 低于真标题、pointer-events:none、
- * aria-hidden，纯装饰；仅展开态/Hero 主标题使用（折叠态保持纯净）。
- * 应用：首页 Hero 主标题（FrontDoc-UID §15.10）。 */
+ * aria-hidden，纯装饰；仅大号衬线主标题（页面 Hero / 章节标题）使用，
+ * 不用于卡片/列表项/统计数字等小标题。
+ * 组件：<GhostTitle>（src/components/primitives/ghost-title.tsx）。
+ * 应用：全站主标题（FrontDoc-UID §15.10）。 */
 .ghost-title {
   position: relative;
-  display: inline-block;
 }
 .ghost-title__echo {
   position: absolute;
@@ -512,6 +513,10 @@ body {
   pointer-events: none;
   user-select: none;
   white-space: nowrap;
+}
+.ghost-title__content {
+  position: relative;
+  z-index: 1;
 }
 .ghost-title > :last-child {
   position: relative;

@@ -7,6 +7,8 @@ export { Button } from './primitives/button';
 export type { ButtonProps } from './primitives/button';
 export { DnaCard } from './primitives/dna-card';
 export type { DnaCardProps } from './primitives/dna-card';
+export { GhostTitle } from './primitives/ghost-title';
+export type { GhostTitleProps } from './primitives/ghost-title';
 export { Pagination } from './primitives/pagination';
 export type { PaginationProps } from './primitives/pagination';
 export { Input } from './primitives/input';

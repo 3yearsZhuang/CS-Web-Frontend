@@ -10,7 +10,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, DnaCard } from '@/components';
+import { Button, DnaCard, GhostTitle } from '@/components';
 import Link from 'next/link';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { TechTagSelector } from '@/components/tech-tag-selector';
@@ -224,13 +224,15 @@ export default function AboutPage() {
         }}
       >
         <RevealTitle>
-          <h1
+          <GhostTitle
+            as="h1"
             className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
               hero.collapsed
                 ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                 : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
             }`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
+            echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
           >
             {t('heroTitle1')}
             <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
@@ -244,7 +246,7 @@ export default function AboutPage() {
             >
               {t('heroTitleEn')}
             </span>
-          </h1>
+          </GhostTitle>
         </RevealTitle>
         <RevealItem>
           <div
@@ -273,9 +275,10 @@ export default function AboutPage() {
           <div>
             {activeTab === 'belief' && (
               <div>
-                <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+                <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16"
+                  echo={`${t('beliefTitle1')}${t('beliefTitle2')}${t('beliefTitle3')}`}>
                   {t('beliefTitle1')}<span className="text-[var(--primary)]">{t('beliefTitle2')}</span>{t('beliefTitle3')}
-                </h2>
+                </GhostTitle>
                 {/* 子区块 1：信念 */}
                 <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
                   {t('beliefSection')}
@@ -321,11 +324,12 @@ export default function AboutPage() {
 
               {activeTab === 'directions' && (
                 <div>
-                  <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+                  <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16"
+                    echo={<>{t('directionsTitle1')}<br /><span>{t('directionsTitle2')}</span>{t('directionsTitle3')}</>}>
                     {t('directionsTitle1')}
                     <br />
                     <span className="text-[var(--primary)]">{t('directionsTitle2')}</span>{t('directionsTitle3')}
-                  </h2>
+                  </GhostTitle>
                   <RevealItem>
                     <p className="mb-8 sm:mb-12 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
                       {t('directionsDesc1')}
@@ -366,9 +370,10 @@ export default function AboutPage() {
 
               {activeTab === 'process' && (
                 <div>
-                  <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+                  <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16"
+                    echo={`${t('processTitle1')}${t('processTitle2')}。`}>
                     {t('processTitle1')}<span className="text-[var(--primary)]">{t('processTitle2')}</span>。
-                  </h2>
+                  </GhostTitle>
                   {/* 子区块：加入流程（步骤）+ 报名表 — 合并原 /join 全量内容；全屏左右布局 */}
                   {/* 全屏左右布局：左步骤 / 右表单 */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
@@ -380,11 +385,12 @@ export default function AboutPage() {
                       <div className="section-marker">[ 02 ]</div>
                     </div>
                     <div className="col-span-12 md:col-span-10">
-                      <h2 className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]">
+                      <GhostTitle as="h2" className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]"
+                        echo={`${t('processTitle1')}${t('processTitle2')}${t('processTitle3')}`}>
                         {t('processTitle1')}
                         <span className="text-[var(--primary)]">{t('processTitle2')}</span>
                         <span className="text-[var(--muted-foreground)]">{t('processTitle3')}</span>
-                      </h2>
+                      </GhostTitle>
                       <p className="mt-4 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
                         {t('processDesc')}
                       </p>
@@ -417,11 +423,12 @@ export default function AboutPage() {
                       <div className="section-marker">[ 01 ]</div>
                     </div>
                     <div className="col-span-12 md:col-span-10">
-                      <h2 className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]">
+                      <GhostTitle as="h2" className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]"
+                        echo={`${tJoin('sectionTitle1')}${tJoin('sectionTitle2')}${tJoin('sectionTitleEn')}`}>
                         {tJoin('sectionTitle1')}
                         <span className="text-[var(--primary)]">{tJoin('sectionTitle2')}</span>
                         <span className="text-[var(--muted-foreground)]">{tJoin('sectionTitleEn')}</span>
-                      </h2>
+                      </GhostTitle>
                     </div>
                   </div>
 

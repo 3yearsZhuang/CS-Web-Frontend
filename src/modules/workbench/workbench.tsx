@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { Download, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
+import { GhostTitle } from '@/components';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS } from './widget-registry';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -146,9 +147,9 @@ export function Workbench() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)]">
+              <GhostTitle as="h2" className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)]">
                 {t('wbTitle')}
-              </h2>
+              </GhostTitle>
               <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[12px] mt-1">
                 {t('wbSubtitle')}
               </p>

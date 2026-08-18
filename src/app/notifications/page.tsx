@@ -13,7 +13,7 @@ import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/
 import { PageHeaderBackground } from '@/components/layout/page-header-background';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { SectionLoading } from '@/components';
+import { SectionLoading, GhostTitle } from '@/components';
 import { useTranslations } from 'next-intl';
 import { useNotifications } from './use-notifications';
 import { NotificationCenter } from './notification-center';
@@ -80,13 +80,15 @@ function NotificationsContent() {
               </div>
               <div className="col-span-12 md:col-span-10">
                 <RevealTitle>
-                  <h1
+                  <GhostTitle
+                    as="h1"
                     className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
                       heroCollapsed
                         ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
                         : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
                     }`}
                     onClick={heroCollapsed ? onTitleClick : undefined}
+                    echo={`${t('centerTitle')} ${t('centerTitleEn')}`}
                   >
                     {t('centerTitle')}
                     <span
@@ -98,7 +100,7 @@ function NotificationsContent() {
                     >
                       {t('centerTitleEn')}
                     </span>
-                  </h1>
+                  </GhostTitle>
                 </RevealTitle>
                 <div
                   className={`overflow-hidden transition-all hero-reveal ${
