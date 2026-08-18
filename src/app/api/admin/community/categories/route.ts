@@ -1,5 +1,5 @@
 /**
- * @file 管理端分类 API — GET/POST /api/admin/community/community/categories（BFF 薄转发）
+ * @file 管理端分类 API — GET/POST /api/admin/community/categories（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -8,7 +8,7 @@ import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toCommu
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const proxy = await proxyBackend(req, { path: '/admin/community/community/categories' });
+  const proxy = await proxyBackend(req, { path: '/admin/community/categories' });
   const list = Array.isArray(proxy.body) ? proxy.body : [];
   const res = NextResponse.json({ categories: list.map(toCommunityCategory) });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const proxy = await proxyBackend(req, {
-    path: '/admin/community/community/categories',
+    path: '/admin/community/categories',
     method: 'POST',
     jsonBody: {
       slug: body.slug,

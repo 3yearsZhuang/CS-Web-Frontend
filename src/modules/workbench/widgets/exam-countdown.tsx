@@ -71,30 +71,31 @@ export default function ExamCountdown() {
 
   if (!loaded) {
     return (
-      <DnaCard corner="EXM" className="p-5 min-h-[120px] flex items-center justify-center">
+      <DnaCard corner="EXM" className="p-5 min-h-[120px] h-full flex items-center justify-center">
         <span className="text-[13px] text-[var(--muted-foreground)]">…</span>
       </DnaCard>
     );
   }
 
   return (
-    <DnaCard corner="EXM" className="p-5 flex flex-col gap-3">
+    <DnaCard corner="EXM" className="p-5 flex flex-col gap-3 h-full min-h-0">
       <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
         <AlarmClock className="w-4 h-4" />
         {t('examCountdown')}
       </h3>
 
-      {notLoggedIn ? (
-        <div className="text-[13px] text-[var(--muted-foreground)]">
-          <Link href="/login" className="text-[var(--primary)] underline underline-offset-2">
-            {t('wbSubtitle')} →
-          </Link>
-        </div>
-      ) : exams.length === 0 ? (
-        <p className="text-[13px] text-[var(--muted-foreground)]">{t('noExam')}</p>
-      ) : (
-        <ul className="flex flex-col gap-2.5">
-          {exams.map((exam, i) => {
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {notLoggedIn ? (
+          <div className="text-[13px] text-[var(--muted-foreground)]">
+            <Link href="/login" className="text-[var(--primary)] underline underline-offset-2">
+              {t('wbSubtitle')} →
+            </Link>
+          </div>
+        ) : exams.length === 0 ? (
+          <p className="text-[13px] text-[var(--muted-foreground)]">{t('noExam')}</p>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {exams.map((exam, i) => {
             const diff = exam.endedAt ? new Date(exam.endedAt).getTime() - nowTs : 0;
             const { n, unit } = diffText(diff);
             return (
@@ -118,7 +119,8 @@ export default function ExamCountdown() {
             );
           })}
         </ul>
-      )}
+        )}
+      </div>
     </DnaCard>
   );
 }

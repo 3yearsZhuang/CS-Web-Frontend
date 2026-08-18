@@ -19,7 +19,7 @@ export default function LlmWidget() {
   const [showPanel, setShowPanel] = useState(false);
 
   return (
-    <DnaCard corner="AUX" className="p-4 sm:p-5 flex flex-col gap-4">
+    <DnaCard corner="AUX" className="p-4 sm:p-5 flex flex-col gap-4 h-full min-h-0">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-1.5">
           <Bot className="w-3.5 h-3.5" />
@@ -30,7 +30,9 @@ export default function LlmWidget() {
           {t('llmUsageEntry')}
         </Button>
       </div>
-      {showPanel ? <LlmUsageStats embedded /> : <AssistantChat embedded />}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {showPanel ? <LlmUsageStats embedded /> : <AssistantChat embedded />}
+      </div>
     </DnaCard>
   );
 }

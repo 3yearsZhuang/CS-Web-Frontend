@@ -43,7 +43,7 @@ export function PomodoroPlayer() {
   };
 
   return (
-    <DnaCard corner="FCS" className="p-5 flex flex-col gap-4">
+    <DnaCard corner="FCS" className="p-5 flex flex-col gap-4 h-full min-h-0">
       <audio ref={audioRef} className="hidden" />
 
       <div className="flex items-center justify-between">
@@ -153,28 +153,30 @@ export function PomodoroPlayer() {
         </button>
       </div>
 
-      {showMusic && (
-        <MusicPanel
-          musicItems={pomo.musicItems}
-          currentSound={pomo.currentSound}
-          onPlay={playUploaded}
-          onUpload={(file) => {
-            if (file) void pomo.upload(file).then((id) => playUploaded(id));
-          }}
-          onRemove={(id) => void pomo.remove(id)}
-        />
-      )}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {showMusic && (
+          <MusicPanel
+            musicItems={pomo.musicItems}
+            currentSound={pomo.currentSound}
+            onPlay={playUploaded}
+            onUpload={(file) => {
+              if (file) void pomo.upload(file).then((id) => playUploaded(id));
+            }}
+            onRemove={(id) => void pomo.remove(id)}
+          />
+        )}
 
-      {showConfig && (
-        <SettingsPanel
-          settings={pomo.settings}
-          musicItems={pomo.musicItems}
-          onChangeDuration={(key, value) =>
-            pomo.setSettings((prev) => ({ ...prev, [key]: value }))
-          }
-          onChangeSound={pomo.changePhaseSound}
-        />
-      )}
+        {showConfig && (
+          <SettingsPanel
+            settings={pomo.settings}
+            musicItems={pomo.musicItems}
+            onChangeDuration={(key, value) =>
+              pomo.setSettings((prev) => ({ ...prev, [key]: value }))
+            }
+            onChangeSound={pomo.changePhaseSound}
+          />
+        )}
+      </div>
     </DnaCard>
   );
 }

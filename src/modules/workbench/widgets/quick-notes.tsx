@@ -40,7 +40,7 @@ export default function QuickNotes() {
   );
 
   return (
-    <DnaCard corner="NOTE" className="p-5 flex flex-col gap-3">
+    <DnaCard corner="NOTE" className="p-5 flex flex-col gap-3 h-full min-h-0">
       <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
         <NotebookPen className="w-4 h-4" />
         {t('quickNotes')}
@@ -62,7 +62,7 @@ export default function QuickNotes() {
         </Button>
       </div>
 
-      <ul className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto">
+      <ul className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
         {notes.length === 0 && (
           <li className="text-[13px] text-[var(--muted-foreground)] py-3 text-center">…</li>
         )}

@@ -3,39 +3,10 @@
  * @file 公告横幅组件
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, AlertTriangle, Info, CheckCircle, AlertCircle } from 'lucide-react';
-
-type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string | null;
-  level: AnnouncementLevel;
-  isDismissible: boolean;
-}
-
-const STORAGE_KEY = 'dismissed_announcements';
-
-function getDismissedSet(): Set<string> {
-  if (typeof window === 'undefined') return new Set();
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDismissedSet(set: Set<string>) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
-  } catch {
-    // localStorage 不可用时静默忽略
-  }
-}
+import { useAnnouncements, saveDismissed, type AnnouncementLevel } from '@/modules/community/ui/use-announcements';
 
 const levelConfig: Record<AnnouncementLevel, {
   icon: React.ComponentType<{ className?: string; size?: number }>;
@@ -77,52 +48,14 @@ const levelConfig: Record<AnnouncementLevel, {
 /** 全站公告横幅 — 在 Navbar 下方展示当前生效的公告 */
 export function AnnouncementBanner() {
   const t = useTranslations('feedback');
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const { announcements } = useAnnouncements();
+  // 本次会话可见性：缺省视为可见；dismiss 仅隐藏本会话并持久化（下次 reload 自动排除）
   const [visible, setVisible] = useState<Record<string, boolean>>({});
-  const [hasAny, setHasAny] = useState(false);
-
-  const fetchAnnouncements = useCallback(async () => {
-    try {
-      const res = await fetch('/api/announcements');
-      if (!res.ok) return;
-      const data = await res.json();
-      const list: Announcement[] = data.announcements || [];
-
-      const dismissed = getDismissedSet();
-      const filtered = list.filter((a) => !dismissed.has(a.id));
-
-      setAnnouncements(filtered);
-      setHasAny(filtered.length > 0);
-
-      const initVisible: Record<string, boolean> = {};
-      filtered.forEach((a) => {
-        initVisible[a.id] = true;
-      });
-      setVisible(initVisible);
-    } catch {
-      // 静默失败
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
 
   const dismiss = (id: string) => {
     setVisible((prev) => ({ ...prev, [id]: false }));
-    const dismissed = getDismissedSet();
-    dismissed.add(id);
-    saveDismissedSet(dismissed);
-
-    // 检查是否所有公告都已关闭
-    setAnnouncements((prev) => {
-      const remaining = prev.filter((a) => a.id !== id || a.isDismissible);
-      setHasAny(remaining.length > 0);
-      return prev;
-    });
+    saveDismissed(id);
   };
-
-  if (!hasAny) return null;
 
   const activeAnnouncements = announcements.filter((a) => visible[a.id] !== false);
 

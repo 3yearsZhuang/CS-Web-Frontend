@@ -427,6 +427,9 @@ export interface ToolsMessages {
     llmMaskedHint: string;
     llmNoData: string;
     llmUsageEntry: string;
+    resetLayout: string;
+    confirmResetLayout: string;
+    dragHint: string;
   }
 }
 
@@ -854,6 +857,9 @@ export const zhCN: ToolsMessages = {
     llmMaskedHint: '当前 Key：{masked}',
     llmNoData: '暂无用量数据，先和学习助手聊几句',
     llmUsageEntry: '用量与设置',
+    resetLayout: '重置布局',
+    confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
+    dragHint: '拖拽卡片可排序 · 点击 S/M/L 改尺寸',
   }
 };
 
@@ -1281,5 +1287,8 @@ export const en: ToolsMessages = {
     llmMaskedHint: 'Current key: {masked}',
     llmNoData: 'No usage yet — chat with the assistant first',
     llmUsageEntry: 'Usage & Settings',
+    resetLayout: 'Reset layout',
+    confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
+    dragHint: 'Drag cards to reorder · click S/M/L to resize',
   }
 };

@@ -39,6 +39,8 @@ export interface TitleProps
   /**
    * 是否启用底部像素虚影（标题选项 A · 像素错位虚影）。
    * 默认 level<=2 启用，level>=3 关闭。
+   * 注意：折叠 Hero 进入顶栏态（collapsed=true）时强制关闭——
+   * 紧凑顶栏不需要大号标题的错位回声，避免像素虚影在顶栏堆叠。
    */
   ghost?: boolean;
   /**
@@ -54,6 +56,8 @@ export interface TitleProps
   echo?: ReactNode;
   /** 是否用 .ghost-title__content 包裹（块级子节点设 false）。*/
   wrapContent?: boolean;
+  /** 真实标题自然换行时是否隐藏虚影（默认 true）；显式 <br/> 多行场景可设 false。*/
+  hideOnWrap?: boolean;
   className?: string;
 }
 
@@ -103,7 +107,8 @@ export function Title({
   className = '',
   ...rest
 }: TitleProps) {
-  const useGhost = ghost ?? level <= 2;
+  // 折叠 Hero 进入顶栏态（collapsed=true）时强制关闭像素虚影，仅在展开大标题态保留。
+  const useGhost = ghost ?? (level <= 2 && !collapsed);
   const heroMode = collapsed !== undefined;
   const Tag = (as ?? `h${level}`) as ElementType;
 

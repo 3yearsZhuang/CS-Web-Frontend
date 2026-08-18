@@ -57,3 +57,9 @@ export interface MediaItem {
   size: number;
   uploadedAt: number;
 }
+
+/** 工作台 widget 尺寸档（UI 选）：小 / 中 / 大 */
+export type WidgetSize = 'sm' | 'md' | 'lg';
+
+/** 工作台 widget 栅格宽度（lg 下 col-span），仅 4 / 8 / 12 三档 */
+export type WidgetSizeSpan = 4 | 8 | 12;

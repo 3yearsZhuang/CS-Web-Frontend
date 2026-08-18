@@ -1,5 +1,5 @@
 /**
- * @file 内容恢复 API — POST /api/admin/community/community/topics/[id]/restore（BFF 薄转发）
+ * @file 内容恢复 API — POST /api/admin/community/topics/[id]/restore（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -16,7 +16,7 @@ export async function POST(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/topics/${encodeURIComponent(id)}/restore`,
+    path: `/admin/community/topics/${encodeURIComponent(id)}/restore`,
     method: 'POST',
   });
 

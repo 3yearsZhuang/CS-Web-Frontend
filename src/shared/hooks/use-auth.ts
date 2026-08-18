@@ -70,15 +70,20 @@ export function useAuth() {
   const loading = isLoading;
 
   // 同步预读会话标记：登录成功写入、登出/401 清除。用于硬加载首帧乐观判定已登录，
-  // 消除「刷新即闪一下登出」的残留。注意：服务端渲染 sessionMarker 为 false，客户端首帧
-  // 以标记乐观判定，可能与 SSR HTML 存在瞬时差异（仅开发模式 hydration 警告，最终状态一致）。
+  // 消除「刷新即闪一下登出」的残留。
   const [sessionMarker] = useState<boolean>(
     () => typeof window !== 'undefined' && window.localStorage.getItem(SESSION_KEY) === '1',
   );
 
+  // 挂载标志：SSR 与客户端首帧（hydrated=false）一律按 guest 判定，保证与 SSR HTML 一致；
+  // 挂载后（hydrated=true）再以本地会话标记乐观视为已登录。这样既不触发 hydration 不匹配，
+  // 又保留「硬刷新不闪一下登出」的体验（乐观态在挂载后近乎即时生效）。
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
   // 数据到达后以真实 user 为准；首拉无缓存（loading）时以本地标记乐观视为已登录，
   // 避免硬刷新瞬间 isLoggedIn 短暂为 false 造成的登出闪烁。
-  const isLoggedIn = user !== null || (loading && sessionMarker);
+  const isLoggedIn = user !== null || (hydrated && loading && sessionMarker);
 
   // 仅在得出明确结论（非加载中）时同步标记，避免加载期间反复写 localStorage。
   useEffect(() => {

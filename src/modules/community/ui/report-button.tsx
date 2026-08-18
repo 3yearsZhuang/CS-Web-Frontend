@@ -3,14 +3,17 @@
  *
  * 点击弹出理由选择，提交到 POST /api/community/reports。
  * 用于帖子详情与回复的操作栏。
+ *
+ * 提交逻辑（POST + 401→/login + 错误归一 + submitting）已收敛至 useReport（C-19），
+ * 本组件仅保留表单 UI 状态（open/reason/detail）与成功后的弹窗时序。
  */
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, ModalShell } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { useReport } from './use-report';
 
 type TargetType = 'topic' | 'reply';
 
@@ -30,37 +33,15 @@ interface ReportButtonProps {
 
 export function ReportButton({ targetType, targetId }: ReportButtonProps) {
   const t = useTranslations('report');
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [detail, setDetail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const targetApiType = targetType === 'reply' ? 'comment' : 'topic';
+  const { submitting, error, submit } = useReport({ targetType, targetId });
 
   const handleSubmit = async () => {
-    if (!reason) {
-      setError(t('errorSelectReason'));
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/community/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: targetApiType, targetId, reason, detail: detail || null }),
-      });
-      if (res.status === 401) {
-        router.push('/login');
-        return;
-      }
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || t('errorSubmitFailed'));
-      }
+    const ok = await submit(reason, detail, t);
+    if (ok) {
       setDone(true);
       setTimeout(() => {
         setOpen(false);
@@ -68,10 +49,6 @@ export function ReportButton({ targetType, targetId }: ReportButtonProps) {
         setReason('');
         setDetail('');
       }, 1200);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errorSubmitFailed'));
-    } finally {
-      setSubmitting(false);
     }
   };
 

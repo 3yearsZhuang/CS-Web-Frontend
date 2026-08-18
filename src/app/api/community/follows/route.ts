@@ -2,7 +2,13 @@
  * @file 关注/粉丝列表 API — GET /api/community/follows（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import {
+  arrayFrom,
+  bodyOrEmpty,
+  clearAuthCookies,
+  okJson,
+  proxyBackend,
+} from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -21,9 +27,9 @@ export async function GET(req: Request) {
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const body = (proxy.body ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
-  const res = NextResponse.json({
+  const body = bodyOrEmpty(proxy);
+  const items = arrayFrom(body, 'items');
+  return okJson({
     users: items.map((u) => ({
       id: String(u.id),
       displayName: u.display_name ?? null,
@@ -38,7 +44,5 @@ export async function GET(req: Request) {
     total: Number(body.total ?? 0),
     page,
     pageSize,
-  });
-  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
-  return res;
+  }, proxy);
 }

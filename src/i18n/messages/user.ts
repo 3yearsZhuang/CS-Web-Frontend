@@ -184,6 +184,8 @@ export interface UserMessages {
     beliefTitle3: string;
     beliefSection: string;
     expectationSection: string;
+    beliefHeading: string;
+    expectationHeading: string;
     directionsTitle1: string;
     directionsTitle2: string;
     directionsTitle3: string;
@@ -569,6 +571,8 @@ export const zhCN: UserMessages = {
     beliefTitle3: '的你！',
     beliefSection: '— 信念 / Belief',
     expectationSection: '— 期望 / Expectation',
+    beliefHeading: '我们相信 / What We Believe',
+    expectationHeading: '我们期望 / What We Expect',
     directionsTitle1: '六大方向，',
     directionsTitle2: '覆盖',
     directionsTitle3: '主流技术领域。',
@@ -953,6 +957,8 @@ export const en: UserMessages = {
     beliefTitle3: 'people like you!',
     beliefSection: '— Beliefs',
     expectationSection: '— Expectations',
+    beliefHeading: 'What We Believe',
+    expectationHeading: 'What We Expect',
     directionsTitle1: 'Six directions,',
     directionsTitle2: 'covering',
     directionsTitle3: 'all mainstream tech.',

@@ -94,7 +94,7 @@ export default function TodayTasks() {
   }, [setTasks, t]);
 
   return (
-    <DnaCard corner="TSK" className="p-5 flex flex-col gap-4">
+    <DnaCard corner="TSK" className="p-5 flex flex-col gap-4 h-full min-h-0">
       <div className="flex items-center justify-between">
         <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
           {t('todayTasks')}
@@ -147,7 +147,7 @@ export default function TodayTasks() {
       {sorted.length === 0 ? (
         <p className="text-[13px] text-[var(--muted-foreground)] py-4 text-center">{t('noTasks')}</p>
       ) : (
-        <ul className="idx-rail max-h-[280px] overflow-y-auto">
+        <ul className="idx-rail flex-1 min-h-0 overflow-y-auto">
           {sorted.map((task, i) => {
             const isOverdue = !task.done && task.dueDate < today;
             const isDueToday = !task.done && task.dueDate === today;

@@ -1,5 +1,5 @@
 /**
- * @file 评论审核 API — PUT/DELETE /api/admin/community/community/replies/[id]（BFF 薄转发）
+ * @file 评论审核 API — PUT/DELETE /api/admin/community/replies/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -18,7 +18,7 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/replies/${encodeURIComponent(id)}`,
+    path: `/admin/community/replies/${encodeURIComponent(id)}`,
     method: 'PUT',
     jsonBody: { contentMarkdown: body.contentMarkdown },
   });
@@ -43,7 +43,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/replies/${encodeURIComponent(id)}`,
+    path: `/admin/community/replies/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 

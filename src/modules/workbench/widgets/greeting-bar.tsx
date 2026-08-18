@@ -13,7 +13,7 @@ export default function GreetingBar() {
   const { now, sessionDuration } = useClock();
 
   return (
-    <DnaCard corner="HI" className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <DnaCard corner="HI" className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 h-full min-h-0">
       <div className="flex items-center gap-3">
         <span className="display-serif text-[clamp(20px,3vw,30px)] text-[var(--foreground)]">
           {t(greetingKey(now.getHours()))}

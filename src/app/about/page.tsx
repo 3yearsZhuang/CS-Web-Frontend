@@ -269,46 +269,69 @@ export default function AboutPage() {
                   echo={`${t('beliefTitle1')}${t('beliefTitle2')}${t('beliefTitle3')}`}>
                   {t('beliefTitle1')}<span className="text-[var(--primary)]">{t('beliefTitle2')}</span>{t('beliefTitle3')}
                 </Title>
-                {/* 子区块 1：信念 */}
-                <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
-                  {t('beliefSection')}
-                </h3>
-                {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
-                <ul className="idx-rail border-t border-[var(--border)]">
-                  {BELIEFS.map((b) => (
-                    <li key={b.num}>
-                      <span className="idx">{'// '}{b.num}</span>
-                      <div className="min-w-0">
-                        <h3 className="idx-ttl">{t(b.titleKey as Parameters<typeof t>[0])}</h3>
-                        <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
-                          {t(b.descKey as Parameters<typeof t>[0])}
-                        </p>
-                        <div className="idx-mt"><span className="k">{b.tag}</span></div>
+                {/* 全屏左右布局：左信念 / 右期望（lg 起对半分栏，右栏发丝竖线分隔） */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                  {/* 左栏：信念 */}
+                  <div>
+                    <div className="grid grid-cols-12 gap-0 mb-8 sm:mb-10">
+                      <div className="col-span-12 md:col-span-2">
+                        <SectionMarker>[ 01 ]</SectionMarker>
                       </div>
-                      <span className="idx-arw" aria-hidden="true">→</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* 子区块 2：期望 */}
-                <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 mt-16 sm:mt-20 uppercase tracking-widest">
-                  {t('expectationSection')}
-                </h3>
-                {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
-                <ul className="idx-rail border-t border-[var(--border)]">
-                  {REQUIREMENTS.map((req) => (
-                    <li key={req.num}>
-                      <span className="idx">{'// '}{req.num}</span>
-                      <div className="min-w-0">
-                        <h3 className="idx-ttl">{t(req.titleKey as Parameters<typeof t>[0])}</h3>
-                        <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
-                          {t(req.descKey as Parameters<typeof t>[0])}
-                        </p>
-                        <div className="idx-mt"><span className="k">{req.tag}</span></div>
+                      <div className="col-span-12 md:col-span-10">
+                        <Title level={2} className="text-[clamp(22px,3.4vw,38px)] leading-[1.12]"
+                          echo={t('beliefHeading')}>
+                          {t('beliefHeading')}
+                        </Title>
                       </div>
-                      <span className="idx-arw" aria-hidden="true">→</span>
-                    </li>
-                  ))}
-                </ul>
+                    </div>
+                    {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
+                    <ul className="idx-rail border-t border-[var(--border)]">
+                      {BELIEFS.map((b) => (
+                        <li key={b.num}>
+                          <span className="idx">{'// '}{b.num}</span>
+                          <div className="min-w-0">
+                            <h3 className="idx-ttl">{t(b.titleKey as Parameters<typeof t>[0])}</h3>
+                            <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                              {t(b.descKey as Parameters<typeof t>[0])}
+                            </p>
+                            <div className="idx-mt"><span className="k">{b.tag}</span></div>
+                          </div>
+                          <span className="idx-arw" aria-hidden="true">→</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* 右栏：期望（lg 起加发丝竖线 + 左内边距分隔） */}
+                  <div className="lg:pl-16 lg:border-l lg:border-[var(--border)]">
+                    <div className="grid grid-cols-12 gap-0 mb-8 sm:mb-10">
+                      <div className="col-span-12 md:col-span-2">
+                        <SectionMarker>[ 02 ]</SectionMarker>
+                      </div>
+                      <div className="col-span-12 md:col-span-10">
+                        <Title level={2} className="text-[clamp(22px,3.4vw,38px)] leading-[1.12]"
+                          echo={t('expectationHeading')}>
+                          {t('expectationHeading')}
+                        </Title>
+                      </div>
+                    </div>
+                    {/* 列表选项 A · 索引铁路：左像素编号 + 发丝铁路线 + 衬线标题 + 像素元数据行 */}
+                    <ul className="idx-rail border-t border-[var(--border)]">
+                      {REQUIREMENTS.map((req) => (
+                        <li key={req.num}>
+                          <span className="idx">{'// '}{req.num}</span>
+                          <div className="min-w-0">
+                            <h3 className="idx-ttl">{t(req.titleKey as Parameters<typeof t>[0])}</h3>
+                            <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
+                              {t(req.descKey as Parameters<typeof t>[0])}
+                            </p>
+                            <div className="idx-mt"><span className="k">{req.tag}</span></div>
+                          </div>
+                          <span className="idx-arw" aria-hidden="true">→</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -2,7 +2,14 @@
  * @file 收藏列表 API — GET /api/community/favorites（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
-import { clearAuthCookies, proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
+import {
+  arrayFrom,
+  bodyOrEmpty,
+  clearAuthCookies,
+  okJson,
+  proxyBackend,
+  toCommunityPost,
+} from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -20,15 +27,13 @@ export async function GET(req: Request) {
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const body = (proxy.body ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
-  const res = NextResponse.json({
+  const body = bodyOrEmpty(proxy);
+  const items = arrayFrom(body, 'items');
+  return okJson({
     posts: items.map(toCommunityPost),
     total: Number(body.total ?? 0),
     page,
     pageSize,
     totalPages: Number(body.total_pages ?? 1),
-  });
-  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
-  return res;
+  }, proxy);
 }
