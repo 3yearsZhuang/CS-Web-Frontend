@@ -191,6 +191,7 @@ export interface UserMessages {
     directionsDesc2: string;
     processTitle1: string;
     processTitle2: string;
+    processTitle3: string;
     processSection: string;
     joinSection: string;
     processDesc: string;
@@ -575,6 +576,7 @@ export const zhCN: UserMessages = {
     directionsDesc2: '同时参与多个方向。',
     processTitle1: '如何',
     processTitle2: '加入',
+    processTitle3: ' / How to Join',
     processSection: '— 流程 / Process',
     joinSection: '— 加入 / Join',
     processDesc: '报名通道全年开放。填写报名表，我们会在 3 个工作日内联系你。',
@@ -958,6 +960,7 @@ export const en: UserMessages = {
     directionsDesc2: 'join multiple directions',
     processTitle1: 'How to',
     processTitle2: 'join',
+    processTitle3: ' / How to Join',
     processSection: '— Process',
     joinSection: '— Join',
     processDesc: 'Applications are open all year. Fill out the form and we will contact you within 3 business days.',

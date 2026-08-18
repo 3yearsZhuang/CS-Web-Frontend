@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 Hero 标题虚影；§11 登记像素融合白名单例外）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 Hero 标题虚影；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -708,11 +708,13 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 页面 | 选型 | 共享类 | 视觉特征 |
 |------|------|--------|----------|
 | `/about`（信念 / 期望索引列表） | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移 |
-| `/join`（加入流程） | **B DNA 行卡** | `.lst-dna`（`.dna-corner` / `.dna-ttl` / `.dna-mt` / `.dna-arw`） | 左主色硬边条 + 右上角像素编号 + 同款 `steps(3)` 抬升硬阴影；复用 about 四步流程语义 |
+| `/about`（加入流程，由 `/join` 合并而来） | **B DNA 行卡** | `.lst-dna`（`.dna-corner` / `.dna-ttl` / `.dna-mt` / `.dna-arw`） | 左主色硬边条 + 右上角像素编号 + 同款 `steps(3)` 抬升硬阴影；复用 about 四步流程语义 |
 | （待定） | C 像素终端 | `.lst-term` | 全像素字体 + 状态点 + 游标，适合数据/日志型列表 |
 
-- **选型边界**：盒装卡 → `<DnaCard>`（§15.3）；列表行 → A/B/C 三档之一（不套 DnaCard）。`/about` 的「六大方向」仍为 DNA **盒装卡**（B 卡片，非列表），「流程行」仍为 C 流程行，二者**不在**本列表选型范围。
-- `/join` 的「加入流程」为新增引导区（Hero 与表单之间），`JOIN_STEPS` 复用 about 的 `step1~4Title/Desc` + `duration` 文案（`useTranslations('about')`）。
+- **选型边界**：盒装卡 → `<DnaCard>`（§15.3）；列表行 → A/B/C 三档之一（不套 DnaCard）。`/about` 的「六大方向」仍为 DNA **盒装卡**（B 卡片，非列表），二者**不在**本列表选型范围。
+- **C 流程行已移除**：原 `/about` process 标签内的「详细步骤文章（C 流程行，`STEPS` 大卡片文章）」已于 2026-08-18 删除——`STEPS` 数据与 `StepItem` 接口一并移除；该标签页仅保留「加入流程」**B DNA 行卡**作为步骤呈现，与报名表同屏。
+- **步骤 / 表单同屏双栏**：process 标签页内，左栏「加入流程（步骤 · B DNA 行卡，`.lg:col-span-5`）」与右栏「报名表（`.lg:col-span-7`）」在 `lg+` 采用 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` **左右布局**；移动端单列（步骤在上、表单在下）。对应栅格代码位于 `src/app/about/page.tsx` 的 process 分支。
+- 原 `/join` 页面已于 2026-08-18 合并入 `/about` 的「加入 / Join」标签页（process 标签 → 加入子区块）：其「加入流程」DNA 行卡与**完整报名表填写逻辑**（认证检查 / 已有申请状态 / 校验 / 提交 / 成功·待审态）全部迁入 `src/app/about/page.tsx`，随后删除 `src/app/join/`。`JOIN_STEPS` 复用 about 的 `step1~4Title/Desc` + `duration` 文案（`useTranslations('about')`）；报名表字段沿用 `join` 命名空间（`useTranslations('join')`）。`/profile` 的 `join-tab` 链接由 `/join` 改为 `/about`。
 
 ### 15.10 标题底部虚影（Hero 专用）
 
@@ -727,7 +729,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 日期 | 变更 |
 |------|------|
-| 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join` 新增「加入流程」引导区选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
+| 2026-08-18 | **`/about` process 标签页精简 + 步骤/表单左右布局**：① 删除「详细步骤文章（C 流程行）」——`STEPS` 常量与 `StepItem` 接口一并移除，`processSection` 子标题不再渲染；② 仅保留「加入流程」**B DNA 行卡**（`JOIN_STEPS`）作为步骤呈现；③ process 标签页改为 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` 同屏双栏——左栏「加入流程（`.lg:col-span-5`）」、右栏「报名表（`.lg:col-span-7`）」，移动端单列（步骤在上、表单在下）。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.9 选型边界 / 双栏说明已更新） |
+| 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
 | 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
 | 2026-08-18 | 像素融合全站化：① 新建共享组件 `<DnaCard>`（`primitives/dna-card.tsx`），`/about`、`/events` 重构其使用，DNA 卡皮肤改全局生效（§15.3/§15.8 更新）；② 像素元数据层 opt-in 统一为 `.pixel-page`（兼容 about/events），覆盖 join/login/profile/users/[id]/notifications/events/[id]/community*/tools*，`/admin` 排除（§15.2）；③ 上述页面主 CTA 切 `pixel`/`pixel-outline`；④ 盒装卡 `featured-topic-strip`、tools 工具卡转 `dna-card`，Feed/主题列表行保持列表样式 |
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |

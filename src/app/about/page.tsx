@@ -1,9 +1,9 @@
 /**
- * @file 关于页面
+ * @file 关于页面 — 含「加入 / Join」区块（已合并原 /join 全量内容：加入流程 DNA 行卡 + 报名表填写）
  */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -13,13 +13,15 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, DnaCard } from '@/components';
 import Link from 'next/link';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
+import { TechTagSelector } from '@/components/tech-tag-selector';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { formatDate } from '@/shared/utils/utils';
 
 type AboutTab = 'belief' | 'directions' | 'process';
 
 interface BeliefItem { num: string; titleKey: string; descKey: string; tag: string; }
 interface DirectionItem { num: string; nameKey: string; nameEn: string; tag: string; descKey: string; stack: string[]; }
 interface RequirementItem { num: string; titleKey: string; descKey: string; tag: string; }
-interface StepItem { num: string; titleKey: string; duration: string; descKey: string; details: string[]; }
 
 const BELIEFS: BeliefItem[] = [
   { num: '01', titleKey: 'belief1Title', descKey: 'belief1Desc', tag: 'Project-First' },
@@ -43,16 +45,26 @@ const REQUIREMENTS: RequirementItem[] = [
   { num: '04', titleKey: 'req4Title', descKey: 'req4Desc', tag: 'Inclusive' },
 ];
 
-const STEPS: StepItem[] = [
-  { num: '01', titleKey: 'step1Title', duration: '5 min', descKey: 'step1Desc', details: ['Email Verify', 'Set Password', 'Profile'] },
-  { num: '02', titleKey: 'step2Title', duration: '15 min', descKey: 'step2Desc', details: ['Interest', 'Background', 'Statement'] },
-  { num: '03', titleKey: 'step3Title', duration: '20 min', descKey: 'step3Desc', details: ['Zoom / Tencent', '1:1 Chat', 'No Tech Test'] },
-  { num: '04', titleKey: 'step4Title', duration: '1 day', descKey: 'step4Desc', details: ['Join Lab', 'Meet Peers'] },
-];
+// 加入流程（来自原 /join，落地为列表选项 B · DNA 行卡）
+const JOIN_STEPS = [
+  { num: '01', titleKey: 'step1Title', duration: '5 min', descKey: 'step1Desc' },
+  { num: '02', titleKey: 'step2Title', duration: '15 min', descKey: 'step2Desc' },
+  { num: '03', titleKey: 'step3Title', duration: '20 min', descKey: 'step3Desc' },
+  { num: '04', titleKey: 'step4Title', duration: '1 day', descKey: 'step4Desc' },
+] as const;
+
+interface ExistingApplication {
+  id: string;
+  applicantName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewNote: string | null;
+  createdAt: string;
+}
 
 export default function AboutPage() {
   const router = useRouter();
   const t = useTranslations('about');
+  const tJoin = useTranslations('join');
   const [activeTab, setActiveTab] = useState<AboutTab>('belief');
 
   const aboutTabs: CapsuleTab[] = [
@@ -69,6 +81,131 @@ export default function AboutPage() {
     onRevealComplete,
     onTitleClick,
   };
+
+  // ─────────────────────────────────────────────────────────────
+  // 报名表逻辑（合并自原 /join）
+  // ─────────────────────────────────────────────────────────────
+  const [authChecked, setAuthChecked] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [existingApps, setExistingApps] = useState<ExistingApplication[]>([]);
+
+  const [form, setForm] = useState({
+    applicantName: '',
+    studentId: '',
+    major: '',
+    techTags: [] as string[],
+    reason: '',
+    contactQq: '',
+    contactPhone: '',
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch('/api/join/mine').then(async (r) => ({ ok: r.ok, status: r.status, data: r.ok ? await r.json() : null })),
+      fetch('/api/profile').then(async (r) => ({ ok: r.ok, data: r.ok ? await r.json() : null })),
+    ]).then(([mineRes, profileRes]) => {
+      if (cancelled) return;
+      // 未登录（401）不再跳转登录页，游客可直接填写表单
+      if (mineRes.ok) {
+        setLoggedIn(true);
+        if (mineRes.data?.applications) {
+          setExistingApps(mineRes.data.applications);
+        }
+      }
+      // 预填用户信息（仅登录用户）
+      if (profileRes.data?.user) {
+        const u = profileRes.data.user;
+        setForm((f) => ({
+          ...f,
+          applicantName: u.displayName || '',
+          techTags: u.techTags || [],
+        }));
+      }
+      setAuthChecked(true);
+    }).catch(() => {
+      if (cancelled) return;
+      setAuthChecked(true);
+    });
+    return () => { cancelled = true; };
+  }, [router]);
+
+  const pendingApp = existingApps.find((a) => a.status === 'pending');
+
+  const validate = (): boolean => {
+    const e: Record<string, string> = {};
+    if (!form.applicantName.trim()) e.applicantName = tJoin('nameRequired');
+    if (!form.studentId.trim()) e.studentId = tJoin('studentIdRequired');
+    if (!form.major.trim()) e.major = tJoin('majorRequired');
+    if (!form.reason.trim()) e.reason = tJoin('reasonRequired');
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    if (!validate()) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantName: form.applicantName.trim(),
+          studentId: form.studentId.trim(),
+          major: form.major.trim(),
+          techTags: form.techTags,
+          reason: form.reason.trim(),
+          contactQq: form.contactQq.trim() || undefined,
+          contactPhone: form.contactPhone.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.error || tJoin('submitFailed') });
+        return;
+      }
+
+      setMessage({
+        type: 'success',
+        text: loggedIn ? tJoin('submitSuccessLoggedIn') : tJoin('submitSuccessGuest'),
+      });
+      // 将新申请加入已有列表
+      if (data.application) {
+        setExistingApps((prev) => [data.application, ...prev]);
+      }
+      setForm({
+        applicantName: '',
+        studentId: '',
+        major: '',
+        techTags: [],
+        reason: '',
+        contactQq: '',
+        contactPhone: '',
+      });
+    } catch {
+      setMessage({ type: 'error', text: tJoin('networkError') });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 认证检查完成前的加载态
+  if (!authChecked) {
+    return (
+      <main className="about-page relative pt-16 min-h-screen flex items-center justify-center">
+        <div className="meta-mono text-[var(--muted-foreground)]">{tJoin('loading')}</div>
+      </main>
+    );
+  }
 
   return (
     <VisibilityGate componentKey="about">
@@ -147,7 +284,7 @@ export default function AboutPage() {
                 <ul className="idx-rail border-t border-[var(--border)]">
                   {BELIEFS.map((b) => (
                     <li key={b.num}>
-                      <span className="idx">// {b.num}</span>
+                      <span className="idx">{'// '}{b.num}</span>
                       <div className="min-w-0">
                         <h3 className="idx-ttl">{t(b.titleKey as Parameters<typeof t>[0])}</h3>
                         <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
@@ -167,7 +304,7 @@ export default function AboutPage() {
                 <ul className="idx-rail border-t border-[var(--border)]">
                   {REQUIREMENTS.map((req) => (
                     <li key={req.num}>
-                      <span className="idx">// {req.num}</span>
+                      <span className="idx">{'// '}{req.num}</span>
                       <div className="min-w-0">
                         <h3 className="idx-ttl">{t(req.titleKey as Parameters<typeof t>[0])}</h3>
                         <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
@@ -232,73 +369,235 @@ export default function AboutPage() {
                   <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
                     {t('processTitle1')}<span className="text-[var(--primary)]">{t('processTitle2')}</span>。
                   </h2>
-                  {/* 子区块 1：流程 */}
-                  <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 uppercase tracking-widest">
-                    {t('processSection')}
-                  </h3>
-                  <div className="border-t border-[var(--border)]">
-                    {STEPS.map((step, idx) => (
-                      <article
-                        key={step.num}
-                        className="group grid grid-cols-12 gap-4 py-8 sm:py-12 border-b border-[var(--border)] card-minimal"
-                      >
-                        <div className="col-span-12 md:col-span-3">
-                          <div className="display-serif text-[clamp(40px,7vw,80px)] text-[var(--foreground)] group-hover:text-[var(--primary)] transition-colors leading-none mb-2">
-                            {step.num}
-                          </div>
-                          <div className="meta-mono text-[var(--muted-foreground)]">
-                            {t('step', { current: idx + 1, total: STEPS.length })}
-                          </div>
-                        </div>
-                        <div className="col-span-12 md:col-span-2 md:border-l md:border-r md:border-[var(--border)] md:pl-6 pb-4 md:pb-0 border-b md:border-b-0 border-[var(--border)]">
-                          <div className="meta-mono mb-2">{t('duration')}</div>
-                          <div className="text-[13px] font-mono text-[var(--primary)]">
-                            {step.duration}
-                          </div>
-                        </div>
-                        <div className="col-span-12 md:col-span-6">
-                          <h3 className="display-serif text-[clamp(22px,3vw,28px)] text-[var(--foreground)] mb-3">
-                            {t(step.titleKey as Parameters<typeof t>[0])}
-                          </h3>
-                          <p className="text-[14px] text-[var(--muted-foreground)] leading-[1.7] max-w-xl">
+                  {/* 子区块：加入流程（步骤）+ 报名表 — 合并原 /join 全量内容；全屏左右布局 */}
+                  {/* 全屏左右布局：左步骤 / 右表单 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                    {/* 左：加入流程（步骤） */}
+                    <div className="lg:col-span-5">
+                      {/* 加入流程 — 列表选项 B · DNA 行卡（来自 /join） */}
+                      <div className="grid grid-cols-12 gap-0 mb-10 sm:mb-16">
+                    <div className="col-span-12 md:col-span-2">
+                      <div className="section-marker">[ 02 ]</div>
+                    </div>
+                    <div className="col-span-12 md:col-span-10">
+                      <h2 className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]">
+                        {t('processTitle1')}
+                        <span className="text-[var(--primary)]">{t('processTitle2')}</span>
+                        <span className="text-[var(--muted-foreground)]">{t('processTitle3')}</span>
+                      </h2>
+                      <p className="mt-4 max-w-2xl text-[var(--muted-foreground)] text-[15px] sm:text-[16px] leading-[1.8]">
+                        {t('processDesc')}
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="lst-dna max-w-3xl">
+                    {JOIN_STEPS.map((step, idx) => (
+                      <li key={step.num}>
+                        <span className="dna-corner" aria-hidden="true">{step.num}</span>
+                        <div className="min-w-0">
+                          <h3 className="dna-ttl">{t(step.titleKey as Parameters<typeof t>[0])}</h3>
+                          <p className="mt-2 text-[13px] sm:text-[14px] text-[var(--muted-foreground)] leading-[1.7]">
                             {t(step.descKey as Parameters<typeof t>[0])}
                           </p>
-                          {step.details.length > 0 && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              {step.details.map((d, i) => (
-                                <span key={`${d}-${i}`} className="tag-badge">
-                                  {d}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="dna-mt">
+                            <span className="k">{t('step', { current: idx + 1, total: JOIN_STEPS.length })}</span>
+                            <span>{step.duration}</span>
+                          </div>
+                        </div>
+                        <span className="dna-arw" aria-hidden="true">→</span>
+                      </li>
+                    ))}
+                      </ul>
+                    </div>
+                    {/* 右：报名表 */}
+                    <div className="lg:col-span-7">
+                      {/* 报名表 — 来自 /join（含填写逻辑） */}
+                      <div className="grid grid-cols-12 gap-0 mb-10 sm:mb-16">
+                    <div className="col-span-12 md:col-span-2">
+                      <div className="section-marker">[ 01 ]</div>
+                    </div>
+                    <div className="col-span-12 md:col-span-10">
+                      <h2 className="display-serif text-[clamp(24px,4vw,44px)] text-[var(--foreground)] leading-[1.1]">
+                        {tJoin('sectionTitle1')}
+                        <span className="text-[var(--primary)]">{tJoin('sectionTitle2')}</span>
+                        <span className="text-[var(--muted-foreground)]">{tJoin('sectionTitleEn')}</span>
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="max-w-2xl">
+                    {/* 已有待审核申请 — 显示状态卡片 */}
+                    {pendingApp && message?.type !== 'success' ? (
+                      <div className="p-6 border-l-2 border-amber-500/60 bg-amber-500/[0.04]">
+                        <div className="meta-mono text-amber-500 mb-2">{tJoin('underReview')}</div>
+                        <p className="text-[14px] text-[var(--foreground)] leading-relaxed mb-4">
+                          {tJoin('pendingDesc', { date: formatDate(pendingApp.createdAt) })}
+                        </p>
+                        <Link
+                          href="/profile?tab=join"
+                          className="meta-mono text-[var(--primary)] underline-grow"
+                        >
+                          {tJoin('viewInProfile')}
+                        </Link>
+                      </div>
+                    ) : message?.type === 'success' ? (
+                      <div className="p-6 border-l-2 border-[var(--primary)] bg-[var(--primary)]/[0.04]">
+                        <div className="meta-mono text-[var(--primary)] mb-2">{tJoin('submitted')}</div>
+                        <p className="text-[14px] text-[var(--foreground)] leading-relaxed">{message.text}</p>
+                        {loggedIn ? (
+                          <Link
+                            href="/profile?tab=join"
+                            className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
+                          >
+                            {tJoin('viewStatusInProfile')}
+                          </Link>
+                        ) : (
+                          <Link
+                            href="/register"
+                            className="mt-4 inline-block meta-mono text-[var(--primary)] underline-grow"
+                          >
+                            {tJoin('register')}
+                          </Link>
+                        )}
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSubmit} className="space-y-8">
+                        {/* 姓名 */}
+                        <div>
+                          <label htmlFor="applicantName" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
+                            [ 01 ] {tJoin('name')} *
+                          </label>
+                          <input
+                            id="applicantName"
+                            type="text"
+                            value={form.applicantName}
+                            onChange={(e) => setForm((f) => ({ ...f, applicantName: e.target.value }))}
+                            maxLength={20}
+                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            placeholder={tJoin('namePlaceholder')}
+                          />
+                          {errors.applicantName && (
+                            <div className="meta-mono text-[var(--destructive)] mt-1">{errors.applicantName}</div>
                           )}
                         </div>
-                        <div className="hidden md:block md:col-span-1 text-right">
-                          <span className="text-[var(--muted-foreground)] group-hover:text-[var(--primary)] group-hover:translate-x-1 inline-block transition-all">
-                            →
-                          </span>
+
+                        {/* 学号 */}
+                        <div>
+                          <label htmlFor="studentId" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
+                            [ 02 ] {tJoin('studentId')} *
+                          </label>
+                          <input
+                            id="studentId"
+                            type="text"
+                            value={form.studentId}
+                            onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
+                            maxLength={20}
+                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            placeholder={tJoin('studentIdPlaceholder')}
+                          />
+                          {errors.studentId && (
+                            <div className="meta-mono text-[var(--destructive)] mt-1">{errors.studentId}</div>
+                          )}
                         </div>
-                      </article>
-                    ))}
+
+                        {/* 专业 */}
+                        <div>
+                          <label htmlFor="major" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
+                            [ 03 ] {tJoin('major')} *
+                          </label>
+                          <input
+                            id="major"
+                            type="text"
+                            value={form.major}
+                            onChange={(e) => setForm((f) => ({ ...f, major: e.target.value }))}
+                            maxLength={40}
+                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            placeholder={tJoin('majorPlaceholder')}
+                          />
+                          {errors.major && (
+                            <div className="meta-mono text-[var(--destructive)] mt-1">{errors.major}</div>
+                          )}
+                        </div>
+
+                        {/* 技术方向 */}
+                        <TechTagSelector
+                          selected={form.techTags}
+                          onChange={(tags) => setForm((f) => ({ ...f, techTags: tags }))}
+                          disabled={submitting}
+                        />
+
+                        {/* 申请理由 */}
+                        <div>
+                          <label htmlFor="reason" className="meta-mono mb-2 flex items-center justify-between text-[var(--muted-foreground)]">
+                            <span>[ 04 ] {tJoin('reason')} *</span>
+                            <span>{form.reason.length}/500</span>
+                          </label>
+                          <textarea
+                            id="reason"
+                            value={form.reason}
+                            onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value.slice(0, 500) }))}
+                            maxLength={500}
+                            rows={4}
+                            className={`${INPUT_CLASS} px-4 py-3 text-[14px] resize-none`}
+                            placeholder={tJoin('reasonPlaceholder')}
+                          />
+                          {errors.reason && (
+                            <div className="meta-mono text-[var(--destructive)] mt-1">{errors.reason}</div>
+                          )}
+                        </div>
+
+                        {/* 联系方式 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="contactQq" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
+                              [ 05 ] {tJoin('qq')}
+                            </label>
+                            <input
+                              id="contactQq"
+                              type="text"
+                              value={form.contactQq}
+                              onChange={(e) => setForm((f) => ({ ...f, contactQq: e.target.value }))}
+                              maxLength={20}
+                              className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                              placeholder={tJoin('optional')}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="contactPhone" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
+                              [ 06 ] {tJoin('phone')}
+                            </label>
+                            <input
+                              id="contactPhone"
+                              type="text"
+                              value={form.contactPhone}
+                              onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                              maxLength={20}
+                              className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                              placeholder={tJoin('optional')}
+                            />
+                          </div>
+                        </div>
+
+                        {/* 消息 + 提交按钮 */}
+                        {message?.type === 'error' && (
+                          <div className="p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[var(--destructive)] text-[12px] font-mono leading-relaxed">
+                            {message.text}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="submit"
+                            variant="pixel"
+                            disabled={submitting}
+                          >
+                            {submitting ? tJoin('submitting') : tJoin('submit')}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </div>
-                  {/* 子区块 2：加入 */}
-                  <h3 className="meta-mono text-[clamp(14px,1.5vw,18px)] text-[var(--primary)] mb-6 sm:mb-8 mt-16 sm:mt-20 uppercase tracking-widest">
-                    {t('joinSection')}
-                  </h3>
-                  <div className="border-t border-[var(--border)] pt-10 sm:pt-16">
-                    <p className="text-[14px] sm:text-[15px] text-[var(--muted-foreground)] leading-[1.8] max-w-xl mb-8">
-                      {t('processDesc')}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Button variant="pixel" onClick={() => router.push('/join')}>
-                        <span>{t('fillForm')}</span>
-                        <span>→</span>
-                      </Button>
-                      <Button variant="pixel-outline" onClick={() => router.push('/login')}>
-                        <span>{t('login')}</span>
-                        <span>→</span>
-                      </Button>
-                    </div>
+                  </div>
                   </div>
                 </div>
               )}

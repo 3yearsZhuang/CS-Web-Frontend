@@ -92,7 +92,7 @@ export function JoinTab() {
               {t('noApplicationDesc')}
             </p>
             <Link
-              href="/join"
+              href="/about"
               className="meta-mono text-[var(--primary)] underline-grow"
             >
               {t('fillApplication')}
