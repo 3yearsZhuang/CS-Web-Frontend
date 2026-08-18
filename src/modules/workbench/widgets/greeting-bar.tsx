@@ -5,6 +5,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Clock3, Timer } from 'lucide-react';
+import { DnaCard } from '@/components';
 import { formatClock, formatDateZh, greetingKey, useClock } from '../hooks/use-clock';
 
 export default function GreetingBar() {
@@ -12,7 +13,7 @@ export default function GreetingBar() {
   const { now, sessionDuration } = useClock();
 
   return (
-    <div className="card-minimal px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <DnaCard corner="HI" className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         <span className="display-serif text-[clamp(20px,3vw,30px)] text-[var(--foreground)]">
           {t(greetingKey(now.getHours()))}
@@ -30,6 +31,6 @@ export default function GreetingBar() {
           {t('onlineLabel')} {sessionDuration}
         </span>
       </div>
-    </div>
+    </DnaCard>
   );
 }

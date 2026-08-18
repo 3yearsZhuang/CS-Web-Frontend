@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronDown, Music2, Pause, Play, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
+import { DnaCard } from '@/components';
 import { MusicPanel } from './music-panel';
 import { SettingsPanel } from './settings-panel';
 import { usePomodoro } from './use-pomodoro';
@@ -42,7 +43,7 @@ export function PomodoroPlayer() {
   };
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
+    <DnaCard corner="FCS" className="p-5 flex flex-col gap-4">
       <audio ref={audioRef} className="hidden" />
 
       <div className="flex items-center justify-between">
@@ -100,18 +101,19 @@ export function PomodoroPlayer() {
           {!pomo.state.running ? (
             <Button
               size="sm"
+              variant="pixel"
               onClick={pomo.state.phase === 'idle' || pomo.state.finishedAt == null ? pomo.start : pomo.resume}
             >
               <Play className="w-4 h-4" />
               {pomo.state.phase === 'idle' ? t('startFocus') : t('resume')}
             </Button>
           ) : (
-            <Button size="sm" variant="outline" onClick={pomo.pause}>
+            <Button size="sm" variant="pixel-outline" onClick={pomo.pause}>
               <Pause className="w-4 h-4" />
               {t('pause')}
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={pomo.reset}>
+          <Button size="sm" variant="pixel-outline" onClick={pomo.reset}>
             <RotateCcw className="w-4 h-4" />
             {t('reset')}
           </Button>
@@ -173,6 +175,6 @@ export function PomodoroPlayer() {
           onChangeSound={pomo.changePhaseSound}
         />
       )}
-    </div>
+    </DnaCard>
   );
 }

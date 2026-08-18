@@ -487,6 +487,10 @@ body {
   color: var(--primary);
   transform: translateX(5px);
 }
+/* idx-rail 嵌入 DnaCard 时，编号遮罩底色对齐卡片表面（避免铁路线在编号处透出底差矩形） */
+.dna-card .idx-rail .idx {
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+}
 
 /* ============ 标题底部虚影（标题选项 A · 像素错位虚影 Pixel Offset Echo）============
  * 真实标题用衬线，背后叠一份像素字体的相同文本，向右下硬偏移、低透明度。
@@ -1504,6 +1508,76 @@ body,
   cursor: not-allowed;
   transform: none;
   box-shadow: 3px 3px 0 var(--muted-foreground);
+}
+
+/* 破坏性像素按钮：底色走 --destructive 令牌，硬阴影 3px + steps(2) 按压位移；
+ * 与 .btn-pixel 同语言，仅色彩语义改为 destructive，用于清空 / 删除等高风险操作 */
+.btn-pixel-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border: 1px solid var(--destructive);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  transition:
+    transform 0.1s steps(2),
+    box-shadow 0.1s steps(2),
+    background 0.15s,
+    color 0.15s;
+}
+.btn-pixel-danger:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+}
+.btn-pixel-danger:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+}
+.btn-pixel-danger:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+}
+
+.btn-pixel-danger-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border: 1px solid var(--destructive);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  transition:
+    transform 0.1s steps(2),
+    box-shadow 0.1s steps(2),
+    background 0.15s,
+    color 0.15s;
+}
+.btn-pixel-danger-sm:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+}
+.btn-pixel-danger-sm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 color-mix(in srgb, var(--destructive) 60%, #000);
+}
+.btn-pixel-danger-sm:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--destructive) 60%, #000);
 }
 
 /* ─── 打字机逐字入场（Kimi 风格融合 M4） ───

@@ -4,7 +4,8 @@
  * 约定与 MobiusRing 对齐：
  * - DPR 上限 2 + ResizeObserver 自适应
  * - prefers-reduced-motion：静态绘制一帧，不做闪烁动画
- * - document.hidden 时暂停 RAF，回到前台恢复
+ * - 帧率节流到 ~30fps（闪烁视觉无需满帧，省一半绘制）
+ * - 滚出视口（IntersectionObserver）或 document.hidden 时暂停 RAF，回到前台/视口恢复
  * - 星点颜色读取运行时 --foreground 计算值，监听 <html> class 变化以跟随主题切换
  */
 'use client';
@@ -100,6 +101,10 @@ export function StarfieldCanvas({ className = '', density = 9000 }: StarfieldCan
       attributeFilter: ['class'],
     });
 
+    /** 帧率节流：闪烁视觉上无需 60fps，限到 ~30fps 即可省一半绘制 */
+    const FRAME_INTERVAL = 1000 / 30;
+    let lastDraw = 0;
+
     const draw = (time: number) => {
       ctx.clearRect(0, 0, widthPx, heightPx);
       const [r, g, b] = baseColor;
@@ -112,14 +117,22 @@ export function StarfieldCanvas({ className = '', density = 9000 }: StarfieldCan
       }
     };
 
+    /** 是否应运行 RAF：非 reduced-motion + 在视口内 + 标签页可见 */
+    let isVisible = true;
     let isRafRunning = false;
+
     const render = (time: number) => {
-      draw(time);
+      // 节流：仅在达到帧间隔时才重绘，跳过中间帧（RAF 自身仍按 vsync 走，开销可忽略）
+      if (time - lastDraw >= FRAME_INTERVAL) {
+        lastDraw = time;
+        draw(time);
+      }
       animationRef.current = requestAnimationFrame(render);
     };
     const startRaf = () => {
       if (isRafRunning) return;
       isRafRunning = true;
+      lastDraw = 0;
       animationRef.current = requestAnimationFrame(render);
     };
     const stopRaf = () => {
@@ -128,23 +141,41 @@ export function StarfieldCanvas({ className = '', density = 9000 }: StarfieldCan
       cancelAnimationFrame(animationRef.current);
     };
 
+    /** 统一根据「可见性 + 标签页可见性」决定启停（reduced-motion 走静态帧） */
+    const updateRunning = () => {
+      if (prefersReducedMotion) {
+        stopRaf();
+        if (isVisible) draw(0); // 静态一帧（仅在可见时绘制）
+        return;
+      }
+      if (isVisible && !document.hidden) startRaf();
+      else stopRaf();
+    };
+
     if (prefersReducedMotion) {
       draw(0); // 静态一帧
     } else {
       startRaf();
     }
 
-    const handleVisibilityChange = () => {
-      if (prefersReducedMotion) return;
-      if (document.hidden) stopRaf();
-      else startRaf();
-    };
+    // 滚出视口时暂停绘制（hero 离开屏幕后无需继续闪烁，避免持续占用主线程）
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        updateRunning();
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const handleVisibilityChange = () => updateRunning();
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       stopRaf();
       ro.disconnect();
       mo.disconnect();
+      io.disconnect();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [density]);

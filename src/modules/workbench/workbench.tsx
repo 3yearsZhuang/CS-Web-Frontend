@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 import { Download, RefreshCw, Settings2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { GhostTitle, Title } from '@/components';
+import { DnaCard, GhostTitle, SectionMarker, Title } from '@/components';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS } from './widget-registry';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -142,9 +142,10 @@ export function Workbench() {
   );
 
   return (
-    <section data-section-nav="01|工作台" className="px-4 sm:px-6 md:px-8 py-10 sm:py-14 border-t border-[var(--border)]">
+    <section data-section-nav="01|工作台" className="px-4 sm:px-6 md:px-8 py-10 sm:py-14 border-t border-[var(--border)] pixel-page">
       <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
         <div className="flex flex-col gap-4">
+          <SectionMarker>[ 01 ] 工作台 / WORKBENCH</SectionMarker>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <Title level={2} className="text-[clamp(24px,4vw,44px)]">
@@ -155,11 +156,11 @@ export function Workbench() {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Button size="sm" variant="outline" onClick={exportBackup}>
+              <Button size="sm" variant="pixel-outline" onClick={exportBackup}>
                 <Download className="w-4 h-4" />
                 导出备份
               </Button>
-              <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+              <Button size="sm" variant="pixel-outline" onClick={() => fileRef.current?.click()}>
                 <RefreshCw className="w-4 h-4" />
                 导入恢复
               </Button>
@@ -170,7 +171,7 @@ export function Workbench() {
                 className="hidden"
                 onChange={(e) => onImportFile(e.target.files?.[0] ?? null)}
               />
-              <Button size="sm" variant="danger" onClick={clearAllData}>
+              <Button size="sm" variant="pixel-danger" onClick={clearAllData}>
                 <Trash2 className="w-4 h-4" />
                 清空
               </Button>
@@ -193,14 +194,14 @@ export function Workbench() {
 
           {/* 布局设置 */}
           <div className="flex items-center justify-end gap-3 flex-wrap">
-            <Button size="sm" variant="outline" onClick={() => setShowLayout((v) => !v)}>
+            <Button size="sm" variant="pixel-outline" onClick={() => setShowLayout((v) => !v)}>
               <Settings2 className="w-4 h-4" />
               布局设置
             </Button>
           </div>
 
           {showLayout && (
-            <div className="card-minimal p-4 flex flex-wrap gap-x-6 gap-y-2">
+            <DnaCard corner="CFG" className="p-4 flex flex-wrap gap-x-6 gap-y-2">
               {WIDGETS.filter((w) => w.id !== 'greeting').map((w) => {
                 const checked = !prefs.hidden.includes(w.id);
                 return (
@@ -218,7 +219,7 @@ export function Workbench() {
                   </label>
                 );
               })}
-            </div>
+            </DnaCard>
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">

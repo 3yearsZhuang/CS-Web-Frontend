@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
+import { DnaCard } from '@/components';
 import { Input } from '@/components/primitives/input';
 import { useLocalStorage } from '../hooks/use-local-storage';
 
@@ -120,7 +121,7 @@ export default function GithubHeatmap() {
   }, [data]);
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
+    <DnaCard corner="GIT" className="p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
           {t('heatmapTitle', { year })}
@@ -136,15 +137,15 @@ export default function GithubHeatmap() {
               {new Date(data.fetched_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="pixel-outline"
             aria-label="refresh"
-            className="p-2 rounded hover:bg-[var(--border)] disabled:opacity-40"
             disabled={loading || notLoggedIn}
             onClick={() => void load(true)}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -162,7 +163,7 @@ export default function GithubHeatmap() {
               if (e.key === 'Enter') bind();
             }}
           />
-          <Button size="sm" onClick={bind}>
+          <Button size="sm" variant="pixel" onClick={bind}>
             绑定
           </Button>
         </div>
@@ -219,6 +220,6 @@ export default function GithubHeatmap() {
           </div>
         </>
       ) : null}
-    </div>
+    </DnaCard>
   );
 }

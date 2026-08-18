@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { AlarmClock } from 'lucide-react';
+import { DnaCard } from '@/components';
 import { useEffect, useState } from 'react';
 
 interface ExamItem {
@@ -70,14 +71,14 @@ export default function ExamCountdown() {
 
   if (!loaded) {
     return (
-      <div className="card-minimal p-5 min-h-[120px] flex items-center justify-center">
+      <DnaCard corner="EXM" className="p-5 min-h-[120px] flex items-center justify-center">
         <span className="text-[13px] text-[var(--muted-foreground)]">…</span>
-      </div>
+      </DnaCard>
     );
   }
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-3">
+    <DnaCard corner="EXM" className="p-5 flex flex-col gap-3">
       <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
         <AlarmClock className="w-4 h-4" />
         {t('examCountdown')}
@@ -118,6 +119,6 @@ export default function ExamCountdown() {
           })}
         </ul>
       )}
-    </div>
+    </DnaCard>
   );
 }

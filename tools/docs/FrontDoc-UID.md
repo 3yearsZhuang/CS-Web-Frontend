@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局；§15.11 统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` 全站主标题/章节标记/分隔落地）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局；§15.11 统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` 全站主标题/章节标记/分隔落地；§15.12 工作台像素化——Workbench 9 widget DNA 卡 + 今日任务索引铁路 + 顶部 CTA 像素化 + 新增 `pixel-danger` 变体）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -662,11 +662,12 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - `/events` 活动时间轴卡片（`<DnaCard corner={index+1}>` 内嵌 `Link`，`isLeft` 交替 + archived 透明度降级）
 - `/community` 精选横滑卡 `featured-topic-strip`（盒装卡 → `dna-card`）
 - `/tools` 工具卡（`dna-card`，available 态保留 `hover:bg` 微染）
+- `/tools` 工作台（Workbench）9 个 widget 盒装卡（`greeting-bar`/`today-tasks`/`github-heatmap`/`llm-widget`/`quick-notes`/`pomodoro`/`exam-countdown`/`llm-usage-stats`/`assistant-chat`）统一经 `<DnaCard corner={…}>`：角标语义 `HI`(问候) / `TSK`(任务) / `GIT`(GitHub) / `AUX`(LLM) / `NOTE`(便签) / `FCS`(番茄钟) / `EXM`(考试) / `MEM`(用量) / `CHAT`(对话)；布局设置面板 `card-minimal`→`<DnaCard corner="CFG">`；非嵌入态独立卡仍保留 `card-minimal`（避免 DnaCard 嵌套）
 - **不适用**：Feed / 主题列表项 `feed-item-card` / `community-topic-item` 是「列表行」（`border-b` 分隔 + 紧凑 padding），非盒装卡，保持列表样式、由 `.pixel-page` 像素化其元数据即可，勿套 `.dna-card`（会撑大行高、破坏列表密度）
 
 ### 15.4 像素按钮
 
-`Button` 组件新增 `pixel` / `pixel-outline` 变体（映射 `.btn-pixel*`）：实色硬阴影 `4px 4px 0 var(--muted-foreground)`（主/次按钮统一）、hover `translate(-2px,-2px)`、active `translate(2px,2px)`、`transition steps(2)`、全令牌适配双主题。首页 CTA、`/about` 与 `/events` 的 CTA 均使用。
+`Button` 组件新增 `pixel` / `pixel-outline` / `pixel-danger` 变体（映射 `.btn-pixel*` / `.btn-pixel-danger*`）：实色硬阴影 `4px 4px 0 var(--muted-foreground)`（主/次按钮统一）、hover `translate(-2px,-2px)`、active `translate(2px,2px)`、`transition steps(2)`、全令牌适配双主题。`pixel-danger` 用 `var(--destructive)` 底 + `var(--destructive-foreground)` 字 + `3px 3px 0` 硬阴影（破坏性操作，如工作台「清空」、删除类 CTA）；首页 CTA、`/about` 与 `/events` 的 CTA 使用 `pixel`/`pixel-outline`，工作台破坏性 CTA 使用 `pixel-danger`。
 
 ### 15.5 首页 Hero 像素层
 
@@ -709,6 +710,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 |------|------|--------|----------|
 | `/about`（信念 / 期望索引列表） | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移 |
 | `/about`（加入流程，由 `/join` 合并而来） | **B DNA 行卡** | `.lst-dna`（`.dna-corner` / `.dna-ttl` / `.dna-mt` / `.dna-arw`） | 左主色硬边条 + 右上角像素编号 + 同款 `steps(3)` 抬升硬阴影；复用 about 四步流程语义 |
+| `/tools` 工作台「今日任务」列表 | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移；逾期/到期状态仍保留红/琥珀色（在 `.idx-mt` 元数据行呈现），`idx-rail` 内置于 DnaCard 时编号遮罩跟随卡面（见 §15.12） |
 | （待定） | C 像素终端 | `.lst-term` | 全像素字体 + 状态点 + 游标，适合数据/日志型列表 |
 
 - **选型边界**：盒装卡 → `<DnaCard>`（§15.3）；列表行 → A/B/C 三档之一（不套 DnaCard）。`/about` 的「六大方向」仍为 DNA **盒装卡**（B 卡片，非列表），二者**不在**本列表选型范围。
@@ -737,6 +739,17 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - **落地范围**：所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`），以及页面级 `section-marker`/`ark-divider` 标记为对应组件（`/notifications`、`/about`、`/community/new`(+`compose-form`)、`/events/[id]`、`/profile`(+`security-tab`/`profile-tab`)、`/tools/resource`(+`submit-resource-modal`)、`/admin`、首页 ark-divider 等）；`tools/exam` 列表区 `ark-divider` 英文后缀改 `<ArkDivider>` 子节点（保留工业分隔视觉，不转 muted 斜体 subtitle）。
 - **排除项**：46 处零散卡片 `<h3>` 一次性标题（保持原样，不在统一范围）；共享组件 `section-nav`/`feed-item-card`/`community-topic-item`/`collapsing-hero`/`admin-events-settings` 内的 `section-marker`/`ark-divider` 不触碰；首页 `GhostTitle as="div"` Hero（含 `TypewriterTitle` 块级子节点）保持 `<GhostTitle>`。
 - **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归。
+
+### 15.12 工作台像素化（Workbench / `/tools`）
+
+`/tools` 页面根 `<main>` 已带 `pixel-page`（元数据层早前接入，§15.2），本次（2026-08-18）把**可见工作台**整体推入融合层（方案 A 完整融合：盒装 widget 转 DNA 卡 + 任务列表转索引铁路 + CTA 转像素按钮 + 可见 SectionMarker）：
+
+- **widget 卡片**：9 个 widget 的 `card-minimal` 盒装容器统一经共享 `<DnaCard corner={…}>`（角标语义见 §15.3 使用方）；均在嵌入态（嵌于 `llm-widget` 的 DnaCard，或 workbench 直接渲染）套 DnaCard；非嵌入态独立分支保留 `card-minimal`（LLM 用量/对话仅在嵌入态渲染，避免 DnaCard 嵌套 DnaCard）
+- **任务列表**：`today-tasks` 的 `<ul>/<li>` 行卡改为 **A 索引铁路** `.idx-rail`（`.idx` 序号 + `.idx-ttl` 标题 + `.idx-mt` 元数据行含逾期/到期态 + `.idx-arw` 箭头）；`idx-rail` 内置于 DnaCard 时，`.idx` 编号遮罩由 `var(--background)` 改为跟随 `.dna-card` 表面（`globals.css` 新增 `.dna-card .idx-rail .idx` 作用域覆盖，双主题自适应）
+- **CTA 按钮**：workbench 顶部 4 个操作（导出/导入/布局设置）转 `pixel-outline`、「清空」（破坏性）转 `pixel-danger`（新增变体，见 §15.4）；各 widget 内按钮（github 刷新、llm 用量入口/保存、对话 newChat/发送、番茄钟 开始/暂停/重置、便签新增）统一转 `pixel`/`pixel-outline`
+- **可见 SectionMarker**：`workbench.tsx` 顶部 section 显式加 `<SectionMarker>[ 01 ] 工作台</SectionMarker>`，与既有 `<Title level={2}>` + `.meta-mono` 副标题并列
+- **新增 CSS 类**：`globals.css` 新增 `.btn-pixel-danger` / `.btn-pixel-danger-sm`（destructive 令牌 + `3px 3px 0` 硬阴影 + `steps(2)`），及 `.dna-card .idx-rail .idx` 作用域覆盖
+- **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归；`pnpm next build` 通过
 
 ---
 

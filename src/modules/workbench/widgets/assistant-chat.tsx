@@ -223,7 +223,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
 
   if (notLoggedIn) {
     return (
-      <div className="card-minimal p-8 text-center">
+      <div className="p-8 text-center">
         <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
       </div>
     );
@@ -239,7 +239,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
             : 'card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto'
         }
       >
-        <Button size="sm" variant="outline" className="justify-center" onClick={newConversation}>
+        <Button size="sm" variant="pixel-outline" className="justify-center" onClick={newConversation}>
           <Plus className="w-4 h-4" /> {t('newChat')}
         </Button>
         {conversations.map((c) => (
@@ -343,6 +343,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
           />
           <Button
             size="sm"
+            variant="pixel"
             aria-label="send"
             className="shrink-0"
             disabled={streaming || !input.trim()}

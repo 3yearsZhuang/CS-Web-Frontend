@@ -133,7 +133,7 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
 
   if (notLoggedIn) {
     return (
-      <div className="card-minimal p-5">
+      <div className="p-5">
         <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
       </div>
     );
@@ -146,7 +146,7 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
           <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
             {t('llmUsageTitle', { days: data?.days ?? 30 })}
           </h3>
-          <Button size="sm" variant="outline" onClick={() => setShowSettings((v) => !v)}>
+          <Button size="sm" variant="pixel-outline" onClick={() => setShowSettings((v) => !v)}>
             <Settings2 className="w-4 h-4" />
             {t('llmSettings')}
           </Button>
@@ -274,7 +274,7 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
             </label>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm" loading={saving} onClick={() => void saveConfig()}>
+            <Button size="sm" variant="pixel" loading={saving} onClick={() => void saveConfig()}>
               <Save className="w-4 h-4" />
               {t('llmSave')}
             </Button>
