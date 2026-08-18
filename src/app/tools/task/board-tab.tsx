@@ -9,7 +9,7 @@
 
 import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading, GhostTitle } from '@/components';
+import { Button, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './use-tasks';
 import { categoryLabel, categoryOptions, TASK_INPUT_CLASS } from './task-shared';
 
@@ -43,9 +43,9 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
 
   return (
     <div>
-      <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+      <Title level={2} className="mb-10 sm:mb-16">
         {t('boardTitle')}
-      </GhostTitle>
+      </Title>
 
       {/* 分类筛选 */}
       {categories.length > 0 && (

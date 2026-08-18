@@ -15,7 +15,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, Pagination, SectionLoading, GhostTitle } from '@/components';
+import { Button, Pagination, SectionLoading, ArkDivider, Title } from '@/components';
 import { motion } from 'motion/react';
 import { useResources } from './use-resources';
 import { ResourceCard } from './resource-card';
@@ -64,27 +64,17 @@ export default function ResourcePage() {
         }
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${t('pageTitle')}`}
+            subtitle={`/ ${t('pageTitleEn')}`}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('pageTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              / {t('pageTitleEn')}
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -114,13 +104,11 @@ export default function ResourcePage() {
       >
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+            <Title level={2} className="mb-4"
               echo={`${res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}`}>
               {res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}
-              <span className="ark-divider ml-2">
-                {res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}
-              </span>
-            </GhostTitle>
+              <ArkDivider className="ml-2">{res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}</ArkDivider>
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {res.loading
                 ? '// 加载中...'

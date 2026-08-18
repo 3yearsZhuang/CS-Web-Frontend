@@ -10,7 +10,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar } from '@/components/avatar';
 import { TechTagSelector } from '@/components/tech-tag-selector';
-import { Button } from '@/components';
+import { Button, ArkDivider } from '@/components';
 import { AVATAR_PRESETS } from '@/shared/config';
 import { useTranslations } from 'next-intl';
 import { EASE, INPUT_CLASS } from '@/shared/utils/ui-constants';
@@ -50,7 +50,7 @@ export function ProfileTab(props: ProfileTabProps) {
         <div>
           <div className="meta-mono mb-4 flex items-center justify-between text-[var(--muted-foreground)]">
             <span>{t('current')}</span>
-            <span className="ark-divider">Avatar</span>
+            <ArkDivider>Avatar</ArkDivider>
           </div>
           <div className="flex items-center gap-6">
             <Avatar

@@ -13,7 +13,7 @@ import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/
 import { PageHeaderBackground } from '@/components/layout/page-header-background';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { SectionLoading, GhostTitle } from '@/components';
+import { SectionLoading, SectionMarker, Title } from '@/components';
 import { useTranslations } from 'next-intl';
 import { useNotifications } from './use-notifications';
 import { NotificationCenter } from './notification-center';
@@ -76,31 +76,21 @@ function NotificationsContent() {
           <StaggerContainer onComplete={onRevealComplete}>
             <div className={`grid grid-cols-12 gap-0 ${heroCollapsed ? 'items-center mb-0' : 'mb-0 sm:mb-0'}`}>
               <div className={`col-span-12 md:col-span-2 ${heroCollapsed ? 'mb-0' : 'mb-4 md:mb-0'}`}>
-                <div className="section-marker">[ 00 ]</div>
+                <SectionMarker>[ 00 ]</SectionMarker>
               </div>
               <div className="col-span-12 md:col-span-10">
                 <RevealTitle>
-                  <GhostTitle
-                    as="h1"
-                    className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-                      heroCollapsed
-                        ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                        : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
-                    }`}
-                    onClick={heroCollapsed ? onTitleClick : undefined}
+                  <Title
+                    level={1}
+                    collapsed={heroCollapsed}
+                    collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+                    expandedSize="text-[clamp(32px,7vw,72px)] leading-[1.05]"
                     echo={`${t('centerTitle')} ${t('centerTitleEn')}`}
+                    subtitle={t('centerTitleEn')}
+                    onClick={heroCollapsed ? onTitleClick : undefined}
                   >
                     {t('centerTitle')}
-                    <span
-                      className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                        heroCollapsed
-                          ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                          : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-                      }`}
-                    >
-                      {t('centerTitleEn')}
-                    </span>
-                  </GhostTitle>
+                  </Title>
                 </RevealTitle>
                 <div
                   className={`overflow-hidden transition-all hero-reveal ${

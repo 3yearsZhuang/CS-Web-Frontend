@@ -9,6 +9,8 @@ export { DnaCard } from './primitives/dna-card';
 export type { DnaCardProps } from './primitives/dna-card';
 export { GhostTitle } from './primitives/ghost-title';
 export type { GhostTitleProps } from './primitives/ghost-title';
+export { Title, SectionMarker, ArkDivider } from './primitives/title';
+export type { TitleProps, TitleLevel } from './primitives/title';
 export { Pagination } from './primitives/pagination';
 export type { PaginationProps } from './primitives/pagination';
 export { Input } from './primitives/input';

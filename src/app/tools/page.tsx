@@ -7,7 +7,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge, GhostTitle } from '@/components';
+import { Badge, GhostTitle, Title } from '@/components';
 import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -175,27 +175,17 @@ export default function ToolsPage() {
         }}
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${wt('wbTitle')}`}
+            subtitle={wt('wbSubtitle')}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {wt('wbTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {wt('wbSubtitle')}
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -225,11 +215,11 @@ export default function ToolsPage() {
       <section data-section-nav="01|工具列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+            <Title level={2} className="mb-4"
               echo={`${activeTab === 'available' ? wt('allTools') : t('sectionTitleDeveloping')}`}>
               {activeTab === 'available' && wt('allTools')}
               {activeTab === 'developing' && t('sectionTitleDeveloping')}
-            </GhostTitle>
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'available' && wt('toolsHint')}
               {activeTab === 'developing' && t('sectionDescDeveloping')}

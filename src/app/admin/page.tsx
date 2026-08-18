@@ -12,6 +12,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { ToastProvider } from '@/components/feedback/toast';
+import { ArkDivider } from '@/components';
 import { AdminUsersPanel } from '@/modules/admin/ui/admin-users-panel';
 import { AdminMessagesPanel } from '@/modules/admin/ui/admin-messages-panel';
 import { AdminLogsPanel } from '@/modules/admin/ui/admin-logs-panel';
@@ -193,7 +194,7 @@ export default function AdminPage() {
           >
             <RevealItem>
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 meta-mono text-[12px] text-[var(--muted-foreground)]">
-                <span className="ark-divider">3yearsZ Design</span>
+                <ArkDivider>3yearsZ Design</ArkDivider>
                 <span>{t('currentAdmin', { email: currentUser.email })}</span>
               </div>
             </RevealItem>

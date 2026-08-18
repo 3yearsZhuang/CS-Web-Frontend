@@ -17,7 +17,7 @@ import { FloatingCapsuleSidebar, type CapsuleTab } from '@/components/layout/flo
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SectionLoading, GhostTitle } from '@/components';
+import { Button, SectionLoading, ArkDivider, Title } from '@/components';
 import { formatDate } from '@/shared/utils/utils';
 import { useProfile } from '@/modules/user/ui/hooks/use-profile';
 import { ProfileTab } from './profile-tab';
@@ -133,15 +133,15 @@ function ProfileContent() {
           </RevealItem>
           <div className="flex-1 min-w-0">
             <RevealTitle>
-              <GhostTitle
-                as="h1"
-                className={`display-serif text-[var(--foreground)] break-words transition-all hero-reveal ${
-                  hero.collapsed
-                    ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                    : 'text-[clamp(32px,6vw,72px)] leading-[1.05] sm:leading-[0.95]'
-                }`}
-                onClick={hero.collapsed ? hero.onTitleClick : undefined}
+              <Title
+                level={1}
+                collapsed={hero.collapsed}
+                collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+                expandedSize="text-[clamp(32px,6vw,72px)] leading-[1.05] sm:leading-[0.95]"
+                className="break-words"
                 echo={`${user.displayName || `${t('unnamed')} ${t('unnamedUser')}`} ${t('identityEn')}`}
+                subtitle={t('identityEn')}
+                onClick={hero.collapsed ? hero.onTitleClick : undefined}
               >
                 {user.displayName || (
                   <>
@@ -149,16 +149,7 @@ function ProfileContent() {
                     <span className="text-[var(--muted-foreground)]"> {t('unnamedUser')}</span>
                   </>
                 )}
-                <span
-                  className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                    hero.collapsed
-                      ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                      : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-                  }`}
-                >
-                  {t('identityEn')}
-                </span>
-              </GhostTitle>
+              </Title>
             </RevealTitle>
             <div
               className={`overflow-hidden transition-all hero-reveal ${
@@ -198,9 +189,9 @@ function ProfileContent() {
             <div className="grid grid-cols-12 gap-0 items-end mb-8 sm:mb-12">
               <div className="col-span-12">
                 <RevealTitle>
-                  <GhostTitle
-                    as="h1"
-                    className="display-serif text-[clamp(26px,4.5vw,48px)] text-[var(--foreground)] leading-[1.1] sm:leading-[1]"
+                  <Title
+                    level={1}
+                    className="text-[clamp(26px,4.5vw,48px)] leading-[1.1] sm:leading-[1]"
                     echo={`${activeTab === 'profile' ? t('profileTitle') : activeTab === 'activity' ? t('activityTitle') : t('joinTitle')} ${activeTab === 'profile' ? t('profileEn') : activeTab === 'activity' ? t('activityEn') : t('joinEn')}`}
                   >
                     {activeTab === 'profile'
@@ -217,11 +208,11 @@ function ProfileContent() {
                           ? t('activityEn')
                           : t('joinEn')}
                     </span>
-                  </GhostTitle>
+                  </Title>
                 </RevealTitle>
                 <RevealItem>
                   <div className="mt-4 meta-mono text-[12px] text-[var(--muted-foreground)]">
-                    <span className="ark-divider">{t('userPanel')}</span>
+                    <ArkDivider>{t('userPanel')}</ArkDivider>
                   </div>
                 </RevealItem>
               </div>

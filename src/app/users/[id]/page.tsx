@@ -8,7 +8,7 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SkeletonBlock, GhostTitle } from '@/components';
+import { Button, SkeletonBlock, Title } from '@/components';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -183,18 +183,16 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
               size={hero.collapsed ? 32 : 64}
             />
             <div>
-              <GhostTitle
-                as="h1"
-                className={`display-serif transition-all duration-700 ease-[var(--ease-ark)] ${
-                  hero.collapsed
-                    ? 'text-xl cursor-pointer hover:text-[var(--primary)]'
-                    : 'text-4xl md:text-5xl'
-                }`}
-                onClick={hero.collapsed ? hero.onTitleClick : undefined}
+              <Title
+                level={1}
+                collapsed={hero.collapsed}
+                collapsedSize="text-xl cursor-pointer hover:text-[var(--primary)] duration-700 ease-[var(--ease-ark)]"
+                expandedSize="text-4xl md:text-5xl duration-700 ease-[var(--ease-ark)]"
                 echo={displayName}
+                onClick={hero.collapsed ? hero.onTitleClick : undefined}
               >
                 {displayName}
-              </GhostTitle>
+              </Title>
               <p className="meta-mono text-[var(--muted-foreground)] mt-1">
                 <span className={user.role === 'root' ? 'text-[var(--destructive)]' : user.role === 'admin' ? 'text-[var(--primary)]' : undefined}>
                   {user.role === 'root' ? t('roleRoot') : user.role === 'admin' ? t('roleAdmin') : t('roleMember')}
@@ -225,7 +223,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <GhostTitle as="h2" className="display-serif text-3xl mb-8">{t('profileTitle')}</GhostTitle>
+                <Title level={2} className="text-3xl mb-8">{t('profileTitle')}</Title>
 
                 {/* 技术标签 */}
                 <div className="mb-8">
@@ -312,7 +310,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <GhostTitle as="h2" className="display-serif text-3xl mb-8">{t('examTitle')}</GhostTitle>
+                <Title level={2} className="text-3xl mb-8">{t('examTitle')}</Title>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                   <div className="card-minimal p-4 text-center">
                     <div className="display-serif text-2xl">{stats.examCount}</div>
@@ -343,7 +341,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <GhostTitle as="h2" className="display-serif text-3xl mb-8">{t('recentTopics')}</GhostTitle>
+                <Title level={2} className="text-3xl mb-8">{t('recentTopics')}</Title>
                 {topics.length > 0 ? (
                   <div className="space-y-2">
                     {topics.map((topic) => (

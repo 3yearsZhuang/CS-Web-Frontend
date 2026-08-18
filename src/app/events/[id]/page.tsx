@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading, GhostTitle } from '@/components';
+import { Button, SectionLoading, SectionMarker, Title } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -234,27 +234,17 @@ export default function EventDetailPage() {
         }
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(32px,7vw,72px)] leading-[1.05]"
             echo={`${event.title} / Event`}
+            subtitle="/ Event"
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {event.title}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              / Event
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <div
           className={`overflow-hidden transition-all hero-reveal ${
@@ -310,7 +300,7 @@ export default function EventDetailPage() {
             {event.description && (
               <RevealItem>
                 <section className="mb-12 sm:mb-16">
-                  <div className="section-marker mb-4">Overview</div>
+                  <SectionMarker className="mb-4">Overview</SectionMarker>
                   <p className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] leading-[1.6] max-w-3xl">
                     {event.description}
                   </p>
@@ -334,7 +324,7 @@ export default function EventDetailPage() {
             {/* 活动详情内容 */}
             <RevealItem>
               <section className="mb-12 sm:mb-16">
-                <div className="section-marker mb-6">Details</div>
+                <SectionMarker className="mb-6">Details</SectionMarker>
                 {event.contentMarkdown ? (
                   <div className="prose-ark max-w-none">
                     <MarkdownRenderer content={event.contentMarkdown} />

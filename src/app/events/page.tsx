@@ -17,7 +17,7 @@ import type { EventItem } from '@/modules/events/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading, GhostTitle } from '@/components';
+import { Button, SectionLoading, Title } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -190,29 +190,19 @@ export default function EventsPage() {
         }}
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
+            subtitle={t('heroTitleEn')}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle1')}
             <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             {t('heroTitle3')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -244,11 +234,11 @@ export default function EventsPage() {
             {activeTab === 'timeline' && (
               <div>
                 <div className="mb-10 sm:mb-16">
-                  <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]"
+                  <Title level={2}
                     echo={`${t('sectionTitle1')}${t('sectionTitle2')}`}>
                     {t('sectionTitle1')}
                     <span className="text-[var(--primary)]">{t('sectionTitle2')}</span>
-                  </GhostTitle>
+                  </Title>
                 </div>
 
                 {/* 筛选区域 — 同时作用于日历与时间线 */}
@@ -282,12 +272,12 @@ export default function EventsPage() {
             {/* Tab 02 — Next CTA */}
             {activeTab === 'next' && (
               <div>
-                <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16"
+                <Title level={2} className="mb-10 sm:mb-16"
                   echo={`${t('nextTitle1')}${t('nextTitle2')}？`}>
                   {t('nextTitle1')}
                   <span className="text-[var(--primary)]">{t('nextTitle2')}</span>
                   ？
-                </GhostTitle>
+                </Title>
                 <div className="border-t border-[var(--border)] pt-10 sm:pt-16">
                   <p className="text-[15px] sm:text-[16px] text-[var(--muted-foreground)] leading-[1.8] max-w-2xl mb-8">
                     {t('nextDesc')}

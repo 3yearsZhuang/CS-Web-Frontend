@@ -18,7 +18,7 @@ import { CommunitySidebarTrending } from '@/modules/community/ui/community-sideb
 import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip';
 import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
-import { Button, Pagination, SectionLoading, GhostTitle } from '@/components';
+import { Button, Pagination, SectionLoading, GhostTitle, Title } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCommunityFeed } from './use-community-feed';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -105,15 +105,14 @@ function CommunityPageContent() {
         }}
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
+            subtitle={t('heroTitleEn')}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle1')}
             <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
@@ -124,16 +123,7 @@ function CommunityPageContent() {
             >
               {t('heroTitle3')}
             </span>
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -168,14 +158,14 @@ function CommunityPageContent() {
             <div className="flex-1 md:px-6 lg:px-10 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
                 <div>
-                  <GhostTitle as="h2" className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+                  <Title level={2} className="mb-4"
                     echo={hasSearch ? t('searchResults') : t('communityFeed')}>
                     {hasSearch ? t('searchResults') : t('communityFeed')}
                     {hasSearch && searchQuery.trim() && (
                       <span className="text-[var(--primary)] ml-2">「{searchQuery.trim()}」</span>
                     )}
                     {selectedTag && <span className="text-[var(--primary)] ml-2">#{selectedTag}</span>}
-                  </GhostTitle>
+                  </Title>
                   <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px]">
                     {hasSearch
                       ? loading

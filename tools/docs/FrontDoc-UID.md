@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局；§15.11 统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` 全站主标题/章节标记/分隔落地）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -725,12 +725,26 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - **安全约束**：虚影 `z-index` 低于真标题、`pointer-events:none`、`aria-hidden`，纯装饰；颜色走 `--muted-foreground` 低透明度、双主题自适应；`clamp()` 控字号、小偏移 `translate(8px,12px)` 避免移动端显脏；折叠态标题虚影随真标题同步收缩。
 - **CSS**：`globals.css` 中 `.ghost-title{position:relative}`、`.ghost-title__echo`（绝对定位 z-0、像素字体、offset、opacity 0.2）、`.ghost-title__content`（z-1）、`.ghost-title > :last-child`（z-1）。
 
+### 15.11 统一标题组件（`<Title>` / `<SectionMarker>` / `<ArkDivider>`）
+
+- **背景**：§15.10 已把「像素错位虚影」沉淀为 `<GhostTitle>` 并全站主标题落地。在此之上，进一步把**主标题 + 章节标记 + 英文副标题 + 工业分隔**四类排印元素统一为共享组件，消除零散内联 `<span>` 标题与手写 `section-marker`/`ark-divider` 类的不一致。
+- **共享组件**（均桶导出 `src/components/index.ts`）：
+  - `<Title>`（`primitives/title.tsx`，构建于 `<GhostTitle>`）：`level`（1–4 字号预设，默认 2）、`as`（默认 `h{level}`）、`className`、`children`、`eyebrow`（可选眉标）、`subtitle`（**内联** muted 斜体英文后缀，渲染在标题内 `align-baseline`，与既有 Hero 内联英文 span 视觉一致）、`ghost`（默认 `level<=2` 启用虚影）、`collapsed`/`collapsedSize`/`expandedSize`（Hero 折叠动画，尺寸串原样透传以像素级保真）、`echo`、`wrapContent`、`...rest`（透传 `onClick`）。
+    - **尺寸守卫**：调用方 `className` 已含 `text-*` 字号工具类时，`<Title>` **不**追加 `LEVEL_PRESET`（避免自定义字号标题上的 Tailwind 字号冲突）。
+    - **Hero 迁移范式**：把内联英文后缀 `<span className="display-serif italic text-[var(--muted-foreground)] ...">` 抽为 `subtitle={...}`；折叠态尺寸串原样传入 `collapsedSize`/`expandedSize`。
+  - `<SectionMarker>`：包裹 `.section-marker` 数字章节标记（`[ 01 ]` 风）。**仅替换 `<div className="section-marker">`**——`.section-marker` 未设 `display`，span→div 会改变行内/块级；首页 `[ 00 ] — Index` 因是 `<span>` 行内标记，保持原样。
+  - `<ArkDivider>`：包裹 `.ark-divider` 工业双斜杠分隔（`//` 风）。`.ark-divider` 强制 `inline-flex`，故 span↔div 包裹视觉一致。
+- **落地范围**：所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`），以及页面级 `section-marker`/`ark-divider` 标记为对应组件（`/notifications`、`/about`、`/community/new`(+`compose-form`)、`/events/[id]`、`/profile`(+`security-tab`/`profile-tab`)、`/tools/resource`(+`submit-resource-modal`)、`/admin`、首页 ark-divider 等）；`tools/exam` 列表区 `ark-divider` 英文后缀改 `<ArkDivider>` 子节点（保留工业分隔视觉，不转 muted 斜体 subtitle）。
+- **排除项**：46 处零散卡片 `<h3>` 一次性标题（保持原样，不在统一范围）；共享组件 `section-nav`/`feed-item-card`/`community-topic-item`/`collapsing-hero`/`admin-events-settings` 内的 `section-marker`/`ark-divider` 不触碰；首页 `GhostTitle as="div"` Hero（含 `TypewriterTitle` 块级子节点）保持 `<GhostTitle>`。
+- **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归。
+
 ---
 
 ## 变更记录
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-18 | **统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` + 全站主标题/章节标记/分隔统一**：① 新建 `<Title>`（`primitives/title.tsx`，构建于 `<GhostTitle>`，`level` 1–4、`subtitle` 内联英文后缀、`collapsed`+`collapsedSize`/`expandedSize` Hero 折叠动画、`ghost` 默认 `level<=2`、`...rest` 透传 `onClick`；含**尺寸守卫**——调用方 `className` 已含 `text-*` 时不追加预设）并桶导出；② 所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`）迁移到 `<Title>`，内联英文后缀抽为 `subtitle`；③ 页面级 `section-marker` `<div>`→`<SectionMarker>`、`ark-divider`→`<ArkDivider>`（`.ark-divider` 强制 `inline-flex` 故 span↔div 视觉一致；`.section-marker` 未设 `display` 故仅替换 `<div>`，首页行内 `[ 00 ]` span 保持）；④ 排除 46 处零散卡片 `<h3>` 与共享组件内标记。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.11 新增） |
 | 2026-08-18 | **标题虚影全量应用 + 提炼共享组件 `<GhostTitle>`**：① 新建 `<GhostTitle>`（`primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`），支持纯文本自动虚影 / 复杂节点 `echo` / 块级 `wrapContent=false` / `...rest` 透传 `onClick`（折叠 Hero）；② 虚影由 Hero 专用扩展至**全站主标题**——所有页面 Hero 主标题与大号章节标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 各 tab 区等）；`globals.css` `.ghost-title` 去掉强制 `inline-block`、新增 `.ghost-title__content`；③ 排除 admin / 卡片·列表项 / 统计数字 / navbar / 弹窗小标题 / markdown 标题。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 已更新） |
 | 2026-08-18 | **`/about` process 标签页精简 + 步骤/表单左右布局**：① 删除「详细步骤文章（C 流程行）」——`STEPS` 常量与 `StepItem` 接口一并移除，`processSection` 子标题不再渲染；② 仅保留「加入流程」**B DNA 行卡**（`JOIN_STEPS`）作为步骤呈现；③ process 标签页改为 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` 同屏双栏——左栏「加入流程（`.lg:col-span-5`）」、右栏「报名表（`.lg:col-span-7`）」，移动端单列（步骤在上、表单在下）。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.9 选型边界 / 双栏说明已更新） |
 | 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |

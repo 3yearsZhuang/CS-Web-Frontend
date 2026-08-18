@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge, GhostTitle } from '@/components';
+import { Badge, Title, ArkDivider } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -126,27 +126,17 @@ export default function ExamListPage() {
         }
       >
         <RevealTitle>
-          <GhostTitle
-            as="h1"
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
-            onClick={hero.collapsed ? hero.onTitleClick : undefined}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${t('heroTitle')} ${t('heroTitleEn')}`}
+            subtitle={t('heroTitleEn')}
+            onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </GhostTitle>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -175,20 +165,20 @@ export default function ExamListPage() {
       <section data-section-nav="01|考试列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <GhostTitle
-              as="h2"
-              className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4"
+            <Title
+              level={2}
+              className="text-[clamp(28px,5vw,56px)] mb-4"
               echo={activeTab === 'ongoing' ? `${t('listOngoing')} ${t('listOngoingEn')}` : activeTab === 'upcoming' ? `${t('listUpcoming')} ${t('listUpcomingEn')}` : `${t('listEnded')} ${t('listEndedEn')}`}
             >
               {activeTab === 'ongoing' && t('listOngoing')}
               {activeTab === 'upcoming' && t('listUpcoming')}
               {activeTab === 'ended' && t('listEnded')}
-              <span className="ark-divider ml-2">
+              <ArkDivider className="ml-2">
                 {activeTab === 'ongoing' && t('listOngoingEn')}
                 {activeTab === 'upcoming' && t('listUpcomingEn')}
                 {activeTab === 'ended' && t('listEndedEn')}
-              </span>
-            </GhostTitle>
+              </ArkDivider>
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'ongoing' && t('countOngoing', { count: filteredExams.length })}
               {activeTab === 'upcoming' && t('countUpcoming', { count: filteredExams.length })}

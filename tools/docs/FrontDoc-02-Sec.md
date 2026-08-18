@@ -333,11 +333,11 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 ## 4.3 例外登记（Exception Register）
 
-> ℹ️ 例外登记条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 例外登记条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ## 4.4 标准更新积压（Backlog）
 
-> ℹ️ 标准更新积压（Backlog）条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 标准更新积压（Backlog）条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ## 4.5 验证收据
 

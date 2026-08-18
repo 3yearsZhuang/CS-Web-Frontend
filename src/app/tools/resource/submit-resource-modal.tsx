@@ -10,7 +10,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
+import { Button, ArkDivider } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
@@ -54,7 +54,7 @@ export function SubmitResourceModal(props: ResourcesState) {
             <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
               <h2 className="display-serif text-[20px] text-[var(--foreground)]">
                 {t('submit')}
-                <span className="ark-divider ml-2">Submit</span>
+                <ArkDivider className="ml-2">Submit</ArkDivider>
               </h2>
               <button
                 onClick={closeSubmit}

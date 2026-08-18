@@ -13,7 +13,7 @@ import { StarfieldCanvas } from '@/components/effects/starfield-canvas';
 import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
-import { Button, GhostTitle } from '@/components';
+import { Button, GhostTitle, ArkDivider } from '@/components';
 import { BootScreen } from '@/components/effects/boot-screen';
 import { RevealItem, TypewriterTitle, StaggerContainer } from '@/components/effects/motion-primitives';
 import { useAuth } from '@/shared/hooks/use-auth';
@@ -200,9 +200,7 @@ export default function Home() {
           <span className="section-marker">[ 00 ] — Index</span>
           {/* ark-divider 的 display:inline-flex 会覆盖 Tailwind hidden，用外层包裹控制显隐 */}
           <div className="hidden md:block">
-            <span className="ark-divider">
-              {t('est')}
-            </span>
+            <ArkDivider>{t('est')}</ArkDivider>
           </div>
         </div>
       </div>
