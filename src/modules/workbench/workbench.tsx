@@ -30,11 +30,21 @@ import { Button } from '@/components/primitives/button';
 import { DnaCard, GhostTitle, SectionMarker, Title } from '@/components';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS, type WorkbenchWidget } from './widget-registry';
-import type { WidgetSizeSpan } from './types';
+import { WIDGET_SIZE_SPECS, GRID_COLS, type WidgetSizeKey } from './types';
+import GreetingBar from './widgets/greeting-bar';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
-const SIZE_SPAN: Record<'sm' | 'md' | 'lg', WidgetSizeSpan> = { sm: 4, md: 8, lg: 12 };
-const SIZE_ORDER: Array<'sm' | 'md' | 'lg'> = ['sm', 'md', 'lg'];
+/** 每卡尺寸规格选项的有序展示顺序（布局面板按钮按此排列） */
+const SIZE_ORDER: WidgetSizeKey[] = [
+  '1x1',
+  '1x2',
+  '2x1',
+  '2x2',
+  '1x3',
+  '2x3',
+  '3x2',
+  'full',
+];
 
 const BACKUP_PREFIX = 'wb_';
 const BACKUP_KEYS = ['wb_tasks', 'wb_notes', 'wb_pomodoro_settings', 'wb_pomodoro_state'];
@@ -44,8 +54,21 @@ interface WidgetPrefs {
   hidden: string[];
   /** 用户自定义排序（覆盖 registry 声明序）；缺失的 id 按 registry 顺序补在末尾 */
   order: string[];
-  /** 每卡尺寸档：col-span 4 / 8 / 12，缺省取 registry.defaultSpan */
-  sizes: Record<string, 'sm' | 'md' | 'lg'>;
+  /** 每卡尺寸规格 key（栅格 {w,h}）；缺省取 registry.defaultSize */
+  sizes: Record<string, WidgetSizeKey>;
+}
+
+/** 取 widget 默认尺寸 key（无自定义时） */
+function defaultSizeFor(w: WorkbenchWidget): WidgetSizeKey {
+  return w.defaultSize;
+}
+
+/** 解析某 widget 当前生效的尺寸规格 key（用于高亮按钮 / 渲染）。
+ *  若偏好值非法（如旧版本 sm/md/lg 残留）则回退默认，保证旧 localStorage 数据可平滑迁移。 */
+function sizeKeyFor(w: WorkbenchWidget, prefs: WidgetPrefs): WidgetSizeKey {
+  const v = prefs.sizes[w.id];
+  if (v && v in WIDGET_SIZE_SPECS) return v;
+  return defaultSizeFor(w);
 }
 
 /** 收集所有工作台 localStorage 数据 → 备份对象 */
@@ -82,12 +105,35 @@ function restoreBackup(obj: unknown): boolean {
 
 export function Workbench() {
   const t = useTranslations('workbench');
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showLayout, setShowLayout] = useState(false);
+  // dnd-kit 的 useSortable 会生成自增 aria-describedby，SSR/CSR 必不一致导致全局 hydration 失败。
+  // 故网格在挂载后才启用 dnd；SSR 与首屏渲染静态等价的网格（无拖拽属性）。
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [tasksCount] = useLocalStorage<unknown[]>('wb_tasks', []);
   const [notesCount] = useLocalStorage<unknown[]>('wb_notes', []);
   const [prefsRaw, setPrefs] = useLocalStorage<WidgetPrefs>(PREFS_KEY, { hidden: [], order: [], sizes: {} });
+
+  // 正方单元：用 ResizeObserver 测量网格容器实际列宽 → 单元边长 = 列宽，
+  // 使 1×1 永远正方形、1×2 为两横连正方形，任意屏宽严格成立（原则2）。
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [cell, setCell] = useState(120);
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const GAP = 12; // gap-3
+    const measure = () => {
+      const w = el.clientWidth;
+      const cs = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length || GRID_COLS;
+      const side = (w - GAP * (cs - 1)) / cs;
+      setCell(Math.max(72, Math.round(side)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mounted]);
   // 双层防御旧 schema：useLocalStorage 现已对 object 类型做默认浅合并（缺字段回退默认），
   // 但若旧 localStorage 把 order/sizes 存成了非预期类型（如 order 写成字符串），merge 仍不会纠正类型，
   // 故此处再对字段做类型收窄，确保 `prefs.order is not iterable` 在任何畸形数据下都不复现。
@@ -202,11 +248,16 @@ export function Workbench() {
     [orderedWidgets, setPrefs],
   );
 
+  /** 切换某卡尺寸：在当前 sizeOptions 内循环（搭积木的"换块"） */
   const cycleSize = useCallback(
     (id: string) => {
       setPrefs((prev) => {
-        const current = prev.sizes[id] ?? 'md';
-        const next = SIZE_ORDER[(SIZE_ORDER.indexOf(current) + 1) % SIZE_ORDER.length];
+        const w = WIDGETS.find((x) => x.id === id);
+        if (!w) return prev;
+        const opts = w.sizeOptions;
+        const current = prev.sizes[id] ?? w.defaultSize;
+        const idx = opts.indexOf(current);
+        const next = opts[(idx + 1) % opts.length];
         return { ...prev, sizes: { ...prev.sizes, [id]: next } };
       });
     },
@@ -232,27 +283,6 @@ export function Workbench() {
                 {t('wbSubtitle')}
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button size="sm" variant="pixel-outline" onClick={exportBackup}>
-                <Download className="w-4 h-4" />
-                导出备份
-              </Button>
-              <Button size="sm" variant="pixel-outline" onClick={() => fileRef.current?.click()}>
-                <RefreshCw className="w-4 h-4" />
-                导入恢复
-              </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="application/json,.json"
-                className="hidden"
-                onChange={(e) => onImportFile(e.target.files?.[0] ?? null)}
-              />
-              <Button size="sm" variant="pixel-danger" onClick={clearAllData}>
-                <Trash2 className="w-4 h-4" />
-                清空
-              </Button>
-            </div>
           </div>
 
           {notice && (
@@ -263,14 +293,7 @@ export function Workbench() {
             </p>
           )}
 
-          {/* 布局设置：显隐 + 尺寸三档 + 重置 */}
-          <div className="flex items-center justify-end gap-3 flex-wrap">
-            <Button size="sm" variant="pixel-outline" onClick={() => setShowLayout((v) => !v)}>
-              <Settings2 className="w-4 h-4" />
-              布局设置
-            </Button>
-          </div>
-
+          {/* 布局设置面板：由问候卡片内的「布局设置」按钮触发（showLayout 状态） */}
           {showLayout && (
             <DnaCard corner="CFG" className="p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
@@ -283,9 +306,9 @@ export function Workbench() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {WIDGETS.filter((w) => w.id !== 'greeting').map((w) => {
+                {WIDGETS.map((w) => {
                   const checked = !prefs.hidden.includes(w.id);
-                  const size = prefs.sizes[w.id] ?? 'md';
+                  const size = sizeKeyFor(w, prefs);
                   return (
                     <div key={w.id} className="flex items-center gap-2 text-[13px] text-[var(--muted-foreground)]">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -298,7 +321,7 @@ export function Workbench() {
                         <span className="meta-mono text-[11px] uppercase tracking-wider">{w.id}</span>
                       </label>
                       <div className="flex overflow-hidden rounded border border-[var(--border)]">
-                        {SIZE_ORDER.map((s) => (
+                        {w.sizeOptions.map((s) => (
                           <button
                             key={s}
                             type="button"
@@ -320,63 +343,106 @@ export function Workbench() {
             </DnaCard>
           )}
 
-          {/* 主网格：单容器 12 栅格 + auto-flow dense，每卡按 size→col-span，dnd-kit 可拖拽排序 */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start auto-rows-min">
-                {orderedWidgets.map(({ id, component: C, defaultSpan }) => {
-                  const size = prefs.sizes[id] ?? 'md';
-                  const span = SIZE_SPAN[size] ?? defaultSpan;
-                  return (
-                    <SortableWidget key={id} id={id} span={span}>
+          {/* 主网格：手机桌面图标式二维积木，6 列单元 + 固定行高 + dense 自动回填。
+              挂载前渲染静态网格（无 dnd 属性，避免 SSR/CSR hydration mismatch）；挂载后启用 dnd 拖拽排序。 */}
+          {mounted ? (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={orderedWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
+                <div
+                  ref={gridRef}
+                  style={{ gridAutoRows: 'var(--wb-cell)', ['--wb-cell' as string]: `${cell}px` }}
+                  className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 [grid-auto-flow:dense] overflow-hidden"
+                >
+                  {orderedWidgets.map((w) => {
+                    const { id, component: C } = w;
+                    const sizeKey = sizeKeyFor(w, prefs);
+                    const spec = WIDGET_SIZE_SPECS[sizeKey];
+                    return (
+                      <SortableWidget key={id} id={id} w={spec.w} h={spec.h}>
+                        <VisibilityGate componentKey={id}>
+                          {w.id === 'greeting' ? (
+                            <GreetingBar
+                              onExport={exportBackup}
+                              onImport={(f) => onImportFile(f)}
+                              onClear={clearAllData}
+                              onOpenLayout={() => setShowLayout((v) => !v)}
+                            />
+                          ) : (
+                            <C />
+                          )}
+                        </VisibilityGate>
+                      </SortableWidget>
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <div
+              ref={gridRef}
+              style={{ gridAutoRows: 'var(--wb-cell)', ['--wb-cell' as string]: `${cell}px` }}
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 [grid-auto-flow:dense] overflow-hidden"
+            >
+              {orderedWidgets.map((w) => {
+                const { id, component: C } = w;
+                const sizeKey = sizeKeyFor(w, prefs);
+                const spec = WIDGET_SIZE_SPECS[sizeKey];
+                return (
+                  <div
+                    key={id}
+                    style={{ gridColumn: `span ${spec.w} / span ${spec.w}`, gridRow: `span ${spec.h} / span ${spec.h}` }}
+                    className="relative group min-w-0 min-h-0 flex flex-col overflow-hidden"
+                  >
+                    <div className="min-h-0 flex-1 flex flex-col">
                       <VisibilityGate componentKey={id}>
-                        <C />
+                        {w.id === 'greeting' ? (
+                          <GreetingBar
+                            onExport={exportBackup}
+                            onImport={(f) => onImportFile(f)}
+                            onClear={clearAllData}
+                            onOpenLayout={() => setShowLayout((v) => !v)}
+                          />
+                        ) : (
+                          <C />
+                        )}
                       </VisibilityGate>
-                    </SortableWidget>
-                  );
-                })}
-              </div>
-            </SortableContext>
-          </DndContext>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-/** 尺寸档 → 宽高比（仅 lg 起生效，窄屏回落内容自适应），保证同档卡片等长宽；
- *  greeting 为顶部横条（唯一 12 档），豁免等比以避免被压成扁条，改用自适应高度 */
-const SPAN_ASPECT: Record<WidgetSizeSpan, string> = {
-  4: 'lg:aspect-[4/3]',
-  8: 'lg:aspect-[16/9]',
-  12: 'lg:aspect-[21/9]',
-};
-
-/** 可拖拽排序的网格项：包裹 widget，提供拖拽手柄、col-span 与固定宽高比 */
+/** 可拖拽排序的网格项：包裹 widget，提供拖拽手柄、gridColumn/gridRow span（积木块） */
 function SortableWidget({
   id,
-  span,
+  w,
+  h,
   children,
 }: {
   id: string;
-  span: WidgetSizeSpan;
+  /** 占列数（栅格单元） */
+  w: number;
+  /** 占行数（栅格单元） */
+  h: number;
   children: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    gridColumn: `span ${span} / span ${span}`,
+    gridColumn: `span ${w} / span ${w}`,
+    gridRow: `span ${h} / span ${h}`,
     zIndex: isDragging ? 50 : undefined,
     opacity: isDragging ? 0.85 : 1,
   };
-  const aspectClass = id === 'greeting' ? 'lg:min-h-[120px]' : SPAN_ASPECT[span];
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative group min-w-0 flex flex-col ${aspectClass}`}
-    >
+    <div ref={setNodeRef} style={style} className="relative group min-w-0 min-h-0 flex flex-col">
       <button
         type="button"
         aria-label="拖拽排序"

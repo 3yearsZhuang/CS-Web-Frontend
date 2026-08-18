@@ -368,6 +368,8 @@ body {
  * 阴影用 color-mix 走主题令牌（深色琥珀 / 浅色蓝），双主题自适应。 */
 .dna-card {
   position: relative;
+  /* 原则1：卡片内元素不溢出卡片（内容裁切在卡内） */
+  overflow: hidden;
   /* 表面底色：foreground 8% 抬升（深色 ≈ #141414 接近 demo #131313；浅色 ≈ 微染近白） */
   background: color-mix(in srgb, var(--foreground) 8%, var(--background));
   /* 边框：foreground 14%（深色 ≈ #242424 接近 demo #262626） */

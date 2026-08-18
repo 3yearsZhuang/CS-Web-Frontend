@@ -19,6 +19,7 @@ import { RevealItem, TypewriterTitle, StaggerContainer } from '@/components/effe
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { MemberItem } from '@/modules/community/types';
 
 /** 莫比乌斯环响应式配置 — 按断点分级
@@ -103,12 +104,9 @@ export default function Home() {
 
   // 挂载时获取所有注册用户
   useEffect(() => {
-    fetch('/api/community/members')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.members) setAllMembers(data.members as MemberItem[]);
-      })
-      .catch(() => {});
+    apiRequest<{ members: MemberItem[] }>('/api/community/members').then((r) => {
+      if (r.ok && r.data?.members) setAllMembers(r.data.members as MemberItem[]);
+    });
   }, []);
 
   /** 判断是否为 AdminAvatar */

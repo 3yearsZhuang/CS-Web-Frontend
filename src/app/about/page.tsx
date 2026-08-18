@@ -16,6 +16,7 @@ import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { TechTagSelector } from '@/components/tech-tag-selector';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type AboutTab = 'belief' | 'directions' | 'process';
 
@@ -106,8 +107,8 @@ export default function AboutPage() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch('/api/join/mine').then(async (r) => ({ ok: r.ok, status: r.status, data: r.ok ? await r.json() : null })),
-      fetch('/api/profile').then(async (r) => ({ ok: r.ok, data: r.ok ? await r.json() : null })),
+      apiRequest<{ applications?: ExistingApplication[] }>('/api/join/mine'),
+      apiRequest<{ user: { displayName?: string; techTags?: string[] } }>('/api/profile'),
     ]).then(([mineRes, profileRes]) => {
       if (cancelled) return;
       // 未登录（401）不再跳转登录页，游客可直接填写表单
@@ -154,10 +155,9 @@ export default function AboutPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/join', {
+      const r = await apiRequest('/api/join', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           applicantName: form.applicantName.trim(),
           studentId: form.studentId.trim(),
           major: form.major.trim(),
@@ -165,22 +165,22 @@ export default function AboutPage() {
           reason: form.reason.trim(),
           contactQq: form.contactQq.trim() || undefined,
           contactPhone: form.contactPhone.trim() || undefined,
-        }),
+        },
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setMessage({ type: 'error', text: data.error || tJoin('submitFailed') });
+      if (!r.ok) {
+        setMessage({ type: 'error', text: r.error ?? tJoin('submitFailed') });
         return;
       }
 
+      const data = r.data as { application?: ExistingApplication } | null;
       setMessage({
         type: 'success',
         text: loggedIn ? tJoin('submitSuccessLoggedIn') : tJoin('submitSuccessGuest'),
       });
       // 将新申请加入已有列表
-      if (data.application) {
-        setExistingApps((prev) => [data.application, ...prev]);
+      if (data?.application) {
+        setExistingApps((prev) => [data.application!, ...prev]);
       }
       setForm({
         applicantName: '',

@@ -19,6 +19,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useEffect, useMemo, useState } from 'react';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type ToolTab = 'available' | 'developing' | 'admin';
 
@@ -123,11 +124,11 @@ export default function ToolsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
+    apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' })
+      .then((r) => {
+        if (r.status === 401) return null;
+        if (!r.ok) return null;
+        return r.data;
       })
       .then((data) => {
         if (cancelled || !data) return;

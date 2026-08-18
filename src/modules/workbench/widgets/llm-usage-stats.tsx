@@ -10,6 +10,7 @@ import { Activity, Gauge, Settings2, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface LlmUsage {
   ok: boolean;
@@ -50,26 +51,20 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
   const [saved, setSaved] = useState(false);
 
   const loadUsage = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workbench/stats/llm-usage?days=30', { cache: 'no-store' });
-      if (res.status === 401) {
-        setNotLoggedIn(true);
-        return;
-      }
-      if (!res.ok) return;
-      const json = (await res.json()) as LlmUsage;
-      setData(json);
-    } catch {
-      // 静默
+    const r = await apiRequest<LlmUsage>('/api/workbench/stats/llm-usage?days=30', { cache: 'no-store' });
+    if (r.status === 401) {
+      setNotLoggedIn(true);
+      return;
     }
+    if (!r.ok) return;
+    setData(r.data);
   }, []);
 
   const loadConfig = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workbench/llm-config', { cache: 'no-store' });
-      if (!res.ok) return;
-      const json = (await res.json()) as LlmConfigResp;
-      if (json.ok && json.configured) {
+    const r = await apiRequest<LlmConfigResp>('/api/workbench/llm-config', { cache: 'no-store' });
+    if (!r.ok) return;
+    const json = r.data;
+    if (json && json.ok && json.configured) {
         setForm((prev) => ({
           ...prev,
           provider: json.provider ?? 'openai',
@@ -78,9 +73,6 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
         }));
         setMasked(json.apiKeyMasked ?? '');
       }
-    } catch {
-      // 静默
-    }
   }, []);
 
   useEffect(() => {
@@ -91,17 +83,16 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
   const saveConfig = useCallback(async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/workbench/llm-config', {
+      const r = await apiRequest('/api/workbench/llm-config', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           provider: form.provider,
           apiKey: form.apiKey.trim(),
           baseUrl: form.baseUrl.trim(),
           model: form.model.trim() || 'gpt-4o-mini',
-        }),
+        },
       });
-      if (res.ok) {
+      if (r.ok) {
         setForm((prev) => ({ ...prev, apiKey: '' }));
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);

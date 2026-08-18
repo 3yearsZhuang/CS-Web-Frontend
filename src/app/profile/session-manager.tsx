@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useSWRConfig } from 'swr';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 会话记录 */
 interface SessionItem {
@@ -35,20 +36,18 @@ export function SessionManager() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/sessions')
-      .then(async (res) => {
-        if (!res.ok) throw new Error(t('loadFailed'));
-        const data = await res.json();
-        if (cancelled) return;
-        setSessions(data.sessions || []);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const load = async () => {
+      const r = await apiRequest<{ sessions?: SessionItem[] }>('/api/sessions');
+      if (cancelled) return;
+      if (!r.ok) {
+        setError(r.error ?? t('loadFailed'));
+        return;
+      }
+      setSessions(r.data?.sessions || []);
+    };
+    void load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -57,15 +56,12 @@ export function SessionManager() {
   const handleDelete = async (sessionId: string) => {
     setDeletingId(sessionId);
     try {
-      const res = await fetch('/api/sessions', {
+      const r = await apiRequest('/api/sessions', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: { sessionId },
       });
-      if (!res.ok) throw new Error(t('deleteFailed'));
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    } catch {
-      // 静默失败
+      // 失败静默忽略（等价于原 .catch(() => {}) 的 if(!ok) skip）
+      if (r.ok) setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } finally {
       setDeletingId(null);
     }
@@ -83,12 +79,14 @@ export function SessionManager() {
 
     setRevokingAll(true);
     try {
-      const res = await fetch('/api/sessions', {
+      const r = await apiRequest('/api/sessions', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ all: true }),
+        body: { all: true },
       });
-      if (!res.ok) throw new Error(t('logoutAllFailed'));
+      if (!r.ok) {
+        setRevokingAll(false);
+        return;
+      }
       // 全部撤销后当前设备也失效，刷新登录态并跳转登录页
       await mutate('/api/auth/me');
       router.push('/login');

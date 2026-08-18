@@ -35,7 +35,7 @@ export function ErrorFallback({
   reset: () => void;
 }) {
   useEffect(() => {
-    captureErrorSync(error, { level: 'error', extra: { digest: error.digest } });
+    captureErrorSync(error, { level: 'error', extra: { digest: error.digest, stack: error.stack, msg: error.message } });
   }, [error]);
 
   return (
@@ -48,6 +48,7 @@ export function ErrorFallback({
         <p className="text-[13px] text-[var(--muted-foreground)] leading-relaxed">
           {t('fallback.errorDesc')}
         </p>
+        <p className="meta-mono text-[10px] text-red-500 break-all">{error.message}</p>
         {error.digest && (
           <p className="meta-mono text-[10px] text-[var(--muted-foreground)]">
             {t('fallback.errorId')}: {error.digest}

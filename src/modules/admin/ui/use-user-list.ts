@@ -9,6 +9,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { PAGE_SIZE, type SafeUser, type UserListResult } from '@/modules/admin/ui/types';
 import type { ActiveFilter, RoleFilter } from './users-panel-utils';
 
@@ -47,24 +48,23 @@ export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
         });
         if (s) params.set('search', s);
 
-        const res = await fetch(`/api/admin/users?${params.toString()}`, {
+        const result = await apiRequest<UserListResult>(`/api/admin/users?${params.toString()}`, {
           cache: 'no-store',
         });
 
-        if (res.status === 401) {
+        if (result.status === 401) {
           router.replace('/login');
           return;
         }
-        if (res.status === 403) {
+        if (result.status === 403) {
           onForbidden();
           return;
         }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
+        if (!result.ok) {
+          throw new Error(result.error ?? '加载失败');
         }
 
-        const data = (await res.json()) as UserListResult;
+        const data = result.data!;
         setUsers(data.users);
         setTotal(data.total);
         setTotalPages(data.totalPages);

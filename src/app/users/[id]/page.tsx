@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type ProfileTab = 'profile' | 'exam' | 'community';
 
@@ -103,22 +104,25 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
     let cancelled = false;
     async function load() {
       try {
-        const [userRes, topicsRes] = await Promise.all([
-          fetch(`/api/users/${id}`),
-          fetch(`/api/community/users/${id}/topics?page=1&page_size=5`),
+        const [userR, topicsR] = await Promise.all([
+          apiRequest<{ user: PublicUser; stats: UserStats }>(`/api/users/${id}`),
+          apiRequest<{ items: CommunityPost[] }>(`/api/community/users/${id}/topics?page=1&page_size=5`),
         ]);
-        if (!userRes.ok) {
-          const data = await userRes.json();
-          throw new Error(data.error || t('notFound'));
+        if (!userR.ok) {
+          throw new Error(userR.error ?? t('notFound'));
         }
-        const userData = await userRes.json();
+        const userData = userR.data;
         if (cancelled) return;
+        if (!userData) {
+          setError(t('notFound'));
+          setLoading(false);
+          return;
+        }
         setUser(userData.user);
         setStats(userData.stats);
 
-        if (topicsRes.ok) {
-          const topicsData = await topicsRes.json();
-          if (!cancelled) setTopics(topicsData.items || []);
+        if (topicsR.ok) {
+          if (!cancelled) setTopics(topicsR.data?.items || []);
         }
       } catch (e) {
         if (cancelled) return;

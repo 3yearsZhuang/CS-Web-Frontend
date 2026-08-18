@@ -3,87 +3,28 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
-import { getError } from './community-admin-utils';
-
-interface AdminUserItem {
-  id: string;
-  displayName: string | null;
-  email: string;
-  role: 'user' | 'admin' | 'root';
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface UsersResponse {
-  users: AdminUserItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import { useUsersManager, type AdminUserItem } from './use-users-manager';
 
 /** 用户管理 — 搜索/禁言/解禁用户 */
 export function UsersManager() {
-  const [users, setUsers] = useState<AdminUserItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-
+  const { users, loading, error, actionError, total, totalPages, busyIds, loadUsers, disableUser, enableUser } =
+    useUsersManager();
   const { confirm } = useConfirm();
   const t = useTranslations('userList');
 
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
-      if (search.trim()) params.set('search', search.trim());
-      const res = await fetch(`/api/admin/users?${params}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, t('loadFailed')));
-      }
-      const data = (await res.json()) as UsersResponse;
-      setUsers(data.users ?? []);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [search, page]);
+  // 视图态（搜索/分页）
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
-  useEffect(() => { void loadUsers(); }, [loadUsers]);
-
-  const doUserAction = async (userId: string, action: () => Promise<Response>) => {
-    setActionError(null);
-    setBusyIds((s) => new Set(s).add(userId));
-    try {
-      const res = await action();
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, t('actionFailed')));
-      await loadUsers();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : t('actionFailed'));
-    } finally {
-      setBusyIds((s) => {
-        const next = new Set(s);
-        next.delete(userId);
-        return next;
-      });
-    }
-  };
+  useEffect(() => {
+    void loadUsers({ search, page });
+  }, [loadUsers, search, page]);
 
   const handleDisable = (user: AdminUserItem) => {
     void (async () => {
@@ -94,16 +35,12 @@ export function UsersManager() {
         confirmLabel: t('muteConfirm'),
       });
       if (!confirmed) return;
-      doUserAction(user.id, () =>
-        fetch(`/api/admin/users/${user.id}/disable`, { method: 'POST' }),
-      );
+      await disableUser(user.id);
     })();
   };
 
   const handleEnable = (user: AdminUserItem) => {
-    void doUserAction(user.id, () =>
-      fetch(`/api/admin/users/${user.id}/enable`, { method: 'POST' }),
-    );
+    void enableUser(user.id);
   };
 
   return (

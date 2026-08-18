@@ -16,6 +16,7 @@ import type {
   NestedCommentsResult,
   PaginatedComments,
 } from '@/modules/community/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 const REPLIES_PAGE_SIZE = 10;
 
@@ -64,30 +65,22 @@ export function useTopicDetail(topicId: string): TopicDetailState {
 
   // 加载当前用户（可选，未登录也允许浏览）
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const data = (await res.json()) as CurrentUserResponse;
-        return data.user;
-      })
-      .then((u) => {
-        if (u) setCurrentUser({ id: u.id, role: u.role });
-      })
-      .catch(() => {
-        // 静默失败 — 未登录用户仍可浏览
+    apiRequest<CurrentUserResponse>('/api/auth/me')
+      .then((r) => {
+        if (!r.ok || !r.data) return;
+        setCurrentUser({ id: r.data.user.id, role: r.data.user.role });
       });
   }, []);
 
   // 加载主题详情
   const loadTopic = useCallback(async () => {
     try {
-      const res = await fetch(`/api/community/topics/${topicId}`);
-      if (!res.ok) {
-        if (res.status === 404) throw new Error('主题不存在或已删除');
+      const r = await apiRequest<TopicResponse>(`/api/community/topics/${topicId}`);
+      if (!r.ok) {
+        if (r.status === 404) throw new Error('主题不存在或已删除');
         throw new Error('加载失败');
       }
-      const data = (await res.json()) as TopicResponse;
-      setTopic(data.topic);
+      setTopic(r.data?.topic ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
     }
@@ -97,12 +90,11 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   const loadReplies = useCallback(async () => {
     try {
       const url = `/api/community/topics/${topicId}/replies?page=${replyPage}&page_size=${REPLIES_PAGE_SIZE}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('加载回复失败');
-      const data = (await res.json()) as PaginatedComments;
-      setReplies(data.items ?? []);
-      setReplyTotalPages(data.totalPages ?? 0);
-      setReplyTotal(data.total ?? 0);
+      const r = await apiRequest<PaginatedComments>(url);
+      if (!r.ok) throw new Error('加载回复失败');
+      setReplies(r.data?.items ?? []);
+      setReplyTotalPages(r.data?.totalPages ?? 0);
+      setReplyTotal(r.data?.total ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载回复失败');
     }
@@ -129,9 +121,9 @@ export function useTopicDetail(topicId: string): TopicDetailState {
   const nestedRepliesLoader = useCallback(
     async (parentId: string): Promise<NestedCommentsResult | null> => {
       try {
-        const res = await fetch(`/api/community/replies/${parentId}/nested`);
-        if (!res.ok) return null;
-        return (await res.json()) as NestedCommentsResult;
+        const r = await apiRequest<NestedCommentsResult>(`/api/community/replies/${parentId}/nested`);
+        if (!r.ok) return null;
+        return r.data;
       } catch {
         return null;
       }
@@ -147,17 +139,13 @@ export function useTopicDetail(topicId: string): TopicDetailState {
     params.set('category', topic.category.slug);
     params.set('sort', 'hot');
     params.set('page_size', '6');
-    fetch(`/api/community/topics?${params.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const data = (await res.json()) as { items: CommunityPost[] };
-        return data.items ?? [];
-      })
-      .then((items) => {
-        if (cancelled || !items) return;
+    apiRequest<{ items: CommunityPost[] }>(`/api/community/topics?${params.toString()}`)
+      .then((r) => {
+        if (!r.ok || !r.data) return;
+        const items = r.data.items ?? [];
+        if (cancelled) return;
         setRelatedTopics(items.filter((t) => t.id !== topic.id).slice(0, 5));
-      })
-      .catch(() => {});
+      });
     return () => {
       cancelled = true;
     };

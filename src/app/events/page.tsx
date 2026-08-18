@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 import { Button, SectionLoading, Title } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type EventTab = 'timeline' | 'next' | 'admin';
 
@@ -49,20 +50,15 @@ export default function EventsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
-      })
-      .then((data) => {
-        if (cancelled || !data) return;
-        const user = data.user;
-        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-          setCurrentUser(user);
-        }
-      })
-      .catch(() => {});
+    (async () => {
+      const r = await apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' });
+      if (cancelled) return;
+      if (r.status === 401 || !r.ok || !r.data) return;
+      const user = r.data.user;
+      if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
+        setCurrentUser(user);
+      }
+    })();
     return () => { cancelled = true; };
   }, []);
 
@@ -101,10 +97,10 @@ export default function EventsPage() {
     if (debouncedSearch) params.set('search', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
 
-    const res = await fetch(`/api/events?${params.toString()}`);
-    if (!res.ok) throw new Error(t('loadFailed'));
-    const data = await res.json();
-    return data.events ?? [];
+    const r = await apiRequest<{ events?: EventItem[] }>(`/api/events?${params.toString()}`);
+    if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+    const data = r.data;
+    return data?.events ?? [];
   }, [debouncedSearch, statusFilter, t]);
 
   useEffect(() => {

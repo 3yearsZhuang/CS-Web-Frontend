@@ -30,27 +30,46 @@ export interface ApiRequestInit {
   cache?: RequestCache;
 }
 
-/** 从响应体提取可读错误信息（对齐后端 camelCase ErrorResponse.message） */
+/**
+ * 从响应体提取可读错误信息。
+ * 兼容两种错误体：后端规范 `ErrorResponse.message` 与社区域历史端点返回的 `{ error }`。
+ * 优先 `message`（规范），缺失时回退 `error`，再否则 fallback —— 避免 server 错误消息被丢弃。
+ */
 function extractError(body: unknown, fallback: string): string {
   const b = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
-  return typeof b.message === 'string' ? b.message : fallback;
+  if (typeof b.message === 'string' && b.message.length > 0) return b.message;
+  if (typeof b.error === 'string' && b.error.length > 0) return b.error;
+  return fallback;
 }
 
 /**
  * 薄封装一次 fetch：自动 JSON 解析、统一错误提取、网络异常兜底。
  * 不抛异常——调用方据 result.ok / result.error 处理。
  */
+/**
+ * 判断 body 是否为「原始型」（应原样透传、不 JSON 序列化、不强制 Content-Type）。
+ * 典型：FormData（文件上传）、Blob、URLSearchParams。
+ */
+function isRawBody(body: unknown): body is BodyInit {
+  return (
+    typeof FormData !== 'undefined' && body instanceof FormData ||
+    typeof Blob !== 'undefined' && body instanceof Blob ||
+    typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams
+  );
+}
+
 export async function apiRequest<T = unknown>(
   path: string,
   init?: ApiRequestInit,
 ): Promise<ApiRequestResult<T>> {
+  const raw = isRawBody(init?.body);
   const opts: RequestInit = {
     method: init?.method ?? 'GET',
     headers:
-      init?.body !== undefined
+      !raw && init?.body !== undefined
         ? { 'Content-Type': 'application/json', ...(init.headers ?? {}) }
         : init?.headers,
-    body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+    body: raw ? (init?.body as BodyInit) : init?.body !== undefined ? JSON.stringify(init.body) : undefined,
     cache: init?.cache,
   };
   try {

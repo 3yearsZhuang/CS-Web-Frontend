@@ -6,6 +6,7 @@
 
 import { useRef, useState, useCallback } from 'react';
 import { MarkdownEditorBase, type MarkdownEditorBaseProps } from './community-markdown-editor-base';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useTranslations } from 'next-intl';
 
 /** 工具栏按钮配置 */
@@ -80,16 +81,16 @@ export function MarkdownEditor({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/community/upload', {
+      const result = await apiRequest<{ url: string }>('/api/community/upload', {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || t('editorUploadFailed'));
+      if (!result.ok) {
+        throw new Error(result.error ?? t('editorUploadFailed'));
       }
+      const data = result.data;
       const ta = document.activeElement as HTMLTextAreaElement | null;
-      const insertText = `\n![${file.name}](${data.url})\n`;
+      const insertText = data ? `\n![${file.name}](${data.url})\n` : '';
       if (ta && ta.tagName === 'TEXTAREA') {
         const start = ta.selectionStart;
         const newValue = value.slice(0, start) + insertText + value.slice(start);

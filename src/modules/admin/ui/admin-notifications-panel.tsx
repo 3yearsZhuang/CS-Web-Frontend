@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { Button, SectionLoading } from '@/components';
@@ -61,22 +62,22 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
   const fetchNotifHistory = useCallback(async () => {
     setNotifHistoryLoading(true);
     try {
-      const res = await fetch(`/api/admin/notifications?limit=${NOTIF_HISTORY_LIMIT}`, {
-        cache: 'no-store',
-      });
-      if (res.status === 401) {
+      const r = await apiRequest<{ broadcasts?: NotifHistoryItem[] }>(
+        `/api/admin/notifications?limit=${NOTIF_HISTORY_LIMIT}`,
+        { cache: 'no-store' },
+      );
+      if (r.status === 401) {
         router.replace('/login');
         return;
       }
-      if (res.status === 403) {
+      if (r.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) {
+      if (!r.ok) {
         return;
       }
-      const data = (await res.json()) as { broadcasts?: NotifHistoryItem[] };
-      setNotifHistory(data.broadcasts ?? []);
+      setNotifHistory(r.data?.broadcasts ?? []);
     } catch {
       // 静默失败
     } finally {
@@ -111,24 +112,18 @@ export function AdminNotificationsPanel({ onForbidden }: AdminNotificationsPanel
     setNotifSaving(true);
     setNotifError(null);
     try {
-      const res = await fetch('/api/admin/notifications', {
+      const r = await apiRequest<{ ok?: boolean; count?: number }>('/api/admin/notifications', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           title: notifForm.title,
           content: notifForm.content || null,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as {
-        ok?: boolean;
-        count?: number;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.ok) {
-        setNotifError(data?.error || t('sendFailed'));
+      if (!r.ok || !r.data?.ok) {
+        setNotifError(r.error ?? t('sendFailed'));
         return;
       }
-      pushToast('success', t('sendSuccess', { count: data.count ?? 0 }));
+      pushToast('success', t('sendSuccess', { count: r.data.count ?? 0 }));
       setNotifForm({ title: '', content: '' });
       setNotifError(null);
       fetchNotifHistory();

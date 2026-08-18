@@ -9,6 +9,7 @@ import { Bot, Plus, Send, Wrench } from 'lucide-react';
 import { Button } from '@/components/primitives/button';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ToolCallEvent {
@@ -49,18 +50,13 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const loadConversations = useCallback(async () => {
-    try {
-      const res = await fetch('/api/tools/auxilio/conversations', { cache: 'no-store' });
-      if (res.status === 401) {
-        setNotLoggedIn(true);
-        return;
-      }
-      if (!res.ok) return;
-      const json = (await res.json()) as { conversations: ConversationMeta[] };
-      setConversations(json.conversations ?? []);
-    } catch {
-      // 静默
+    const r = await apiRequest<{ conversations: ConversationMeta[] }>('/api/tools/auxilio/conversations', { cache: 'no-store' });
+    if (r.status === 401) {
+      setNotLoggedIn(true);
+      return;
     }
+    if (!r.ok) return;
+    setConversations(r.data?.conversations ?? []);
   }, []);
 
   useEffect(() => {
@@ -74,14 +70,14 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
   const openConversation = useCallback(async (id: number) => {
     setLoadingHistory(true);
     try {
-      const res = await fetch(`/api/tools/auxilio/conversations/${id}/messages`, { cache: 'no-store' });
-      if (!res.ok) return;
-      const json = (await res.json()) as {
+      const r = await apiRequest<{
         messages: { role: string; content: string | null; toolCalls?: { name: string }[] }[];
-      };
+      }>(`/api/tools/auxilio/conversations/${id}/messages`, { cache: 'no-store' });
+      if (!r.ok) return;
+      const json = r.data;
       setConversationId(id);
       setMessages(
-        (json.messages ?? []).map((m) => ({
+        (json?.messages ?? []).map((m) => ({
           role: m.role === 'user' ? ('user' as const) : ('assistant' as const),
           content: m.content ?? '',
           toolCalls: (m.toolCalls ?? []).map((tc, i) => ({

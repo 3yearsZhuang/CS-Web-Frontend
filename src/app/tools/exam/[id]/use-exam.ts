@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 export interface ExamDetail {
   id: string;
@@ -84,12 +85,11 @@ export function useExam(id: string) {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`/api/tools/exam/${id}`);
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || '加载失败');
-        }
-        const data = await res.json();
+        const result = await apiRequest<{ exam: ExamDetail; questions?: ExamQuestion[] }>(
+          `/api/tools/exam/${id}`,
+        );
+        if (!result.ok) throw new Error(result.error ?? '加载失败');
+        const data = result.data!;
         if (cancelled) return;
         setExam(data.exam);
         setQuestions(data.questions || []);
@@ -111,15 +111,17 @@ export function useExam(id: string) {
     let cancelled = false;
     async function checkAuth() {
       try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) return;
-        const data = await res.json();
+        const me = await apiRequest<{ user: { id: string; role: string } }>('/api/auth/me');
+        if (!me.ok) return;
+        const data = me.data!;
         if (cancelled) return;
         if (data.user) {
           setIsLoggedIn(true);
-          const attemptsRes = await fetch(`/api/tools/exam/${id}/my-results`);
-          if (attemptsRes.ok) {
-            const attemptsData = await attemptsRes.json();
+          const attemptsResult = await apiRequest<{ attempts?: PreviousAttempt[] }>(
+            `/api/tools/exam/${id}/my-results`,
+          );
+          if (attemptsResult.ok) {
+            const attemptsData = attemptsResult.data!;
             if (cancelled) return;
             const attempts: PreviousAttempt[] = attemptsData.attempts || [];
             setPreviousAttempts(attempts);
@@ -202,18 +204,16 @@ export function useExam(id: string) {
         answer,
       }));
 
-      const res = await fetch(`/api/tools/exam/${id}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: answerList }),
-      });
+      const result = await apiRequest<{ results: AttemptResult[] }>(
+        `/api/tools/exam/${id}/submit`,
+        { method: 'POST', body: { answers: answerList } },
+      );
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || '提交失败');
+      if (!result.ok) {
+        throw new Error(result.error ?? '提交失败');
       }
 
-      const data = await res.json();
+      const data = result.data!;
       const newResults: Record<string, AttemptResult> = {};
       for (const r of data.results) {
         newResults[r.questionId] = r;

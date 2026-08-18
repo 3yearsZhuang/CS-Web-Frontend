@@ -14,6 +14,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type ExamTab = 'ongoing' | 'upcoming' | 'ended';
 
@@ -66,9 +67,9 @@ export default function ExamListPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/tools/exam');
-      if (!res.ok) throw new Error('加载失败');
-      const data = await res.json();
+      const result = await apiRequest<{ exams?: ExamItem[] }>('/api/tools/exam');
+      if (!result.ok) throw new Error(result.error ?? '加载失败');
+      const data = result.data!;
       setExams(data.exams ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');

@@ -3,50 +3,19 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { SectionLoading } from '@/components';
-
-interface DashboardStats {
-  totalUsers: number;
-  totalTopics: number;
-  totalReplies: number;
-  totalCommunityPosts: number;
-  totalCategories: number;
-  totalAnnouncements: number;
-  onlineUsers: number;
-}
+import { useDashboardManager, type DashboardStats } from './use-dashboard-manager';
 
 /** 数据看板 — 社区运营数据概览 */
 export function DashboardManager() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { stats, loading, error, loadStats } = useDashboardManager();
   const t = useTranslations('dashboard');
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/admin/users?pageSize=1').then((r) => r.json()),
-      fetch('/api/community/feed?stats=1').then((r) => r.json()),
-      fetch('/api/admin/announcements').then((r) => r.json()),
-      fetch('/api/admin/community/community/categories').then((r) => r.json()),
-    ])
-      .then(([usersData, feedStats, announcementsData, categoriesData]) => {
-        setStats({
-          totalUsers: usersData.total ?? 0,
-          totalTopics: feedStats.topicCount ?? 0,
-          totalReplies: (feedStats.topicCount ?? 0) + (feedStats.postCount ?? 0),
-          totalCommunityPosts: feedStats.postCount ?? 0,
-          totalCategories: (categoriesData.items ?? []).length,
-          totalAnnouncements: announcementsData.total ?? 0,
-          onlineUsers: 0,
-        });
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : t('loadFailed'));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    void loadStats();
+  }, [loadStats]);
 
   const statCards = stats ? [
     { label: t('statTotalUsers'), value: stats.totalUsers, color: 'var(--primary)' },

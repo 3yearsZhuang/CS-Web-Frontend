@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { EventStatusBadge } from '@/modules/events/ui/event-status-badge';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 容量为 0 表示不限名额（数据库无 NULL 容量，以 0 代表不限制） */
 const UNLIMITED_CAPACITY = 0;
@@ -74,26 +75,26 @@ export default function EventDetailPage() {
   };
 
   const fetchEvent = useCallback(async () => {
-    const res = await fetch(`/api/events/${eventId}`);
-    if (!res.ok) {
-      if (res.status === 404) throw new Error('活动不存在');
-      throw new Error('加载失败');
+    const r = await apiRequest<{ event: EventDetail; registeredCount: number }>(`/api/events/${eventId}`);
+    if (!r.ok) {
+      if (r.status === 404) throw new Error('活动不存在');
+      throw new Error(r.error ?? '加载失败');
     }
-    const data = await res.json();
-    return { event: data.event as EventDetail, registeredCount: data.registeredCount as number };
+    const data = r.data;
+    return { event: data!.event, registeredCount: data!.registeredCount };
   }, [eventId]);
 
   const fetchRegistration = useCallback(async () => {
-    const res = await fetch(`/api/events/${eventId}/registration`);
-    if (res.status === 401) {
+    const r = await apiRequest<{ registered: boolean }>(`/api/events/${eventId}/registration`);
+    if (r.status === 401) {
       return { registered: false, isLoggedIn: false };
     }
-    if (!res.ok) {
-      throw new Error('加载报名状态失败');
+    if (!r.ok) {
+      throw new Error(r.error ?? '加载报名状态失败');
     }
-    const data = await res.json();
+    const data = r.data;
     return {
-      registered: data.registered as boolean,
+      registered: data!.registered,
       isLoggedIn: true,
     };
   }, [eventId]);
@@ -147,15 +148,13 @@ export default function EventDetailPage() {
     setActionError(null);
 
     try {
-      const res = await fetch(`/api/events/${eventId}/register`, {
+      const r = await apiRequest(`/api/events/${eventId}/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formData }),
+        body: { formData },
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('registerFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('registerFailed'));
       }
 
       setRegistered(true);
@@ -172,13 +171,12 @@ export default function EventDetailPage() {
     setActionError(null);
 
     try {
-      const res = await fetch(`/api/events/${eventId}/register`, {
+      const r = await apiRequest(`/api/events/${eventId}/register`, {
         method: 'DELETE',
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('cancelFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('cancelFailed'));
       }
 
       setRegistered(false);

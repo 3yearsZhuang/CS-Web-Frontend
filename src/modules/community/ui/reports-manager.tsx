@@ -3,34 +3,13 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { Button } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
-import { getError } from './community-admin-utils';
-
-type ReportStatusFilter = 'pending' | 'resolved' | 'dismissed' | 'all';
-
-interface ReportRow {
-  id: string;
-  reporterName: string | null;
-  targetType: 'topic' | 'comment';
-  targetId: string;
-  reason: string;
-  detail: string | null;
-  status: 'pending' | 'resolved' | 'dismissed';
-  createdAt: string;
-}
-
-interface ReportsResponse {
-  items: ReportRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+import { useReportsManager, type ReportRow, type ReportStatusFilter } from './use-reports-manager';
 
 const REPORT_STATUS_FILTERS: { value: ReportStatusFilter; label: string }[] = [
   { value: 'pending', label: '待处理 / Pending' },
@@ -41,65 +20,24 @@ const REPORT_STATUS_FILTERS: { value: ReportStatusFilter; label: string }[] = [
 
 /** 举报处理 — 处理/驳回举报 */
 export function ReportsManager() {
+  const { reports, loading, error, actionError, busyIds, loadReports, resolveReport, dismissReport } =
+    useReportsManager();
   const [statusFilter, setStatusFilter] = useState<ReportStatusFilter>('pending');
-  const [reports, setReports] = useState<ReportRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const { confirm } = useConfirm();
   const t = useTranslations('reportsManager');
   const tf = useTranslations('community');
-  const tc = useTranslations('communityAdmin');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      const res = await fetch(`/api/admin/community/reports?${params.toString()}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, tc('loadFailed')));
-      }
-      const data = (await res.json()) as ReportsResponse;
-      setReports(data.items ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tc('loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadReports(statusFilter);
+  }, [loadReports, statusFilter]);
 
   const handleAction = async (id: string, action: 'resolve' | 'dismiss') => {
-    setActionError(null);
     const ok = action === 'resolve'
       ? await confirm({ title: t('resolveTitle'), message: '确认将该举报标记为已处理？内容处置请另行执行。', confirmLabel: t('confirm') })
       : await confirm({ title: t('dismissTitle'), message: '确认驳回该举报（认定无违规）？', confirmLabel: t('confirm') });
     if (!ok) return;
-    setBusyIds((s) => new Set(s).add(id));
-    try {
-      const res = await fetch(`/api/admin/community/reports/${id}?action=${action}`, { method: 'POST' });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, tc('actionFailed')));
-      }
-      setReports((prev) => prev.filter((r) => r.id !== id));
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : tc('actionFailed'));
-    } finally {
-      setBusyIds((s) => {
-        const next = new Set(s);
-        next.delete(id);
-        return next;
-      });
-    }
+    await (action === 'resolve' ? resolveReport(id) : dismissReport(id));
   };
 
   return (

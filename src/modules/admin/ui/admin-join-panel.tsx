@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
@@ -104,21 +105,22 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/admin/join?status=${status}`, { cache: 'no-store' });
-        if (res.status === 401) {
+        const r = await apiRequest<{ applications: JoinApplication[] }>(
+          `/api/admin/join?status=${status}`,
+          { cache: 'no-store' },
+        );
+        if (r.status === 401) {
           router.replace('/login');
           return;
         }
-        if (res.status === 403) {
+        if (r.status === 403) {
           onForbidden();
           return;
         }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || t('loadFailed'));
+        if (!r.ok) {
+          throw new Error(r.error ?? t('loadFailed'));
         }
-        const data = (await res.json()) as { applications: JoinApplication[] };
-        setApplications(data.applications ?? []);
+        setApplications(r.data?.applications ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : t('loadFailed'));
       } finally {
@@ -154,20 +156,16 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
     setSaving(true);
     setModalError(null);
     try {
-      const res = await fetch('/api/admin/join', {
+      const r = await apiRequest<{ application?: JoinApplication }>('/api/admin/join', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           applicationId: application.id,
           status: action,
           reviewNote: reviewNote.trim() || undefined,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as
-        | { application?: JoinApplication; error?: string }
-        | null;
-      if (!res.ok || !data?.application) {
-        setModalError(data?.error || t('reviewFailed'));
+      if (!r.ok || !r.data?.application) {
+        setModalError(r.error ?? t('reviewFailed'));
         return;
       }
       pushToast('success', action === 'approved' ? t('approveSuccess') : t('rejectSuccess'));

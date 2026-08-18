@@ -10,6 +10,7 @@ import Script from 'next/script';
 import localFont from 'next/font/local';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
+import { getServerUser } from '@/shared/server-auth';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -158,6 +159,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // SSR cookie 注水：服务端读取 JWT cookie 取当前用户，注入 SWRConfig fallback，
+  // 使 SSR 与客户端首帧登录态一致（根除 /tools 等登录页 hydration 不匹配）。
+  // 后端不可达时降级 null，由客户端 useAuth 挂载后 revalidate 自愈。
+  const serverUser = await getServerUser();
+  const swrFallback = serverUser ? { '/api/auth/me': { user: serverUser } } : {};
+
   // F2：读取 proxy.ts 注入的 per-request CSP nonce
   const nonce = (await headers()).get('x-nonce') ?? '';
 
@@ -193,7 +200,7 @@ export default async function RootLayout({
         * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
         * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
         */}
-        <SWRProvider>
+        <SWRProvider fallback={swrFallback}>
         <Script
           id="sw-register"
           strategy="afterInteractive"

@@ -10,6 +10,7 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CommunityPostDetail } from '@/modules/community/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface UseTopicActionsParams {
   topic: CommunityPostDetail | null;
@@ -41,14 +42,12 @@ export function useTopicActions({
       likeCount: topic.likeCount + (wasLiked ? -1 : 1),
     });
     try {
-      const res = await fetch('/api/community/like', {
+      const r = await apiRequest<{ liked: boolean; likeCount: number }>('/api/community/like', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: 'topic', targetId: topic.id }),
+        body: { targetType: 'topic', targetId: topic.id },
       });
-      if (!res.ok) throw new Error('操作失败');
-      const data = (await res.json()) as { liked: boolean; likeCount: number };
-      setTopic({ ...topic, isLikedByMe: data.liked, likeCount: data.likeCount });
+      if (!r.ok || !r.data) throw new Error('操作失败');
+      setTopic({ ...topic, isLikedByMe: r.data.liked, likeCount: r.data.likeCount });
     } catch {
       setTopic({ ...topic, isLikedByMe: wasLiked, likeCount: topic.likeCount });
     }
@@ -63,14 +62,12 @@ export function useTopicActions({
       favoriteCount: topic.favoriteCount + (wasFav ? -1 : 1),
     });
     try {
-      const res = await fetch('/api/community/favorite', {
+      const r = await apiRequest<{ favorited: boolean; favoriteCount: number }>('/api/community/favorite', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topicId: topic.id }),
+        body: { topicId: topic.id },
       });
-      if (!res.ok) throw new Error('操作失败');
-      const data = (await res.json()) as { favorited: boolean; favoriteCount: number };
-      setTopic({ ...topic, isFavoritedByMe: data.favorited, favoriteCount: data.favoriteCount });
+      if (!r.ok || !r.data) throw new Error('操作失败');
+      setTopic({ ...topic, isFavoritedByMe: r.data.favorited, favoriteCount: r.data.favoriteCount });
     } catch {
       setTopic({ ...topic, isFavoritedByMe: wasFav, favoriteCount: topic.favoriteCount });
     }
@@ -79,13 +76,10 @@ export function useTopicActions({
   const handleDeleteTopic = useCallback(async () => {
     if (!topic) return;
     try {
-      const res = await fetch(`/api/community/topics/${topic.id}`, {
+      const r = await apiRequest(`/api/community/topics/${topic.id}`, {
         method: 'DELETE',
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? '删除失败');
-      }
+      if (!r.ok) throw new Error(r.error ?? '删除失败');
       router.push('/community');
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败');

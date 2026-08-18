@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Avatar } from '@/components/avatar';
@@ -11,9 +11,9 @@ import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
-import type { CommunityCategory, CommunityPost, PaginatedPosts } from '@/modules/community/types';
+import type { CommunityPost } from '@/modules/community/types';
+import { useTopicsManager } from './use-topics-manager';
 import {
-  getError,
   STATUS_OPTIONS,
   SORT_OPTIONS,
   TOPICS_PAGE_SIZE,
@@ -21,167 +21,66 @@ import {
   type TopicStatus,
 } from './community-admin-utils';
 
-interface CategoriesResponse {
-  items: CommunityCategory[];
-}
-
 /** 主题审核 — 搜索/筛选/置顶/加精/隐藏/硬删除 */
 export function TopicsManager() {
   const t = useTranslations('communityAdmin');
-  const [topics, setTopics] = useState<CommunityPost[]>([]);
-  const [categories, setCategories] = useState<CommunityCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const {
+    topics,
+    categories,
+    loading,
+    error,
+    actionError,
+    total,
+    totalPages,
+    busyIds,
+    loadCategories,
+    loadTopics,
+    hideTopic,
+    restoreTopic,
+    togglePin,
+    toggleFeature,
+    deleteTopic,
+  } = useTopicsManager();
+  const { confirm } = useConfirm();
 
-  // 筛选状态
+  // 视图态（筛选/排序/搜索/分页）
   const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortValue>('latest');
-
-  // 分页
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-
-  // 操作中状态（按 topicId 隔离）
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-
-  const { confirm } = useConfirm();
-
-  /** 加载版块（用于筛选下拉） */
-  useEffect(() => {
-    fetch('/api/admin/community/community/categories')
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const data = (await res.json()) as CategoriesResponse;
-        return data.items ?? [];
-      })
-      .then((cats) => {
-        if (cats) setCategories(cats);
-      })
-      .catch(() => {
-        // 静默失败 — 筛选下拉仅作辅助
-      });
-  }, []);
-
-  /** 加载主题列表 */
-  const loadTopics = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        sort,
-        page: String(page),
-        page_size: String(TOPICS_PAGE_SIZE),
-      });
-      if (statusFilter !== 'all') params.set('status', statusFilter);
-      if (categoryFilter) params.set('category', categoryFilter);
-      if (search.trim()) params.set('search', search.trim());
-
-      const res = await fetch(`/api/admin/community/community/topics?${params}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, t('loadFailed')));
-      }
-      const data = (await res.json()) as PaginatedPosts;
-      setTopics(data.items ?? []);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-      setTopics([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, categoryFilter, search, sort, page]);
 
   useEffect(() => {
-    void loadTopics();
-  }, [loadTopics]);
+    void loadCategories();
+  }, [loadCategories]);
 
-  /** 通用操作调用 — 设置 busy + 错误处理 + 成功后刷新 */
-  const doAction = async (
-    topicId: string,
-    action: () => Promise<Response>,
-    _successMsg?: string,
-  ) => {
-    setActionError(null);
-    setBusyIds((s) => new Set(s).add(topicId));
-    try {
-      const res = await action();
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(getError(data, t('actionFailed')));
-      }
-      await loadTopics();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : t('actionFailed'));
-    } finally {
-      setBusyIds((s) => {
-        const next = new Set(s);
-        next.delete(topicId);
-        return next;
-      });
-    }
-  };
+  useEffect(() => {
+    void loadTopics({
+      sort,
+      page,
+      page_size: TOPICS_PAGE_SIZE,
+      status: statusFilter,
+      category: categoryFilter,
+      search,
+    });
+  }, [loadTopics, sort, page, statusFilter, categoryFilter, search]);
 
-  /** 隐藏主题 */
+  /** 隐藏主题（需填写原因） */
   const handleHide = (topic: CommunityPost) => {
     const reason = window.prompt(t('hidePrompt', { title: topic.title })) ?? '';
-    void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/topics/${topic.id}/hide`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason: reason.trim() || undefined }),
-      }),
-    );
+    void hideTopic(topic.id, reason);
   };
 
-  /** 恢复主题 */
-  const handleRestore = (topic: CommunityPost) => {
-    void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/topics/${topic.id}/restore`, { method: 'POST' }),
-    );
-  };
-
-  /** 切换置顶 */
-  const handleTogglePin = (topic: CommunityPost) => {
-    void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/topics/${topic.id}/pin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned: !topic.isPinned }),
-      }),
-    );
-  };
-
-  /** 切换加精 */
-  const handleToggleFeature = (topic: CommunityPost) => {
-    void doAction(topic.id, () =>
-      fetch(`/api/admin/community/community/topics/${topic.id}/feature`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ featured: !topic.isFeatured }),
-      }),
-    );
-  };
-
-  /** 硬删除主题 */
-  const handleHardDelete = (topic: CommunityPost) => {
-    void (async () => {
-      const confirmed = await confirm({
-        title: t('hardDeleteTitle'),
-        message: t('hardDeleteMessage', { title: topic.title }),
-        variant: 'danger',
-        confirmLabel: t('confirmDelete'),
-      });
-      if (!confirmed) return;
-      doAction(topic.id, () =>
-        fetch(`/api/admin/community/community/topics/${topic.id}`, { method: 'DELETE' }),
-      );
-    })();
+  /** 硬删除主题（需 confirm） */
+  const handleHardDelete = async (topic: CommunityPost) => {
+    const confirmed = await confirm({
+      title: t('hardDeleteTitle'),
+      message: t('hardDeleteMessage', { title: topic.title }),
+      variant: 'danger',
+      confirmLabel: t('confirmDelete'),
+    });
+    if (!confirmed) return;
+    await deleteTopic(topic.id);
   };
 
   return (
@@ -353,10 +252,10 @@ export function TopicsManager() {
 
                 {/* 操作 */}
                 <div className="lg:col-span-4 flex flex-wrap gap-1.5 lg:justify-end">
-                  <Button variant="outline" size="sm" type="button" onClick={() => handleTogglePin(topic)} disabled={busy} className={topic.isPinned ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isPinned ? t('unpinTitle') : t('pinTitle')}>
+                  <Button variant="outline" size="sm" type="button" onClick={() => togglePin(topic.id, !topic.isPinned)} disabled={busy} className={topic.isPinned ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isPinned ? t('unpinTitle') : t('pinTitle')}>
                     {topic.isPinned ? t('unpinBtn') : t('pinBtn')}
                   </Button>
-                  <Button variant="outline" size="sm" type="button" onClick={() => handleToggleFeature(topic)} disabled={busy} className={topic.isFeatured ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isFeatured ? t('unfeatTitle') : t('featTitle')}>
+                  <Button variant="outline" size="sm" type="button" onClick={() => toggleFeature(topic.id, !topic.isFeatured)} disabled={busy} className={topic.isFeatured ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : ''} title={topic.isFeatured ? t('unfeatTitle') : t('featTitle')}>
                     {topic.isFeatured ? t('unfeatBtn') : t('featBtn')}
                   </Button>
                   {topic.status === 'published' ? (
@@ -364,7 +263,7 @@ export function TopicsManager() {
                       {t('hideBtn')}
                     </Button>
                   ) : (
-                    <Button variant="outline" size="sm" type="button" onClick={() => handleRestore(topic)} disabled={busy}>
+                    <Button variant="outline" size="sm" type="button" onClick={() => restoreTopic(topic.id)} disabled={busy}>
                       {t('restoreBtn')}
                     </Button>
                   )}

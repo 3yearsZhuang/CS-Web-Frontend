@@ -14,6 +14,7 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
 import { SectionLoading, Title } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 export default function DraftsPage() {
   const t = useTranslations('communityDrafts');
@@ -30,13 +31,14 @@ export default function DraftsPage() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // 以一次探测请求判断登录态（草稿 API 未登录返回 401）
-    fetch('/api/community/drafts?page=1&pageSize=1', { cache: 'no-store' })
-      .then((res) => {
-        setLoginRequired(res.status === 401);
-      })
-      .catch(() => setLoginRequired(true))
-      .finally(() => setChecked(true));
+    // 以一次探测请求判断登录态（草稿 API 未登录返回 401；网络异常等同未登录）
+    void (async () => {
+      const result = await apiRequest('/api/community/drafts?page=1&pageSize=1', {
+        cache: 'no-store',
+      });
+      setLoginRequired(result.status === 401 || result.status === 0);
+      setChecked(true);
+    })();
   }, []);
 
   return (

@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { TaskData, ClaimData, PointsProfile, LeaderboardEntry } from './task-shared';
 
 export function useTasks() {
@@ -44,19 +45,18 @@ export function useTasks() {
 
   // 初始化：获取用户信息 + 任务列表
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then((r) => r.json())
+    apiRequest<{ user: { id: string; role: string } }>('/api/auth/me')
+      .then((r) => r.data)
       .then((data) => {
-        if (data.user) setUser(data.user);
+        if (data?.user) setUser(data.user);
       })
       .catch(() => {});
 
     setTasksLoading(true);
-    fetch('/api/tools/task?status=published&pageSize=50')
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || t('loadFailed'));
-        setTasks(data.tasks || []);
+    apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
+      .then((r) => {
+        if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+        setTasks(r.data?.tasks || []);
         setTasksError(null);
       })
       .catch((err) => {
@@ -69,11 +69,10 @@ export function useTasks() {
   const loadMyClaims = useCallback(() => {
     if (!user) return;
     setClaimsLoading(true);
-    fetch('/api/tools/task/claims')
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || t('loadFailed'));
-        setMyClaims(data.claims || []);
+    apiRequest<{ claims?: ClaimData[] }>('/api/tools/task/claims')
+      .then((r) => {
+        if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+        setMyClaims(r.data?.claims || []);
       })
       .catch(() => {})
       .finally(() => setClaimsLoading(false));
@@ -84,12 +83,12 @@ export function useTasks() {
     if (!user) return;
     setPointsLoading(true);
     Promise.all([
-      fetch('/api/tools/points').then((r) => r.json()),
-      fetch('/api/tools/points/leaderboard').then((r) => r.json()),
+      apiRequest<{ profile?: PointsProfile }>('/api/tools/points'),
+      apiRequest<{ leaderboard?: LeaderboardEntry[] }>('/api/tools/points/leaderboard'),
     ])
-      .then(([pData, lData]) => {
-        if (pData.profile) setPointsProfile(pData.profile);
-        if (lData.leaderboard) setLeaderboard(lData.leaderboard);
+      .then(([pResult, lResult]) => {
+        if (pResult.ok && pResult.data?.profile) setPointsProfile(pResult.data.profile);
+        if (lResult.ok && lResult.data?.leaderboard) setLeaderboard(lResult.data.leaderboard);
       })
       .catch(() => {})
       .finally(() => setPointsLoading(false));
@@ -98,10 +97,9 @@ export function useTasks() {
   // 管理员获取待审核认领
   useEffect(() => {
     if (!isAdmin) return;
-    fetch('/api/admin/tools/task?sub=claims')
-      .then(async (r) => {
-        const data = await r.json();
-        if (r.ok && data.claims) setPendingClaims(data.claims);
+    apiRequest<{ claims?: ClaimData[] }>('/api/admin/tools/task?sub=claims')
+      .then((r) => {
+        if (r.ok && r.data?.claims) setPendingClaims(r.data.claims);
       })
       .catch(() => {});
   }, [isAdmin, tasks]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -110,9 +108,8 @@ export function useTasks() {
   const handleClaim = useCallback(async (taskId: string) => {
     setClaimingId(taskId);
     try {
-      const r = await fetch(`/api/tools/task/${taskId}/claim`, { method: 'POST' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || t('actionFailed'));
+      const r = await apiRequest(`/api/tools/task/${taskId}/claim`, { method: 'POST' });
+      if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, claimCount: t.claimCount + 1 } : t)));
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
@@ -124,9 +121,8 @@ export function useTasks() {
   // 取消认领
   const handleCancelClaim = useCallback(async (taskId: string) => {
     try {
-      const r = await fetch(`/api/tools/task/${taskId}/claim`, { method: 'DELETE' });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || t('actionFailed'));
+      const r = await apiRequest(`/api/tools/task/${taskId}/claim`, { method: 'DELETE' });
+      if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
       loadMyClaims();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
@@ -138,26 +134,23 @@ export function useTasks() {
     e.preventDefault();
     setCreating(true);
     try {
-      const r = await fetch('/api/admin/tools/task', {
+      const r = await apiRequest('/api/admin/tools/task', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           title: newTask.title,
           description: newTask.description,
           category: newTask.category,
           points: newTask.points,
           maxClaimants: newTask.maxClaimants,
           tags: newTask.tags.split(',').map((s) => s.trim()).filter(Boolean),
-        }),
+        },
       });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || t('createFailed'));
+      if (!r.ok) throw new Error(r.error ?? t('createFailed'));
       setShowCreateForm(false);
       setNewTask({ title: '', description: '', category: 'general', points: 10, maxClaimants: 1, tags: '' });
       // 刷新
-      fetch('/api/tools/task?status=published&pageSize=50')
-        .then((r) => r.json())
-        .then((data) => setTasks(data.tasks || []));
+      apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
+        .then((rr) => { if (rr.ok) setTasks(rr.data?.tasks || []); });
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
     } finally {
@@ -168,15 +161,13 @@ export function useTasks() {
   // 发布任务
   const handlePublish = useCallback(async (taskId: string) => {
     try {
-      const r = await fetch('/api/admin/tools/task?sub=publish', {
+      const r = await apiRequest('/api/admin/tools/task?sub=publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId }),
+        body: { taskId },
       });
-      if (!r.ok) throw new Error((await r.json()).error || '操作失败');
-      fetch('/api/tools/task?status=published&pageSize=50')
-        .then((r) => r.json())
-        .then((data) => setTasks(data.tasks || []));
+      if (!r.ok) throw new Error(r.error ?? '操作失败');
+      apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
+        .then((rr) => { if (rr.ok) setTasks(rr.data?.tasks || []); });
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
     }
@@ -186,12 +177,11 @@ export function useTasks() {
   const handleReview = useCallback(async (claimId: string, approved: boolean) => {
     setReviewingId(claimId);
     try {
-      const r = await fetch('/api/admin/tools/task?sub=claim', {
+      const r = await apiRequest('/api/admin/tools/task?sub=claim', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claimId, approved }),
+        body: { claimId, approved },
       });
-      if (!r.ok) throw new Error((await r.json()).error || '操作失败');
+      if (!r.ok) throw new Error(r.error ?? '操作失败');
       setPendingClaims((prev) => prev.filter((c) => c.id !== claimId));
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));

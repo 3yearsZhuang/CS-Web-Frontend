@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { Button } from '@/components';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { AnnouncementsPanel } from '@/modules/announcement/ui/admin-announcements-panel';
 import { BroadcastHistoryPanel } from './broadcast-history-panel';
@@ -68,24 +69,21 @@ export function AdminMessagesPanel({ onForbidden }: AdminMessagesPanelProps) {
       setNotifSaving(true);
       setNotifError(null);
       try {
-        const res = await fetch('/api/admin/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: notifForm.title,
-            content: notifForm.content || null,
-          }),
-        });
-        const data = (await res.json().catch(() => null)) as {
-          ok?: boolean;
-          count?: number;
-          error?: string;
-        } | null;
-        if (!res.ok || !data?.ok) {
-          setNotifError(data?.error || t('sendFailedShort'));
+        const result = await apiRequest<{ ok?: boolean; count?: number; error?: string }>(
+          '/api/admin/notifications',
+          {
+            method: 'POST',
+            body: {
+              title: notifForm.title,
+              content: notifForm.content || null,
+            },
+          },
+        );
+        if (!result.ok || !result.data?.ok) {
+          setNotifError(result.error ?? t('sendFailedShort'));
           return;
         }
-        pushToast('success', t('sendSuccess', { count: data.count ?? 0 }));
+        pushToast('success', t('sendSuccess', { count: result.data?.count ?? 0 }));
         setNotifForm({ title: '', content: '' });
         setNotifError(null);
       } catch {

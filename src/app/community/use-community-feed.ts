@@ -11,6 +11,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type {
   FeedItem,
   FeedKind,
@@ -61,27 +62,19 @@ export function useCommunityFeed() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
-      })
-      .then((data) => {
-        if (cancelled) return;
-        if (data) {
-          setIsLoggedIn(true);
-          const user = data.user;
-          setCurrentUserId(user.id);
-          if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-            setCurrentUser(user);
-          }
+    void (async () => {
+      const meResult = await apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' });
+      if (cancelled) return;
+      if (meResult.ok && meResult.data) {
+        setIsLoggedIn(true);
+        const user = meResult.data.user;
+        setCurrentUserId(user.id);
+        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
+          setCurrentUser(user);
         }
-        setAuthChecked(true);
-      })
-      .catch(() => {
-        if (!cancelled) setAuthChecked(true);
-      });
+      }
+      setAuthChecked(true);
+    })();
     return () => {
       cancelled = true;
     };
@@ -137,67 +130,40 @@ export function useCommunityFeed() {
 
   /** 加载聚合标签与统计 */
   useEffect(() => {
-    fetch('/api/community/tags')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = await res.json();
-        setTags(data.tags ?? []);
-      })
-      .catch(() => {
-        /* 标签加载失败不阻塞 Feed */
-      });
-
-    fetch('/api/community/feed?stats=1')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as FeedStats;
-        setStats(data);
-      })
-      .catch(() => {
-        /* 统计加载失败不阻塞 */
-      });
+    void (async () => {
+      const [tagsResult, statsResult] = await Promise.all([
+        apiRequest<{ tags: FeedTag[] }>('/api/community/tags'),
+        apiRequest<FeedStats>('/api/community/feed?stats=1'),
+      ]);
+      if (tagsResult.ok) setTags(tagsResult.data?.tags ?? []);
+      if (statsResult.ok) setStats(statsResult.data ?? null);
+    })();
   }, []);
 
   /** 加载侧边栏数据（版块 + 热榜 + 活跃用户 + 精选） */
   useEffect(() => {
-    fetch('/api/community/categories')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityCategory[] };
-        setCategories(data.items ?? []);
-      })
-      .catch(() => {});
+    void (async () => {
+      const hotParams = new URLSearchParams();
+      hotParams.set('sort', 'hot');
+      hotParams.set('page_size', '8');
+      const featParams = new URLSearchParams();
+      featParams.set('page_size', '8');
+      featParams.set('sort', 'latest');
 
-    const hotParams = new URLSearchParams();
-    hotParams.set('sort', 'hot');
-    hotParams.set('page_size', '8');
-    fetch(`/api/community/topics?${hotParams.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityPost[] };
-        setHotTopics((data.items ?? []).slice(0, 6));
-      })
-      .catch(() => {});
-
-    fetch('/api/community/members?sort=active&limit=6')
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { members: MemberItem[] };
-        setActiveMembers(data.members ?? []);
-      })
-      .catch(() => {});
-
-    const featParams = new URLSearchParams();
-    featParams.set('page_size', '8');
-    featParams.set('sort', 'latest');
-    fetch(`/api/community/topics?${featParams.toString()}`)
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { items: CommunityPost[] };
-        const items = data.items ?? [];
+      const [catResult, hotResult, membersResult, featResult] = await Promise.all([
+        apiRequest<{ items: CommunityCategory[] }>('/api/community/categories'),
+        apiRequest<{ items: CommunityPost[] }>(`/api/community/topics?${hotParams.toString()}`),
+        apiRequest<{ members: MemberItem[] }>('/api/community/members?sort=active&limit=6'),
+        apiRequest<{ items: CommunityPost[] }>(`/api/community/topics?${featParams.toString()}`),
+      ]);
+      if (catResult.ok) setCategories(catResult.data?.items ?? []);
+      if (hotResult.ok) setHotTopics((hotResult.data?.items ?? []).slice(0, 6));
+      if (membersResult.ok) setActiveMembers(membersResult.data?.members ?? []);
+      if (featResult.ok) {
+        const items = featResult.data?.items ?? [];
         setFeaturedTopics(items.filter((tt) => tt.isPinned || tt.isFeatured).slice(0, 6));
-      })
-      .catch(() => {});
+      }
+    })();
   }, []);
 
   /** 加载 Feed */
@@ -234,19 +200,24 @@ export function useCommunityFeed() {
       params.set('page', String(page));
       params.set('pageSize', String(PAGE_SIZE));
 
-      const res = await fetch(`/api/community/feed?${params.toString()}`);
-      if (res.status === 401 && (activeTab === 'following' || activeTab === 'member')) {
+      const result = await apiRequest<PaginatedFeed>(`/api/community/feed?${params.toString()}`);
+      if (result.status === 401 && (activeTab === 'following' || activeTab === 'member')) {
         setItems([]);
         setTotal(0);
         setTotalPages(0);
         setLoading(false);
         return;
       }
-      if (!res.ok) throw new Error('加载失败');
-      const data = (await res.json()) as PaginatedFeed;
-      setItems(data.items ?? []);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 0);
+      if (!result.ok) {
+        setError(result.error ?? '加载失败');
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+      const data = result.data;
+      setItems(data?.items ?? []);
+      setTotal(data?.total ?? 0);
+      setTotalPages(data?.totalPages ?? 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
       setItems([]);

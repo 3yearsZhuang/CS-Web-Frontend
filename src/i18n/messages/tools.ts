@@ -859,7 +859,7 @@ export const zhCN: ToolsMessages = {
     llmUsageEntry: '用量与设置',
     resetLayout: '重置布局',
     confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
-    dragHint: '拖拽卡片可排序 · 点击 S/M/L 改尺寸',
+    dragHint: '拖拽卡片可排序 · 点击规格键改积木大小（如 1×1 / 2×2 / 2×3）',
   }
 };
 
@@ -1289,6 +1289,6 @@ export const en: ToolsMessages = {
     llmUsageEntry: 'Usage & Settings',
     resetLayout: 'Reset layout',
     confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
-    dragHint: 'Drag cards to reorder · click S/M/L to resize',
+    dragHint: 'Drag cards to reorder · click a size key to resize (e.g. 1×1 / 2×2 / 2×3)',
   }
 };

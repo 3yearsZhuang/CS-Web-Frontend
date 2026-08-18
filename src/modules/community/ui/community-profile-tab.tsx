@@ -1,27 +1,23 @@
 /**
  * @file 个人主页社区 Tab — 我的主题/回复/收藏（三段 sub-tab 切换）
+ *
+ * 数据逻辑见 `use-profile-community-tab.ts`，本文件仅作 UI 壳。
  */
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CommunityTopicItem } from './community-topic-item';
 import { formatDateTime } from '@/shared/utils/utils';
 import { SectionLoading, Pagination } from '@/components';
 import { SectionNav } from '@/components/primitives/section-nav';
-import type {
-  CommunityPost,
-  CommunityCommentDetail,
-  PaginatedPosts,
-  PaginatedComments,
-} from '@/modules/community/types';
+import {
+  useProfileCommunityTab,
+  type CommunitySubTab,
+} from './use-profile-community-tab';
 
 const PAGE_SIZE = 10;
-
-/** Sub-tab 类型 */
-type CommunitySubTab = 'topics' | 'replies' | 'favorites';
 
 /** Sub-tab 配置 */
 const SUB_TABS: { value: CommunitySubTab; label: string; num: string }[] = [
@@ -43,78 +39,18 @@ function truncateContent(content: string, maxLen = 140): string {
 
 export function ProfileCommunityTab({ userId }: ProfileCommunityTabProps) {
   const t = useTranslations('communityProfile');
-  const [activeSubTab, setActiveSubTab] = useState<CommunitySubTab>('topics');
-
-  // 主题列表（topics / favorites 共用）
-  const [topics, setTopics] = useState<CommunityPost[]>([]);
-  // 回复列表
-  const [replies, setReplies] = useState<CommunityCommentDetail[]>([]);
-
-  // 分页状态
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-
-  // 加载状态
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  /** 加载数据 — 由 activeSubTab 与 page 触发 */
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      let url: string;
-      if (activeSubTab === 'topics') {
-        url = `/api/community/users/${userId}/topics?page=${page}&page_size=${PAGE_SIZE}`;
-      } else if (activeSubTab === 'replies') {
-        url = `/api/community/users/${userId}/replies?page=${page}&page_size=${PAGE_SIZE}`;
-      } else {
-        url = `/api/community/favorites?page=${page}&page_size=${PAGE_SIZE}`;
-      }
-
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error(t('loadFailed'));
-      }
-
-      if (activeSubTab === 'replies') {
-        const data = (await res.json()) as PaginatedComments;
-        setReplies(data.items ?? []);
-        setTopics([]);
-        setTotal(data.total ?? 0);
-        setTotalPages(data.totalPages ?? 0);
-      } else {
-        const data = (await res.json()) as PaginatedPosts;
-        setTopics(data.items ?? []);
-        setReplies([]);
-        setTotal(data.total ?? 0);
-        setTotalPages(data.totalPages ?? 0);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-      setTopics([]);
-      setReplies([]);
-      setTotal(0);
-      setTotalPages(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeSubTab, page, userId]);
-
-  // sub-tab 或 page 变化时重新加载
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
-
-  /** 切换 sub-tab — 重置分页 */
-  const handleTabChange = (tab: CommunitySubTab) => {
-    if (tab === activeSubTab) return;
-    setActiveSubTab(tab);
-    setPage(1);
-  };
-
-  /** 当前页码范围由 Pagination 组件内部处理，无需本地 pageNums */
+  const {
+    activeSubTab,
+    handleTabChange,
+    topics,
+    replies,
+    page,
+    setPage,
+    totalPages,
+    total,
+    loading,
+    error,
+  } = useProfileCommunityTab(userId);
 
   return (
     <div className="grid grid-cols-12 gap-0 border-t border-[var(--border)]">

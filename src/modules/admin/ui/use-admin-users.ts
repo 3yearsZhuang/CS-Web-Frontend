@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useToast } from '@/components/feedback/toast';
 import {
   LIMITS,
@@ -153,18 +154,15 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     const u = modal.user;
     const endpoint = u.isActive ? 'disable' : 'enable';
     try {
-      const res = await fetch(`/api/admin/users/${u.id}/${endpoint}`, {
+      const r = await apiRequest<{ user?: SafeUser }>(`/api/admin/users/${u.id}/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
-      const data = (await res.json().catch(() => null)) as
-        | { user?: SafeUser; error?: string }
-        | null;
-      if (!res.ok || !data?.user) {
-        pushToast('error', data?.error || '操作失败，请稍后再试');
+      if (!r.ok || !r.data?.user) {
+        pushToast('error', r.error ?? '操作失败，请稍后再试');
         return;
       }
-      setUsers((prev) => prev.map((x) => (x.id === data.user!.id ? data.user! : x)));
+      const updated = r.data.user;
+      setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
       pushToast('success', `已${u.isActive ? '禁用' : '启用'} ${u.email}`);
       closeModal();
     } catch {
@@ -197,25 +195,24 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setEditSaving(true);
     setEditError(null);
     try {
-      const res = await fetch(`/api/admin/users/${target.id}`, {
+      const r = await apiRequest<{ user?: SafeUser }>(`/api/admin/users/${target.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           displayName: editForm.displayName || null,
           bio: editForm.bio || null,
           githubUrl: editForm.githubUrl || null,
           websiteUrl: editForm.websiteUrl || null,
           role: editForm.role,
           isActive: editForm.isActive,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as { user?: SafeUser; error?: string } | null;
-      if (!res.ok || !data?.user) {
-        setEditError(data?.error || '保存失败，请稍后再试');
+      if (!r.ok || !r.data?.user) {
+        setEditError(r.error ?? '保存失败，请稍后再试');
         return;
       }
-      setUsers((prev) => prev.map((u) => (u.id === data.user!.id ? data.user! : u)));
-      pushToast('success', `已更新 ${data.user.email}`);
+      const updated = r.data.user;
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      pushToast('success', `已更新 ${updated.email}`);
       closeModal();
     } catch {
       setEditError('网络错误，请稍后再试');
@@ -238,14 +235,12 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setResetSaving(true);
     setResetError(null);
     try {
-      const res = await fetch(`/api/admin/users/${target.id}/reset-password`, {
+      const r = await apiRequest<{ ok?: boolean }>(`/api/admin/users/${target.id}/reset-password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: resetPassword }),
+        body: { password: resetPassword },
       });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        setResetError(data?.error || '重置失败，请稍后再试');
+      if (!r.ok || !r.data?.ok) {
+        setResetError(r.error ?? '重置失败，请稍后再试');
         return;
       }
       pushToast('success', `已重置 ${target.email} 的密码`);
@@ -262,13 +257,11 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     const target = modal.user;
 
     try {
-      const res = await fetch(`/api/admin/users/${target.id}/reset-password-default`, {
+      const r = await apiRequest<{ ok?: boolean }>(`/api/admin/users/${target.id}/reset-password-default`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        pushToast('error', data?.error || '重置失败，请稍后再试');
+      if (!r.ok || !r.data?.ok) {
+        pushToast('error', r.error ?? '重置失败，请稍后再试');
         return;
       }
       pushToast('success', `已重置 ${target.email} 的密码为默认密码`);
@@ -285,12 +278,11 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setDeleteSaving(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/admin/users/${target.id}`, {
+      const r = await apiRequest<{ ok?: boolean }>(`/api/admin/users/${target.id}`, {
         method: 'DELETE',
       });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        setDeleteError(data?.error || '删除失败，请稍后再试');
+      if (!r.ok || !r.data?.ok) {
+        setDeleteError(r.error ?? '删除失败，请稍后再试');
         return;
       }
       setUsers((prev) => prev.filter((u) => u.id !== target.id));
@@ -324,18 +316,12 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setResetActionLoading(true);
     setResetActionError(null);
     try {
-      const res = await fetch(`/api/admin/password-resets/${target.id}/approve`, {
+      const r = await apiRequest(`/api/admin/password-resets/${target.id}/approve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: approveNote || undefined }),
+        body: { note: approveNote || undefined },
       });
-      const data = (await res.json().catch(() => null)) as {
-        user?: unknown;
-        message?: string;
-        error?: string;
-      } | null;
-      if (!res.ok) {
-        setResetActionError(data?.error || '批准失败，请稍后再试');
+      if (!r.ok) {
+        setResetActionError(r.error ?? '批准失败，请稍后再试');
         return;
       }
       pushToast('success', `已批准 ${target.email} 的重置申请，密码已重置为 FZTBU_CS`);
@@ -354,17 +340,12 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     setResetActionLoading(true);
     setResetActionError(null);
     try {
-      const res = await fetch(`/api/admin/password-resets/${target.id}/reject`, {
+      const r = await apiRequest<{ ok?: boolean }>(`/api/admin/password-resets/${target.id}/reject`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: rejectNote || undefined }),
+        body: { note: rejectNote || undefined },
       });
-      const data = (await res.json().catch(() => null)) as {
-        ok?: boolean;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.ok) {
-        setResetActionError(data?.error || '拒绝失败，请稍后再试');
+      if (!r.ok || !r.data?.ok) {
+        setResetActionError(r.error ?? '拒绝失败，请稍后再试');
         return;
       }
       pushToast('success', `已拒绝 ${target.email} 的重置申请`);

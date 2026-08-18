@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,30 +11,10 @@ import { Bell } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
 import { useAuth } from '@/shared/hooks/use-auth';
+import { useNotificationBell } from './use-notification-bell';
+import type { Notification, NotificationType } from './use-notification-bell';
 
-/** 通知类型 */
-type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
-
-/** 通知数据结构 */
-interface Notification {
-  id: string;
-  title: string;
-  content: string;
-  type: NotificationType;
-  isRead: boolean;
-  createdAt: string;
-  senderId: string;
-}
-
-/** 未读数量响应 */
-interface UnreadCountResponse {
-  unreadCount: number;
-}
-
-/** 通知列表响应 */
-interface NotificationsResponse {
-  notifications: Notification[];
-}
+export type { Notification, NotificationType };
 
 /** 类型标签颜色映射 */
 export const TYPE_STYLES: Record<NotificationType, { label: string; className: string }> = {
@@ -100,38 +80,19 @@ const itemVariants = {
 /** 通知铃铛组件 — 轮询获取未读通知数，点击打开通知面板 */
 export function NotificationBell() {
   const t = useTranslations('notifications');
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
-  const [loadingList, setLoadingList] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+  const {
+    unreadCount,
+    notifications,
+    loadingList,
+    fetchUnreadCount,
+    fetchNotifications,
+    markRead,
+    markAllRead,
+  } = useNotificationBell();
   // 登录态以 useAuth 为唯一事实来源，不再另起探测请求。
   const { isLoggedIn } = useAuth();
-  const bellRef = useRef<HTMLDivElement>(null);
-
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      const res = await fetch('/api/notifications/unread-count');
-      if (!res.ok) return;
-      const data: UnreadCountResponse = await res.json();
-      setUnreadCount(data.unreadCount ?? 0);
-    } catch {
-      // 静默失败
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    setLoadingList(true);
-    try {
-      const res = await fetch('/api/notifications?page_size=5');
-      if (!res.ok) return;
-      const data: NotificationsResponse = await res.json();
-      setNotifications(data.notifications ?? []);
-    } catch {
-      // 静默失败
-    } finally {
-      setLoadingList(false);
-    }
-  }, []);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -163,53 +124,6 @@ export function NotificationBell() {
     return () => document.removeEventListener('keydown', handler);
   }, [open]);
 
-  const handleToggle = () => {
-    setOpen((v) => !v);
-  };
-
-  const handleMarkRead = async (id: string) => {
-    const notification = notifications.find((n) => n.id === id);
-    if (!notification || notification.isRead) return;
-
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-
-    try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
-    } catch {
-      // 失败回滚
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)),
-      );
-      setUnreadCount((prev) => prev + 1);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    const unreadNotifications = notifications.filter((n) => !n.isRead);
-    if (unreadNotifications.length === 0) return;
-
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    const prevCount = unreadCount;
-    setUnreadCount(0);
-
-    try {
-      const res = await fetch('/api/notifications/read-all', { method: 'POST' });
-      if (!res.ok) throw new Error('failed');
-    } catch {
-      setNotifications((prev) =>
-        prev.map((n) =>
-          unreadNotifications.some((u) => u.id === n.id)
-            ? { ...n, isRead: false }
-            : n,
-        ),
-      );
-      setUnreadCount(prevCount);
-    }
-  };
-
   const displayCount = unreadCount > 99 ? '99+' : unreadCount;
 
   // 未登录或登录态加载中：不渲染铃铛（以 useAuth 为唯一来源）
@@ -221,7 +135,7 @@ export function NotificationBell() {
     <div ref={bellRef} className="relative">
       <button
         type="button"
-        onClick={handleToggle}
+        onClick={() => setOpen((v) => !v)}
         className="relative flex items-center justify-center w-8 h-8 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
         aria-label={t('ariaLabel')}
         aria-expanded={open}
@@ -278,7 +192,7 @@ export function NotificationBell() {
                     <motion.button
                       key={notification.id}
                       variants={itemVariants}
-                      onClick={() => handleMarkRead(notification.id)}
+                      onClick={() => markRead(notification.id)}
                       className={`w-full text-left px-4 py-3 hover:bg-[var(--primary)]/[0.06] transition-colors border-b border-[var(--border)] last:border-b-0 relative ${
                         !notification.isRead ? 'pl-[18px]' : ''
                       }`}
@@ -320,7 +234,7 @@ export function NotificationBell() {
               </Link>
               <button
                 type="button"
-                onClick={handleMarkAllRead}
+                onClick={() => markAllRead()}
                 disabled={unreadCount === 0}
                 className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >

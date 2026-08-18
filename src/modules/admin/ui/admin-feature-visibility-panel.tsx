@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/feedback/toast';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import {
   useFeatureVisibility,
   DEFAULT_VISIBILITY,
@@ -89,24 +90,25 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
     if (!pending || !/^\d{6}$/.test(totpCode)) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/feature-visibility/${encodeURIComponent(pending.key)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guest: pending.rule.guest,
-          member: pending.rule.member,
-          admin: pending.rule.admin,
-          totpCode,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+      const result = await apiRequest<{ error?: string; code?: string }>(
+        `/api/admin/feature-visibility/${encodeURIComponent(pending.key)}`,
+        {
+          method: 'PUT',
+          body: {
+            guest: pending.rule.guest,
+            member: pending.rule.member,
+            admin: pending.rule.admin,
+            totpCode,
+          },
+        },
+      );
 
-      if (res.status === 403) {
+      if (result.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) {
-        pushToast('error', data?.error || t('updateFailed'));
+      if (!result.ok) {
+        pushToast('error', result.error ?? t('updateFailed'));
         return;
       }
 

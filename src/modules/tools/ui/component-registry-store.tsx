@@ -21,6 +21,7 @@ import type {
   MigrationStatus,
   VariantPresetKey,
 } from '../types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 // ============= State & Action =============
 
@@ -176,9 +177,9 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
   const loadComponents = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
     try {
-      const res = await fetch('/api/tools/component-registry', { cache: 'no-store' });
-      if (!res.ok) throw new Error(t('storeLoadFailed'));
-      const data = (await res.json()) as { components: ComponentItem[] };
+      const r = await apiRequest<{ components: ComponentItem[] }>('/api/tools/component-registry', { cache: 'no-store' });
+      if (!r.ok) throw new Error(t('storeLoadFailed'));
+      const data = r.data as { components: ComponentItem[] };
       dispatch({ type: 'LOAD_SUCCESS', components: data.components });
     } catch (err) {
       dispatch({
@@ -197,14 +198,13 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
       // 乐观更新
       dispatch({ type: 'TOGGLE_VARIANT', itemId, variantId, enabled });
       try {
-        const res = await fetch(`/api/tools/component-registry/${itemId}/variants`, {
+        const r = await apiRequest<ComponentVariant[]>(`/api/tools/component-registry/${itemId}/variants`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ variantId, enabled }),
+          body: { variantId, enabled },
         });
-        if (!res.ok) throw new Error(t('storeToggleFailed'));
+        if (!r.ok) throw new Error(t('storeToggleFailed'));
         // 成功：用后端返回的最新变体列表精准同步该 item（保持最终一致）。
-        const data = (await res.json()) as ComponentVariant[];
+        const data = r.data as ComponentVariant[];
         dispatch({ type: 'SYNC_VARIANTS', itemId, variants: data });
       } catch {
         // 失败：仅回滚该变体到乐观更新前的值，避免整表重拉闪烁。
@@ -218,14 +218,13 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
     async (itemId: string, preset: VariantPresetKey): Promise<boolean> => {
       // 预设为批量翻转：乐观层无可靠目标态，直接请求后端，成功用返回列表精准同步。
       try {
-        const res = await fetch(`/api/tools/component-registry/${itemId}/variants/preset`, {
+        const r = await apiRequest<ComponentVariant[]>(`/api/tools/component-registry/${itemId}/variants/preset`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ preset }),
+          body: { preset },
         });
-        if (!res.ok) throw new Error(t('storePresetFailed'));
+        if (!r.ok) throw new Error(t('storePresetFailed'));
         // 成功：用后端返回的最新变体列表精准覆盖该 item（与 SYNC_VARIANTS 一致）。
-        const data = (await res.json()) as ComponentVariant[];
+        const data = r.data as ComponentVariant[];
         dispatch({ type: 'SYNC_VARIANTS', itemId, variants: data });
         return true;
       } catch {
@@ -242,14 +241,13 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
       // 乐观更新
       dispatch({ type: 'SET_MIGRATION_STATUS', itemId, status });
       try {
-        const res = await fetch(`/api/tools/component-registry/${itemId}`, {
+        const r = await apiRequest<{ visibilityOpened: boolean }>(`/api/tools/component-registry/${itemId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ migrationStatus: status }),
+          body: { migrationStatus: status },
         });
-        if (!res.ok) throw new Error(t('storeUpdateStatusFailed'));
+        if (!r.ok) throw new Error(t('storeUpdateStatusFailed'));
         // #7 可见性闭环：用后端返回的 visibilityOpened 精准刷新可见性联动状态。
-        const data = (await res.json()) as { visibilityOpened: boolean };
+        const data = r.data as { visibilityOpened: boolean };
         dispatch({
           type: 'SET_MIGRATION_STATUS',
           itemId,
@@ -270,12 +268,11 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
       // 乐观更新
       dispatch({ type: 'UPDATE_GUIDE', itemId, guide });
       try {
-        const res = await fetch(`/api/tools/component-registry/${itemId}/guide`, {
+        const r = await apiRequest(`/api/tools/component-registry/${itemId}/guide`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(guide),
+          body: guide,
         });
-        if (!res.ok) throw new Error(t('storeUpdateGuideFailed'));
+        if (!r.ok) throw new Error(t('storeUpdateGuideFailed'));
       } catch {
         // 精准回滚到操作前指南
         if (prev) dispatch({ type: 'ROLLBACK_GUIDE', itemId, guide: prev });
@@ -287,16 +284,14 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
   const createComponent = useCallback(
     async (input: ComponentItemInput): Promise<boolean> => {
       try {
-        const res = await fetch('/api/tools/component-registry', {
+        const r = await apiRequest<{ item: ComponentItem }>('/api/tools/component-registry', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(input),
+          body: input,
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error ?? t('storeCreateFailed'));
+        if (!r.ok) {
+          throw new Error(r.error ?? t('storeCreateFailed'));
         }
-        const data = (await res.json()) as { item: ComponentItem };
+        const data = r.data as { item: ComponentItem };
         dispatch({ type: 'CREATE_COMPONENT', item: data.item });
         return true;
       } catch {
@@ -312,10 +307,10 @@ export function ComponentRegistryStoreProvider({ children }: { children: ReactNo
       // 乐观更新
       dispatch({ type: 'DELETE_COMPONENT', itemId });
       try {
-        const res = await fetch(`/api/tools/component-registry/${itemId}`, {
+        const r = await apiRequest(`/api/tools/component-registry/${itemId}`, {
           method: 'DELETE',
         });
-        if (!res.ok) throw new Error(t('storeDeleteFailed'));
+        if (!r.ok) throw new Error(t('storeDeleteFailed'));
         return true;
       } catch {
         // 精准恢复被删除的条目

@@ -9,6 +9,7 @@
 
 import { useCallback, useState } from 'react';
 import type { CommunityCommentDetail, CommunityPostDetail } from '@/modules/community/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface UseReplyActionsParams {
   topic: CommunityPostDetail | null;
@@ -60,18 +61,17 @@ export function useReplyActions({
         }),
       );
       try {
-        const res = await fetch('/api/community/like', {
+        const r = await apiRequest<{ liked: boolean; likeCount: number }>('/api/community/like', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ targetType, targetId }),
+          body: { targetType, targetId },
         });
-        if (!res.ok) throw new Error('操作失败');
-        const data = (await res.json()) as { liked: boolean; likeCount: number };
+        if (!r.ok || !r.data) throw new Error('操作失败');
+        const liked = r.data;
         setReplies((prev) =>
-          prev.map((r) =>
-            r.id === targetId
-              ? { ...r, isLikedByMe: data.liked, likeCount: data.likeCount }
-              : r,
+          prev.map((rp) =>
+            rp.id === targetId
+              ? { ...rp, isLikedByMe: liked.liked, likeCount: liked.likeCount }
+              : rp,
           ),
         );
       } catch {
@@ -92,13 +92,10 @@ export function useReplyActions({
   const handleDeleteReply = useCallback(
     async (replyId: string) => {
       try {
-        const res = await fetch(`/api/community/replies/${replyId}`, {
+        const r = await apiRequest(`/api/community/replies/${replyId}`, {
           method: 'DELETE',
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error ?? '删除失败');
-        }
+        if (!r.ok) throw new Error(r.error ?? '删除失败');
         await loadReplies();
       } catch (err) {
         setError(err instanceof Error ? err.message : '删除失败');
@@ -123,29 +120,21 @@ export function useReplyActions({
 
     try {
       if (editingReplyId) {
-        const res = await fetch(`/api/community/replies/${editingReplyId}`, {
+        const r = await apiRequest(`/api/community/replies/${editingReplyId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contentMarkdown: replyContent }),
+          body: { contentMarkdown: replyContent },
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error ?? '编辑失败');
-        }
+        if (!r.ok) throw new Error(r.error ?? '编辑失败');
         sessionStorage.removeItem('community_editing_reply_id');
       } else {
-        const res = await fetch(`/api/community/topics/${topic.id}/replies`, {
+        const r = await apiRequest(`/api/community/topics/${topic.id}/replies`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: {
             contentMarkdown: replyContent,
             parentReplyId: replyParentId,
-          }),
+          },
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error ?? '发布失败');
-        }
+        if (!r.ok) throw new Error(r.error ?? '发布失败');
       }
       setReplyContent('');
       setReplyParentId(null);

@@ -70,8 +70,8 @@ export function PomodoroPlayer() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-6">
-        <div className="relative w-[128px] h-[128px] shrink-0">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3 overflow-y-auto">
+        <div className="relative w-[clamp(88px,60%,128px)] aspect-square shrink-0">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r={RING_R} fill="none" stroke="var(--border)" strokeWidth="6" />
             <circle

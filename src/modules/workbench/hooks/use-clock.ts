@@ -30,19 +30,26 @@ function formatDuration(ms: number): string {
 }
 
 export function useClock(intervalMs = 1000) {
-  const [now, setNow] = useState(() => Date.now());
+  // 初始用固定占位（避免 SSR/CSR 时间戳不一致导致 hydration mismatch），挂载后再启动真实时钟
+  const [now, setNow] = useState(() => 0);
   const [sessionStart] = useState(() => getSessionStart());
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setNow(Date.now());
+    setMounted(true);
     const timer = setInterval(() => setNow(Date.now()), intervalMs);
     return () => clearInterval(timer);
   }, [intervalMs]);
 
+  const safeNow = now || Date.now();
   return {
-    now: new Date(now),
-    timestamp: now,
-    sessionDuration: formatDuration(now - sessionStart),
+    now: new Date(safeNow),
+    timestamp: safeNow,
+    // 未挂载前不展示会话时长（SSR/CSR 一致）
+    sessionDuration: mounted ? formatDuration(safeNow - sessionStart) : '',
     sessionStart,
+    mounted,
   };
 }
 

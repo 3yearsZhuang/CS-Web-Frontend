@@ -17,6 +17,7 @@ import {
   EXAM_PAGE_SIZE,
   type Exam,
 } from './tool-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 const EMPTY_EXAM_FORM = {
   title: '',
@@ -48,14 +49,13 @@ export function ExamManagePanel() {
     setExamLoading(true);
     setExamError(null);
     try {
-      const res = await fetch(`/api/admin/tools/exam?page=${pg}&pageSize=${EXAM_PAGE_SIZE}`);
-      if (res.ok) {
-        const json = await res.json();
+      const r = await apiRequest<{ exams?: Exam[]; data?: Exam[]; total?: number }>(`/api/admin/tools/exam?page=${pg}&pageSize=${EXAM_PAGE_SIZE}`);
+      if (r.ok) {
+        const json = r.data ?? {};
         setExams(json.exams || json.data || []);
         setExamTotal(json.total || 0);
       } else {
-        const json = await res.json();
-        setExamError(json.error || '加载失败');
+        setExamError(r.error ?? '加载失败');
       }
     } catch {
       setExamError('网络错误');
@@ -95,22 +95,20 @@ export function ExamManagePanel() {
 
     setExamCreating(true);
     try {
-      const res = await fetch('/api/admin/tools/exam', {
+      const r = await apiRequest('/api/admin/tools/exam', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           title: examForm.title.trim(),
           description: examForm.description.trim() || undefined,
           startTime: new Date(examForm.startTime).toISOString(),
           endTime: new Date(examForm.endTime).toISOString(),
           durationMinutes: duration,
           techTags: examForm.techTags.length > 0 ? examForm.techTags : undefined,
-        }),
+        },
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setExamFormError(data.error || t('examCreateFailed'));
+      if (!r.ok) {
+        setExamFormError(r.error ?? t('examCreateFailed'));
         return;
       }
 

@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 2FA 状态 */
 export interface TwoFAStatus {
@@ -53,13 +54,11 @@ export function useTwoFA() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/auth/2fa');
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || '加载 2FA 状态失败');
+      const r = await apiRequest<TwoFAStatus>('/api/auth/2fa');
+      if (!r.ok) {
+        throw new Error(r.error ?? '加载 2FA 状态失败');
       }
-      const data = (await res.json()) as TwoFAStatus;
-      setStatus(data);
+      setStatus(r.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载 2FA 状态失败');
     } finally {
@@ -82,12 +81,11 @@ export function useTwoFA() {
     setSetupLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/2fa/setup', { method: 'POST' });
-      const data = (await res.json().catch(() => null)) as SetupData | { error?: string } | null;
-      if (!res.ok) {
-        throw new Error((data as { error?: string })?.error || '初始化 2FA 失败');
+      const r = await apiRequest<SetupData>('/api/auth/2fa/setup', { method: 'POST' });
+      if (!r.ok) {
+        throw new Error(r.error ?? '初始化 2FA 失败');
       }
-      setSetupData(data as SetupData);
+      setSetupData(r.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '初始化 2FA 失败');
     } finally {
@@ -112,14 +110,12 @@ export function useTwoFA() {
     setVerifying(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/2fa/verify', {
+      const r = await apiRequest<{ ok?: boolean }>('/api/auth/2fa/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, mode: 'setup' }),
+        body: { code, mode: 'setup' },
       });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || '验证失败');
+      if (!r.ok || !r.data?.ok) {
+        throw new Error(r.error ?? '验证失败');
       }
       setSetupData(null);
       setVerifyCode('');
@@ -142,14 +138,12 @@ export function useTwoFA() {
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/2fa/disable', {
+      const r = await apiRequest<{ ok?: boolean }>('/api/auth/2fa/disable', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: { code },
       });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || '禁用失败');
+      if (!r.ok || !r.data?.ok) {
+        throw new Error(r.error ?? '禁用失败');
       }
       setActionMode('idle');
       setActionCode('');
@@ -172,16 +166,13 @@ export function useTwoFA() {
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/2fa/backup-codes', {
+      const r = await apiRequest<{ codes?: string[]; error?: string }>('/api/auth/2fa/backup-codes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: { code },
       });
-      const data = (await res.json().catch(() => null)) as
-        | { codes?: string[]; error?: string }
-        | null;
-      if (!res.ok || !data?.codes) {
-        throw new Error(data?.error || '重新生成失败');
+      const data = r.data;
+      if (!r.ok || !data?.codes) {
+        throw new Error(r.error ?? '重新生成失败');
       }
       setRegeneratedCodes(data.codes);
       setActionCode('');

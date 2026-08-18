@@ -13,6 +13,7 @@ import { Badge } from '@/components';
 import type { BadgeVariant } from '@/components';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils/utils';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 入社申请记录 */
 interface JoinApplication {
@@ -36,20 +37,18 @@ export function JoinTab() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/join/mine')
-      .then(async (res) => {
-        if (!res.ok) throw new Error(t('loadFailed'));
-        const data = await res.json();
-        if (cancelled) return;
-        setApplications(data.applications || []);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : t('loadFailed'));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const load = async () => {
+      const r = await apiRequest<{ applications?: JoinApplication[] }>('/api/join/mine');
+      if (cancelled) return;
+      if (!r.ok) {
+        setError(r.error ?? t('loadFailed'));
+        return;
+      }
+      setApplications(r.data?.applications || []);
+    };
+    void load().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };

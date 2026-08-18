@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { CommunityCategory } from '@/modules/community/types';
 
 /** 后端长度限制（与 server/community.ts LIMITS 保持一致） */
@@ -30,10 +31,6 @@ interface CategoriesResponse {
 interface CreateTopicResponse {
   ok: true;
   topic: { id: string; categoryId: string; category?: { slug: string; name: string } | null };
-}
-
-interface ErrorResponse {
-  error: string;
 }
 
 export function useCompose() {
@@ -63,22 +60,20 @@ export function useCompose() {
   const loadInitial = useCallback(async () => {
     setLoadingCats(true);
     try {
-      const [meRes, catRes] = await Promise.all([
-        fetch('/api/auth/me'),
-        fetch('/api/community/categories'),
+      const [meResult, catResult] = await Promise.all([
+        apiRequest<CurrentUserResponse>('/api/auth/me'),
+        apiRequest<CategoriesResponse>('/api/community/categories'),
       ]);
 
-      if (meRes.ok) {
-        const me = (await meRes.json()) as CurrentUserResponse;
-        setIsLoggedIn(Boolean(me?.user?.id));
+      if (meResult.ok) {
+        setIsLoggedIn(Boolean(meResult.data?.user?.id));
       } else {
         setIsLoggedIn(false);
       }
       setAuthChecked(true);
 
-      if (catRes.ok) {
-        const catData = (await catRes.json()) as CategoriesResponse;
-        const cats = catData.items ?? [];
+      if (catResult.ok) {
+        const cats = catResult.data?.items ?? [];
         setCategories(cats);
         if (initialCategory) {
           const matched = cats.find((c) => c.slug === initialCategory);
@@ -134,24 +129,24 @@ export function useCompose() {
 
       setSubmitting(true);
       try {
-        const res = await fetch('/api/community/topics', {
+        const result = await apiRequest<CreateTopicResponse>('/api/community/topics', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: {
             categoryId,
             title: title.trim(),
             contentMarkdown: content,
-          }),
+          },
         });
 
-        const data = (await res.json()) as CreateTopicResponse | ErrorResponse;
-        if (!res.ok) {
-          setFormError((data as ErrorResponse).error ?? '发布失败');
+        if (!result.ok) {
+          setFormError(result.error ?? '发布失败');
           return;
         }
 
-        const ok = data as CreateTopicResponse;
-        router.push(`/community/${ok.topic.id}`);
+        const ok = result.data;
+        if (ok) {
+          router.push(`/community/${ok.topic.id}`);
+        }
       } catch {
         setFormError('网络错误，请重试');
       } finally {

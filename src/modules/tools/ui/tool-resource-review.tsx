@@ -14,6 +14,7 @@ import {
   RESOURCE_PAGE_SIZE,
   type PendingResource,
 } from './tool-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 资源审核子面板 — 待审核资源列表 + 通过/拒绝 */
 export function ResourceReviewPanel() {
@@ -30,14 +31,13 @@ export function ResourceReviewPanel() {
     setResourceLoading(true);
     setResourceError(null);
     try {
-      const res = await fetch(`/api/admin/tools/resource?page=${pg}&pageSize=${RESOURCE_PAGE_SIZE}`);
-      if (res.ok) {
-        const json = await res.json();
-        setResources(json.resources);
-        setResourceTotal(json.total);
+      const r = await apiRequest<{ resources?: PendingResource[]; total?: number }>(`/api/admin/tools/resource?page=${pg}&pageSize=${RESOURCE_PAGE_SIZE}`);
+      if (r.ok) {
+        const json = r.data ?? {};
+        setResources(json.resources ?? []);
+        setResourceTotal(json.total ?? 0);
       } else {
-        const json = await res.json();
-        setResourceError(json.error || t('loadFailed'));
+        setResourceError(r.error ?? t('loadFailed'));
       }
     } catch {
       setResourceError(t('networkError'));
@@ -51,21 +51,19 @@ export function ResourceReviewPanel() {
   }, [resourcePage, fetchResources]);
 
   const handleReview = async (resourceId: string, status: 'published' | 'hidden') => {
-    const res = await fetch(`/api/admin/tools/resource?id=${resourceId}`, {
+    const r = await apiRequest(`/api/admin/tools/resource?id=${resourceId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      body: {
         status,
         note: reviewNote[resourceId]?.trim() || undefined,
-      }),
+      },
     });
 
-    if (res.ok) {
-      setResources((prev) => prev.filter((r) => r.id !== resourceId));
+    if (r.ok) {
+      setResources((prev) => prev.filter((it) => it.id !== resourceId));
       setResourceTotal((prev) => prev - 1);
     } else {
-      const json = await res.json();
-      alert(json.error || t('actionFailed'));
+      alert(r.error ?? t('actionFailed'));
     }
   };
 

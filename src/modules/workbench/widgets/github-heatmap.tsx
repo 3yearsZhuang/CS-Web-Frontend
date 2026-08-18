@@ -12,6 +12,7 @@ import { Button } from '@/components/primitives/button';
 import { DnaCard } from '@/components';
 import { Input } from '@/components/primitives/input';
 import { useLocalStorage } from '../hooks/use-local-storage';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface HeatmapDay {
   date: string;
@@ -66,9 +67,13 @@ export default function GithubHeatmap() {
   const [data, setData] = useState<HeatmapData | null>(null);
   const [loading, setLoading] = useState(false);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
-
-  const year = useMemo(() => new Date().getFullYear(), []);
+  // 年份初始取一次（SSR/CSR 通常一致）；挂载后再次校准，规避跨年边界 SSR/CSR 不一致
+  const [year, setYear] = useState(() => new Date().getFullYear());
   const cells = useMemo(() => buildYearGrid(year), [year]);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   const load = useCallback(
     async (force = false) => {
@@ -79,18 +84,17 @@ export default function GithubHeatmap() {
       }
       setLoading(true);
       try {
-        const res = await fetch(
+        const r = await apiRequest<HeatmapData>(
           `/api/workbench/contributions/github?username=${encodeURIComponent(user)}&year=${year}${
             force ? '&refresh=1' : ''
           }`,
           { cache: 'no-store' },
         );
-        if (res.status === 401) {
+        if (r.status === 401) {
           setNotLoggedIn(true);
           return;
         }
-        const json = (await res.json()) as HeatmapData;
-        setData(json);
+        setData(r.data);
       } catch {
         setData(null);
       } finally {

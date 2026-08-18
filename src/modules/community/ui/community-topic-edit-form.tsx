@@ -8,6 +8,7 @@ import { RevealItem } from '@/components/effects/motion-primitives';
 import { MarkdownEditor } from './community-markdown-editor';
 import { Button } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { CommunityPostDetail } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
 
@@ -28,20 +29,22 @@ export function TopicEditForm({ topic, onCancel, onSaved }: TopicEditFormProps) 
     setSavingTopic(true);
     setTopicEditError(null);
     try {
-      const res = await fetch(`/api/community/topics/${topic.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editTitle,
-          contentMarkdown: editContent,
-        }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? t('saveFailed'));
+      const result = await apiRequest<{ topic: CommunityPostDetail }>(
+        `/api/community/topics/${topic.id}`,
+        {
+          method: 'PUT',
+          body: {
+            title: editTitle,
+            contentMarkdown: editContent,
+          },
+        },
+      );
+      if (!result.ok) {
+        throw new Error(result.error ?? t('saveFailed'));
       }
-      const data = (await res.json()) as { topic: CommunityPostDetail };
-      onSaved(data.topic);
+      if (result.data) {
+        onSaved(result.data.topic);
+      }
     } catch (err) {
       setTopicEditError(err instanceof Error ? err.message : t('saveFailed'));
     } finally {
