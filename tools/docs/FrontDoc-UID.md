@@ -622,7 +622,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 > 2026-08 引入：从 careers.kimi.com（月之暗面招聘站）提取视觉语言，与「编辑式技术极简」做**平衡融合**。
 > 核心原则：像素语言只注入**元数据层与交互**（标签 / 编号 / 角标 / 按钮 / 卡片皮肤），**不动** Fraunces 衬线标题与正文栈。全站像素化与 scroll-jacking 不采用。
-> 参照 demo：`tools/demo/kimi-pixel-style-demo.html`（风格 DNA + 融合示范）、`tools/demo/cards-pixel-options.html`（卡片方案对照）。
+> 参照 demo：`.design_library/fztbucs/demos/kimi-pixel-style-demo.html`（风格 DNA + 融合示范）、`.design_library/fztbucs/demos/cards-pixel-options.html`（卡片方案对照）。
 
 ### 15.1 字体令牌
 
@@ -704,7 +704,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ### 15.9 列表（列表行）选型落地
 
-像素融合列表三档（`tools/demo/list-and-title-demos.html`）已按页面选型落地。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
+像素融合列表三档已按页面选型落地（原型与选型对照见 `.design_library/fztbucs/demos/list-and-title-demos.html`「一、列表」三方案；标题虚影可行性评估同文件「二、标题底部虚影」）。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
 
 | 页面 | 选型 | 共享类 | 视觉特征 |
 |------|------|--------|----------|
