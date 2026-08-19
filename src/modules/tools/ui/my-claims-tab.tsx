@@ -9,7 +9,7 @@
 
 import { useTranslations } from 'next-intl';
 import { SectionLoading, GhostTitle, Title } from '@/components';
-import type { useTasks } from './use-tasks';
+import type { useTasks } from './hooks/use-tasks';
 import { statusBadge } from './task-shared';
 
 export function MyClaimsTab(props: ReturnType<typeof useTasks>) {

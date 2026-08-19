@@ -16,7 +16,7 @@ import { Footer } from '@/components/layout/footer';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { ThemeProvider } from '@/components/theme-provider';
 import { PageTransition } from '@/components/effects/page-transition';
-import { AnnouncementBanner } from '@/components/feedback/announcement-banner';
+import { AnnouncementBannerClient } from '@/modules/announcements/ui/announcement-banner-client';
 import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
 import { DemoModeInit } from '@/components/demo/demo-mode-init';
 import { DemoBanner } from '@/components/demo/demo-banner';
@@ -221,7 +221,7 @@ export default async function RootLayout({
                 <Navbar />
               </VisibilityGate>
               <VisibilityGate componentKey="chrome-announcement-banner">
-                <AnnouncementBanner />
+                <AnnouncementBannerClient />
               </VisibilityGate>
               <PageTransition>{children}</PageTransition>
               <VisibilityGate componentKey="chrome-footer">

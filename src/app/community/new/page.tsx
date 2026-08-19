@@ -14,8 +14,8 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading, Title, SectionMarker, ArkDivider } from '@/components';
-import { useCompose } from './use-compose';
-import { ComposeForm } from './compose-form';
+import { useCompose } from '@/modules/community/ui/hooks/use-compose';
+import { ComposeForm } from '@/modules/community/ui/compose-form';
 
 export default function ComposePage() {
   return (

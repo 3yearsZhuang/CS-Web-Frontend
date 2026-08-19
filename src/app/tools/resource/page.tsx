@@ -17,9 +17,9 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, Pagination, SectionLoading, ArkDivider, Title } from '@/components';
 import { motion } from 'motion/react';
-import { useResources } from './use-resources';
-import { ResourceCard } from './resource-card';
-import { SubmitResourceModal } from './submit-resource-modal';
+import { useResources } from '@/modules/tools/ui/hooks/use-resources';
+import { ResourceCard } from '@/modules/tools/ui/resource-card';
+import { SubmitResourceModal } from '@/modules/tools/ui/submit-resource-modal';
 
 export default function ResourcePage() {
   const t = useTranslations('toolsResource');

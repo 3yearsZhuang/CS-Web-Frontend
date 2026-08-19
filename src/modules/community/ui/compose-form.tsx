@@ -13,7 +13,7 @@ import { MarkdownEditor } from '@/modules/community/ui/community-markdown-editor
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { Button, SectionMarker } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import type { ComposeState } from './use-compose';
+import type { ComposeState } from './hooks/use-compose';
 
 export function ComposeForm(props: ComposeState) {
   const t = useTranslations('communityNew');

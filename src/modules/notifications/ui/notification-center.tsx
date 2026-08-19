@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, EmptyState, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
-import { filterTabs, TYPE_STYLES, type NotificationsState } from './use-notifications';
+import { filterTabs, TYPE_STYLES, type NotificationsState } from './hooks/use-notifications';
 
 export function NotificationCenter(props: NotificationsState) {
   const t = useTranslations('notifications');

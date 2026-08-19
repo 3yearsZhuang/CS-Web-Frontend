@@ -12,8 +12,8 @@ import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
-import type { ResourceItem } from './use-resources';
-import { typeLabelOf, typeIconOf } from './use-resources';
+import type { ResourceItem } from './hooks/use-resources';
+import { typeLabelOf, typeIconOf } from './hooks/use-resources';
 import { formatDate } from '@/shared/utils/utils';
 
 interface Props {

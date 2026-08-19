@@ -15,8 +15,8 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { SectionLoading, SectionMarker, Title } from '@/components';
 import { useTranslations } from 'next-intl';
-import { useNotifications } from './use-notifications';
-import { NotificationCenter } from './notification-center';
+import { useNotifications } from '@/modules/notifications/ui/hooks/use-notifications';
+import { NotificationCenter } from '@/modules/notifications/ui/notification-center';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 export default function NotificationsPage() {

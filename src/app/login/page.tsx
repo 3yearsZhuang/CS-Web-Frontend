@@ -16,9 +16,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useAuthForm } from '@/modules/auth/ui/hooks/use-auth-form';
 import { DEMO_COOKIE, DEMO_COOKIE_MAX_AGE } from '@/shared/constants/demo';
-import { AuthForm } from './auth-form';
-import { TwoFactorForm } from './two-factor-form';
-import { ForgotPasswordForm } from './forgot-password-form';
+import { AuthForm } from '@/modules/auth/ui/auth-form';
+import { TwoFactorForm } from '@/modules/auth/ui/two-factor-form';
+import { ForgotPasswordForm } from '@/modules/auth/ui/forgot-password-form';
 
 // 动态渲染：用户特定页面，无需静态预生成
 export const dynamic = 'force-dynamic';

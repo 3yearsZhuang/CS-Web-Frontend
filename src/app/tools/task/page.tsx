@@ -14,11 +14,11 @@ import { useTranslations } from 'next-intl';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Title } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { useTasks } from './use-tasks';
-import { BoardTab } from './board-tab';
-import { MyClaimsTab } from './my-claims-tab';
-import { PointsTab } from './points-tab';
-import type { TaskTab } from './task-shared';
+import { useTasks } from '@/modules/tools/ui/hooks/use-tasks';
+import { BoardTab } from '@/modules/tools/ui/board-tab';
+import { MyClaimsTab } from '@/modules/tools/ui/my-claims-tab';
+import { PointsTab } from '@/modules/tools/ui/points-tab';
+import type { TaskTab } from '@/modules/tools/ui/task-shared';
 
 export default function TaskPage() {
   const t = useTranslations('toolsTask');

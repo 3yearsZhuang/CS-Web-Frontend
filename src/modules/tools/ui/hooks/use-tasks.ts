@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
-import type { TaskData, ClaimData, PointsProfile, LeaderboardEntry } from './task-shared';
+import type { TaskData, ClaimData, PointsProfile, LeaderboardEntry } from '../task-shared';
 
 export function useTasks() {
   const t = useTranslations('toolsTask');

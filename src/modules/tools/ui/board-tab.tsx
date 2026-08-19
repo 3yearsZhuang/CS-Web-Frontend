@@ -10,7 +10,7 @@
 import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button, SectionLoading, GhostTitle, Title } from '@/components';
-import type { useTasks } from './use-tasks';
+import type { useTasks } from './hooks/use-tasks';
 import { categoryLabel, categoryOptions, TASK_INPUT_CLASS } from './task-shared';
 
 export function BoardTab(props: ReturnType<typeof useTasks>) {

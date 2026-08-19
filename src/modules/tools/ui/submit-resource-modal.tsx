@@ -14,8 +14,8 @@ import { Button, ArkDivider } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
-import type { ResourcesState, TFn, ResourceType } from './use-resources';
-import { resourceTypeLabel } from './use-resources';
+import type { ResourcesState, TFn, ResourceType } from './hooks/use-resources';
+import { resourceTypeLabel } from './hooks/use-resources';
 
 export function SubmitResourceModal(props: ResourcesState) {
   const t = useTranslations('toolsResource');

@@ -1,14 +1,33 @@
 'use client'
 /**
- * @file 公告横幅组件
+ * @file 公告横幅组件（纯 UI 壳）
+ *
+ * 数据与 dismiss 持久化均由调用方经 props 注入（GENERAL 2.2 展示/容器分离）：
+ * - announcements: 当前生效公告列表（业务层容器负责拉取与过滤）
+ * - onDismiss: 关闭回调（持久化由调用方负责，如 saveDismissed）
+ * 组件仅保留「本次会话可见性（visible）」UI 状态。
  */
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, AlertTriangle, Info, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAnnouncements, saveDismissed, type AnnouncementLevel } from '@/modules/community/ui/hooks/use-announcements';
 
-const levelConfig: Record<AnnouncementLevel, {
+export type AnnouncementBannerLevel = 'info' | 'warning' | 'success' | 'error';
+
+export interface AnnouncementBannerItem {
+  id: string;
+  title: string;
+  content: string | null;
+  level: AnnouncementBannerLevel;
+  isDismissible: boolean;
+}
+
+interface AnnouncementBannerProps {
+  announcements: AnnouncementBannerItem[];
+  onDismiss: (id: string) => void;
+}
+
+const levelConfig: Record<AnnouncementBannerLevel, {
   icon: React.ComponentType<{ className?: string; size?: number }>;
   bg: string;
   border: string;
@@ -45,16 +64,15 @@ const levelConfig: Record<AnnouncementLevel, {
   },
 };
 
-/** 全站公告横幅 — 在 Navbar 下方展示当前生效的公告 */
-export function AnnouncementBanner() {
+/** 全站公告横幅 — 在 Navbar 下方展示当前生效的公告（数据由容器注入） */
+export function AnnouncementBanner({ announcements, onDismiss }: AnnouncementBannerProps) {
   const t = useTranslations('feedback');
-  const { announcements } = useAnnouncements();
-  // 本次会话可见性：缺省视为可见；dismiss 仅隐藏本会话并持久化（下次 reload 自动排除）
+  // 本次会话可见性：缺省视为可见；dismiss 仅隐藏本会话（持久化由 onDismiss 负责）
   const [visible, setVisible] = useState<Record<string, boolean>>({});
 
   const dismiss = (id: string) => {
     setVisible((prev) => ({ ...prev, [id]: false }));
-    saveDismissed(id);
+    onDismiss(id);
   };
 
   const activeAnnouncements = announcements.filter((a) => visible[a.id] !== false);

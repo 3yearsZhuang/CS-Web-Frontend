@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Notification } from '@/app/notifications/use-notifications';
+import type { Notification } from '@/modules/notifications/ui/hooks/use-notifications';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 

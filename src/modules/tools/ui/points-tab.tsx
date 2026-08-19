@@ -10,7 +10,7 @@
 import { Trophy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { SectionLoading, GhostTitle, Title } from '@/components';
-import type { useTasks } from './use-tasks';
+import type { useTasks } from './hooks/use-tasks';
 
 const LEVEL_THRESHOLDS = [
   { l: 1, key: 'levelL1', p: 0 },
