@@ -74,7 +74,19 @@ export async function apiRequest<T = unknown>(
   };
   try {
     const res = await fetch(path, opts);
-    const text = await res.text();
+    // 解析响应体：优先 res.text()（兼容空响应体场景，空串→null）。
+    // 若响应对象未实现 text()（部分测试桩仅实现 json()），退化为 JSON 序列化，
+    // 保证数据/状态码正确解析（真实 fetch Response 必有 text()，生产行为不变）。
+    let text: string;
+    if (typeof (res as { text?: unknown }).text === 'function') {
+      text = await res.text();
+    } else {
+      const fb =
+        typeof (res as { json?: unknown }).json === 'function'
+          ? await (res as { json: () => Promise<unknown> }).json()
+          : null;
+      text = JSON.stringify(fb ?? null);
+    }
     const data = (text ? (JSON.parse(text) as T) : null) as T | null;
     if (!res.ok) {
       return {
