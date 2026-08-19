@@ -1,5 +1,5 @@
 /**
- * @file 活动报名 API — POST /api/events/[id]/register（BFF 薄转发）
+ * @file 活动报名 API — POST/DELETE /api/events/[id]/register（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -30,6 +30,31 @@ export async function POST(
     return res;
   }
   const res = NextResponse.json({ ok: true, registration: proxy.body });
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const originErr = assertAllowedOrigin(req);
+  if (originErr) return originErr;
+
+  const { id } = await params;
+
+  const proxy = await proxyBackend(req, {
+    path: `/events/${encodeURIComponent(id)}/register`,
+    method: 'DELETE',
+  });
+
+  if (proxy.status !== 200) {
+    const err = normalizeError(proxy.body, '取消报名失败');
+    const res = NextResponse.json(err, { status: proxy.status });
+    if (proxy.clearAuth) clearAuthCookies(res);
+    return res;
+  }
+  const res = NextResponse.json({ ok: true });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

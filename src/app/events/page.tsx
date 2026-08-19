@@ -190,7 +190,7 @@ export default function EventsPage() {
             level={1}
             collapsed={hero.collapsed}
             collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
-            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            expandedSize="text-[clamp(36px,9vw,100px)] leading-[1.05] sm:leading-[0.95]"
             echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
             subtitle={t('heroTitleEn')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
