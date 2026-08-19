@@ -1401,6 +1401,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auxilio/conversations/{conversation_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Events
+         * @description Trajectory 事件回放（融合点 2 的消费端）：按 seq 返回会话全事件流。
+         */
+        get: operations["list_events_api_v1_auxilio_conversations__conversation_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auxilio/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -3896,6 +3916,8 @@ export interface components {
             conversation_id?: number | null;
             /** Messages */
             messages: components["schemas"]["ChatTurn"][];
+            /** Preset Id */
+            preset_id?: string | null;
         };
         /** ChatTurn */
         ChatTurn: {
@@ -7965,6 +7987,37 @@ export interface operations {
             };
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_events_api_v1_auxilio_conversations__conversation_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;

@@ -11,7 +11,7 @@ import { BarChart3, Bot, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { WorkbenchCard } from '../workbench-card';
-import AssistantChat from './assistant-chat';
+import AssistantChat from '@/modules/auxilio/ui/assistant-chat';
 import LlmUsageStats from './llm-usage-stats';
 
 export default function LlmWidget() {
@@ -35,7 +35,7 @@ export default function LlmWidget() {
       }
     >
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {showPanel ? <LlmUsageStats embedded /> : <AssistantChat embedded />}
+        {showPanel ? <LlmUsageStats embedded /> : <AssistantChat embedded mode="lite" />}
       </div>
     </WorkbenchCard>
   );

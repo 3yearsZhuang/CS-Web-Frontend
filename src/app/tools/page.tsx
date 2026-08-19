@@ -8,7 +8,7 @@
 
 import Link from 'next/link';
 import { Badge, GhostTitle, Title } from '@/components';
-import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
+import { Bot, BookOpen, ClipboardList, Code2, GraduationCap, MessageCircle, MessageSquare } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -35,6 +35,15 @@ interface ToolCard {
 }
 
 const TOOLS: ToolCard[] = [
+  {
+    href: '/tools/auxilio',
+    icon: <Bot className="w-5 h-5" />,
+    titleKey: 'auxilioAgentTitle',
+    enKey: 'auxilioAgentEn',
+    descKey: 'auxilioAgentDesc',
+    status: 'available',
+    visibilityKey: 'tools-auxilio',
+  },
   {
     href: '/tools/exam',
     icon: <GraduationCap className="w-5 h-5" />,

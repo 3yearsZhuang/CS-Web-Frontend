@@ -34,10 +34,22 @@ const MAX_HISTORY = 20;
 interface AssistantChatProps {
   /** 嵌入合并卡片（llm-widget）时去掉左右栏 card-minimal 外壳，仅保留内容与交互 */
   embedded?: boolean;
+  /** lite = 纯轻聊（仅提问+回复：无会话列表/无工具卡/无历史加载）；full = 完整 agent 能力 */
+  mode?: 'lite' | 'full';
+  /** 显式 Agent 预设（full 模式；如 exam_sprint / web_research，缺省后端启发式匹配） */
+  presetId?: string | null;
+  /** 当前打开会话变化回调（full 模式，供 Trajectory 回放定位） */
+  onActiveConversation?: (id: number | null) => void;
 }
 
-export default function AssistantChat({ embedded = false }: AssistantChatProps) {
+export default function AssistantChat({
+  embedded = false,
+  mode = 'full',
+  presetId = null,
+  onActiveConversation,
+}: AssistantChatProps) {
   const t = useTranslations('workbench');
+  const lite = mode === 'lite';
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -60,8 +72,9 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
   }, []);
 
   useEffect(() => {
+    if (lite) return; // lite 模式不做历史会话管理
     void loadConversations();
-  }, [loadConversations]);
+  }, [loadConversations, lite]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -87,6 +100,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
           })),
         })),
       );
+      onActiveConversation?.(id);
     } finally {
       setLoadingHistory(false);
     }
@@ -96,7 +110,8 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
     setConversationId(null);
     setMessages([]);
     setInput('');
-  }, []);
+    onActiveConversation?.(null);
+  }, [onActiveConversation]);
 
   const send = useCallback(async () => {
     const content = input.trim();
@@ -158,8 +173,9 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversation_id: conversationId,
+          conversation_id: lite ? null : conversationId,
           messages: history.map((m) => ({ role: m.role, content: m.content })),
+          ...(presetId ? { preset_id: presetId } : {}),
         }),
       });
       if (res.status === 401) {
@@ -197,7 +213,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
             finishTool(ev.name, ev.ok !== false);
           else if (type === 'error') appendDelta(`\n\n⚠ ${String(ev.message ?? '模型服务异常')}`);
           else if (type === 'done') {
-            void loadConversations();
+            if (!lite) void loadConversations();
           }
         }
       }
@@ -215,7 +231,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
     } finally {
       setStreaming(false);
     }
-  }, [input, streaming, messages, conversationId, loadConversations]);
+  }, [input, streaming, messages, conversationId, loadConversations, presetId]);
 
   if (notLoggedIn) {
     return (
@@ -226,41 +242,51 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 items-start">
-      {/* 会话列表 */}
-      <div
-        className={
-          embedded
-            ? 'flex flex-col gap-2 max-h-[60vh] overflow-y-auto lg:border-r lg:border-[var(--border)] lg:pr-3'
-            : 'card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto'
-        }
-      >
-        <Button size="sm" variant="pixel-outline" className="justify-center" onClick={newConversation}>
-          <Plus className="w-4 h-4" /> {t('newChat')}
-        </Button>
-        {conversations.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            className={`text-left px-3 py-2 rounded text-[13px] truncate border border-[var(--border)] hover:bg-[var(--border)]/40 ${
-              conversationId === c.id ? 'bg-[var(--border)]/50' : ''
-            }`}
-            onClick={() => void openConversation(c.id)}
-          >
-            {c.title || '新会话'}
-          </button>
-        ))}
-        {conversations.length === 0 && (
-          <p className="text-[12px] text-[var(--muted-foreground)] px-2 py-3">{t('noConversations')}</p>
-        )}
-      </div>
+    <div
+      className={
+        lite
+          ? 'flex flex-col gap-4'
+          : 'grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 items-start'
+      }
+    >
+      {/* 会话列表（仅 full 模式） */}
+      {!lite && (
+        <div
+          className={
+            embedded
+              ? 'flex flex-col gap-2 max-h-[60vh] overflow-y-auto lg:border-r lg:border-[var(--border)] lg:pr-3'
+              : 'card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto'
+          }
+        >
+          <Button size="sm" variant="pixel-outline" className="justify-center" onClick={newConversation}>
+            <Plus className="w-4 h-4" /> {t('newChat')}
+          </Button>
+          {conversations.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`text-left px-3 py-2 rounded text-[13px] truncate border border-[var(--border)] hover:bg-[var(--border)]/40 ${
+                conversationId === c.id ? 'bg-[var(--border)]/50' : ''
+              }`}
+              onClick={() => void openConversation(c.id)}
+            >
+              {c.title || '新会话'}
+            </button>
+          ))}
+          {conversations.length === 0 && (
+            <p className="text-[12px] text-[var(--muted-foreground)] px-2 py-3">{t('noConversations')}</p>
+          )}
+        </div>
+      )}
 
       {/* 对话区 */}
       <div
         className={
-          embedded
-            ? 'flex flex-col min-h-[480px] max-h-[60vh]'
-            : 'card-minimal flex flex-col min-h-[520px] max-h-[72vh]'
+          lite
+            ? 'flex flex-col min-h-[280px] max-h-[50vh]'
+            : embedded
+              ? 'flex flex-col min-h-[480px] max-h-[60vh]'
+              : 'card-minimal flex flex-col min-h-[520px] max-h-[72vh]'
         }
       >
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
@@ -294,7 +320,7 @@ export default function AssistantChat({ embedded = false }: AssistantChatProps) 
                   <span className="whitespace-pre-wrap">{msg.content}</span>
                 )}
               </div>
-              {msg.role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0 && (
+              {!lite && msg.role === 'assistant' && msg.toolCalls && msg.toolCalls.length > 0 && (
                 <div className="flex flex-col gap-1">
                   {msg.toolCalls.map((tc, j) => (
                     <div

@@ -22,6 +22,9 @@ export interface ToolsMessages {
     communityTitle: string;
     communityEn: string;
     communityDesc: string;
+    auxilioAgentTitle: string;
+    auxilioAgentEn: string;
+    auxilioAgentDesc: string;
     examTitle: string;
     examEn: string;
     examDesc: string;
@@ -434,6 +437,25 @@ export interface ToolsMessages {
     llmMaskedHint: string;
     llmNoData: string;
     llmUsageEntry: string;
+    agentTitle: string;
+    presetLabel: string;
+    presetAuto: string;
+    presetGeneral: string;
+    presetExamSprint: string;
+    presetResourceFinder: string;
+    presetWebResearch: string;
+    replay: string;
+    replayNoConversation: string;
+    replayFailed: string;
+    noEvents: string;
+    play: string;
+    eventDelta: string;
+    eventToolCall: string;
+    eventToolResult: string;
+    eventUsage: string;
+    eventDone: string;
+    eventError: string;
+    eventOther: string;
     resetLayout: string;
     confirmResetLayout: string;
     dragHint: string;
@@ -487,6 +509,9 @@ export const zhCN: ToolsMessages = {
     communityTitle: '社区',
     communityEn: 'Community',
     communityDesc: '社团交流、问答与内容分享',
+    auxilioAgentTitle: '学习助手 Agent',
+    auxilioAgentEn: 'Full Agent',
+    auxilioAgentDesc: '完整对话、工具调用、Agent 预设与轨迹回放',
     examTitle: '内网考试',
     examEn: 'Exam System',
     examDesc: '选择题在线评测，自动判分与排名。支持算法周赛和项目组考核。',
@@ -899,6 +924,25 @@ export const zhCN: ToolsMessages = {
     llmMaskedHint: '当前 Key：{masked}',
     llmNoData: '暂无用量数据，先和学习助手聊几句',
     llmUsageEntry: '用量与设置',
+    agentTitle: 'Auxilio · 全量 Agent',
+    presetLabel: '预设',
+    presetAuto: '自动',
+    presetGeneral: '通用答疑',
+    presetExamSprint: '考试冲刺',
+    presetResourceFinder: '资源检索',
+    presetWebResearch: '联网研究',
+    replay: '轨迹回放',
+    replayNoConversation: '（打开会话后可用）',
+    replayFailed: '回放加载失败：{msg}',
+    noEvents: '暂无事件记录',
+    play: '播放',
+    eventDelta: '回复片段',
+    eventToolCall: '工具调用',
+    eventToolResult: '工具结果',
+    eventUsage: '用量',
+    eventDone: '完成',
+    eventError: '错误',
+    eventOther: '其他',
     resetLayout: '重置布局',
     confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
     dragHint: '点击规格键改积木大小（如 1×1 / 2×2 / 2×3）· 进入排序模式拖拽排序',
@@ -952,6 +996,9 @@ export const en: ToolsMessages = {
     communityTitle: 'Community',
     communityEn: 'Community',
     communityDesc: 'Discussion, Q&A and community sharing',
+    auxilioAgentTitle: 'Learning Assistant Agent',
+    auxilioAgentEn: 'Full Agent',
+    auxilioAgentDesc: 'Full conversation, tool calls, presets & trajectory replay',
     examTitle: 'Exam System',
     examEn: 'Exam System',
     examDesc: 'Online multiple-choice assessment with auto-grading and leaderboards. For algorithm contests and project-team assessments.',
@@ -1364,6 +1411,25 @@ export const en: ToolsMessages = {
     llmMaskedHint: 'Current key: {masked}',
     llmNoData: 'No usage yet — chat with the assistant first',
     llmUsageEntry: 'Usage & Settings',
+    agentTitle: 'Auxilio · Full Agent',
+    presetLabel: 'Preset',
+    presetAuto: 'Auto',
+    presetGeneral: 'General',
+    presetExamSprint: 'Exam sprint',
+    presetResourceFinder: 'Resource finder',
+    presetWebResearch: 'Web research',
+    replay: 'Trajectory replay',
+    replayNoConversation: '(open a conversation first)',
+    replayFailed: 'Replay failed: {msg}',
+    noEvents: 'No events yet',
+    play: 'Play',
+    eventDelta: 'Delta',
+    eventToolCall: 'Tool call',
+    eventToolResult: 'Tool result',
+    eventUsage: 'Usage',
+    eventDone: 'Done',
+    eventError: 'Error',
+    eventOther: 'Other',
     resetLayout: 'Reset layout',
     confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
     dragHint: 'Click a size key to resize (e.g. 1×1 / 2×2 / 2×3) · enter sort mode to drag reorder',
