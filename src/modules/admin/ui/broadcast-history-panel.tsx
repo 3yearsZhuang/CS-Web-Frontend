@@ -6,6 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
 import { type NotifHistoryItem } from '@/modules/admin/ui/types';
@@ -23,20 +24,20 @@ export function BroadcastHistoryPanel({ onForbidden }: { onForbidden: () => void
   const fetchHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      const res = await fetch(`/api/admin/notifications?limit=${NOTIF_HISTORY_LIMIT}`, {
-        cache: 'no-store',
-      });
-      if (res.status === 401) {
+      const r = await apiRequest<{ broadcasts?: NotifHistoryItem[] }>(
+        `/api/admin/notifications?limit=${NOTIF_HISTORY_LIMIT}`,
+        { cache: 'no-store' },
+      );
+      if (r.status === 401) {
         router.replace('/login');
         return;
       }
-      if (res.status === 403) {
+      if (r.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) return;
-      const data = (await res.json()) as { broadcasts?: NotifHistoryItem[] };
-      setHistory(data.broadcasts ?? []);
+      if (!r.ok) return;
+      setHistory(r.data?.broadcasts ?? []);
     } catch {
       // 静默
     } finally {

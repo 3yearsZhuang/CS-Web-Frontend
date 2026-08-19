@@ -8,7 +8,7 @@
  */
 
 import { useTranslations } from 'next-intl';
-import { SectionLoading } from '@/components';
+import { SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './use-tasks';
 import { statusBadge } from './task-shared';
 
@@ -18,9 +18,9 @@ export function MyClaimsTab(props: ReturnType<typeof useTasks>) {
 
   return (
     <div>
-      <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+      <Title level={2} className="mb-10 sm:mb-16">
         {t('tabMyClaims')}
-      </h2>
+      </Title>
 
       {!user ? (
         <div className="py-12 text-center">

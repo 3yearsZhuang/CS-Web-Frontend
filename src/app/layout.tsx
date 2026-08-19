@@ -10,6 +10,7 @@ import Script from 'next/script';
 import localFont from 'next/font/local';
 import { NextIntlClientProvider } from 'next-intl';
 import { SWRProvider } from '@/components/swr-provider';
+import { getServerUser } from '@/shared/server-auth';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -40,6 +41,16 @@ const manrope = localFont({
 const jetbrainsMono = localFont({
   src: './fonts/jetbrains-latin.woff2',
   variable: '--font-jetbrains',
+  display: 'swap',
+});
+/**
+ * 缝合像素字体（Fusion Pixel 12px Monospaced zh_hans，OFL-1.1）— 自托管。
+ * 用于像素元数据层（标签/编号/按钮文案/装饰文字），经 --font-pixel 令牌引用。
+ * 全字符 CJK 像素字族 641KB，可接受；不改变正文/展示字体栈。
+ */
+const fusionPixel = localFont({
+  src: './fonts/fusion-pixel-zh_hans.woff2',
+  variable: '--font-fusion-pixel',
   display: 'swap',
 });
 
@@ -148,6 +159,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // SSR cookie 注水：服务端读取 JWT cookie 取当前用户，注入 SWRConfig fallback，
+  // 使 SSR 与客户端首帧登录态一致（根除 /tools 等登录页 hydration 不匹配）。
+  // 后端不可达时降级 null，由客户端 useAuth 挂载后 revalidate 自愈。
+  const serverUser = await getServerUser();
+  const swrFallback = serverUser ? { '/api/auth/me': { user: serverUser } } : {};
+
   // F2：读取 proxy.ts 注入的 per-request CSP nonce
   const nonce = (await headers()).get('x-nonce') ?? '';
 
@@ -156,18 +173,20 @@ export default async function RootLayout({
       lang="zh-CN"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable} ${fusionPixel.variable}`}
     >
       <head>
         {/*
-          防闪烁：SSR 默认深色，首帧由下方内联脚本按 next-themes 存储值校正主题类，
+          防闪烁：SSR 默认深色，首帧由内联脚本按 next-themes 存储值校正主题类，
           避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
 
-          置于 <head> 中的内联 <script> 是 React 19 / Next 16 中消除“Encountered a
-          script tag”告警的规范做法（next-themes 同理）：<head> 内的脚本会被 React
-          识别为文档级一次性副作用，不会再触发该渲染告警。
+          使用 next/script 的 beforeInteractive 策略：该脚本会被注入到文档 <head>
+          并在 hydrate 前执行，且不会触发 “Encountered a script tag” 渲染告警
+          （裸 <script> 在 React 19 组件树中渲染时会触发该告警）。
         */}
-        <script
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
@@ -181,7 +200,7 @@ export default async function RootLayout({
         * SWR 全局配置：提供默认 fetcher（HTTP 200 返回 JSON，否则返回 null），
         * 关闭焦点/重连重验证以避免不必要的请求；缓存与去重由 SWR 自动管理。
         */}
-        <SWRProvider>
+        <SWRProvider fallback={swrFallback}>
         <Script
           id="sw-register"
           strategy="afterInteractive"

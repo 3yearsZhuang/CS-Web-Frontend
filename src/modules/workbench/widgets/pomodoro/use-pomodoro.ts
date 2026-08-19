@@ -12,6 +12,7 @@ import { useIdbMedia } from '../../hooks/use-idb-media';
 import { useLocalStorage } from '../../hooks/use-local-storage';
 import type { PomodoroPhase, PomodoroSettings, PomodoroState, SoundSource } from '../../types';
 import { DEFAULT_SETTINGS } from './constants';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 const DEFAULT_STATE: PomodoroState = {
   phase: 'idle',
@@ -27,7 +28,8 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
     DEFAULT_SETTINGS,
   );
   const [state, setState] = useLocalStorage<PomodoroState>('wb_pomodoro_state', DEFAULT_STATE);
-  const [now, setNow] = useState(() => Date.now());
+  // 初始占位 0，挂载后再取真实时间，避免 SSR/CSR 时间戳不一致导致 hydration mismatch
+  const [now, setNow] = useState(() => 0);
   const [currentSound, setCurrentSound] = useState<SoundSource | null>(null);
 
   const musicUrlRef = useRef<string | null>(null);
@@ -141,15 +143,14 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
   const prevRoundRef = useRef(state.round);
   useEffect(() => {
     if (state.round > prevRoundRef.current) {
-      void fetch('/api/workbench/focus-sessions', {
+      void apiRequest('/api/workbench/focus-sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           durationSeconds: settings.focusMin * 60,
           phase: 'focus',
           soundSource: settings.focusSound,
-        }),
-      }).catch(() => {});
+        },
+      });
     }
     prevRoundRef.current = state.round;
   }, [state.round, settings.focusMin, settings.focusSound]);

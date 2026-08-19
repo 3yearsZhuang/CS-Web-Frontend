@@ -8,9 +8,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 
 type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
@@ -74,13 +75,9 @@ export function AnnouncementsPanel() {
   const fetchAnnouncements = useCallback(async () => {
     try {
       setAnnLoading(true);
-      const res = await fetch('/api/admin/announcements');
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || t('loadFailed'));
-      }
-      const data = await res.json();
-      setAnnouncements(data.items || []);
+      const r = await apiRequest<{ items: Announcement[] }>('/api/admin/announcements');
+      if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+      setAnnouncements(r.data?.items ?? []);
       setAnnError(null);
     } catch (err) {
       setAnnError(err instanceof Error ? err.message : t('unknownError'));
@@ -135,22 +132,19 @@ export function AnnouncementsPanel() {
         expiresAt: form.expiresAt || null,
         targetRoles: form.targetRoles.length > 0 ? form.targetRoles : null,
       };
-      let res: Response;
+      let r;
       if (editingId) {
-        res = await fetch(`/api/admin/announcements/${editingId}`, {
+        r = await apiRequest(`/api/admin/announcements/${editingId}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body,
         });
       } else {
-        res = await fetch('/api/admin/announcements', {
+        r = await apiRequest('/api/admin/announcements', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body,
         });
       }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('actionFailed'));
+      if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
       annShowSuccess(editingId ? t('updated') : t('created'));
       resetForm();
       fetchAnnouncements();
@@ -163,15 +157,11 @@ export function AnnouncementsPanel() {
 
   const toggleActive = async (a: Announcement) => {
     try {
-      const res = await fetch(`/api/admin/announcements/${a.id}`, {
+      const r = await apiRequest(`/api/admin/announcements/${a.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !a.isActive }),
+        body: { isActive: !a.isActive },
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || t('actionFailed'));
-      }
+      if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
       fetchAnnouncements();
     } catch (err) {
       setAnnError(err instanceof Error ? err.message : t('actionFailed'));
@@ -187,11 +177,8 @@ export function AnnouncementsPanel() {
     });
     if (!confirmed) return;
     try {
-      const res = await fetch(`/api/admin/announcements/${a.id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || t('deleteFailed'));
-      }
+      const r = await apiRequest(`/api/admin/announcements/${a.id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error(r.error ?? t('deleteFailed'));
       annShowSuccess(t('deleted'));
       fetchAnnouncements();
     } catch (err) {
@@ -328,17 +315,17 @@ export function AnnouncementsPanel() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={resetForm} className="px-3 py-1.5 text-[11px] font-mono border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-                {t('cancel')}
-              </button>
-              <button
+              <Button variant="outline" size="sm" type="button" onClick={resetForm}>{t('cancel')}</Button>
+              <Button
+                variant="filled"
+                size="sm"
+                type="button"
                 onClick={handleAnnSubmit}
                 disabled={submitting || !form.title.trim()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono bg-[var(--foreground)] text-[var(--background)] hover:opacity-80 disabled:opacity-50 transition-colors"
               >
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 {editingId ? t('saveChanges') : t('createBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

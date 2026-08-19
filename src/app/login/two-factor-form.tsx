@@ -8,6 +8,7 @@
  */
 
 import { Button } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { AuthFormState } from '@/modules/auth/ui/hooks/use-auth-form';
 
 export function TwoFactorForm(props: AuthFormState) {
@@ -28,7 +29,7 @@ export function TwoFactorForm(props: AuthFormState) {
           inputMode="numeric"
           maxLength={6}
           autoFocus
-          className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono tracking-[0.5em] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors text-center"
+          className={`${INPUT_CLASS} w-full px-4 py-3 text-[14px] tracking-[0.5em] text-center`}
           placeholder={t('codePlaceholder')}
         />
       </div>
@@ -39,7 +40,7 @@ export function TwoFactorForm(props: AuthFormState) {
         </div>
       )}
 
-      <Button type="submit" disabled={loading} loading={loading} className="w-full py-4">
+      <Button type="submit" variant="pixel" disabled={loading} loading={loading} className="w-full py-4">
         {loading ? t('verifying') : t('verify')}
       </Button>
 

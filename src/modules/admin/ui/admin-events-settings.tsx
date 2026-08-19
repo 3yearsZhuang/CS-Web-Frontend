@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
@@ -78,17 +79,15 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/events/settings', { cache: 'no-store' });
-      if (res.status === 401) {
+      const r = await apiRequest<{ settings: EventSettings }>('/api/admin/events/settings', { cache: 'no-store' });
+      if (r.status === 401) {
         router.replace('/login');
         return;
       }
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || t('loadFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('loadFailed'));
       }
-      const data = (await res.json()) as { settings: EventSettings };
-      setSettings(data.settings);
+      setSettings(r.data!.settings);
       setEditValues({});
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loadFailed'));
@@ -135,18 +134,14 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
     setSaving(key);
     setError(null);
     try {
-      const res = await fetch('/api/admin/events/settings', {
+      const r = await apiRequest<{ settings: EventSettings }>('/api/admin/events/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [key]: value }),
+        body: { [key]: value },
       });
-      const data = (await res.json().catch(() => null)) as
-        | { settings: EventSettings; error?: string }
-        | null;
-      if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || t('saveFailed'));
+      if (!r.ok || !r.data?.settings) {
+        throw new Error(r.error ?? t('saveFailed'));
       }
-      setSettings(data.settings);
+      setSettings(r.data.settings);
       setEditValues((prev) => {
         const next = { ...prev };
         delete next[key];
@@ -164,16 +159,14 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
     setSaving(key);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/events/settings?key=${encodeURIComponent(key)}`, {
-        method: 'DELETE',
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { settings: EventSettings; error?: string }
-        | null;
-      if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || t('resetFailed'));
+      const r = await apiRequest<{ settings: EventSettings }>(
+        `/api/admin/events/settings?key=${encodeURIComponent(key)}`,
+        { method: 'DELETE' },
+      );
+      if (!r.ok || !r.data?.settings) {
+        throw new Error(r.error ?? t('resetFailed'));
       }
-      setSettings(data.settings);
+      setSettings(r.data.settings);
       setEditValues((prev) => {
         const next = { ...prev };
         delete next[key];
@@ -198,18 +191,14 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
     setSaving('__all__');
     setError(null);
     try {
-      const res = await fetch('/api/admin/events/settings', {
+      const r = await apiRequest<{ settings: EventSettings }>('/api/admin/events/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: payload,
       });
-      const data = (await res.json().catch(() => null)) as
-        | { settings: EventSettings; error?: string }
-        | null;
-      if (!res.ok || !data?.settings) {
-        throw new Error(data?.error || t('saveFailed'));
+      if (!r.ok || !r.data?.settings) {
+        throw new Error(r.error ?? t('saveFailed'));
       }
-      setSettings(data.settings);
+      setSettings(r.data.settings);
       setEditValues({});
       showSuccess(t('allSaved'));
     } catch (err) {

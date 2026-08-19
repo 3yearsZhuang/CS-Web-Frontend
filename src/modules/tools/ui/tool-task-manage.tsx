@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { Check, X } from 'lucide-react';
 import {
   formatDate,
@@ -13,6 +14,7 @@ import {
   type Task,
   type TaskClaim,
 } from './tool-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 任务管理子面板 — 任务列表 + 发布/关闭/删除 + 认领审核 */
 export function TaskManagePanel() {
@@ -31,14 +33,13 @@ export function TaskManagePanel() {
     setTaskLoading(true);
     setTaskError(null);
     try {
-      const res = await fetch(`/api/admin/tools/task?page=${pg}&pageSize=${TASK_PAGE_SIZE}`);
-      if (res.ok) {
-        const json = await res.json();
+      const r = await apiRequest<{ tasks?: Task[]; total?: number }>(`/api/admin/tools/task?page=${pg}&pageSize=${TASK_PAGE_SIZE}`);
+      if (r.ok) {
+        const json = r.data ?? {};
         setTasks(json.tasks || []);
         setTaskTotal(json.total || 0);
       } else {
-        const json = await res.json();
-        setTaskError(json.error || '加载失败');
+        setTaskError(r.error ?? '加载失败');
       }
     } catch {
       setTaskError('网络错误');
@@ -49,9 +50,9 @@ export function TaskManagePanel() {
 
   const fetchPendingClaims = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/tools/task?sub=claims');
-      if (res.ok) {
-        const json = await res.json();
+      const r = await apiRequest<{ claims?: TaskClaim[] }>('/api/admin/tools/task?sub=claims');
+      if (r.ok) {
+        const json = r.data ?? {};
         setPendingClaims(json.claims || []);
       }
     } catch {
@@ -68,14 +69,12 @@ export function TaskManagePanel() {
   const handlePublishTask = async (taskId: string) => {
     setTaskActingId(taskId);
     try {
-      const res = await fetch('/api/admin/tools/task?sub=publish', {
+      const r = await apiRequest('/api/admin/tools/task?sub=publish', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId }),
+        body: { taskId },
       });
-      if (!res.ok) {
-        const json = await res.json();
-        alert(json.error || t('taskPublishFailed'));
+      if (!r.ok) {
+        alert(r.error ?? t('taskPublishFailed'));
       } else {
         fetchTasks(taskPage);
       }
@@ -91,14 +90,12 @@ export function TaskManagePanel() {
     if (!window.confirm(t('taskCloseConfirm'))) return;
     setTaskActingId(taskId);
     try {
-      const res = await fetch('/api/admin/tools/task?sub=close', {
+      const r = await apiRequest('/api/admin/tools/task?sub=close', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId }),
+        body: { taskId },
       });
-      if (!res.ok) {
-        const json = await res.json();
-        alert(json.error || t('taskCloseFailed'));
+      if (!r.ok) {
+        alert(r.error ?? t('taskCloseFailed'));
       } else {
         fetchTasks(taskPage);
       }
@@ -115,14 +112,12 @@ export function TaskManagePanel() {
     if (password === null) return;
     setTaskActingId(taskId);
     try {
-      const res = await fetch(`/api/admin/tools/task?id=${taskId}`, {
+      const r = await apiRequest(`/api/admin/tools/task?id=${taskId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: { password },
       });
-      if (!res.ok) {
-        const json = await res.json();
-        alert(json.error || t('taskDeleteFailed'));
+      if (!r.ok) {
+        alert(r.error ?? t('taskDeleteFailed'));
       } else {
         setTasks((prev) => prev.filter((item) => item.id !== taskId));
         setTaskTotal((prev) => prev - 1);
@@ -139,14 +134,12 @@ export function TaskManagePanel() {
   const handleReviewClaim = async (claimId: string, approved: boolean) => {
     setClaimReviewingId(claimId);
     try {
-      const res = await fetch('/api/admin/tools/task?sub=claim', {
+      const r = await apiRequest('/api/admin/tools/task?sub=claim', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claimId, approved }),
+        body: { claimId, approved },
       });
-      if (!res.ok) {
-        const json = await res.json();
-        alert(json.error || t('actionFailed'));
+      if (!r.ok) {
+        alert(r.error ?? t('actionFailed'));
       } else {
         setPendingClaims((prev) => prev.filter((c) => c.id !== claimId));
       }
@@ -267,33 +260,30 @@ export function TaskManagePanel() {
                   <td className="py-3">
                     <div className="flex items-center gap-2">
                       {task.status === 'draft' && (
-                        <button
+                        <Button
+                          variant="primary-outline"
+                          size="sm"
                           type="button"
                           onClick={() => handlePublishTask(task.id)}
                           disabled={taskActingId === task.id}
-                          className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-30"
                         >
                           {t('publish')}
-                        </button>
+                        </Button>
                       )}
                       {task.status === 'published' && (
-                        <button
+                        <Button
+                          variant="amber"
+                          size="sm"
                           type="button"
                           onClick={() => handleCloseTask(task.id)}
                           disabled={taskActingId === task.id}
-                          className="text-[11px] font-mono px-2.5 py-1.5 border border-amber-500/50 text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-30"
                         >
                           {t('close')}
-                        </button>
+                        </Button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteTask(task.id)}
-                        disabled={taskActingId === task.id}
-                        className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors disabled:opacity-30"
-                      >
-                          {t('delete')}
-                        </button>
+                <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDeleteTask(task.id)} disabled={taskActingId === task.id}>
+                  {t('delete')}
+                </Button>
                     </div>
                   </td>
                 </tr>
@@ -350,33 +340,30 @@ export function TaskManagePanel() {
               <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-3">{t('taskClaimCount', { count: task.claimCount, max: task.maxClaimants })}</div>
               <div className="flex items-center gap-2">
                 {task.status === 'draft' && (
-                  <button
+                  <Button
+                    variant="primary-outline"
+                    size="sm"
                     type="button"
                     onClick={() => handlePublishTask(task.id)}
                     disabled={taskActingId === task.id}
-                    className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-30"
                   >
                     发布
-                  </button>
+                  </Button>
                 )}
                 {task.status === 'published' && (
-                  <button
+                  <Button
+                    variant="amber"
+                    size="sm"
                     type="button"
                     onClick={() => handleCloseTask(task.id)}
                     disabled={taskActingId === task.id}
-                    className="text-[11px] font-mono px-2.5 py-1.5 border border-amber-500/50 text-amber-500 hover:bg-amber-500/10 transition-colors disabled:opacity-30"
                   >
                     关闭
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTask(task.id)}
-                  disabled={taskActingId === task.id}
-                  className="text-[11px] font-mono px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors disabled:opacity-30"
-                >
+                <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDeleteTask(task.id)} disabled={taskActingId === task.id}>
                   删除
-                </button>
+                </Button>
               </div>
             </div>
           ))}

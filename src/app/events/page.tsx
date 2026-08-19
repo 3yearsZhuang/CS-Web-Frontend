@@ -17,14 +17,12 @@ import type { EventItem } from '@/modules/events/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Button, SectionLoading, Title } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type EventTab = 'timeline' | 'next' | 'admin';
-
-/** 时间轴子视图模式：时间轴 / 日历 */
-type TimelineViewMode = 'timeline' | 'calendar';
 
 /** 将活动列表按 year 降序分组 */
 function groupByYear(events: EventItem[], uncategorizedLabel: string): YearGroup[] {
@@ -52,20 +50,15 @@ export default function EventsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
-      })
-      .then((data) => {
-        if (cancelled || !data) return;
-        const user = data.user;
-        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-          setCurrentUser(user);
-        }
-      })
-      .catch(() => {});
+    (async () => {
+      const r = await apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' });
+      if (cancelled) return;
+      if (r.status === 401 || !r.ok || !r.data) return;
+      const user = r.data.user;
+      if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
+        setCurrentUser(user);
+      }
+    })();
     return () => { cancelled = true; };
   }, []);
 
@@ -94,9 +87,6 @@ export default function EventsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
 
-  // 时间轴子视图模式：时间轴 / 日历（M3 活动日历视图）
-  const [viewMode, setViewMode] = useState<TimelineViewMode>('timeline');
-
   // 年份手风琴：展开的年份集合（默认全部展开）
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
@@ -107,10 +97,10 @@ export default function EventsPage() {
     if (debouncedSearch) params.set('search', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
 
-    const res = await fetch(`/api/events?${params.toString()}`);
-    if (!res.ok) throw new Error(t('loadFailed'));
-    const data = await res.json();
-    return data.events ?? [];
+    const r = await apiRequest<{ events?: EventItem[] }>(`/api/events?${params.toString()}`);
+    if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+    const data = r.data;
+    return data?.events ?? [];
   }, [debouncedSearch, statusFilter, t]);
 
   useEffect(() => {
@@ -158,7 +148,7 @@ export default function EventsPage() {
 
   if (loading && events.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="events-page relative pt-16 min-h-screen flex items-center justify-center">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -166,7 +156,7 @@ export default function EventsPage() {
 
   if (error && events.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="events-page relative pt-16 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error}</div>
           <button
@@ -182,7 +172,7 @@ export default function EventsPage() {
 
   return (
     <VisibilityGate componentKey="events">
-      <main className="relative pt-16">
+      <main className="events-page relative pt-16">
       {/* ============ Hero — 1s 后自动收缩悬浮（亚克力框） ============ */}
       <CollapsingHero
         index="00"
@@ -196,27 +186,19 @@ export default function EventsPage() {
         }}
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
+            subtitle={t('heroTitleEn')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle1')}
             <span className="text-[var(--primary)]">{t('heroTitle2')}</span>
             {t('heroTitle3')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -244,44 +226,18 @@ export default function EventsPage() {
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           {/* 内容区 */}
           <div>
-            {/* Tab 01 — 统一时间轴（年份手风琴 + 铁路线终端日志节点）/ 日历视图 */}
+            {/* Tab 01 — 时间线 + 日历同屏（桌面左右布局，移动端日历在上、时间线在下） */}
             {activeTab === 'timeline' && (
               <div>
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
-                  <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]">
+                <div className="mb-10 sm:mb-16">
+                  <Title level={2}
+                    echo={`${t('sectionTitle1')}${t('sectionTitle2')}`}>
                     {t('sectionTitle1')}
-                    <span className="text-[var(--primary)]">
-                      {viewMode === 'calendar' ? t('calendarLabel') : t('sectionTitle2')}
-                    </span>
-                  </h2>
-                  {/* 视图切换 — 时间轴 / 日历 */}
-                  <div className="flex gap-0">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('timeline')}
-                      className={`meta-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border transition-colors ${
-                        viewMode === 'timeline'
-                          ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                          : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {t('timelineLabel')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('calendar')}
-                      className={`meta-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border-l-0 transition-colors ${
-                        viewMode === 'calendar'
-                          ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                          : 'bg-transparent text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {t('calendarLabel')}
-                    </button>
-                  </div>
+                    <span className="text-[var(--primary)]">{t('sectionTitle2')}</span>
+                  </Title>
                 </div>
 
-                {/* 筛选区域 */}
+                {/* 筛选区域 — 同时作用于日历与时间线 */}
                 <EventFilterBar
                   searchInput={searchInput}
                   statusFilter={statusFilter}
@@ -289,34 +245,41 @@ export default function EventsPage() {
                   onStatusChange={setStatusFilter}
                 />
 
-                {/* 视图内容：时间轴（年份手风琴 + 铁路线）或日历 */}
-                {viewMode === 'timeline' ? (
-                  <YearAccordionTimeline
-                    uncategorized={uncategorized}
-                    yearGroups={yearGroups}
-                    expandedYears={expandedYears}
-                    loading={loading}
-                    onToggleYear={toggleYear}
-                  />
-                ) : (
-                  <MonthCalendar events={events} />
-                )}
+                {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线）
+                 * 日历列收窄为固定 320px（进一步压缩占比，时间线占剩余空间）；
+                 * 日历层 z-0、时间线层 z-10 显式分层，sticky 日历永不覆盖时间轴卡片的 hover 抬升/硬阴影。 */}
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
+                  <div className="relative z-0 lg:sticky lg:top-24">
+                    <MonthCalendar events={events} />
+                  </div>
+                  <div className="relative z-10">
+                    <YearAccordionTimeline
+                      uncategorized={uncategorized}
+                      yearGroups={yearGroups}
+                      expandedYears={expandedYears}
+                      loading={loading}
+                      onToggleYear={toggleYear}
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Tab 02 — Next CTA */}
             {activeTab === 'next' && (
               <div>
-                <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+                <Title level={2} className="mb-10 sm:mb-16"
+                  echo={`${t('nextTitle1')}${t('nextTitle2')}？`}>
                   {t('nextTitle1')}
                   <span className="text-[var(--primary)]">{t('nextTitle2')}</span>
                   ？
-                </h2>
+                </Title>
                 <div className="border-t border-[var(--border)] pt-10 sm:pt-16">
                   <p className="text-[15px] sm:text-[16px] text-[var(--muted-foreground)] leading-[1.8] max-w-2xl mb-8">
                     {t('nextDesc')}
                   </p>
                   <Button
+                    variant="pixel"
                     onClick={() => router.push('/about')}
                   >
                     <span>{t('joinUs')}</span>

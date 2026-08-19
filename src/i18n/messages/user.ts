@@ -130,6 +130,7 @@ export interface UserMessages {
     logoutAllTitle: string;
     logoutAllConfirm: string;
     logoutAllConfirmLabel: string;
+    logoutAllFailed: string;
     cancel: string;
     loadingSessions: string;
     loading: string;
@@ -183,6 +184,8 @@ export interface UserMessages {
     beliefTitle3: string;
     beliefSection: string;
     expectationSection: string;
+    beliefHeading: string;
+    expectationHeading: string;
     directionsTitle1: string;
     directionsTitle2: string;
     directionsTitle3: string;
@@ -190,6 +193,7 @@ export interface UserMessages {
     directionsDesc2: string;
     processTitle1: string;
     processTitle2: string;
+    processTitle3: string;
     processSection: string;
     joinSection: string;
     processDesc: string;
@@ -377,6 +381,12 @@ export interface UserMessages {
     est: string;
     codeTagline: string;
     unnamed: string;
+    /** 开机遮罩 — 系统启动序列文案 */
+    bootTitle: string;
+    bootEst: string;
+    bootMembers: string;
+    bootRing: string;
+    bootEnter: string;
   }
 }
 
@@ -507,6 +517,7 @@ export const zhCN: UserMessages = {
     logoutAllTitle: '登出全部设备',
     logoutAllConfirm: '此操作将注销你所有设备上的登录状态（包括当前设备），需要重新登录。确定继续吗？',
     logoutAllConfirmLabel: '确认登出全部',
+    logoutAllFailed: '登出全部设备失败，请稍后再试',
     cancel: '取消',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',
@@ -560,6 +571,8 @@ export const zhCN: UserMessages = {
     beliefTitle3: '的你！',
     beliefSection: '— 信念 / Belief',
     expectationSection: '— 期望 / Expectation',
+    beliefHeading: '我们相信 / What We Believe',
+    expectationHeading: '我们期望 / What We Expect',
     directionsTitle1: '六大方向，',
     directionsTitle2: '覆盖',
     directionsTitle3: '主流技术领域。',
@@ -567,6 +580,7 @@ export const zhCN: UserMessages = {
     directionsDesc2: '同时参与多个方向。',
     processTitle1: '如何',
     processTitle2: '加入',
+    processTitle3: ' / How to Join',
     processSection: '— 流程 / Process',
     joinSection: '— 加入 / Join',
     processDesc: '报名通道全年开放。填写报名表，我们会在 3 个工作日内联系你。',
@@ -754,6 +768,11 @@ export const zhCN: UserMessages = {
     est: 'Computer Association / Est. 2017',
     codeTagline: '2026 / Autumn',
     unnamed: '未命名',
+    bootTitle: 'FZTBU·CS — SYSTEM BOOT',
+    bootEst: 'est. 2017 · uptime 8 years',
+    bootMembers: '298 members loaded · 47 events indexed',
+    bootRing: 'mobius ring ready · grid 12-col online',
+    bootEnter: './enter',
   }
 };
 
@@ -884,6 +903,7 @@ export const en: UserMessages = {
     logoutAllTitle: 'Log out all devices',
     logoutAllConfirm: 'This will sign you out on all devices (including the current one). You will need to sign in again. Continue?',
     logoutAllConfirmLabel: 'Log out all',
+    logoutAllFailed: 'Failed to log out all devices, please try again later',
     cancel: 'Cancel',
     loadingSessions: 'Loading sessions...',
     loading: 'Loading...',
@@ -937,6 +957,8 @@ export const en: UserMessages = {
     beliefTitle3: 'people like you!',
     beliefSection: '— Beliefs',
     expectationSection: '— Expectations',
+    beliefHeading: 'What We Believe',
+    expectationHeading: 'What We Expect',
     directionsTitle1: 'Six directions,',
     directionsTitle2: 'covering',
     directionsTitle3: 'all mainstream tech.',
@@ -944,6 +966,7 @@ export const en: UserMessages = {
     directionsDesc2: 'join multiple directions',
     processTitle1: 'How to',
     processTitle2: 'join',
+    processTitle3: ' / How to Join',
     processSection: '— Process',
     joinSection: '— Join',
     processDesc: 'Applications are open all year. Fill out the form and we will contact you within 3 business days.',
@@ -1131,5 +1154,10 @@ export const en: UserMessages = {
     est: 'Computer Association / Est. 2017',
     codeTagline: '2026 / Autumn',
     unnamed: 'Unnamed',
+    bootTitle: 'FZTBU·CS — SYSTEM BOOT',
+    bootEst: 'est. 2017 · uptime 8 years',
+    bootMembers: '298 members loaded · 47 events indexed',
+    bootRing: 'mobius ring ready · grid 12-col online',
+    bootEnter: './enter',
   }
 };

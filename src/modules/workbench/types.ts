@@ -57,3 +57,40 @@ export interface MediaItem {
   size: number;
   uploadedAt: number;
 }
+
+/**
+ * 工作台 widget 尺寸规格（手机桌面图标式二维积木）。
+ * 以 6 列单元栅格为基准：w = 占列数（1..6），h = 占行数（≥1）。
+ * key 用于持久化与 UI 选择；spec 用于渲染 gridColumn / gridRow span。
+ */
+export type WidgetSizeKey =
+  | '1x1'
+  | '1x2'
+  | '2x1'
+  | '2x2'
+  | '1x3'
+  | '2x3'
+  | '3x2'
+  | 'full';
+
+export interface WidgetSizeSpec {
+  /** 占列数 */
+  w: number;
+  /** 占行数 */
+  h: number;
+}
+
+/** 预定义规格表：key → {w,h} 栅格单元数 */
+export const WIDGET_SIZE_SPECS: Record<WidgetSizeKey, WidgetSizeSpec> = {
+  '1x1': { w: 1, h: 1 },
+  '1x2': { w: 1, h: 2 },
+  '2x1': { w: 2, h: 1 },
+  '2x2': { w: 2, h: 2 },
+  '1x3': { w: 1, h: 3 },
+  '2x3': { w: 2, h: 3 },
+  '3x2': { w: 3, h: 2 },
+  full: { w: 6, h: 1 },
+};
+
+/** 桌面端栅格总列数（单元数）；窄屏回落见 workbench.tsx 的响应式映射 */
+export const GRID_COLS = 6;

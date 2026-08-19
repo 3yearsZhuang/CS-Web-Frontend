@@ -54,7 +54,7 @@ export function YearAccordionTimeline({
               transition={{ duration: 0.4 }}
             >
               {uncategorized.map((event, idx) => (
-                <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} />
+                <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} index={idx} />
               ))}
               {/* 未分类与年份组之间的分隔 */}
               {yearGroups.length > 0 && (
@@ -141,7 +141,7 @@ export function YearAccordionTimeline({
                       className="overflow-hidden"
                     >
                       {group.events.map((event, idx) => (
-                        <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} />
+                        <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} index={idx} />
                       ))}
                     </motion.div>
                   )}

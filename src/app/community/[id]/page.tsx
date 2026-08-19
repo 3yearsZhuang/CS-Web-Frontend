@@ -115,7 +115,7 @@ export default function CommunityPostDetailPage() {
 
   if (loading && !topic) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label={t('loading')} />
       </main>
     );
@@ -123,7 +123,7 @@ export default function CommunityPostDetailPage() {
 
   if (error && !topic) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error}</div>
           <Link
@@ -144,7 +144,7 @@ export default function CommunityPostDetailPage() {
   const isLoggedIn = !!currentUser;
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Topic Hero — 1s 后自动收缩悬浮（仅标题/元信息） ============ */}
       <TopicHero topic={topic} categorySlug={categorySlug} replyTotal={replyTotal} hero={hero} currentUserId={currentUser?.id} />
 

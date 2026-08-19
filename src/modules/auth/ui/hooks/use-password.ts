@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 修改密码表单状态 */
 export interface PasswordForm {
@@ -59,34 +60,30 @@ export function usePassword() {
 
     setSavingPassword(true);
     try {
-      const res = await fetch('/api/profile/password', {
+      const r = await apiRequest<{ error?: string }>('/api/profile/password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
 
-      if (!res.ok) {
+      if (!r.ok) {
         // 400 — 密码不符合要求；401 — 当前密码错误
-        if (res.status === 401) {
+        if (r.status === 401) {
           setPasswordMessage({
             type: 'error',
-            text: data?.error || t('currentPasswordWrong'),
+            text: r.error || t('currentPasswordWrong'),
           });
-        } else if (res.status === 400) {
+        } else if (r.status === 400) {
           setPasswordMessage({
             type: 'error',
-            text: data?.error || t('passwordInvalid'),
+            text: r.error || t('passwordInvalid'),
           });
         } else {
           setPasswordMessage({
             type: 'error',
-            text: data?.error || t('passwordChangeFailed'),
+            text: r.error || t('passwordChangeFailed'),
           });
         }
         return;

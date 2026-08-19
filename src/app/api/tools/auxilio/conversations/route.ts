@@ -8,7 +8,8 @@ export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
   const proxy = await proxyBackend(req, { path: '/auxilio/conversations' });
-  const status = proxy.status === 200 ? 200 : 401;
+  // 透传后端真实状态码（此前 200?200:401 会把 404 等误报为未登录）
+  const status = proxy.status;
   const res = NextResponse.json(proxy.body ?? {}, { status });
   if (proxy.clearAuth && status === 401) clearAuthCookies(res);
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);

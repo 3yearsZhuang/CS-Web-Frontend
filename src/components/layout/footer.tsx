@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
+import { version as appVersion, codename as appCodename } from '../../../package.json';
 
 /** 全站页脚 */
 export async function Footer() {
@@ -25,7 +26,9 @@ export async function Footer() {
               />
             </div>
             <span className="text-[13px] text-[var(--muted-foreground)]">
-              {t('brand')}官网(ver.0.9.8) &copy; {new Date().getFullYear()}
+              {t('brand')}官网(ver.{appVersion}
+              {appCodename ? `.${appCodename}` : ''}) &copy;{' '}
+              {new Date().getFullYear()}
             </span>
           </div>
 

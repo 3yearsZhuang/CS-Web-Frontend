@@ -10,6 +10,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components';
 import { formatDateTime, formatDate, formatRelativeTime } from '@/shared/utils/utils';
 import type { FeedItem } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
@@ -50,14 +51,10 @@ function ContentCard({ item, num }: { item: Extract<FeedItem, { kind: 'topic' | 
           {num && <div className="section-marker">[ {num} ]</div>}
           <div className="flex flex-wrap gap-1.5">
             {post.isPinned && (
-              <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                PIN
-              </span>
+              <Badge variant="primary">PIN</Badge>
             )}
             {post.isFeatured && (
-              <span className="meta-mono text-[11px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                FEAT
-              </span>
+              <Badge variant="primary">FEAT</Badge>
             )}
           </div>
         </div>

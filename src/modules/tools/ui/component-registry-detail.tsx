@@ -5,6 +5,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { Check, X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import { VariantCell } from './component-registry-variant-renderer';
@@ -12,13 +13,11 @@ import type { ComponentItem, MigrationStatus } from '../types';
 import {
   ALL_VARIANT_SIZES,
   ALL_VARIANT_COLORS,
+  getStatusConfig,
+  SIZE_LABEL,
+  COLOR_LABEL,
+  VARIANT_PRESETS,
 } from '../types';
-
-const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string }> = {
-  legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20' },
-  migrating: { label: 'Migrating', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  done: { label: 'Done', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-};
 
 const NEXT_STATUS: Partial<Record<MigrationStatus, MigrationStatus>> = {
   legacy: 'migrating',
@@ -29,9 +28,6 @@ const PREV_STATUS: Partial<Record<MigrationStatus, MigrationStatus>> = {
   migrating: 'legacy',
   done: 'migrating',
 };
-
-const SIZE_LABEL: Record<string, string> = { sm: 'SM', md: 'MD', lg: 'LG' };
-const COLOR_LABEL: Record<string, string> = { primary: 'Primary', muted: 'Muted', danger: 'Danger' };
 
 /** 详情面板 Props */
 export interface ComponentDetailPanelProps {
@@ -44,7 +40,7 @@ export interface ComponentDetailPanelProps {
 /** 右侧详情面板 */
 export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPanelProps) {
   const t = useTranslations('toolsAdmin');
-  const { setMigrationStatus } = useComponentRegistryStore();
+  const { setMigrationStatus, applyVariantPreset } = useComponentRegistryStore();
 
   if (!item) {
     return (
@@ -62,11 +58,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
     );
   }
 
-  const status = STATUS_CONFIG[item.migrationStatus] ?? {
-    label: 'Unknown',
-    color: 'text-[var(--muted-foreground)]',
-    bg: 'bg-[var(--muted)]/20',
-  };
+  const status = getStatusConfig(item.migrationStatus);
   const canAdvance = item.migrationStatus !== 'done';
   const canRetreat = item.migrationStatus !== 'legacy';
 
@@ -95,38 +87,55 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
         )}
       </div>
 
-      {/* ============ [2] 迁移操作 ============ */}
-      <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${status.bg} ring-1 ring-current ${status.color}`} />
-          <span className={`meta-mono text-[11px] uppercase ${status.color}`}>
-            {status.label}
-          </span>
+      {/* ============ [2] 迁移操作 + 可见性联动 ============ */}
+      <div className="px-6 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${status.bg} ring-1 ring-current ${status.color}`} />
+            <span className={`meta-mono text-[11px] uppercase ${status.color}`}>
+              {status.label}
+            </span>
+            {/* #7 可见性闭环：展示 slug 对应可见性模块当前状态 */}
+            {typeof item.visibilityOpen === 'boolean' && (
+              <span
+                className={`meta-mono text-[10px] px-2 py-0.5 border ${
+                  item.visibilityOpen
+                    ? 'border-[var(--primary)]/30 text-[var(--primary)]'
+                    : 'border-[var(--border)] text-[var(--muted-foreground)]'
+                }`}
+                title={t('visibilityLabel')}
+              >
+                {t('visibilityLabel')}:{' '}
+                {item.visibilityOpen ? t('visibilityOpen') : t('visibilityClosed')}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {canRetreat && (
+              <Button variant="outline" size="sm" type="button" onClick={() => {
+                  const target = PREV_STATUS[item.migrationStatus];
+                  if (target) setMigrationStatus(item.id, target);
+                }}>{t('retreat')}</Button>
+            )}
+            {canAdvance && (
+              <button
+                onClick={() => {
+                  const target = NEXT_STATUS[item.migrationStatus];
+                  if (target) setMigrationStatus(item.id, target);
+                }}
+                className="px-3 py-1 border border-[var(--primary)]/30 meta-mono text-[10px] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
+              >
+                {t('advance')}
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {canRetreat && (
-            <button
-              onClick={() => {
-                const target = PREV_STATUS[item.migrationStatus];
-                if (target) setMigrationStatus(item.id, target);
-              }}
-              className="px-3 py-1 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--foreground)] transition-colors uppercase"
-            >
-              {t('retreat')}
-            </button>
-          )}
-          {canAdvance && (
-            <button
-              onClick={() => {
-                const target = NEXT_STATUS[item.migrationStatus];
-                if (target) setMigrationStatus(item.id, target);
-              }}
-              className="px-3 py-1 border border-[var(--primary)]/30 meta-mono text-[10px] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
-            >
-              {t('advance')}
-            </button>
-          )}
-        </div>
+        {/* 迁移完成 → 自动开放可见性的联动提示 */}
+        {item.migrationStatus === 'done' && item.visibilityOpen && (
+          <p className="meta-mono text-[10px] text-[var(--primary)]/80 mt-3">
+            ✓ {t('statusDoneAutoOpen')}
+          </p>
+        )}
       </div>
 
       {/* ============ [3] 简化变体预览（3×3） ============ */}
@@ -134,6 +143,12 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
         <span className="meta-mono text-[10px] text-[var(--primary)] uppercase">
           {t('variantPreview')}
         </span>
+        {/* 变体矩阵预设：一键批量翻转 is_enabled */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {VARIANT_PRESETS.map((p) => (
+              <Button key={p.key} variant="outline" size="sm" type="button" onClick={() => applyVariantPreset(item.id, p.key)} title={p.hint}>{p.label}</Button>
+          ))}
+        </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -192,12 +207,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           </table>
         </div>
 
-        <button
-          onClick={() => onOpenDrawer(item.id)}
-          className="mt-4 px-4 py-1.5 border border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors uppercase"
-        >
-          {t('editAllVariants')}
-        </button>
+        <Button variant="outline" size="sm" type="button" onClick={() => onOpenDrawer(item.id)} className="mt-4">{t('editAllVariants')}</Button>
       </div>
 
       {/* ============ [4] 使用规范 ============ */}

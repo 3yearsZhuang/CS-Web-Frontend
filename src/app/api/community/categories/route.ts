@@ -7,7 +7,7 @@ import { proxyBackend, setAuthCookies, toCommunityCategory } from '@/shared/back
 export const runtime = 'nodejs';
 
 export async function GET(req: Request) {
-  const proxy = await proxyBackend(req, { path: '/community/community/categories' });
+  const proxy = await proxyBackend(req, { path: '/community/categories' });
   const list = Array.isArray(proxy.body) ? proxy.body : [];
   const res = NextResponse.json({ categories: list.map(toCommunityCategory) });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);

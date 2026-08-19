@@ -9,6 +9,7 @@ import { Bot, Plus, Send, Wrench } from 'lucide-react';
 import { Button } from '@/components/primitives/button';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ToolCallEvent {
@@ -30,7 +31,12 @@ interface ConversationMeta {
 
 const MAX_HISTORY = 20;
 
-export default function AssistantChat() {
+interface AssistantChatProps {
+  /** 嵌入合并卡片（llm-widget）时去掉左右栏 card-minimal 外壳，仅保留内容与交互 */
+  embedded?: boolean;
+}
+
+export default function AssistantChat({ embedded = false }: AssistantChatProps) {
   const t = useTranslations('workbench');
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
@@ -44,18 +50,13 @@ export default function AssistantChat() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const loadConversations = useCallback(async () => {
-    try {
-      const res = await fetch('/api/tools/auxilio/conversations', { cache: 'no-store' });
-      if (res.status === 401) {
-        setNotLoggedIn(true);
-        return;
-      }
-      if (!res.ok) return;
-      const json = (await res.json()) as { conversations: ConversationMeta[] };
-      setConversations(json.conversations ?? []);
-    } catch {
-      // 静默
+    const r = await apiRequest<{ conversations: ConversationMeta[] }>('/api/tools/auxilio/conversations', { cache: 'no-store' });
+    if (r.status === 401) {
+      setNotLoggedIn(true);
+      return;
     }
+    if (!r.ok) return;
+    setConversations(r.data?.conversations ?? []);
   }, []);
 
   useEffect(() => {
@@ -69,14 +70,14 @@ export default function AssistantChat() {
   const openConversation = useCallback(async (id: number) => {
     setLoadingHistory(true);
     try {
-      const res = await fetch(`/api/tools/auxilio/conversations/${id}/messages`, { cache: 'no-store' });
-      if (!res.ok) return;
-      const json = (await res.json()) as {
+      const r = await apiRequest<{
         messages: { role: string; content: string | null; toolCalls?: { name: string }[] }[];
-      };
+      }>(`/api/tools/auxilio/conversations/${id}/messages`, { cache: 'no-store' });
+      if (!r.ok) return;
+      const json = r.data;
       setConversationId(id);
       setMessages(
-        (json.messages ?? []).map((m) => ({
+        (json?.messages ?? []).map((m) => ({
           role: m.role === 'user' ? ('user' as const) : ('assistant' as const),
           content: m.content ?? '',
           toolCalls: (m.toolCalls ?? []).map((tc, i) => ({
@@ -218,7 +219,7 @@ export default function AssistantChat() {
 
   if (notLoggedIn) {
     return (
-      <div className="card-minimal p-8 text-center">
+      <div className="p-8 text-center">
         <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
       </div>
     );
@@ -227,8 +228,14 @@ export default function AssistantChat() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4 items-start">
       {/* 会话列表 */}
-      <div className="card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto">
-        <Button size="sm" variant="outline" className="justify-center" onClick={newConversation}>
+      <div
+        className={
+          embedded
+            ? 'flex flex-col gap-2 max-h-[60vh] overflow-y-auto lg:border-r lg:border-[var(--border)] lg:pr-3'
+            : 'card-minimal p-3 flex flex-col gap-2 lg:sticky lg:top-20 max-h-[520px] overflow-y-auto'
+        }
+      >
+        <Button size="sm" variant="pixel-outline" className="justify-center" onClick={newConversation}>
           <Plus className="w-4 h-4" /> {t('newChat')}
         </Button>
         {conversations.map((c) => (
@@ -249,7 +256,13 @@ export default function AssistantChat() {
       </div>
 
       {/* 对话区 */}
-      <div className="card-minimal flex flex-col min-h-[520px] max-h-[72vh]">
+      <div
+        className={
+          embedded
+            ? 'flex flex-col min-h-[480px] max-h-[60vh]'
+            : 'card-minimal flex flex-col min-h-[520px] max-h-[72vh]'
+        }
+      >
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
           {messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center py-12">
@@ -326,6 +339,7 @@ export default function AssistantChat() {
           />
           <Button
             size="sm"
+            variant="pixel"
             aria-label="send"
             className="shrink-0"
             disabled={streaming || !input.trim()}

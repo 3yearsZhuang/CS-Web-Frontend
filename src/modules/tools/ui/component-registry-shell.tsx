@@ -8,6 +8,13 @@ import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { LayoutGrid } from 'lucide-react';
 import type { MigrationStatus } from '../types';
+import {
+  STATUS_CONFIG,
+  STATUS_FALLBACK,
+  getStatusConfig,
+  STATUS_ORDER,
+  CATEGORY_CONFIG,
+} from '../types';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -28,35 +35,6 @@ const DEFAULT_FILTER: FilterState = {
   category: null,
   migrationStatus: null,
 };
-
-/* ============= 常量 ============= */
-
-const CATEGORY_CONFIG: Record<string, { label: string; en: string; order: number }> = {
-  'ui-primitives': { label: '基础控件', en: 'UI Primitives', order: 1 },
-  feedback: { label: '反馈组件', en: 'Feedback', order: 2 },
-  overlays: { label: '弹窗组件', en: 'Overlays', order: 3 },
-  layout: { label: '布局组件', en: 'Layout', order: 4 },
-};
-
-const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string }> = {
-  legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20' },
-  migrating: { label: 'Migrating', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  done: { label: 'Done', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-};
-
-// 兜底：后端若返回未定义的迁移状态，使用中性样式，避免读取 undefined.bg 崩溃。
-const STATUS_FALLBACK: { label: string; color: string; bg: string } = {
-  label: 'Unknown',
-  color: 'text-[var(--muted-foreground)]',
-  bg: 'bg-[var(--muted)]/20',
-};
-
-function getStatusConfig(status: MigrationStatus | undefined | null) {
-  if (status && STATUS_CONFIG[status]) return STATUS_CONFIG[status];
-  return STATUS_FALLBACK;
-}
-
-const STATUS_ORDER: MigrationStatus[] = ['legacy', 'migrating', 'done'];
 
 // 分类 key → i18n key（对应 toolsAdmin 的 categoryUiPrimitives/Feedback/Overlays/Layout）
 const CATEGORY_LABEL_KEY: Record<string, string> = {

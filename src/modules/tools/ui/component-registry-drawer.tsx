@@ -6,6 +6,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components';
 import { X } from 'lucide-react';
 import { useComponentRegistryStore } from './component-registry-store';
 import {
@@ -69,15 +70,15 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
 
   return (
     <>
-      {/* 遮罩层 */}
+      {/* 遮罩层 — z-50 对齐 ModalShell 规范（原 z-40 低于 navbar 导致盖不住顶部导航） */}
       <div
-        className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-300"
+        className="fixed inset-0 z-[var(--z-header)] bg-black/70 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* 抽屉主体 — 右侧滑出 */}
       <aside
-        className="fixed top-0 right-0 z-50 h-full w-full max-w-[480px] bg-[var(--background)] border-l border-[var(--border)] shadow-[var(--shadow-modal)] flex flex-col"
+        className="fixed top-0 right-0 z-[var(--z-header)] h-full w-full max-w-[480px] bg-[var(--background)] border-l border-[var(--border)] shadow-[var(--shadow-modal)] flex flex-col"
         style={{
           animation: 'drawer-slide-in 300ms var(--ease-ark)',
         }}
@@ -181,12 +182,7 @@ export function ComponentRegistryDrawer({ itemId, onClose }: ComponentRegistryDr
               />
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-1.5 border border-[var(--border)] meta-mono text-[11px] text-[var(--foreground)] hover:bg-[var(--primary)]/5 transition-colors uppercase"
-          >
-            {t('closeBtn')}
-          </button>
+          <Button variant="outline" size="sm" type="button" onClick={onClose}>{t('closeBtn')}</Button>
         </div>
       </aside>
 

@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Button, SectionLoading, SectionMarker, Title } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { EventStatusBadge } from '@/modules/events/ui/event-status-badge';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 容量为 0 表示不限名额（数据库无 NULL 容量，以 0 代表不限制） */
 const UNLIMITED_CAPACITY = 0;
@@ -74,26 +75,26 @@ export default function EventDetailPage() {
   };
 
   const fetchEvent = useCallback(async () => {
-    const res = await fetch(`/api/events/${eventId}`);
-    if (!res.ok) {
-      if (res.status === 404) throw new Error('活动不存在');
-      throw new Error('加载失败');
+    const r = await apiRequest<{ event: EventDetail; registeredCount: number }>(`/api/events/${eventId}`);
+    if (!r.ok) {
+      if (r.status === 404) throw new Error('活动不存在');
+      throw new Error(r.error ?? '加载失败');
     }
-    const data = await res.json();
-    return { event: data.event as EventDetail, registeredCount: data.registeredCount as number };
+    const data = r.data;
+    return { event: data!.event, registeredCount: data!.registeredCount };
   }, [eventId]);
 
   const fetchRegistration = useCallback(async () => {
-    const res = await fetch(`/api/events/${eventId}/registration`);
-    if (res.status === 401) {
+    const r = await apiRequest<{ registered: boolean }>(`/api/events/${eventId}/registration`);
+    if (r.status === 401) {
       return { registered: false, isLoggedIn: false };
     }
-    if (!res.ok) {
-      throw new Error('加载报名状态失败');
+    if (!r.ok) {
+      throw new Error(r.error ?? '加载报名状态失败');
     }
-    const data = await res.json();
+    const data = r.data;
     return {
-      registered: data.registered as boolean,
+      registered: data!.registered,
       isLoggedIn: true,
     };
   }, [eventId]);
@@ -147,15 +148,13 @@ export default function EventDetailPage() {
     setActionError(null);
 
     try {
-      const res = await fetch(`/api/events/${eventId}/register`, {
+      const r = await apiRequest(`/api/events/${eventId}/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formData }),
+        body: { formData },
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('registerFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('registerFailed'));
       }
 
       setRegistered(true);
@@ -172,13 +171,12 @@ export default function EventDetailPage() {
     setActionError(null);
 
     try {
-      const res = await fetch(`/api/events/${eventId}/register`, {
+      const r = await apiRequest(`/api/events/${eventId}/register`, {
         method: 'DELETE',
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('cancelFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('cancelFailed'));
       }
 
       setRegistered(false);
@@ -195,7 +193,7 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -203,7 +201,7 @@ export default function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error || t('notFound')}</div>
           <Link
@@ -218,7 +216,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero
         index="01"
         label="Event"
@@ -234,25 +232,17 @@ export default function EventDetailPage() {
         }
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(32px,7vw,72px)] leading-[1.05]"
+            echo={`${event.title} / Event`}
+            subtitle="/ Event"
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {event.title}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              / Event
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <div
           className={`overflow-hidden transition-all hero-reveal ${
@@ -308,7 +298,7 @@ export default function EventDetailPage() {
             {event.description && (
               <RevealItem>
                 <section className="mb-12 sm:mb-16">
-                  <div className="section-marker mb-4">Overview</div>
+                  <SectionMarker className="mb-4">Overview</SectionMarker>
                   <p className="display-serif text-[clamp(20px,3vw,28px)] text-[var(--foreground)] leading-[1.6] max-w-3xl">
                     {event.description}
                   </p>
@@ -332,7 +322,7 @@ export default function EventDetailPage() {
             {/* 活动详情内容 */}
             <RevealItem>
               <section className="mb-12 sm:mb-16">
-                <div className="section-marker mb-6">Details</div>
+                <SectionMarker className="mb-6">Details</SectionMarker>
                 {event.contentMarkdown ? (
                   <div className="prose-ark max-w-none">
                     <MarkdownRenderer content={event.contentMarkdown} />
@@ -440,7 +430,7 @@ export default function EventDetailPage() {
                       )}
 
                       {isLoggedIn === false ? (
-                        <Button onClick={() => router.push('/login')}>
+                        <Button variant="pixel" onClick={() => router.push('/login')}>
                           <span>{t('loginToRegister')}</span>
                           <span>→</span>
                         </Button>
@@ -465,6 +455,7 @@ export default function EventDetailPage() {
                         </Button>
                       ) : (
                         <Button
+                          variant="pixel"
                           onClick={handleRegister}
                           disabled={actionLoading}
                         >

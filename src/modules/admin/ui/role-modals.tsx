@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { Button } from '@/components';
 import { CreateRoleForm } from './create-role-form';
 import type { PermissionModule, RoleModal } from './roles-types';
 
@@ -97,14 +98,14 @@ export function RoleModals({
               >
                 {t('cancel')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
                 type="button"
                 onClick={onEdit}
                 disabled={editSaving}
-                className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-50"
               >
                 {editSaving ? t('saving') : t('save')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>

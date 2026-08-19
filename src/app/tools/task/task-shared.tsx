@@ -5,6 +5,7 @@
  */
 
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 export type TaskTab = 'board' | 'my-claims' | 'points';
 
@@ -80,8 +81,7 @@ export function categoryOptions(t: TFn): Array<{ value: string; label: string }>
   return CATEGORY_KEYS.map((k) => ({ value: k, label: categoryLabel(t, k) }));
 }
 
-export const INPUT_CLASS =
-  'w-full bg-transparent border border-[var(--border)] px-4 py-2.5 text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] font-mono transition-colors';
+export const TASK_INPUT_CLASS = `${INPUT_CLASS} px-4 py-2.5 text-[13px]`;
 
 export function statusBadge(status: string, t: TFn): { label: string; icon: React.ReactNode; cls: string } {
   switch (status) {

@@ -22,7 +22,7 @@
 | `/events` | 活动 | `[01] 时间线 / Timeline`, `[02] 归档 / Archive`, `[03] 下一步 / Next` |
 | `/profile` | 个人主页 | `[01] 资料 / Profile`, `[02] 安全 / Security`, `[03] 活动 / Activity`, `[04] 社区 / Community` |
 | `/admin` | 管理后台 | `[01] 用户 / Users`, `[02] 活动 / Activities`, `[03] 通知 / Notifications`, `[04] 社区 / Community`, `[05] 工具 / Tools` |
-| `/tools` | 工具集 | `[01] 可用`, `[02] 即将上线`, `[03] 规划中` |
+| `/tools` | 工具集 | `[01] 可用`, `[02] 开发中`, `[99] 管理*` |
 | `/tools/resource` | 资源站 | `[00] 全部`, `[01] 文章`, `[02] 视频`, … |
 
 > 新增页面须同步本表，并在 `FloatingCapsuleSidebar` 配置 `CapsuleTab`（编号 `num` + 标签 `label` + 唯一 `key`）。

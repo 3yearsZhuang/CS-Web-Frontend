@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { AVATAR_PRESETS, PASSWORD_MIN_LENGTH } from '@/shared/config';
 import type { User, ActivityParticipation } from '@/modules/user/types';
 import { USER_LIMITS as LIMITS, isValidHttpUrl as isValidUrl } from '@/modules/user/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 资料编辑表单状态 */
 export interface ProfileForm {
@@ -63,35 +64,37 @@ export function useProfile() {
   /** 初次加载：获取个人资料 */
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/profile')
-      .then(async (res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || t('loadFailed'));
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (cancelled || !data) return;
-        const u = data.user as User;
-        const acts = (data.activities || []) as ActivityParticipation[];
-        setUser(u);
-        setActivities(acts);
-        setForm({
-          displayName: u.displayName ?? '',
-          bio: u.bio ?? '',
-          githubUrl: u.githubUrl ?? '',
-          websiteUrl: u.websiteUrl ?? '',
-          techTags: u.techTags ?? [],
-        });
+    const load = async () => {
+      const r = await apiRequest<ProfileResponse>('/api/profile');
+      if (cancelled) return;
+      if (r.status === 401) {
         setLoading(false);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setLoadError(err instanceof Error ? err.message : t('loadFailed'));
+        return;
+      }
+      if (!r.ok) {
+        setLoadError(r.error ?? t('loadFailed'));
         setLoading(false);
+        return;
+      }
+      const data = r.data;
+      if (!data) {
+        setLoading(false);
+        return;
+      }
+      const u = data.user as User;
+      const acts = (data.activities || []) as ActivityParticipation[];
+      setUser(u);
+      setActivities(acts);
+      setForm({
+        displayName: u.displayName ?? '',
+        bio: u.bio ?? '',
+        githubUrl: u.githubUrl ?? '',
+        websiteUrl: u.websiteUrl ?? '',
+        techTags: u.techTags ?? [],
       });
+      setLoading(false);
+    };
+    void load();
     return () => {
       cancelled = true;
     };
@@ -129,29 +132,24 @@ export function useProfile() {
 
     setSavingProfile(true);
     try {
-      const res = await fetch('/api/profile', {
+      const r = await apiRequest<{ user?: User }>('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           displayName: form.displayName || null,
           bio: form.bio || null,
           githubUrl: form.githubUrl || null,
           websiteUrl: form.websiteUrl || null,
           techTags: form.techTags,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as {
-        user?: User;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.user) {
+      if (!r.ok || !r.data?.user) {
         setProfileMessage({
           type: 'error',
-          text: data?.error || t('profileSaveFailed'),
+          text: r.error || t('profileSaveFailed'),
         });
         return;
       }
-      setUser(data.user);
+      setUser(r.data.user);
       setProfileMessage({ type: 'success', text: t('profileSaved') });
     } catch {
       setProfileMessage({ type: 'error', text: t('networkError') });
@@ -173,23 +171,18 @@ export function useProfile() {
       setAvatarSaving(true);
       setAvatarMessage(null);
       try {
-        const res = await fetch('/api/profile/avatar/preset', {
+        const r = await apiRequest<{ user?: User }>('/api/profile/avatar/preset', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ presetId }),
+          body: { presetId },
         });
-        const data = (await res.json().catch(() => null)) as {
-          user?: User;
-          error?: string;
-        } | null;
-        if (!res.ok || !data?.user) {
+        if (!r.ok || !r.data?.user) {
           setAvatarMessage({
             type: 'error',
-            text: data?.error || t('avatarSetFailed'),
+            text: r.error || t('avatarSetFailed'),
           });
           return;
         }
-        setUser(data.user);
+        setUser(r.data.user);
         setAvatarMessage({ type: 'success', text: t('avatarUpdated') });
       } catch {
         setAvatarMessage({ type: 'error', text: t('networkError') });
@@ -223,22 +216,18 @@ export function useProfile() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('/api/profile/avatar/upload', {
+      const r = await apiRequest<{ user?: User }>('/api/profile/avatar/upload', {
         method: 'POST',
         body: fd,
       });
-      const data = (await res.json().catch(() => null)) as {
-        user?: User;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.user) {
+      if (!r.ok || !r.data?.user) {
         setAvatarMessage({
           type: 'error',
-          text: data?.error || t('avatarUploadFailed'),
+          text: r.error || t('avatarUploadFailed'),
         });
         return;
       }
-      setUser(data.user);
+      setUser(r.data.user);
       setAvatarMessage({ type: 'success', text: t('avatarUploaded') });
     } catch {
       setAvatarMessage({ type: 'error', text: t('networkError') });

@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-09（§10 代码规范迁出 FrontDoc-Conv）
+> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局；§15.11 统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` 全站主标题/章节标记/分隔落地；§15.12 工作台像素化——Workbench 9 widget DNA 卡 + 今日任务索引铁路 + 顶部 CTA 像素化 + 新增 `pixel-danger` 变体）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -32,6 +32,7 @@
 - [12. 新增页面 Checklist](#12-新增页面-checklist)
 - [13. 参考文件](#13-参考文件)
 - [14. Markdown 编辑器](#14-markdown-编辑器)
+- [15. 像素融合层（Pixel Fusion / Kimi 风格）](#15-像素融合层pixel-fusion--kimi-风格)
 - [变更记录](#变更记录)
 
 ## 文档结构
@@ -367,7 +368,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 5.2 按钮
 
-5 种统一按钮类，定义在 `src/app/globals.css`：
+8 类统一按钮，定义在 `src/app/globals.css`（详见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)）：
 
 ```css
 .btn-primary          /* 主按钮 - primary 纯色背景 */
@@ -375,9 +376,14 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 .btn-danger           /* 危险操作 - destructive 纯色背景 */
 .btn-outline          /* 描边按钮 - 透明背景 + 边框 hover */
 .btn-outline-sm       /* 描边按钮（小号）- 行内次要操作 */
+.btn-outline-danger   /* 描边危险 - 透明背景 + destructive 边框，hover 转危险色（替代手搓 hover:text-[var(--destructive)]） */
+.btn-ghost            /* 纯文字按钮 - 无边框，primary 文字，hover 转 foreground */
+.btn-xs               /* 紧凑尺寸（11px→10px 视觉）用于关注 compact / 极小操作 */
+.btn-page            /* 分页专用（共享），active 复用 .btn-active */
+.btn-active           /* 选中/按下态修饰（与 outline/ghost/page 组合，solid 变体勿用） */
 ```
 
-规格：`font-mono text-[12px] uppercase tracking-wider`，大按钮 `py-3 px-6`，小按钮 `py-1.5 px-3`，`transition-opacity/colors`，`disabled:opacity-30`，必须追加 `focus-ring`
+规格：`font-mono uppercase tracking-wider`；大按钮 `py-3 px-6`、小按钮 `py-1.5 px-3`（**outline-sm 字号 11px**，非 12px）、紧凑 `py-0.25rem px-0.5rem 10px`；`transition-colors`，`disabled:opacity-30`，焦点环统一 **`focus-ring`**（`focus-amber` 为历史别名，已废弃）。
 
 ```tsx
 <button className="btn-primary focus-ring">Save Changes -></button>
@@ -385,11 +391,19 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 <button className="btn-danger focus-ring">Delete</button>
 <button className="btn-outline focus-ring">Cancel</button>
 <button className="btn-outline-sm focus-ring">Pin</button>
+{/* 推荐经 components/primitives/button.tsx 封装：自动附加 focus-ring、支持 active/loading、outline-danger/ghost/xs */}
+<Button variant="outline-danger" size="sm">Delete</Button>
+<Button variant="ghost" size="sm">Cancel</Button>
+<Button variant="outline" size="sm" active={pinned}>Pinned</Button>
+<Button variant="outline" size="xs">Follow</Button>
+<Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 ```
 
 推荐经 `src/components/primitives/button.tsx` 封装使用（自动附加 `focus-ring` 并处理 loading 态）。
 
-不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、分页按钮、筛选标签、悬浮胶囊 Tab 保持原有设计。
+> 落地收紧细则见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)：扩展变体（`outline-danger` / `ghost` / `xs` / `active`）、分页共享件、规范↔代码字体/焦点环漂移修订、39 文件迁移映射与反模式。
+
+不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、筛选标签、悬浮胶囊 Tab 保持原有设计；分页按钮允许保留方形描边视觉，但重复出现须抽成共享 `.btn-page`（禁止多处复制手搓）。
 
 ### 5.3 输入框
 
@@ -552,6 +566,8 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 悬浮胶囊容器 / 胶囊内 Tab 项 | `--radius-capsule`（28px）/ `--radius-capsule-item`（22px） |
 | 圆形元素：头像、状态点、spinner、角标徽章、胶囊 active 指示点 | `rounded-full` |
 
+**像素融合层例外（§15，2026-08-18）**：DNA 卡（`.dna-card`）与像素按钮（`.btn-pixel*`）的硬阴影、hover `translate` 位移与 `steps()` 跳变属**白名单例外**，仅限这些像素融合类使用；普通卡片/按钮仍遵守上表（仅边框变色、禁浮起、禁阴影）。
+
 ---
 
 ## 12. 新增页面 Checklist
@@ -590,15 +606,150 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
 | `tools/docs/FrontDoc-UID.md` | 本文档 - 视觉与交互设计规范 |
-| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，原 §10 迁出） |
+| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，§10 迁出） |
 
 ---
 
 ## 14. Markdown 编辑器
 
-> 原 `FrontDoc-MDE.md` 已并入本规范 §14，现进一步下沉为社区模块契约（避免全局 UI 规范膨胀）。完整组件架构 / Props / 使用场景 / 安全策略见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.5.7。
+> Markdown 编辑器契约已下沉为社区模块契约（避免全局 UI 规范膨胀）。完整组件架构 / Props / 使用场景 / 安全策略见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.5.7。
 
 本规范仅保留结论：社区 Markdown 编辑/渲染统一使用 `src/modules/community/ui/` 下的三层组件——`MarkdownRenderer`（只读渲染）/ `MarkdownEditorBase`（基础编辑）/ `MarkdownEditor`（完整编辑，含工具栏 + 图片上传）；安全渲染走 `rehype-sanitize`；内容长度限制统一在 `src/shared/utils/ui-constants.ts` 的 `FORM_LIMITS`。新增页面接入见 Arch §2.5.7。
+
+---
+
+## 15. 像素融合层（Pixel Fusion / Kimi 风格）
+
+> 2026-08 引入：从 careers.kimi.com（月之暗面招聘站）提取视觉语言，与「编辑式技术极简」做**平衡融合**。
+> 核心原则：像素语言只注入**元数据层与交互**（标签 / 编号 / 角标 / 按钮 / 卡片皮肤），**不动** Fraunces 衬线标题与正文栈。全站像素化与 scroll-jacking 不采用。
+> 参照 demo：`tools/demo/kimi-pixel-style-demo.html`（风格 DNA + 融合示范）、`tools/demo/cards-pixel-options.html`（卡片方案对照）。
+
+### 15.1 字体令牌
+
+| 令牌 | 值 | 说明 |
+|------|-----|------|
+| `--font-fusion-pixel` | `src/app/fonts/fusion-pixel-zh_hans.woff2`（layout.tsx `localFont` 自托管） | Fusion Pixel 12px Mono zh_hans，OFL-1.1 |
+| `--font-pixel` | `var(--font-fusion-pixel), ui-monospace, ...` | 像素元数据组合栈（globals.css 双写：`@theme inline` + `:root`） |
+
+### 15.2 页面作用域（像素元数据层）
+
+统一 opt-in：在页面根节点 `<main>` 加 `.pixel-page` 即把元数据层切换为像素字体（globals.css 作用域选择器，特异度 (0,2,0) 高于 `.meta-mono` 等 (0,1,0)）；历史 `.about-page` / `.events-page` 一并兼容：
+
+```css
+.pixel-page .meta-mono, .pixel-page .tag-badge, .pixel-page .font-mono,
+.about-page .meta-mono, .about-page .tag-badge, .about-page .font-mono,
+.events-page .meta-mono, .events-page .tag-badge, .events-page .font-mono {
+  font-family: var(--font-pixel);
+}
+```
+
+- **接入新页面**：给 `<main>` 加 `pixel-page` 即可（已覆盖 join / login / profile / users/[id] / notifications / events/[id] / community* / tools*）。**不要**在无关页面全局替换 `.meta-mono`
+- **排除**：管理员后台 `/admin` 不接入，保持其高密度数据表格可读性（Fusion Pixel 为 12px 位图字体，不利长数字密集排版）
+- 首页是特例：用内联 `style={{ fontFamily: 'var(--font-pixel)' }}` 选择性像素化（本项目自定义类优先级高于 Tailwind 工具类，改字体族用内联 style，勿用 `font-pixel` 工具类）
+
+### 15.3 DNA 卡（共享组件）
+
+参照 demo「风格四要素拆解」DNA 卡 +「融合示范」fusion-frame。**已提炼为共享组件** `src/components/primitives/dna-card.tsx` 的 `<DnaCard>`（props：`corner?: string|number` 自动补零两位、`className?`、`as?: 'article'|'div'`、children），皮肤样式全局生效（不再限页面作用域）：
+
+| 类 | 用途 | 规格 |
+|----|------|------|
+| `.dna-card` | 卡片皮肤 | 表面 `color-mix(fg 8%, bg)`；边框 `color-mix(fg 14%, bg)`；**默认硬阴影** `4px 4px 0 color-mix(fg 10%, transparent)`；hover `translate(-3px,-3px)` + `7px 7px 0 color-mix(primary 30%)` + 边框主色 45%，`transition: transform/box-shadow .15s steps(3)`；padding 26px 24px |
+| `.dna-corner` | 右上角像素编号 | `position:absolute; top:14px; right:16px`；`--font-pixel` 11px；muted，hover 转 primary；`aria-hidden`（装饰性编号） |
+| `.dna-meta` | 元数据行 | flex wrap；`--font-pixel` 11px；`.dna-tag` = primary / `.dna-dim` = muted |
+
+使用方（均经 `<DnaCard>` 或直接 `.dna-card` 类）：
+- `/about` 方向卡片（`<DnaCard corner={d.num}>` 无链接）
+- `/events` 活动时间轴卡片（`<DnaCard corner={index+1}>` 内嵌 `Link`，`isLeft` 交替 + archived 透明度降级）
+- `/community` 精选横滑卡 `featured-topic-strip`（盒装卡 → `dna-card`）
+- `/tools` 工具卡（`dna-card`，available 态保留 `hover:bg` 微染）
+- `/tools` 工作台（Workbench）9 个 widget 盒装卡（`greeting-bar`/`today-tasks`/`github-heatmap`/`llm-widget`/`quick-notes`/`pomodoro`/`exam-countdown`/`llm-usage-stats`/`assistant-chat`）统一经 `<DnaCard corner={…}>`：角标语义 `HI`(问候) / `TSK`(任务) / `GIT`(GitHub) / `AUX`(LLM) / `NOTE`(便签) / `FCS`(番茄钟) / `EXM`(考试) / `MEM`(用量) / `CHAT`(对话)；布局设置面板 `card-minimal`→`<DnaCard corner="CFG">`；非嵌入态独立卡仍保留 `card-minimal`（避免 DnaCard 嵌套）
+- **不适用**：Feed / 主题列表项 `feed-item-card` / `community-topic-item` 是「列表行」（`border-b` 分隔 + 紧凑 padding），非盒装卡，保持列表样式、由 `.pixel-page` 像素化其元数据即可，勿套 `.dna-card`（会撑大行高、破坏列表密度）
+
+### 15.4 像素按钮
+
+`Button` 组件新增 `pixel` / `pixel-outline` / `pixel-danger` 变体（映射 `.btn-pixel*` / `.btn-pixel-danger*`）：实色硬阴影 `4px 4px 0 var(--muted-foreground)`（主/次按钮统一）、hover `translate(-2px,-2px)`、active `translate(2px,2px)`、`transition steps(2)`、全令牌适配双主题。`pixel-danger` 用 `var(--destructive)` 底 + `var(--destructive-foreground)` 字 + `3px 3px 0` 硬阴影（破坏性操作，如工作台「清空」、删除类 CTA）；首页 CTA、`/about` 与 `/events` 的 CTA 使用 `pixel`/`pixel-outline`，工作台破坏性 CTA 使用 `pixel-danger`。
+
+### 15.5 首页 Hero 像素层
+
+- `TypewriterTitle`（`effects/motion-primitives`）：字符级 `steps(6)` 逐字入场 + `▌` 闪烁光标（`.typewriter-cursor`，`var(--primary)`）；遵守 StaggerContainer register/unregister/notifyComplete 协议；SSR 渲染原文
+- `StarfieldCanvas`（`effects/starfield-canvas`）：像素点星空，叠于 `MobiusRing` 之下；DPR≤2、`prefers-reduced-motion` 静态帧、`document.hidden` 暂停 RAF、星色跟随主题
+- 标题字重：像素标题用内联 `fontWeight: 300` 覆盖 `.display-serif` 350（CJK 350 会落到 400 显粗）
+
+### 15.6 活动页同屏双视图（/events）
+
+时间线 + 日历**同屏**展示（2026-08-18 起，替代原「时间轴 / 日历」切换）：
+
+```tsx
+{/* 日历列收窄为固定 320px，时间线占剩余空间；显式分层避免 sticky 日历覆盖卡片 hover */}
+<div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
+  <div className="relative z-0 lg:sticky lg:top-24"><MonthCalendar events={events} /></div>
+  <div className="relative z-10"><YearAccordionTimeline ... /></div>
+</div>
+```
+
+- 移动端（单列）：DOM 顺序日历在前 → **日历在上、时间线在下**
+- 桌面（`lg:grid-cols-[320px_1fr]`）：**左日历、右时间线**（保持「日历优先」阅读顺序）；日历列固定 320px（进一步压缩占比，时间线主导），`lg:sticky lg:top-24` 随滚动固定（需栅格容器 `items-start` 配合）
+- **分层与 hover 安全（2026-08-18 修订）**：日历列 `relative z-0`、时间线列 `relative z-10` 显式分层，保证 sticky 日历**永不覆盖**时间轴 DNA 卡的 `translate(-3px,-3px)` 抬升与 `7px 7px` 硬阴影（§15.3/§15.7）；`lg:gap-12`（48px）留白进一步隔离两列，左列卡片 hover 位移亦不会触及日历
+- 顶部筛选栏同时驱动两个视图（共享 `events` 状态）；若调整桌面比例/左右对调，改栅格与 `order-*` 即可
+
+### 15.7 与既有规范的豁免（必读）
+
+像素融合层的**硬阴影、hover translate、steps() 跳变**违反 §0「不浮起」与 §11「禁止 hover:-translate-y-1 / 默认阴影」，属**有意引入的白名单例外**，仅限以下类：`.dna-card`、`.dna-corner`（hover 变色）、`.btn-pixel*`、`.typewriter-ch/.typewriter-cursor`。其余卡片/按钮仍受 §0/§11 约束（§11 已登记例外）。
+
+### 15.8 组件化决策（更新 2026-08-18）
+
+- **按钮**：像素按钮 `pixel` / `pixel-outline` 变体已沉淀于共享 `Button` 组件（`primitives/button.tsx`，映射 `.btn-pixel*`），全站 CTA 均经此组件，无需额外封装。
+- **卡片**：已按用户要求**提炼为共享组件** `<DnaCard>`（`primitives/dna-card.tsx`，见 §15.3）；`/about` 与 `/events` 现经该组件渲染，新增盒装卡直接复用 `<DnaCard corner={…}>`。皮肤仍由 `globals.css` 单点定义，组件只负责结构 + 角标，符合「样式单点 + 结构复用」的复用契约。
+- **范围边界**：列表行（Feed / 主题项）不套 `<DnaCard>`，见 §15.3「不适用」；管理员后台不接入像素层，见 §15.2「排除」。
+
+### 15.9 列表（列表行）选型落地
+
+像素融合列表三档（`tools/demo/list-and-title-demos.html`）已按页面选型落地。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
+
+| 页面 | 选型 | 共享类 | 视觉特征 |
+|------|------|--------|----------|
+| `/about`（信念 / 期望索引列表） | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移 |
+| `/about`（加入流程，由 `/join` 合并而来） | **B DNA 行卡** | `.lst-dna`（`.dna-corner` / `.dna-ttl` / `.dna-mt` / `.dna-arw`） | 左主色硬边条 + 右上角像素编号 + 同款 `steps(3)` 抬升硬阴影；复用 about 四步流程语义 |
+| `/tools` 工作台「今日任务」列表 | **A 索引铁路** | `.idx-rail`（`.idx` / `.idx-ttl` / `.idx-mt` / `.idx-arw`） | 左像素编号 `// 01` + 贯穿发丝铁路线 + 衬线标题 + 像素元数据行 + hover 转主色/箭头右移；逾期/到期状态仍保留红/琥珀色（在 `.idx-mt` 元数据行呈现），`idx-rail` 内置于 DnaCard 时编号遮罩跟随卡面（见 §15.12） |
+| （待定） | C 像素终端 | `.lst-term` | 全像素字体 + 状态点 + 游标，适合数据/日志型列表 |
+
+- **选型边界**：盒装卡 → `<DnaCard>`（§15.3）；列表行 → A/B/C 三档之一（不套 DnaCard）。`/about` 的「六大方向」仍为 DNA **盒装卡**（B 卡片，非列表），二者**不在**本列表选型范围。
+- **C 流程行已移除**：原 `/about` process 标签内的「详细步骤文章（C 流程行，`STEPS` 大卡片文章）」已于 2026-08-18 删除——`STEPS` 数据与 `StepItem` 接口一并移除；该标签页仅保留「加入流程」**B DNA 行卡**作为步骤呈现，与报名表同屏。
+- **步骤 / 表单同屏双栏**：process 标签页内，左栏「加入流程（步骤 · B DNA 行卡，`.lg:col-span-5`）」与右栏「报名表（`.lg:col-span-7`）」在 `lg+` 采用 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` **左右布局**；移动端单列（步骤在上、表单在下）。对应栅格代码位于 `src/app/about/page.tsx` 的 process 分支。
+- 原 `/join` 页面已于 2026-08-18 合并入 `/about` 的「加入 / Join」标签页（process 标签 → 加入子区块）：其「加入流程」DNA 行卡与**完整报名表填写逻辑**（认证检查 / 已有申请状态 / 校验 / 提交 / 成功·待审态）全部迁入 `src/app/about/page.tsx`，随后删除 `src/app/join/`。`JOIN_STEPS` 复用 about 的 `step1~4Title/Desc` + `duration` 文案（`useTranslations('about')`）；报名表字段沿用 `join` 命名空间（`useTranslations('join')`）。`/profile` 的 `join-tab` 链接由 `/join` 改为 `/about`。
+
+### 15.10 标题底部虚影（全站主标题）
+
+- **选型**：**A 像素错位虚影**——衬线真标题背后叠一份像素同文副本，向右下硬偏移、低透明度（衬线 × 像素的错位，最贴切「融合」表达）。
+- **共享组件**：已提炼为 `<GhostTitle>`（`src/components/primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`）。API：`as`（默认 `h2`）、`className`、`children`（**纯字符串时自动复用为虚影**）、`echo`（复杂节点显式传虚影内容，如含 `<br/>`/彩色 `span`/`TypewriterTitle`）、`wrapContent`（默认 `true`，把 children 包进 `.ghost-title__content` 抬到虚影之上；块级子节点如 `TypewriterTitle` 渲染的 h1 传 `false`，靠 CSS `:last-child` 保证层级）、`hideOnWrap`（默认 `true`，启用「虚影高度保护」：当真实标题渲染高度（`scrollHeight`）高于虚影（`offsetHeight`，即虚影能承载的行数）时隐藏虚影——覆盖**自然换行**，以及**首页 Hero 在显式 `<br/>` 之外又自然换行**的情况，避免「像素虚影单行 / 衬线标题多行」错位；仅在虚影与真标题行结构保证逐行一致（如桌面端对齐）时显示。设 `false` 可强制始终显示虚影）、`...rest` 透传 `onClick` 等 HTML 属性以支持折叠 Hero。`<Title>` 透传 `hideOnWrap` 至 `<GhostTitle>`。
+- **落地范围**：**全站主标题**——所有页面 Hero 主标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 等）+ 大号章节标题（section h2、`/tools/task` 三个 tab 区标题等）。虚影由 `.ghost-title` 通用工具类承载。
+- **排除项**：admin 后台、卡片 / 列表项标题、统计数字、navbar、弹窗内小标题、markdown 生成标题——避免显噪且违背「虚影仅大号衬线主标题」原则。
+- **安全约束**：虚影 `z-index` 低于真标题、`pointer-events:none`、`aria-hidden`，纯装饰；颜色走 `--muted-foreground` 低透明度、双主题自适应；`clamp()` 控字号、小偏移 `translate(8px,12px)` 避免移动端显脏。**折叠 Hero 进入顶栏态（`collapsed=true`）时虚影强制关闭**——紧凑顶栏不需要大号标题的错位回声，避免像素虚影在顶栏堆叠；仅展开大标题态保留（首页独立单屏 Hero 经 `GhostTitle` 显式渲染，不受影响）。**多行标题关闭虚影（虚影高度保护）**：`<GhostTitle>` 用 `ResizeObserver` 监测真实标题 `scrollHeight` 是否高于虚影 `offsetHeight`（即真实标题行数多于虚影能承载的行数），高则隐藏虚影（`visibility` 切换、保留布局高度、可随宽度变化恢复显示）——避免「像素虚影单行 / 衬线标题多行」错位。**该保护覆盖两类情况**：① 自然换行（容器变窄软换行）；② 首页 Hero 在显式 `<br/>` 之外又自然换行（窄屏下真标题行数超虚影的 `<br/>` 断行）。桌面端对齐时真实标题与虚影行数一致，虚影正常显示；设 `hideOnWrap={false}` 可强制始终显示虚影（仅当虚影与真标题行结构逐行一致时使用）。
+- **CSS**：`globals.css` 中 `.ghost-title{position:relative}`、`.ghost-title__echo`（绝对定位 z-0、像素字体、offset、opacity 0.2）、`.ghost-title__content`（z-1）、`.ghost-title > :last-child`（z-1）。
+
+### 15.11 统一标题组件（`<Title>` / `<SectionMarker>` / `<ArkDivider>`）
+
+- **背景**：§15.10 已把「像素错位虚影」沉淀为 `<GhostTitle>` 并全站主标题落地。在此之上，进一步把**主标题 + 章节标记 + 英文副标题 + 工业分隔**四类排印元素统一为共享组件，消除零散内联 `<span>` 标题与手写 `section-marker`/`ark-divider` 类的不一致。
+- **共享组件**（均桶导出 `src/components/index.ts`）：
+  - `<Title>`（`primitives/title.tsx`，构建于 `<GhostTitle>`）：`level`（1–4 字号预设，默认 2）、`as`（默认 `h{level}`）、`className`、`children`、`eyebrow`（可选眉标）、`subtitle`（**内联** muted 斜体英文后缀，渲染在标题内 `align-baseline`，与既有 Hero 内联英文 span 视觉一致）、`ghost`（默认 `level<=2` 启用虚影）、`collapsed`/`collapsedSize`/`expandedSize`（Hero 折叠动画，尺寸串原样透传以像素级保真）、`echo`、`wrapContent`、`...rest`（透传 `onClick`）。
+    - **尺寸守卫**：调用方 `className` 已含 `text-*` 字号工具类时，`<Title>` **不**追加 `LEVEL_PRESET`（避免自定义字号标题上的 Tailwind 字号冲突）。
+    - **Hero 迁移范式**：把内联英文后缀 `<span className="display-serif italic text-[var(--muted-foreground)] ...">` 抽为 `subtitle={...}`；折叠态尺寸串原样传入 `collapsedSize`/`expandedSize`。
+  - `<SectionMarker>`：包裹 `.section-marker` 数字章节标记（`[ 01 ]` 风）。**仅替换 `<div className="section-marker">`**——`.section-marker` 未设 `display`，span→div 会改变行内/块级；首页 `[ 00 ] — Index` 因是 `<span>` 行内标记，保持原样。
+  - `<ArkDivider>`：包裹 `.ark-divider` 工业双斜杠分隔（`//` 风）。`.ark-divider` 强制 `inline-flex`，故 span↔div 包裹视觉一致。
+- **落地范围**：所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`），以及页面级 `section-marker`/`ark-divider` 标记为对应组件（`/notifications`、`/about`、`/community/new`(+`compose-form`)、`/events/[id]`、`/profile`(+`security-tab`/`profile-tab`)、`/tools/resource`(+`submit-resource-modal`)、`/admin`、首页 ark-divider 等）；`tools/exam` 列表区 `ark-divider` 英文后缀改 `<ArkDivider>` 子节点（保留工业分隔视觉，不转 muted 斜体 subtitle）。
+- **排除项**：46 处零散卡片 `<h3>` 一次性标题（保持原样，不在统一范围）；共享组件 `section-nav`/`feed-item-card`/`community-topic-item`/`collapsing-hero`/`admin-events-settings` 内的 `section-marker`/`ark-divider` 不触碰；首页 `GhostTitle as="div"` Hero（含 `TypewriterTitle` 块级子节点）保持 `<GhostTitle>`。
+- **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归。
+
+### 15.12 工作台像素化（Workbench / `/tools`）
+
+`/tools` 页面根 `<main>` 已带 `pixel-page`（元数据层早前接入，§15.2），本次（2026-08-18）把**可见工作台**整体推入融合层（方案 A 完整融合：盒装 widget 转 DNA 卡 + 任务列表转索引铁路 + CTA 转像素按钮 + 可见 SectionMarker）：
+
+- **widget 卡片**：9 个 widget 的 `card-minimal` 盒装容器统一经共享 `<DnaCard corner={…}>`（角标语义见 §15.3 使用方）；均在嵌入态（嵌于 `llm-widget` 的 DnaCard，或 workbench 直接渲染）套 DnaCard；非嵌入态独立分支保留 `card-minimal`（LLM 用量/对话仅在嵌入态渲染，避免 DnaCard 嵌套 DnaCard）
+- **任务列表**：`today-tasks` 的 `<ul>/<li>` 行卡改为 **A 索引铁路** `.idx-rail`（`.idx` 序号 + `.idx-ttl` 标题 + `.idx-mt` 元数据行含逾期/到期态 + `.idx-arw` 箭头）；`idx-rail` 内置于 DnaCard 时，`.idx` 编号遮罩由 `var(--background)` 改为跟随 `.dna-card` 表面（`globals.css` 新增 `.dna-card .idx-rail .idx` 作用域覆盖，双主题自适应）
+- **CTA 按钮**：workbench 顶部 4 个操作（导出/导入/布局设置）转 `pixel-outline`、「清空」（破坏性）转 `pixel-danger`（新增变体，见 §15.4）；各 widget 内按钮（github 刷新、llm 用量入口/保存、对话 newChat/发送、番茄钟 开始/暂停/重置、便签新增）统一转 `pixel`/`pixel-outline`
+- **可见 SectionMarker**：`workbench.tsx` 顶部 section 显式加 `<SectionMarker>[ 01 ] 工作台</SectionMarker>`，与既有 `<Title level={2}>` + `.meta-mono` 副标题并列
+- **新增 CSS 类**：`globals.css` 新增 `.btn-pixel-danger` / `.btn-pixel-danger-sm`（destructive 令牌 + `3px 3px 0` 硬阴影 + `steps(2)`），及 `.dna-card .idx-rail .idx` 作用域覆盖
+- **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归；`pnpm next build` 通过
 
 ---
 
@@ -606,7 +757,14 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-18 | **标题虚影换行错位二次修复（虚影高度保护 v2）**：① 根因——v1 对首页 Hero 设 `hideOnWrap={false}` 跳过测量，但首页大标题在 `<br/>` 之外窄屏额外自然换行仍触发「虚影单行 / 衬线多行」错位；② 重写 `<GhostTitle>` 测量逻辑为「真实标题 `scrollHeight` vs 虚影 `offsetHeight`」高度比较（覆盖自然换行 + 首页 `<br/>` 之外额外换行），用 `visibility` 切换（保留布局、可随宽度恢复显示）；③ 撤销首页 `page.tsx` 的 `hideOnWrap={false}`，让高度保护覆盖首页（桌面对齐显示、窄屏额外换行隐藏）；④ `<Title>` 透传 `hideOnWrap`。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 安全约束更新为高度比较逻辑） |
+| 2026-08-18 | **统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` + 全站主标题/章节标记/分隔统一**：① 新建 `<Title>`（`primitives/title.tsx`，构建于 `<GhostTitle>`，`level` 1–4、`subtitle` 内联英文后缀、`collapsed`+`collapsedSize`/`expandedSize` Hero 折叠动画、`ghost` 默认 `level<=2`、`...rest` 透传 `onClick`；含**尺寸守卫**——调用方 `className` 已含 `text-*` 时不追加预设）并桶导出；② 所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`）迁移到 `<Title>`，内联英文后缀抽为 `subtitle`；③ 页面级 `section-marker` `<div>`→`<SectionMarker>`、`ark-divider`→`<ArkDivider>`（`.ark-divider` 强制 `inline-flex` 故 span↔div 视觉一致；`.section-marker` 未设 `display` 故仅替换 `<div>`，首页行内 `[ 00 ]` span 保持）；④ 排除 46 处零散卡片 `<h3>` 与共享组件内标记。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.11 新增） |
+| 2026-08-18 | **标题虚影全量应用 + 提炼共享组件 `<GhostTitle>`**：① 新建 `<GhostTitle>`（`primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`），支持纯文本自动虚影 / 复杂节点 `echo` / 块级 `wrapContent=false` / `...rest` 透传 `onClick`（折叠 Hero）；② 虚影由 Hero 专用扩展至**全站主标题**——所有页面 Hero 主标题与大号章节标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 各 tab 区等）；`globals.css` `.ghost-title` 去掉强制 `inline-block`、新增 `.ghost-title__content`；③ 排除 admin / 卡片·列表项 / 统计数字 / navbar / 弹窗小标题 / markdown 标题。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 已更新） |
+| 2026-08-18 | **`/about` process 标签页精简 + 步骤/表单左右布局**：① 删除「详细步骤文章（C 流程行）」——`STEPS` 常量与 `StepItem` 接口一并移除，`processSection` 子标题不再渲染；② 仅保留「加入流程」**B DNA 行卡**（`JOIN_STEPS`）作为步骤呈现；③ process 标签页改为 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` 同屏双栏——左栏「加入流程（`.lg:col-span-5`）」、右栏「报名表（`.lg:col-span-7`）」，移动端单列（步骤在上、表单在下）。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.9 选型边界 / 双栏说明已更新） |
+| 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
+| 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
+| 2026-08-18 | 像素融合全站化：① 新建共享组件 `<DnaCard>`（`primitives/dna-card.tsx`），`/about`、`/events` 重构其使用，DNA 卡皮肤改全局生效（§15.3/§15.8 更新）；② 像素元数据层 opt-in 统一为 `.pixel-page`（兼容 about/events），覆盖 join/login/profile/users/[id]/notifications/events/[id]/community*/tools*，`/admin` 排除（§15.2）；③ 上述页面主 CTA 切 `pixel`/`pixel-outline`；④ 盒装卡 `featured-topic-strip`、tools 工具卡转 `dna-card`，Feed/主题列表行保持列表样式 |
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
-| 2026-08-09 | 文档瘦身重构：① 原 §14 Markdown 编辑器（并入自 `FrontDoc-MDE.md`）契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
+| 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

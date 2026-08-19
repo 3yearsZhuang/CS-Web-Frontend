@@ -48,7 +48,7 @@ describe('useProfile', () => {
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/profile');
+    expect(fetchMock).toHaveBeenCalledWith('/api/profile', expect.anything());
     expect(result.current.user?.id).toBe('u1');
     expect(result.current.activities).toHaveLength(1);
     expect(result.current.form.displayName).toBe('Test');

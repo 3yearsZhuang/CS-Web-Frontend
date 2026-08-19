@@ -291,6 +291,41 @@ export function normalizeError(body: unknown, fallback = '请求失败'): { erro
   };
 }
 
+// ---------------------------------------------------------------- 通用 BFF 响应原语（C-15 降重复基石）
+//
+// route.ts 薄转发里反复出现的样板：body 兜底、数组提取、成功/错误响应 + Cookie 接线、
+// 安全读取请求体。集中于此，既削减每文件重复，也为后续 route 骨架生成器提供同源原语。
+
+/** 代理结果 body 兜底为空对象（route 内常做 `proxy.body ?? {}`） */
+export function bodyOrEmpty(proxy: ProxyResult): Record<string, unknown> {
+  return (proxy.body ?? {}) as Record<string, unknown>;
+}
+
+/** 从响应体按 key 取数组，缺失或非数组时返回空数组（route 内常做 Array.isArray 提取） */
+export function arrayFrom(body: Record<string, unknown>, key: string): Array<Record<string, unknown>> {
+  const v = body[key];
+  return Array.isArray(v) ? (v as Array<Record<string, unknown>>) : [];
+}
+
+/** 成功响应：写回轮换后的 JWT（如有 authPair）并返回 JSON 响应 */
+export function okJson(data: unknown, proxy: ProxyResult, init?: ResponseInit): NextResponse {
+  const res = NextResponse.json(data, init);
+  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  return res;
+}
+
+/** 错误响应：规范化错误体（normalizeError），刷新失败时清 Cookie；默认沿用 proxy.status */
+export function errJson(proxy: ProxyResult, fallback = '请求失败', init?: ResponseInit): NextResponse {
+  const res = NextResponse.json(normalizeError(proxy.body, fallback), init ?? { status: proxy.status });
+  if (proxy.clearAuth) clearAuthCookies(res);
+  return res;
+}
+
+/** 安全读取请求 JSON 体，解析失败兜底为空对象（route 内常做 req.json().catch(() => ({}))） */
+export async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
+  return (await req.json().catch(() => ({}))) as Record<string, unknown>;
+}
+
 // ---------------------------------------------------------------- 翻译助手
 
 export function toAnnouncement(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;

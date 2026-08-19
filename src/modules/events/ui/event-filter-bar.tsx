@@ -5,6 +5,7 @@
 
 import { useTranslations } from 'next-intl';
 import { FilterBar, type FilterBarOption } from '@/components/primitives/filter-bar';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 /** 活动状态筛选值 */
 export type StatusFilter = '' | 'upcoming' | 'ongoing' | 'ended';
@@ -46,7 +47,7 @@ export function EventFilterBar({
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full bg-transparent border border-[var(--border)] px-4 py-2.5 text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] font-mono transition-colors"
+            className={`${INPUT_CLASS} w-full px-4 py-2.5 text-[13px]`}
           />
         </div>
 

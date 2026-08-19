@@ -12,7 +12,9 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { GhostTitle, Title } from '@/components';
 import type { SafeUser } from '@/modules/admin/ui/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { DevDocsViewer } from '@/modules/tools/ui/dev-docs-viewer';
 import { ComponentRegistryShell } from '@/modules/tools/ui/component-registry-shell';
 
@@ -39,27 +41,25 @@ export default function DevCenterPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
-      })
-      .then((data) => {
-        if (cancelled || !data) return;
-        const user = data.user;
-        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-          setCurrentUser(user);
-        }
-      })
-      .catch(() => {});
+    (async () => {
+      const result = await apiRequest<{ user: SafeUser }>('/api/auth/me', {
+        cache: 'no-store',
+      });
+      if (cancelled) return;
+      if (result.status === 401 || !result.ok) return;
+      const data = result.data!;
+      const user = data.user;
+      if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
+        setCurrentUser(user);
+      }
+    })();
     return () => { cancelled = true; };
   }, []);
 
   const isRoot = currentUser?.role === 'root';
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -69,25 +69,17 @@ export default function DevCenterPage() {
         minHeight="50vh"
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${t('heroTitle')} / Dev Center`}
+            subtitle="/ Dev Center"
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              / Dev Center
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div

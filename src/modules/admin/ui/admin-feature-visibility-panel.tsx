@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/feedback/toast';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import {
   useFeatureVisibility,
   DEFAULT_VISIBILITY,
@@ -24,6 +25,8 @@ import {
   COMPONENT_REGISTRY,
   type ComponentMeta,
 } from '@/shared/feature-visibility/registry';
+import { Button } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 type UserField = 'guest' | 'member' | 'admin';
 
@@ -87,24 +90,25 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
     if (!pending || !/^\d{6}$/.test(totpCode)) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/feature-visibility/${encodeURIComponent(pending.key)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guest: pending.rule.guest,
-          member: pending.rule.member,
-          admin: pending.rule.admin,
-          totpCode,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
+      const result = await apiRequest<{ error?: string; code?: string }>(
+        `/api/admin/feature-visibility/${encodeURIComponent(pending.key)}`,
+        {
+          method: 'PUT',
+          body: {
+            guest: pending.rule.guest,
+            member: pending.rule.member,
+            admin: pending.rule.admin,
+            totpCode,
+          },
+        },
+      );
 
-      if (res.status === 403) {
+      if (result.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) {
-        pushToast('error', data?.error || t('updateFailed'));
+      if (!result.ok) {
+        pushToast('error', result.error ?? t('updateFailed'));
         return;
       }
 
@@ -312,7 +316,7 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
                 maxLength={6}
                 autoFocus
                 disabled={submitting}
-                className="w-full px-4 py-3 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[14px] font-mono tracking-[0.5em] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors text-center"
+                className={`${INPUT_CLASS} w-full px-4 py-3 text-[14px] tracking-[0.5em] text-center`}
                 placeholder={t('totpPlaceholder')}
               />
             </div>
@@ -326,13 +330,14 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
               >
                 {t('cancel')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
+                type="button"
                 onClick={submitUpdate}
                 disabled={submitting || !/^\d{6}$/.test(totpCode)}
-                className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors focus-amber disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? t('saving') : t('confirm')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

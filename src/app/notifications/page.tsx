@@ -13,7 +13,7 @@ import { StaggerContainer, RevealTitle, RevealItem } from '@/components/effects/
 import { PageHeaderBackground } from '@/components/layout/page-header-background';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { SectionLoading } from '@/components';
+import { SectionLoading, SectionMarker, Title } from '@/components';
 import { useTranslations } from 'next-intl';
 import { useNotifications } from './use-notifications';
 import { NotificationCenter } from './notification-center';
@@ -41,7 +41,7 @@ function NotificationsContent() {
 
   if (n.loading && n.notifications.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -49,7 +49,7 @@ function NotificationsContent() {
 
   if (n.error && n.notifications.length === 0) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{n.error}</div>
           <button onClick={() => n.fetchNotifications()} className="meta-mono text-[var(--primary)] underline-grow">
@@ -62,7 +62,7 @@ function NotificationsContent() {
 
   return (
     <VisibilityGate componentKey="notifications">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       <section
         data-section-nav="00|Notifications"
         className={`relative px-4 sm:px-6 md:px-8 overflow-hidden transition-all hero-reveal ${
@@ -76,29 +76,21 @@ function NotificationsContent() {
           <StaggerContainer onComplete={onRevealComplete}>
             <div className={`grid grid-cols-12 gap-0 ${heroCollapsed ? 'items-center mb-0' : 'mb-0 sm:mb-0'}`}>
               <div className={`col-span-12 md:col-span-2 ${heroCollapsed ? 'mb-0' : 'mb-4 md:mb-0'}`}>
-                <div className="section-marker">[ 00 ]</div>
+                <SectionMarker>[ 00 ]</SectionMarker>
               </div>
               <div className="col-span-12 md:col-span-10">
                 <RevealTitle>
-                  <h1
-                    className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-                      heroCollapsed
-                        ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                        : 'text-[clamp(32px,7vw,72px)] leading-[1.05]'
-                    }`}
+                  <Title
+                    level={1}
+                    collapsed={heroCollapsed}
+                    collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+                    expandedSize="text-[clamp(32px,7vw,72px)] leading-[1.05]"
+                    echo={`${t('centerTitle')} ${t('centerTitleEn')}`}
+                    subtitle={t('centerTitleEn')}
                     onClick={heroCollapsed ? onTitleClick : undefined}
                   >
                     {t('centerTitle')}
-                    <span
-                      className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                        heroCollapsed
-                          ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                          : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-                      }`}
-                    >
-                      {t('centerTitleEn')}
-                    </span>
-                  </h1>
+                  </Title>
                 </RevealTitle>
                 <div
                   className={`overflow-hidden transition-all hero-reveal ${

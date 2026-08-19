@@ -7,12 +7,13 @@
  * - 未登录：点击跳转 /login
  * - 已登录且非本人：显示「关注 / 已关注」切换，调用 POST /api/community/users/[id]/follow
  * - 关注状态首次挂载时若未显式传入，则从 GET 同名接口拉取
+ *
+ * 数据逻辑（关注态/乐观更新/回滚）已收敛至 useFollow（C-19），本组件仅负责 UI 与登录跳转。
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useFollow } from './use-follow';
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -30,57 +31,11 @@ export function FollowButton({
   compact,
 }: FollowButtonProps) {
   const t = useTranslations('follow');
-  const router = useRouter();
-  const isSelf = !!currentUserId && currentUserId === targetUserId;
-  const [following, setFollowing] = useState<boolean>(initialFollowing ?? false);
-  const [loaded, setLoaded] = useState<boolean>(initialFollowing !== undefined);
-  const [pending, setPending] = useState(false);
-
-  // 未显式传入状态时，首屏拉取一次
-  useEffect(() => {
-    if (initialFollowing !== undefined || isSelf) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/community/users/${targetUserId}/follow`, {
-          cache: 'no-store',
-        });
-        const data = (await res.json()) as { following: boolean };
-        if (!cancelled) {
-          setFollowing(data.following);
-          setLoaded(true);
-        }
-      } catch {
-        if (!cancelled) setLoaded(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [targetUserId, initialFollowing, isSelf]);
-
-  const handleClick = useCallback(async () => {
-    if (!currentUserId) {
-      router.push('/login');
-      return;
-    }
-    if (isSelf || pending) return;
-    setPending(true);
-    try {
-      const res = await fetch(`/api/community/users/${targetUserId}/follow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { following: boolean };
-        setFollowing(data.following);
-      }
-    } catch {
-      // 静默失败，保持原状态
-    } finally {
-      setPending(false);
-    }
-  }, [currentUserId, isSelf, pending, targetUserId, router]);
+  const { isSelf, following, loaded, pending, toggle } = useFollow({
+    targetUserId,
+    currentUserId,
+    initialFollowing,
+  });
 
   if (isSelf) return null;
 
@@ -91,7 +46,7 @@ export function FollowButton({
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={() => void toggle()}
       disabled={pending}
       className={`${base} transition-colors focus-amber disabled:opacity-50 ${
         following

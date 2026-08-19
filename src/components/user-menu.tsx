@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LogOut, RefreshCw, User, PenLine, Shield } from 'lucide-react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { formatRelativeTime } from '@/shared/utils/utils';
-import { setLocaleCookie } from '@/shared/utils/locale';;
+import { setLocaleCookie } from '@/shared/utils/locale';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useFeatureVisibility, DEFAULT_VISIBILITY, useComponentVisible } from '@/shared/hooks/use-feature-visibility';
 import { useNotificationsPreview } from '@/components/use-notifications-preview';
@@ -204,7 +204,7 @@ export function UserMenu({ size = 32 }: { size?: number }) {
             animate="visible"
             exit="exit"
             variants={listVariants}
-            className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(88vw,320px)] max-h-[80vh] overflow-y-auto border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
+            className="absolute right-0 top-[calc(100%+8px)] z-[var(--z-header)] w-[min(88vw,320px)] max-h-[80vh] overflow-y-auto border border-[var(--border)] bg-[var(--background)] shadow-[var(--shadow-popover)]"
           >
             {/* 用户信息头部 */}
             <motion.div

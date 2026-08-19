@@ -6,6 +6,7 @@
 
 import { useTranslations } from 'next-intl';
 import { NotebookPen, Plus, Trash2 } from 'lucide-react';
+import { DnaCard } from '@/components';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
@@ -39,7 +40,7 @@ export default function QuickNotes() {
   );
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-3">
+    <DnaCard corner="NOTE" className="p-5 flex flex-col gap-3 h-full min-h-0">
       <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
         <NotebookPen className="w-4 h-4" />
         {t('quickNotes')}
@@ -56,12 +57,12 @@ export default function QuickNotes() {
           }}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <Button size="sm" aria-label={t('addTask')} onClick={add}>
+        <Button size="sm" variant="pixel" aria-label={t('addTask')} onClick={add}>
           <Plus className="w-4 h-4" />
         </Button>
       </div>
 
-      <ul className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto">
+      <ul className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
         {notes.length === 0 && (
           <li className="text-[13px] text-[var(--muted-foreground)] py-3 text-center">…</li>
         )}
@@ -82,6 +83,6 @@ export default function QuickNotes() {
           </li>
         ))}
       </ul>
-    </div>
+    </DnaCard>
   );
 }

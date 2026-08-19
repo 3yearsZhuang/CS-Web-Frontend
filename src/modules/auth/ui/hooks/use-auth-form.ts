@@ -16,6 +16,7 @@ import { useSWRConfig } from 'swr';
 import { EMAIL_REGEX } from '@/modules/auth/types/constants';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import { logger } from '@/shared/logger';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** OAuth 错误码 → 翻译 key */
 export const OAUTH_ERROR_KEYS: Record<string, string> = {
@@ -54,24 +55,6 @@ export function getPasswordStrength(password: string): { score: 0 | 1 | 2 | 3 | 
     score: score as 0 | 1 | 2 | 3 | 4,
     color: score === 0 ? 'transparent' : colors[Math.max(0, score - 1)],
   };
-}
-
-/**
- * 根据 fetch 错误与 HTTP 响应推断前端错误文案
- */
-async function resolveErrorMessage(
-  res: Response | null,
-  fallback: string,
-  networkError: string,
-): Promise<string> {
-  if (!res) return networkError;
-  try {
-    const data = (await res.json().catch(() => null)) as { error?: string } | null;
-    if (data?.error) return data.error;
-  } catch {
-    // 忽略 JSON 解析失败
-  }
-  return fallback;
 }
 
 export function useAuthForm() {
@@ -138,15 +121,13 @@ export function useAuthForm() {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/send-code', {
+      const r = await apiRequest('/api/auth/send-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: { email },
       });
 
-      if (!res.ok) {
-        const msg = await resolveErrorMessage(res, t('sendCodeFailed'), t('networkError'));
-        setError(msg);
+      if (!r.ok) {
+        setError(r.error ?? t('sendCodeFailed'));
         return;
       }
 
@@ -182,15 +163,13 @@ export function useAuthForm() {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const r = await apiRequest('/api/auth/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: forgotEmail }),
+        body: { email: forgotEmail },
       });
 
-      if (!res.ok) {
-        const msg = await resolveErrorMessage(res, t('submitFailed'), t('networkError'));
-        setError(msg);
+      if (!r.ok) {
+        setError(r.error ?? t('submitFailed'));
         return;
       }
 
@@ -243,25 +222,20 @@ export function useAuthForm() {
         body.verificationCode = verificationCode;
       }
 
-      const res = await fetch(endpoint, {
+      const r = await apiRequest<{ requires2FA?: boolean; twoFactorToken?: string }>(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body,
       });
 
-      if (!res.ok) {
-        const msg = await resolveErrorMessage(res, fallbackMsg, t('networkError'));
-        setError(msg);
-        if (!isLogin && res.status === 409) {
+      if (!r.ok) {
+        setError(r.error ?? fallbackMsg);
+        if (!isLogin && r.status === 409) {
           setIsLogin(true);
         }
         return;
       }
 
-      const data = (await res.json().catch(() => null)) as {
-        requires2FA?: boolean;
-        twoFactorToken?: string;
-      } | null;
+      const data = r.data;
 
       if (data?.requires2FA && data?.twoFactorToken) {
         setTwoFactorToken(data.twoFactorToken);
@@ -273,8 +247,7 @@ export function useAuthForm() {
       router.push('/profile');
     } catch (err) {
       logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 请求失败');
-      const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
-      setError(msg);
+      setError(t('requestFailed'));
     } finally {
       setLoading(false);
     }
@@ -293,19 +266,15 @@ export function useAuthForm() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/2fa/verify', {
+      const r = await apiRequest('/api/auth/2fa/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          isOAuth2FA
-            ? { code: twoFactorCode, mode: 'login' }
-            : { code: twoFactorCode, mode: 'login', twoFactorToken },
-        ),
+        body: isOAuth2FA
+          ? { code: twoFactorCode, mode: 'login' }
+          : { code: twoFactorCode, mode: 'login', twoFactorToken },
       });
 
-      if (!res.ok) {
-        const msg = await resolveErrorMessage(res, t('enter2FACode'), t('networkError'));
-        setError(msg);
+      if (!r.ok) {
+        setError(r.error ?? t('enter2FACode'));
         return;
       }
 
@@ -314,8 +283,7 @@ export function useAuthForm() {
       router.push('/profile');
     } catch (err) {
       logger.error({ err: err instanceof Error ? err.message : err }, '[Auth] 2FA 验证失败');
-      const msg = await resolveErrorMessage(null, t('requestFailed'), t('networkError'));
-      setError(msg);
+      setError(t('requestFailed'));
     } finally {
       setLoading(false);
     }

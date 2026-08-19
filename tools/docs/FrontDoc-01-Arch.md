@@ -266,7 +266,7 @@ DB 文件 `data/app.db`（gitignored）为**迁移前遗留**（旧 SQLite 单�
 
 多实例迁移清单（完成前禁止横向扩展）：
 
-> ℹ️ 多实例迁移清单（BFF 速率限制迁 Redis、后端 RBAC/限流多实例一致性）等待办条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 多实例迁移清单（BFF 速率限制迁 Redis、后端 RBAC/限流多实例一致性）等待办条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ---
 
@@ -377,15 +377,15 @@ workbench/
 
 ### 1.3.1 历史问题收敛
 
-> ℹ️ 历史问题收敛记录（Q1/Q2/Q3）已迁移至 `docs/项目演变历史.md`。
+> ℹ️ 历史问题收敛记录（Q1/Q2/Q3）已迁移至根仓 [`CHANGELOG.md`](../../../CHANGELOG.md)。
 
 ### 1.3.2 已完成优化
 
-> ℹ️ 已完成优化记录已迁移至 `docs/项目演变历史.md`。
+> ℹ️ 已完成优化记录已迁移至根仓 [`CHANGELOG.md`](../../../CHANGELOG.md)。
 
 ### 1.3.3 待处理优化
 
-> ℹ️ 待处理优化（P1/P2 项）已迁移至 `docs/项目待办事项.md`。剩余项详见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)（ADR 索引）。
+> ℹ️ 待处理优化（P1/P2 项）已迁移至 `docs/项目待办事项-优先级重排.md`。剩余项详见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)（ADR 索引）。
 
 ### 1.4 BFF 通用约定（架构层，内容见 Part B §2.1 / §2.12–2.17）
 
@@ -599,7 +599,7 @@ i18n `community` namespace。
 
 ### 2.5.7 社区 Markdown 编辑器（UI 组件）
 
-> 社区全文 Markdown 编辑/渲染统一组件，位于 `src/modules/community/ui/`（文件名 `community-` 前缀）。本组件为**前端 UI 关注点**，API 转发仍走 §2.5 社区论坛端点与 §2.8 社区文章端点；其指南原属 `FrontDoc-UID.md` §14，2026-08-09 下沉至本模块契约以避免 UID 膨胀。
+> 社区全文 Markdown 编辑/渲染统一组件，位于 `src/modules/community/ui/`（文件名 `community-` 前缀）。本组件为**前端 UI 关注点**，API 转发仍走 §2.5 社区论坛端点与 §2.8 社区文章端点；其指南已下沉至本模块契约以避免 UID 膨胀。
 
 **概述**
 
@@ -632,7 +632,7 @@ MarkdownRenderer              - 只读渲染（react-markdown + 插件链）
 | 主题正文渲染 | `/community/community/[category]/[topicId]` | `MarkdownRenderer` |
 | 回复内容渲染 | `reply-item.tsx` | `MarkdownRenderer` |
 
-> 待统一项：`/events/[id]` 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未复用 `MarkdownRenderer` 也未配置 `rehype-sanitize`，后续迭代应统一替换（见 `docs/项目待办事项.md`）。
+> 待统一项：`/events/[id]` 活动详情页当前直接使用原始 `ReactMarkdown` + `remarkGfm`，未复用 `MarkdownRenderer` 也未配置 `rehype-sanitize`，后续迭代应统一替换（见 `docs/项目待办事项-优先级重排.md`）。
 
 **配置**
 
@@ -1031,7 +1031,7 @@ return NextResponse.json({ ok: res.status === 200 });
 
 **17.2 安全健康检查（规划）**
 
-> ℹ️ 安全健康检查（`/api/health/events`、`/api/health/security`）规划等待办条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 安全健康检查（`/api/health/events`、`/api/health/security`）规划等待办条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ### 2.18 工作台模块（/api/workbench/）
 

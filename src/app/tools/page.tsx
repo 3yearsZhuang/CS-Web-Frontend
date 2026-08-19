@@ -1,13 +1,14 @@
 /**
  * @file 工具集入口页（/tools）— 工作台 + 工具入口收编
  * 顶部为个人工作台（问候条/今日任务/番茄钟×播放器/倒计时/便签），
- * 底部保留原工具入口网格（可用/即将上线/规划中/管理）。
+ * 底部保留原工具入口网格（可用/开发中/管理）。
  */
 
 'use client';
 
 import Link from 'next/link';
-import { GraduationCap, BookOpen, Bot, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
+import { Badge, GhostTitle, Title } from '@/components';
+import { GraduationCap, BookOpen, ClipboardList, MessageCircle, MessageSquare, Code2 } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -18,8 +19,9 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useEffect, useMemo, useState } from 'react';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
-type ToolTab = 'available' | 'coming-soon' | 'planned' | 'admin';
+type ToolTab = 'available' | 'developing' | 'admin';
 
 interface ToolCard {
   href: string;
@@ -50,15 +52,6 @@ const TOOLS: ToolCard[] = [
     descKey: 'resourceDesc',
     status: 'available',
     visibilityKey: 'tools-resource',
-  },
-  {
-    href: '/tools/auxilio',
-    icon: <Bot className="w-5 h-5" />,
-    titleKey: 'auxilioTitle',
-    enKey: 'auxilioEn',
-    descKey: 'auxilioDesc',
-    status: 'available',
-    visibilityKey: 'tools-auxilio',
   },
   {
     href: '/tools/task',
@@ -93,7 +86,7 @@ const TOOLS: ToolCard[] = [
     titleKey: 'chatTitle',
     enKey: 'chatEn',
     descKey: 'chatDesc',
-    status: 'planned',
+    status: 'developing',
     visibilityKey: 'tools-chat',
   },
 ];
@@ -103,10 +96,8 @@ function statusLabelKey(status: ToolTab): string {
   switch (status) {
     case 'available':
       return 'statusAvailable';
-    case 'coming-soon':
-      return 'statusComingSoon';
-    case 'planned':
-      return 'statusPlanned';
+    case 'developing':
+      return 'statusDeveloping';
     default:
       return '';
   }
@@ -133,11 +124,11 @@ export default function ToolsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/auth/me', { cache: 'no-store' })
-      .then((res) => {
-        if (res.status === 401) return null;
-        if (!res.ok) return null;
-        return res.json() as Promise<{ user: SafeUser }>;
+    apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' })
+      .then((r) => {
+        if (r.status === 401) return null;
+        if (!r.ok) return null;
+        return r.data;
       })
       .then((data) => {
         if (cancelled || !data) return;
@@ -157,8 +148,7 @@ export default function ToolsPage() {
   const toolsTabs: CapsuleTab[] = useMemo(
     () => [
       { key: 'available', num: '01', label: t('tabAvailable') },
-      { key: 'coming-soon', num: '02', label: t('tabComingSoon') },
-      { key: 'planned', num: '03', label: t('tabPlanned') },
+      { key: 'developing', num: '02', label: t('tabDeveloping') },
       ...(isAdmin ? [{ key: 'admin', num: '99', label: t('tabAdmin') }] : []),
     ],
     [isAdmin, t],
@@ -171,7 +161,7 @@ export default function ToolsPage() {
 
   return (
     <VisibilityGate componentKey="tools">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -186,25 +176,17 @@ export default function ToolsPage() {
         }}
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${wt('wbTitle')}`}
+            subtitle={wt('wbSubtitle')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {wt('wbTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {wt('wbSubtitle')}
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -234,15 +216,14 @@ export default function ToolsPage() {
       <section data-section-nav="01|工具列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <Title level={2} className="mb-4"
+              echo={`${activeTab === 'available' ? wt('allTools') : t('sectionTitleDeveloping')}`}>
               {activeTab === 'available' && wt('allTools')}
-              {activeTab === 'coming-soon' && t('sectionTitleComingSoon')}
-              {activeTab === 'planned' && t('sectionTitlePlanned')}
-            </h2>
+              {activeTab === 'developing' && t('sectionTitleDeveloping')}
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'available' && wt('toolsHint')}
-              {activeTab === 'coming-soon' && t('sectionDescComingSoon')}
-              {activeTab === 'planned' && t('sectionDescPlanned')}
+              {activeTab === 'developing' && t('sectionDescDeveloping')}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -251,26 +232,24 @@ export default function ToolsPage() {
 
                 const CardContent = (
                   <div
-                    className={`relative p-6 border border-[var(--border)] transition-colors ${
+                    className={`dna-card ${
                       isAvailable
-                        ? 'card-minimal cursor-pointer hover:bg-[var(--primary)]/[0.03]'
+                        ? 'cursor-pointer hover:bg-[var(--primary)]/[0.03]'
                         : 'opacity-40 cursor-default'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="text-[var(--primary)]">{tool.icon}</div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                            tool.status === 'available'
-                              ? 'border-emerald-500/40 text-emerald-500'
-                              : tool.status === 'coming-soon'
-                                ? 'border-amber-500/40 text-amber-500'
-                                : 'border-[var(--border)] text-[var(--muted-foreground)]'
-                          }`}
-                        >
+                        <Badge variant={
+                          tool.status === 'available'
+                            ? 'success'
+                            : tool.status === 'developing'
+                              ? 'amber'
+                              : 'muted'
+                        }>
                           {t(statusLabelKey(tool.status) as Parameters<typeof t>[0])}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
 

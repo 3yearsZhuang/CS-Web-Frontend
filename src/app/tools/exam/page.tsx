@@ -5,6 +5,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Badge, Title, ArkDivider } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
@@ -13,6 +14,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type ExamTab = 'ongoing' | 'upcoming' | 'ended';
 
@@ -65,9 +67,9 @@ export default function ExamListPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/tools/exam');
-      if (!res.ok) throw new Error('加载失败');
-      const data = await res.json();
+      const result = await apiRequest<{ exams?: ExamItem[] }>('/api/tools/exam');
+      if (!result.ok) throw new Error(result.error ?? '加载失败');
+      const data = result.data!;
       setExams(data.exams ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
@@ -102,7 +104,7 @@ export default function ExamListPage() {
   }, [exams, activeTab, now]);
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -125,25 +127,17 @@ export default function ExamListPage() {
         }
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${t('heroTitle')} ${t('heroTitleEn')}`}
+            subtitle={t('heroTitleEn')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -172,16 +166,20 @@ export default function ExamListPage() {
       <section data-section-nav="01|考试列表" className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-t border-[var(--border)]">
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <Title
+              level={2}
+              className="text-[clamp(28px,5vw,56px)] mb-4"
+              echo={activeTab === 'ongoing' ? `${t('listOngoing')} ${t('listOngoingEn')}` : activeTab === 'upcoming' ? `${t('listUpcoming')} ${t('listUpcomingEn')}` : `${t('listEnded')} ${t('listEndedEn')}`}
+            >
               {activeTab === 'ongoing' && t('listOngoing')}
               {activeTab === 'upcoming' && t('listUpcoming')}
               {activeTab === 'ended' && t('listEnded')}
-              <span className="ark-divider ml-2">
+              <ArkDivider className="ml-2">
                 {activeTab === 'ongoing' && t('listOngoingEn')}
                 {activeTab === 'upcoming' && t('listUpcomingEn')}
                 {activeTab === 'ended' && t('listEndedEn')}
-              </span>
-            </h2>
+              </ArkDivider>
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {activeTab === 'ongoing' && t('countOngoing', { count: filteredExams.length })}
               {activeTab === 'upcoming' && t('countUpcoming', { count: filteredExams.length })}
@@ -238,17 +236,9 @@ export default function ExamListPage() {
                       <div className="flex items-start justify-between gap-4 mb-3">
                         <div className="flex items-center gap-2">
                           <GraduationCap className="w-4 h-4 text-[var(--primary)]" />
-                          <span
-                            className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                              activeTab === 'ongoing'
-                                ? 'border-emerald-500/40 text-emerald-500'
-                                : activeTab === 'upcoming'
-                                  ? 'border-amber-500/40 text-amber-500'
-                                  : 'border-[var(--border)] text-[var(--muted-foreground)]'
-                            }`}
-                          >
+                          <Badge variant={activeTab === 'ongoing' ? 'success' : activeTab === 'upcoming' ? 'amber' : 'muted'}>
                             {activeTab === 'ongoing' ? t('badgeOngoing') : activeTab === 'upcoming' ? t('badgeUpcoming') : t('badgeEnded')}
-                          </span>
+                          </Badge>
                         </div>
                         {exam.startTime && (
                           <span className="meta-mono text-[10px] text-[var(--muted-foreground)] shrink-0">

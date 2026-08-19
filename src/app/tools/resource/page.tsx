@@ -15,7 +15,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SectionLoading } from '@/components';
+import { Button, Pagination, SectionLoading, ArkDivider, Title } from '@/components';
 import { motion } from 'motion/react';
 import { useResources } from './use-resources';
 import { ResourceCard } from './resource-card';
@@ -41,7 +41,7 @@ export default function ResourcePage() {
   const typeTabs: CapsuleTab[] = res.typeTabs as CapsuleTab[];
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -64,25 +64,17 @@ export default function ResourcePage() {
         }
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${t('pageTitle')}`}
+            subtitle={`/ ${t('pageTitleEn')}`}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('pageTitle')}
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              / {t('pageTitleEn')}
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -112,12 +104,11 @@ export default function ResourcePage() {
       >
         <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px]">
           <div>
-            <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+            <Title level={2} className="mb-4"
+              echo={`${res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}`}>
               {res.activeType === 'all' ? t('allResources') : res.activeTypeLabel}
-              <span className="ark-divider ml-2">
-                {res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}
-              </span>
-            </h2>
+              <ArkDivider className="ml-2">{res.activeType === 'all' ? t('allResourcesEn') : res.activeTypeLabel}</ArkDivider>
+            </Title>
             <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px] mb-10 sm:mb-16">
               {res.loading
                 ? '// 加载中...'
@@ -131,10 +122,10 @@ export default function ResourcePage() {
                   <button
                     key={tab.key}
                     onClick={() => res.setTag(tab.key)}
-                    className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
+                    className={`tab-chip focus-ring whitespace-nowrap ${
                       (tab.key === '__all__' && !res.activeTag) || tab.key === res.activeTag
-                        ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                        : 'bg-transparent border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
+                        ? 'tab-chip-active'
+                        : ''
                     }`}
                   >
                     {tab.label}
@@ -148,21 +139,13 @@ export default function ResourcePage() {
               <div className="flex gap-0">
                 <button
                   onClick={() => res.setSortAndReset('latest')}
-                  className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    res.sort === 'latest'
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${res.sort === 'latest' ? 'tab-chip-active' : ''}`}
                 >
                   {t('sortLatest')}
                 </button>
                 <button
                   onClick={() => res.setSortAndReset('popular')}
-                  className={`whitespace-nowrap px-4 py-2 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                    res.sort === 'popular'
-                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                      : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                  }`}
+                  className={`tab-chip focus-ring whitespace-nowrap ${res.sort === 'popular' ? 'tab-chip-active' : ''}`}
                 >
                   {t('sortPopular')}
                 </button>
@@ -207,37 +190,14 @@ export default function ResourcePage() {
                   ))}
                 </motion.div>
 
-                {/* 分页 */}
+                {/* 分页（共享组件，全量页码） */}
                 {res.pages > 1 && (
-                  <div className="flex items-center justify-center gap-2 py-8 mt-4 border-t border-[var(--border)]">
-                    <button
-                      onClick={() => res.setPage((p) => Math.max(1, p - 1))}
-                      disabled={res.page <= 1}
-                      className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30"
-                    >
-                      ←
-                    </button>
-                    {Array.from({ length: res.pages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => res.setPage(p)}
-                        className={`font-mono text-[12px] px-3 py-1.5 border transition-colors ${
-                          p === res.page
-                            ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                            : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'
-                        }`}
-                      >
-                        {String(p).padStart(2, '0')}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => res.setPage((p) => Math.min(res.pages, p + 1))}
-                      disabled={res.page >= res.pages}
-                      className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30"
-                    >
-                      →
-                    </button>
-                  </div>
+                  <Pagination
+                    page={res.page}
+                    totalPages={res.pages}
+                    onPageChange={res.setPage}
+                    variant="all"
+                  />
                 )}
               </>
             )}

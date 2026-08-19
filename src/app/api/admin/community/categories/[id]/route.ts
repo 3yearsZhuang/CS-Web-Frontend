@@ -1,5 +1,5 @@
 /**
- * @file 管理端分类操作 API — PUT/DELETE /api/admin/community/community/categories/[id]（BFF 薄转发）
+ * @file 管理端分类操作 API — PUT/DELETE /api/admin/community/categories/[id]（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -18,7 +18,7 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/categories/${encodeURIComponent(id)}`,
+    path: `/admin/community/categories/${encodeURIComponent(id)}`,
     method: 'PUT',
     jsonBody: {
       slug: body.slug,
@@ -49,7 +49,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/categories/${encodeURIComponent(id)}`,
+    path: `/admin/community/categories/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 

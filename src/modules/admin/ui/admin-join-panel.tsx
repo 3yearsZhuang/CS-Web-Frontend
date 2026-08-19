@@ -7,10 +7,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Badge } from '@/components';
+import type { BadgeVariant } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 
@@ -61,15 +63,15 @@ function statusLabel(s: AppStatus): string {
   }
 }
 
-/** 状态徽章样式 */
-function statusBadgeClass(s: AppStatus): string {
+/** 状态徽章语义色 */
+function statusBadgeVariant(s: AppStatus): BadgeVariant {
   switch (s) {
     case 'pending':
-      return 'border-amber-500/40 text-amber-500';
+      return 'amber';
     case 'approved':
-      return 'border-emerald-500/40 text-emerald-500';
+      return 'success';
     case 'rejected':
-      return 'border-red-400/40 text-red-400';
+      return 'danger';
   }
 }
 
@@ -103,21 +105,22 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/admin/join?status=${status}`, { cache: 'no-store' });
-        if (res.status === 401) {
+        const r = await apiRequest<{ applications: JoinApplication[] }>(
+          `/api/admin/join?status=${status}`,
+          { cache: 'no-store' },
+        );
+        if (r.status === 401) {
           router.replace('/login');
           return;
         }
-        if (res.status === 403) {
+        if (r.status === 403) {
           onForbidden();
           return;
         }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || t('loadFailed'));
+        if (!r.ok) {
+          throw new Error(r.error ?? t('loadFailed'));
         }
-        const data = (await res.json()) as { applications: JoinApplication[] };
-        setApplications(data.applications ?? []);
+        setApplications(r.data?.applications ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : t('loadFailed'));
       } finally {
@@ -153,20 +156,16 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
     setSaving(true);
     setModalError(null);
     try {
-      const res = await fetch('/api/admin/join', {
+      const r = await apiRequest<{ application?: JoinApplication }>('/api/admin/join', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           applicationId: application.id,
           status: action,
           reviewNote: reviewNote.trim() || undefined,
-        }),
+        },
       });
-      const data = (await res.json().catch(() => null)) as
-        | { application?: JoinApplication; error?: string }
-        | null;
-      if (!res.ok || !data?.application) {
-        setModalError(data?.error || t('reviewFailed'));
+      if (!r.ok || !r.data?.application) {
+        setModalError(r.error ?? t('reviewFailed'));
         return;
       }
       pushToast('success', action === 'approved' ? t('approveSuccess') : t('rejectSuccess'));
@@ -197,11 +196,7 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                     key={s.v}
                     type="button"
                     onClick={() => setStatusFilter(s.v)}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      statusFilter === s.v
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${statusFilter === s.v ? 'tab-chip-active' : ''}`}
                   >
                     {t(s.label)}
                   </button>
@@ -258,9 +253,9 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                       <h3 className="display-serif text-[18px] text-[var(--foreground)]">
                         {app.applicantName}
                       </h3>
-                      <span className={`meta-mono text-[10px] px-2 py-0.5 border ${statusBadgeClass(app.status)}`}>
+                      <Badge variant={statusBadgeVariant(app.status)}>
                         {t(statusLabel(app.status))}
-                      </span>
+                      </Badge>
                     </div>
                     <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">
                       <span>{t('studentIdLabel', { id: app.studentId })}</span>

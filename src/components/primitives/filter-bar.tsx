@@ -63,11 +63,7 @@ export function FilterBar({
               <button
                 key={opt.value}
                 onClick={() => onChange(opt.value)}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors focus-amber ${
-                  active
-                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                    : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                }`}
+                className={`tab-chip focus-ring whitespace-nowrap ${active ? 'tab-chip-active' : ''}`}
               >
                 {opt.dotClassName && (
                   <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${opt.dotClassName}`} />

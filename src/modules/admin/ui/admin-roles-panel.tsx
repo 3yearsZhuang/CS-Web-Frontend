@@ -10,9 +10,11 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { RolePermissionMatrix } from './role-permission-matrix';
+import { Button } from '@/components';
 import { RoleModals } from './role-modals';
 import { roleBadgeClass, roleBadgeLabel } from './roles-types';
 import type { PermissionModule, RoleModal, RoleRecord } from './roles-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /* ============= 面板组件 ============= */
 
@@ -58,20 +60,21 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
 
   const loadRoles = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/roles', { cache: 'no-store' });
-      if (res.status === 401) {
+      const result = await apiRequest<{ roles: RoleRecord[] }>('/api/admin/roles', {
+        cache: 'no-store',
+      });
+      if (result.status === 401) {
         router.replace('/login');
         return;
       }
-      if (res.status === 403) {
+      if (result.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('loadFailed'));
+      if (!result.ok) {
+        throw new Error(result.error || t('loadFailed'));
       }
-      const data = (await res.json()) as { roles: RoleRecord[] };
+      const data = result.data!;
       setRoles(data.roles);
       // 默认选中第一个非 root/user 的角色
       if (!selectedRoleKey && data.roles.length > 0) {
@@ -89,9 +92,12 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
 
   const loadPermissions = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/permissions', { cache: 'no-store' });
-      if (res.ok) {
-        const data = (await res.json()) as { modules: PermissionModule[] };
+      const result = await apiRequest<{ modules: PermissionModule[] }>(
+        '/api/admin/permissions',
+        { cache: 'no-store' },
+      );
+      if (result.ok) {
+        const data = result.data!;
         setModules(data.modules);
       }
     } catch {
@@ -136,19 +142,14 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     if (!selectedRole || !dirty) return;
     setSaving(true);
     try {
-      const res = await fetch(
+      const result = await apiRequest<{ role: RoleRecord }>(
         `/api/admin/roles/${encodeURIComponent(selectedRole.key)}/permissions`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ permissions: Array.from(draftPermissions) }),
-        },
+        { method: 'PUT', body: { permissions: Array.from(draftPermissions) } },
       );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('saveFailed'));
+      if (!result.ok) {
+        throw new Error(result.error || t('saveFailed'));
       }
-      const data = (await res.json()) as { role: RoleRecord };
+      const data = result.data!;
       setRoles((prev) =>
         prev.map((r) => (r.key === data.role.key ? data.role : r)),
       );
@@ -184,21 +185,19 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     }
     setCreateSaving(true);
     try {
-      const res = await fetch('/api/admin/roles', {
+      const result = await apiRequest<{ role: RoleRecord }>('/api/admin/roles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           key: createForm.key.trim().toLowerCase(),
           displayName: createForm.displayName.trim(),
           description: createForm.description.trim(),
           permissions: Array.from(createPermissions),
-        }),
+        },
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('createFailed'));
+      if (!result.ok) {
+        throw new Error(result.error || t('createFailed'));
       }
-      const data = (await res.json()) as { role: RoleRecord };
+      const data = result.data!;
       setRoles((prev) => [...prev, data.role]);
       setSelectedRoleKey(data.role.key);
       setModal({ type: 'none' });
@@ -223,22 +222,20 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     setEditError(null);
     setEditSaving(true);
     try {
-      const res = await fetch(
+      const result = await apiRequest<{ role: RoleRecord }>(
         `/api/admin/roles/${encodeURIComponent(modal.role.key)}`,
         {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: {
             displayName: editForm.displayName.trim(),
             description: editForm.description.trim(),
-          }),
+          },
         },
       );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('updateFailed'));
+      if (!result.ok) {
+        throw new Error(result.error || t('updateFailed'));
       }
-      const data = (await res.json()) as { role: RoleRecord };
+      const data = result.data!;
       setRoles((prev) =>
         prev.map((r) => (r.key === data.role.key ? data.role : r)),
       );
@@ -257,13 +254,12 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     if (modal.type !== 'delete') return;
     setEditSaving(true);
     try {
-      const res = await fetch(
+      const result = await apiRequest<{ role: RoleRecord }>(
         `/api/admin/roles/${encodeURIComponent(modal.role.key)}`,
         { method: 'DELETE' },
       );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('deleteFailed'));
+      if (!result.ok) {
+        throw new Error(result.error || t('deleteFailed'));
       }
       setRoles((prev) => prev.filter((r) => r.key !== modal.role.key));
       if (selectedRoleKey === modal.role.key) {
@@ -332,13 +328,13 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
               {t('panelDesc')}
             </p>
           </div>
-          <button
+          <Button
+            variant="primary-outline"
             type="button"
             onClick={openCreateModal}
-            className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors focus-amber"
           >
             {t('createRoleBtn')}
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">

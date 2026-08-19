@@ -18,7 +18,8 @@ import { CommunitySidebarTrending } from '@/modules/community/ui/community-sideb
 import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip';
 import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
-import { Button, SectionLoading } from '@/components';
+import { Button, Pagination, SectionLoading, GhostTitle, Title } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCommunityFeed } from './use-community-feed';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -26,7 +27,7 @@ export default function CommunityPage() {
   return (
     <Suspense
       fallback={
-        <main className="relative pt-16 min-h-screen flex items-center justify-center">
+        <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
           <SectionLoading label="Loading..." />
         </main>
       }
@@ -64,7 +65,6 @@ function CommunityPageContent() {
     activeMembers,
     featuredTopics,
     searchInputRef,
-    pageNums,
     hasSearch,
     isInitialLoading,
     handleTabChange,
@@ -83,7 +83,7 @@ function CommunityPageContent() {
 
   if (isInitialLoading) {
     return (
-      <main className="relative pt-16 min-h-screen flex items-center justify-center">
+      <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <SectionLoading label="Loading..." />
       </main>
     );
@@ -91,7 +91,7 @@ function CommunityPageContent() {
 
   return (
     <VisibilityGate componentKey="community">
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero ============ */}
       <CollapsingHero
         index="00"
@@ -105,12 +105,13 @@ function CommunityPageContent() {
         }}
       >
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={`${t('heroTitle1')}${t('heroTitle2')}${t('heroTitle3')}`}
+            subtitle={t('heroTitleEn')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle1')}
@@ -122,16 +123,7 @@ function CommunityPageContent() {
             >
               {t('heroTitle3')}
             </span>
-            <span
-              className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-                hero.collapsed
-                  ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                  : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-              }`}
-            >
-              {t('heroTitleEn')}
-            </span>
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div
@@ -166,13 +158,14 @@ function CommunityPageContent() {
             <div className="flex-1 md:px-6 lg:px-10 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-16">
                 <div>
-                  <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-4">
+                  <Title level={2} className="mb-4"
+                    echo={hasSearch ? t('searchResults') : t('communityFeed')}>
                     {hasSearch ? t('searchResults') : t('communityFeed')}
                     {hasSearch && searchQuery.trim() && (
                       <span className="text-[var(--primary)] ml-2">「{searchQuery.trim()}」</span>
                     )}
                     {selectedTag && <span className="text-[var(--primary)] ml-2">#{selectedTag}</span>}
-                  </h2>
+                  </Title>
                   <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px]">
                     {hasSearch
                       ? loading
@@ -205,7 +198,7 @@ function CommunityPageContent() {
                       maxLength={80}
                       placeholder={t('searchPlaceholderFull')}
                       aria-label={t('searchPlaceholderFull')}
-                      className="w-full px-4 py-4 bg-transparent border border-[var(--border)] text-[var(--foreground)] text-[16px] font-mono placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] focus-amber transition-colors pr-12"
+                      className={`${INPUT_CLASS} w-full px-4 py-4 text-[16px] pr-12`}
                     />
                     {searchQuery && (
                       <button
@@ -274,12 +267,14 @@ function CommunityPageContent() {
               {selectedTag && (
                 <div className="mb-8 flex items-center gap-3">
                   <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('selectedTag')}</span>
-                  <button
+                  <Button
+                    variant="primary-outline"
+                    size="sm"
+                    type="button"
                     onClick={() => handleTagClick(selectedTag)}
-                    className="meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors focus-amber"
                   >
                     {selectedTag} ✕
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -336,37 +331,7 @@ function CommunityPageContent() {
               )}
 
               {/* 分页 */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 py-8 mt-4 border-t border-[var(--border)]">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-                  >
-                    ←
-                  </button>
-                  {pageNums.map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={`font-mono text-[12px] px-3 py-1.5 border transition-colors focus-amber ${
-                        page === n
-                          ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5'
-                          : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'
-                      }`}
-                    >
-                      {String(n).padStart(2, '0')}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
               </>
               )}

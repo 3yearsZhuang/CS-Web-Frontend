@@ -21,6 +21,7 @@
 - [反向代理配置](#反向代理配置)
 - [安全](#安全)
 - [维护操作](#维护操作)
+- [BFF route 骨架生成器（C-15）](#bff-route-骨架生成器c-15-脚手架)
 - [故障排查（基础）](#故障排查基础)
 - [一、SLO 定义（0.9.1 最小集）](#一slo-定义091-最小集)
 - [二、Error Budget 消耗规则](#二error-budget-消耗规则)
@@ -97,7 +98,7 @@ docker compose up -d
 - 应用容器：运行 `pnpm start`
 - **无本地业务数据卷**：前端为 BFF，业务数据由后端 PostgreSQL 承载（`data/` 仅遗留脚本/上传文件，非运行时数据源）
 
-首次部署后创建管理员：通过**后端 CLI / Swagger** 创建（后端 rbac_init seed 已用 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` 配置创建默认管理员），见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。原前端遗留脚本 `pnpm create-user` 已删除。
+首次部署后创建管理员：通过**后端 CLI / Swagger** 创建（后端 rbac_init seed 已用 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` 配置创建默认管理员），见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。前端遗留脚本 `pnpm create-user` 已删除。
 
 ### 方式二：直接运行
 
@@ -237,6 +238,54 @@ docker compose up -d
 2. 在 `src/modules/workbench/widget-registry.ts` 的 `WIDGETS` 数组声明 `id` / `slot`（`full` / `main` / `side`）/ `titleKey`（指向 `workbench` namespace）/ `component`——`workbench.tsx` 按 slot 分组 + `wb_widget_prefs`（localStorage）显隐自动渲染，**无需改骨架**；
 3. （可选）在布局设置显隐开关中暴露该 widget。
 
+### BFF route 骨架生成器（C-15 脚手架）
+
+> 位置：`tools/scripts/fe/gen/bff-routes.mjs`（C-15 真正交付物）。用于把 `../openapi.baseline.json` 的 API 路径自动产出使用通用原语（`proxyBackend` / `bodyOrEmpty` / `arrayFrom` / `okJson` / `errJson` / `readJsonBody`，定义见 `src/shared/backend-client.ts`）的 `route.ts` 薄转发骨架，削减 140+ 手写 BFF 路由的重复。
+
+**前置**：
+
+- `openapi.baseline.json`（前端根上一级）须为最新后端契约；
+- `src/shared/backend-client.ts` 已存在上述通用原语。
+
+**命令**：
+
+```bash
+# 1) 默认 dry-run：仅生成草稿 + 对账报告，绝不触碰 src
+node tools/scripts/fe/gen/bff-routes.mjs
+
+# 2) 指定草稿目录（默认 <frontend>/.bff-scaffold）
+node tools/scripts/fe/gen/bff-routes.mjs --out .bff-scaffold
+
+# 3) 真正写入：仅新建 NEW 端点骨架到 src/app/api（绝不覆盖已存在文件）
+node tools/scripts/fe/gen/bff-routes.mjs --write
+
+# 其他开关
+--openapi <path>   # 指定 openapi 文件（默认 ../openapi.baseline.json）
+--no-check         # 跳过生成后的 TS 语法校验
+```
+
+**安全模型**：
+
+- **默认 dry-run**：骨架只写入草稿目录（默认 `.bff-scaffold/`），不碰 `src/app/api` 任何手写文件；
+- **自动对账**：扫描现有手写 `route.ts` 的反向代理路径，按「规范化归一路径」精确匹配（父子路由在 App Router 是独立文件，父存在 ≠ 子已代理；`comments↔replies` / `posts↔topics` 目录重映射同样靠精确归一识别），把每个 openapi 操作标为 `COVERED`（已被代理）或 `NEW`（尚未代理）；仅 `NEW` 才产出骨架；
+- **`--write` 默认关闭且只新建**：即便开启也只新建不存在的文件，绝不覆盖手写路由。
+
+**草稿产物**：`.bff-scaffold/` 下含每个骨架 `src/app/api/<dir>/route.ts` + `manifest.json` + `RECONCILE.md`（NEW/COVERED 清单 + TS 校验结果）。
+
+**⚠️ `--write` 后必须做的冲突检查（重要）**：
+
+生成器按「代理路径归一」判定 `COVERED`，**不识别路由目录的动态段参数名冲突**。openapi 用 `{report_id}` / `{post_id}` / `{event_id}` 等，而项目既有手写路由统一用 `[id]`。当某端点既有 `[id]` 路由、`--write` 又新建了同层的 `[*_id]` 骨架时，Next.js 启动会报 `You cannot use different slug names for the same dynamic path ('id' !== 'report_id')` 并直接 abort 进程。
+
+> 已发生实例：`--write` 在 6 个父目录（`admin/community/reports`、`admin/community/topics`、`admin/events`、`community/users`、`tools/component-registry`、`tools/task/claims`、`users`）下新建了 `[*_id]` 骨架，与既有 `[id]` 路由同层冲突。处置：删除这些未跟踪的 `[*_id]` 骨架目录——功能已被 `[id]` 路由经 body `action` 或参数值转发覆盖（文件夹参数名不影响后端代理），保留 `[id]`。
+
+**`--write` 后的标准收尾流程**：
+
+1. `git status` 确认仅新增预期骨架；用 `find src/app/api -type d -name '\[*\]'` 检查「同父目录下出现两个不同 `[*]` 动态段」，逐个删除冗余 `[*_id]`；
+2. 打开 `.bff-scaffold/RECONCILE.md` 与 `manifest.json` 复核 NEW 清单与 COVERED 匹配；
+3. 骨架含 `// TODO: 补全请求体字段映射（camel→snake）` 与响应塑形（`arrayFrom` / `to*` 映射 / 分页），**人工补全后再启用**；
+4. `pnpm ts-check` 与 `pnpm check:bff-boundary` 须持平（仅基线错误）；
+5. `pnpm dev` 确认能正常监听（路由冲突会直接 abort 进程，不会只报编译错）。
+
 > ⚠️ **部分就绪提醒**：`api-usage-stats` 后端路由 `/api/workbench/stats/api-usage` 与 i18n（`workbench.apiUsageTitle`）已就绪，但前端 widget 卡片尚未在 `WIDGETS` 注册、未渲染。接入须补齐第 1–2 步（详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4）。
 
 ---
@@ -303,7 +352,7 @@ GET  /api/notifications           — 通知（轮询高频）
 | API P95 延迟 | pino `requestId` + `responseTime` | 按端点分组计算 P95 |
 | 考试提交 | pino 业务日志 | 按考试 ID 聚合 `exam.submit` 成功率 |
 
-> ℹ️ 外部探针接入等待办条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 外部探针接入等待办条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ---
 
@@ -351,7 +400,7 @@ GET  /api/notifications           — 通知（轮询高频）
 | 月份 | 可用性 | 5xx 错误率 | P95 延迟 | Budget 消耗 | 状态 | 备注 |
 |------|--------|----------|---------|------------|------|------|
 
-> ℹ️ 待发布月份记录等待办条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 待发布月份记录等待办条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ---
 
@@ -547,11 +596,11 @@ df -h                                            # 磁盘问题
 
 ### 1. 创建管理员
 
-> 原前端遗留脚本 `pnpm create-user` / `pnpm seed`（直连 SQLite）已于 2026-08-07 删除。管理员由后端 `rbac_init` seed 创建（配置 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD`，见后端 `.env.example`）；生产环境如需额外管理员请通过**后端 CLI / Swagger** 创建，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
+> 前端遗留脚本 `pnpm create-user` / `pnpm seed`（直连 SQLite）已于 2026-08-07 删除。管理员由后端 `rbac_init` seed 创建（配置 `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD`，见后端 `.env.example`）；生产环境如需额外管理员请通过**后端 CLI / Swagger** 创建，见根级 `docs/Onboarding.md`（附录 B 后端工程约定）。
 
 ### 2. 数据保留清理
 
-> ℹ️ 数据保留清理（手动，未来由 L9 定时任务自动化）等待办条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 数据保留清理（手动，未来由 L9 定时任务自动化）等待办条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ### 3. 后端数据备份与恢复演练
 

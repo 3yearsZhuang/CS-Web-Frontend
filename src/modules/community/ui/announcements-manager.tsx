@@ -3,30 +3,14 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Badge, Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
 import { getError } from './community-admin-utils';
-
-interface AnnouncementItem {
-  id: string;
-  title: string;
-  content: string | null;
-  level: 'info' | 'warning' | 'success' | 'error';
-  isActive: boolean;
-  isDismissible: boolean;
-  priority: number;
-  expiresAt: string | null;
-  createdAt: string;
-}
-
-interface AnnouncementsResponse {
-  items: AnnouncementItem[];
-  total: number;
-}
+import { useAnnouncementsManager, type AnnouncementItem } from './use-announcements-manager';
 
 const LEVEL_OPTIONS: { value: AnnouncementItem['level']; label: string }[] = [
   { value: 'info', label: '信息 / Info' },
@@ -37,11 +21,8 @@ const LEVEL_OPTIONS: { value: AnnouncementItem['level']; label: string }[] = [
 
 /** 公告管理 — 新建/启用/停用/删除公告 */
 export function AnnouncementsManager() {
-  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
+  const { announcements, loading, error, actionError, busyIds, loadAnnouncements, toggleActive, deleteAnnouncement, createAnnouncement } =
+    useAnnouncementsManager();
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ title: '', content: '', level: 'info' as AnnouncementItem['level'], priority: 0 });
   const [creating, setCreating] = useState(false);
@@ -51,53 +32,10 @@ export function AnnouncementsManager() {
   const t = useTranslations('announcementsAdmin');
   const tc = useTranslations('common');
 
-  const loadAnnouncements = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/announcements');
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, t('loadFailed')));
-      }
-      const data = (await res.json()) as AnnouncementsResponse;
-      setAnnouncements(data.items ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => { void loadAnnouncements(); }, [loadAnnouncements]);
 
-  const doAction = async (id: string, action: () => Promise<Response>) => {
-    setActionError(null);
-    setBusyIds((s) => new Set(s).add(id));
-    try {
-      const res = await action();
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, t('actionFailed')));
-      await loadAnnouncements();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : t('actionFailed'));
-    } finally {
-      setBusyIds((s) => {
-        const next = new Set(s);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
   const handleToggleActive = (item: AnnouncementItem) => {
-    void doAction(item.id, () =>
-      fetch(`/api/admin/announcements/${item.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: !item.isActive }),
-      }),
-    );
+    void toggleActive(item.id, !item.isActive);
   };
 
   const handleDelete = (item: AnnouncementItem) => {
@@ -109,9 +47,7 @@ export function AnnouncementsManager() {
         confirmLabel: t('confirmDelete'),
       });
       if (!confirmed) return;
-      doAction(item.id, () =>
-        fetch(`/api/admin/announcements/${item.id}`, { method: 'DELETE' }),
-      );
+      await deleteAnnouncement(item.id);
     })();
   };
 
@@ -122,22 +58,14 @@ export function AnnouncementsManager() {
       return;
     }
     setCreating(true);
-    try {
-      const res = await fetch('/api/admin/announcements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createForm),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, t('createFailed')));
+    const result = await createAnnouncement(createForm);
+    if (!result.ok) {
+      setCreateError(getError(result.data, t('createFailed')));
+    } else {
       setShowCreate(false);
       setCreateForm({ title: '', content: '', level: 'info', priority: 0 });
-      await loadAnnouncements();
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : t('createFailed'));
-    } finally {
-      setCreating(false);
     }
+    setCreating(false);
   };
 
   return (
@@ -215,17 +143,17 @@ export function AnnouncementsManager() {
                   {item.content && <p className="text-[11px] text-[var(--muted-foreground)] line-clamp-1 mt-0.5">{item.content}</p>}
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                    item.level === 'error' ? 'border-[var(--destructive)] text-[var(--destructive)]' :
-                    item.level === 'warning' ? 'border-amber-500 text-amber-400' :
-                    item.level === 'success' ? 'border-green-500 text-green-400' :
-                    'border-[var(--border)] text-[var(--muted-foreground)]'
-                  }`}>{item.level.toUpperCase()}</span>
+                  <Badge variant={
+                    item.level === 'error' ? 'danger' :
+                    item.level === 'warning' ? 'amber' :
+                    item.level === 'success' ? 'success' :
+                    'muted'
+                  }>{item.level.toUpperCase()}</Badge>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${item.isActive ? 'border-green-500 text-green-400' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
+                  <Badge variant={item.isActive ? 'success' : 'muted'}>
                     {item.isActive ? 'ACTIVE' : 'INACTIVE'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-1 font-mono text-[12px] text-[var(--foreground)] tabular-nums">{item.priority}</div>
                 <div className="lg:col-span-3 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(item.createdAt)}</div>
@@ -233,9 +161,7 @@ export function AnnouncementsManager() {
                   <Button variant="outline" size="sm" type="button" onClick={() => handleToggleActive(item)} disabled={busy}>
                     {item.isActive ? t('disable') : t('enable')}
                   </Button>
-                  <button type="button" onClick={() => handleDelete(item)} disabled={busy} className="px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber disabled:opacity-50">
-                    Del
-                  </button>
+                  <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDelete(item)} disabled={busy}>Del</Button>
                 </div>
               </div>
             );

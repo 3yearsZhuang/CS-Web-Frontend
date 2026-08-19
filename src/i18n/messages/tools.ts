@@ -6,23 +6,19 @@
 export interface ToolsMessages {
   tools: {
     tabAvailable: string;
-    tabComingSoon: string;
-    tabPlanned: string;
+    tabDeveloping: string;
     tabAdmin: string;
     heroTitle: string;
     heroTitleEn: string;
     heroDesc1: string;
     heroDesc2: string;
     sectionTitleAvailable: string;
-    sectionTitleComingSoon: string;
-    sectionTitlePlanned: string;
+    sectionTitleDeveloping: string;
     sectionDescAvailable: string;
-    sectionDescComingSoon: string;
-    sectionDescPlanned: string;
+    sectionDescDeveloping: string;
     enter: string;
     statusAvailable: string;
-    statusComingSoon: string;
-    statusPlanned: string;
+    statusDeveloping: string;
     communityTitle: string;
     communityEn: string;
     communityDesc: string;
@@ -32,9 +28,6 @@ export interface ToolsMessages {
     resourceTitle: string;
     resourceEn: string;
     resourceDesc: string;
-    auxilioTitle: string;
-    auxilioEn: string;
-    auxilioDesc: string;
     taskTitle: string;
     taskEn: string;
     taskDesc: string;
@@ -114,33 +107,6 @@ export interface ToolsMessages {
     loadFailed: string;
     actionFailed: string;
     createFailed: string;
-  },
-  toolsAuxilio: {
-    heroTitle1: string;
-    heroDesc1: string;
-    heroDesc2: string;
-    notLoggedIn: string;
-    loginPrompt: string;
-    login: string;
-    back: string;
-    analysisTitle1: string;
-    analysisTitle2: string;
-    analysisTitleEn: string;
-    statTotal: string;
-    statCorrect: string;
-    statAccuracy: string;
-    weakTitle1: string;
-    weakTitle2: string;
-    correctLabel: string;
-    noExam: string;
-    goExam: string;
-    retry: string;
-    resTypeArticle: string;
-    resTypeVideo: string;
-    resTypeCourse: string;
-    resTypeTool: string;
-    resTypeBook: string;
-    resTypeOther: string;
   },
   toolsDevCenter: {
     heroLabel: string;
@@ -369,9 +335,15 @@ export interface ToolsMessages {
     storeUnknownError: string;
     storeToggleFailed: string;
     storeUpdateStatusFailed: string;
+    storePresetFailed: string;
     storeUpdateGuideFailed: string;
     storeCreateFailed: string;
     storeDeleteFailed: string;
+    visibilityLabel: string;
+    visibilityOpen: string;
+    visibilityClosed: string;
+    statusDoneAutoOpen: string;
+    slugInvalidHint: string;
   },
   workbench: {
     wbTitle: string;
@@ -454,29 +426,29 @@ export interface ToolsMessages {
     llmSaved: string;
     llmMaskedHint: string;
     llmNoData: string;
+    llmUsageEntry: string;
+    resetLayout: string;
+    confirmResetLayout: string;
+    dragHint: string;
   }
 }
 
 export const zhCN: ToolsMessages = {
   tools: {
     tabAvailable: '可用',
-    tabComingSoon: '即将上线',
-    tabPlanned: '规划中',
+    tabDeveloping: '开发中',
     tabAdmin: '管理 / Admin',
     heroTitle: '工具集',
     heroTitleEn: '/ Tools',
     heroDesc1: '考试评测 · 资源分享 · 任务协作',
     heroDesc2: '。每一个工具，都让社团更近一步',
     sectionTitleAvailable: '可用工具',
-    sectionTitleComingSoon: '即将上线',
-    sectionTitlePlanned: '规划中',
+    sectionTitleDeveloping: '开发中',
     sectionDescAvailable: '// 当前可用的工具，点击卡片进入',
-    sectionDescComingSoon: '// 正在开发中，敬请期待',
-    sectionDescPlanned: '// 未来规划的功能，优先级由高到低',
+    sectionDescDeveloping: '// 正在规划与开发中，敬请期待',
     enter: '进入 →',
     statusAvailable: '可用',
-    statusComingSoon: '即将上线',
-    statusPlanned: '规划中',
+    statusDeveloping: '开发中',
     communityTitle: '社区',
     communityEn: 'Community',
     communityDesc: '社团交流、问答与内容分享',
@@ -486,9 +458,6 @@ export const zhCN: ToolsMessages = {
     resourceTitle: '学习资源站',
     resourceEn: 'Resource Hub',
     resourceDesc: '按技术领域分类浏览，用户提交资源链接，管理员审核后公开。',
-    auxilioTitle: 'Auxilio 学习助手',
-    auxilioEn: 'Auxilio Agent',
-    auxilioDesc: '基于考试数据的薄弱点分析，规则引擎推荐个性化学习路径。',
     taskTitle: '任务发布板',
     taskEn: 'Quest Board',
     taskDesc: '管理员发布任务，成员领取并完成，获得积分与徽章奖励。',
@@ -568,33 +537,6 @@ export const zhCN: ToolsMessages = {
     loadFailed: '加载失败',
     actionFailed: '操作失败',
     createFailed: '创建失败',
-  },
-  toolsAuxilio: {
-    heroTitle1: '学习助手',
-    heroDesc1: '基于考试结果分析薄弱点，',
-    heroDesc2: '推荐学习路径',
-    notLoggedIn: '需要登录',
-    loginPrompt: 'Auxilio 需要基于你的考试数据进行分析，请先登录。',
-    login: '登录',
-    back: '返回',
-    analysisTitle1: '学习',
-    analysisTitle2: '分析',
-    analysisTitleEn: ' / Analysis',
-    statTotal: '总答题数',
-    statCorrect: '正确数',
-    statAccuracy: '正确率',
-    weakTitle1: '薄弱',
-    weakTitle2: '方向',
-    correctLabel: '正确',
-    noExam: '还没有考试记录。去参加考试来获得个性化推荐。',
-    goExam: '前往考试 →',
-    retry: '重试',
-    resTypeArticle: '文章',
-    resTypeVideo: '视频',
-    resTypeCourse: '课程',
-    resTypeTool: '工具',
-    resTypeBook: '书籍',
-    resTypeOther: '其他',
   },
   toolsDevCenter: {
     heroLabel: '开发者中心',
@@ -823,9 +765,15 @@ export const zhCN: ToolsMessages = {
     storeUnknownError: '未知错误',
     storeToggleFailed: '切换变体失败',
     storeUpdateStatusFailed: '更新状态失败',
+    storePresetFailed: '应用变体预设失败',
     storeUpdateGuideFailed: '更新规范失败',
     storeCreateFailed: '创建失败',
     storeDeleteFailed: '删除失败',
+    visibilityLabel: '可见性',
+    visibilityOpen: '已开放（对所有角色可见）',
+    visibilityClosed: '未开放',
+    statusDoneAutoOpen: '迁移完成 → 已自动开放可见性',
+    slugInvalidHint: 'slug 必须是已知的可见性模块 key',
   },
   workbench: {
     wbTitle: '工作台',
@@ -908,29 +856,29 @@ export const zhCN: ToolsMessages = {
     llmSaved: '已保存',
     llmMaskedHint: '当前 Key：{masked}',
     llmNoData: '暂无用量数据，先和学习助手聊几句',
+    llmUsageEntry: '用量与设置',
+    resetLayout: '重置布局',
+    confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
+    dragHint: '拖拽卡片可排序 · 点击规格键改积木大小（如 1×1 / 2×2 / 2×3）',
   }
 };
 
 export const en: ToolsMessages = {
   tools: {
     tabAvailable: 'Available',
-    tabComingSoon: 'Coming Soon',
-    tabPlanned: 'Planned',
+    tabDeveloping: 'In Development',
     tabAdmin: 'Admin / 管理',
     heroTitle: 'Toolset',
     heroTitleEn: '/ Tools',
     heroDesc1: 'Exams · Resources · Tasks',
     heroDesc2: '. Every tool brings the community one step closer',
     sectionTitleAvailable: 'Available Tools',
-    sectionTitleComingSoon: 'Coming Soon',
-    sectionTitlePlanned: 'Planned',
+    sectionTitleDeveloping: 'In Development',
     sectionDescAvailable: '// Tools available now — click a card to open',
-    sectionDescComingSoon: '// In development, stay tuned',
-    sectionDescPlanned: '// Future features, prioritized high to low',
+    sectionDescDeveloping: '// In planning and development, stay tuned',
     enter: 'Enter →',
     statusAvailable: 'Available',
-    statusComingSoon: 'Coming Soon',
-    statusPlanned: 'Planned',
+    statusDeveloping: 'In Development',
     communityTitle: 'Community',
     communityEn: 'Community',
     communityDesc: 'Discussion, Q&A and community sharing',
@@ -940,9 +888,6 @@ export const en: ToolsMessages = {
     resourceTitle: 'Resource Hub',
     resourceEn: 'Resource Hub',
     resourceDesc: 'Browse by tech domain. Users submit resource links, admins review and publish.',
-    auxilioTitle: 'Auxilio Learning Assistant',
-    auxilioEn: 'Auxilio Agent',
-    auxilioDesc: 'Weakness analysis based on exam data, with a rule engine recommending personalized learning paths.',
     taskTitle: 'Quest Board',
     taskEn: 'Quest Board',
     taskDesc: 'Admins publish tasks; members claim and complete them for points and badges.',
@@ -1022,33 +967,6 @@ export const en: ToolsMessages = {
     loadFailed: 'Failed to load',
     actionFailed: 'Action failed',
     createFailed: 'Failed to create',
-  },
-  toolsAuxilio: {
-    heroTitle1: 'Study Assistant',
-    heroDesc1: 'Analyze weak points from exam results,',
-    heroDesc2: 'recommend a learning path',
-    notLoggedIn: 'Login required',
-    loginPrompt: 'Auxilio analyzes your exam data. Please sign in first.',
-    login: 'Sign In',
-    back: 'Back',
-    analysisTitle1: 'Study',
-    analysisTitle2: 'Analysis',
-    analysisTitleEn: ' / Analysis',
-    statTotal: 'Total Questions',
-    statCorrect: 'Correct',
-    statAccuracy: 'Accuracy',
-    weakTitle1: 'Weak',
-    weakTitle2: 'Areas',
-    correctLabel: 'correct',
-    noExam: 'No exam records yet. Take an exam to get personalized recommendations.',
-    goExam: 'Go to Exams →',
-    retry: 'Retry',
-    resTypeArticle: 'Article',
-    resTypeVideo: 'Video',
-    resTypeCourse: 'Course',
-    resTypeTool: 'Tool',
-    resTypeBook: 'Book',
-    resTypeOther: 'Other',
   },
   toolsDevCenter: {
     heroLabel: 'Dev Center',
@@ -1277,9 +1195,15 @@ export const en: ToolsMessages = {
     storeUnknownError: 'Unknown error',
     storeToggleFailed: 'Toggle variant failed',
     storeUpdateStatusFailed: 'Update status failed',
+    storePresetFailed: 'Apply variant preset failed',
     storeUpdateGuideFailed: 'Update guide failed',
     storeCreateFailed: 'Create failed',
     storeDeleteFailed: 'Delete failed',
+    visibilityLabel: 'Visibility',
+    visibilityOpen: 'Opened (visible to all roles)',
+    visibilityClosed: 'Not opened',
+    statusDoneAutoOpen: 'Migration done → visibility auto-opened',
+    slugInvalidHint: 'slug must be a known visibility module key',
   },
   workbench: {
     wbTitle: 'Workbench',
@@ -1362,5 +1286,9 @@ export const en: ToolsMessages = {
     llmSaved: 'Saved',
     llmMaskedHint: 'Current key: {masked}',
     llmNoData: 'No usage yet — chat with the assistant first',
+    llmUsageEntry: 'Usage & Settings',
+    resetLayout: 'Reset layout',
+    confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
+    dragHint: 'Drag cards to reorder · click a size key to resize (e.g. 1×1 / 2×2 / 2×3)',
   }
 };

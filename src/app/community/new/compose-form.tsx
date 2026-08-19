@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { MarkdownEditor } from '@/modules/community/ui/community-markdown-editor';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
-import { Button } from '@/components';
+import { Button, SectionMarker } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import type { ComposeState } from './use-compose';
 
@@ -41,7 +41,7 @@ export function ComposeForm(props: ComposeState) {
     <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-0">
       {/* 左侧章节标记 */}
       <div className="col-span-12 md:col-span-2 mb-6 md:mb-0">
-        <div className="section-marker">[ 01 ]</div>
+        <SectionMarker>[ 01 ]</SectionMarker>
         <div className="meta-mono mt-2">{t('formLabel')}</div>
       </div>
 

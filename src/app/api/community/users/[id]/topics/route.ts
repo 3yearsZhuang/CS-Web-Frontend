@@ -16,7 +16,7 @@ export async function GET(
   const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
 
   const proxy = await proxyBackend(req, {
-    path: `/community/community/users/${encodeURIComponent(id)}/topics?page=${page}&page_size=${pageSize}`,
+    path: `/community/users/${encodeURIComponent(id)}/topics?page=${page}&page_size=${pageSize}`,
   });
 
   const body = (proxy.body ?? {}) as Record<string, unknown>;

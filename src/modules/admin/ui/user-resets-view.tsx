@@ -138,7 +138,7 @@ export function UserResetsView({
                         {r.status === 'pending' ? (
                           <>
                             <Button size="sm" onClick={() => onApprove(r)}>{t('approveAndResetBtn')}</Button>
-                            <Button variant="outline" size="sm" onClick={() => onReject(r)} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]/60">
+                            <Button variant="outline-danger" size="sm" onClick={() => onReject(r)}>
                               {t('reject')}
                             </Button>
                           </>
@@ -183,7 +183,7 @@ export function UserResetsView({
                 {r.status === 'pending' && (
                   <div className="flex items-center gap-2">
                     <Button size="sm" onClick={() => onApprove(r)} className="flex-1">{t('approveAndResetBtn')}</Button>
-                    <Button variant="outline" size="sm" onClick={() => onReject(r)} className="flex-1 hover:text-[var(--destructive)] hover:border-[var(--destructive)]/60">
+                    <Button variant="outline-danger" size="sm" onClick={() => onReject(r)} className="flex-1">
                       {t('reject')}
                     </Button>
                   </div>

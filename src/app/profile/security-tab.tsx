@@ -7,7 +7,7 @@
  * 仅负责渲染；密码逻辑由 `usePassword` 提供（GENERAL 2.2 展示/容器分离）。
  */
 
-import { Button } from '@/components';
+import { Button, ArkDivider } from '@/components';
 import { useTranslations } from 'next-intl';
 import { PASSWORD_MIN_LENGTH } from '@/shared/config';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
@@ -33,7 +33,7 @@ export function SecurityTab() {
         {/* 安全子区块分隔标题 */}
         <div className="flex items-center gap-3 pt-10 mt-10">
           <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">
-            <span className="ark-divider">{t('securityTitle')}</span>
+            <ArkDivider>{t('securityTitle')}</ArkDivider>
           </span>
         </div>
 

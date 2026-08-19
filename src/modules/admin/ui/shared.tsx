@@ -1,58 +1,13 @@
 /**
- * @file 管理员面板共享 UI — ModalShell（focus trap）+ Field 通用组件
+ * @file 管理员面板共享 UI — ModalShell（已提升为全局原语 components/primitives/modal-shell，此处 re-export 兼容）+ Field 通用组件
  */
 
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
-import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
+import { type ReactNode } from 'react';
+import { ModalShell } from '@/components/primitives/modal-shell';
 
-/* ============= 模态框外壳 ============= */
-
-/** 管理员面板通用模态框外壳，支持 focus trap、Escape 关闭、点击遮罩关闭 */
-export function ModalShell({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
-  onClose: () => void;
-}) {
-  const containerRef = useFocusTrap<HTMLDivElement>({
-    active: true,
-    onClose,
-    lockScroll: true,
-  });
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        ref={containerRef}
-        className="relative w-full max-w-lg my-8 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 标题栏 */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
-          <div className="meta-mono text-[var(--primary)]">{title}</div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[14px] leading-none"
-            aria-label="关闭"
-          >
-            ✕
-          </button>
-        </div>
-        {/* 内容 */}
-        <div className="px-5 sm:px-6 py-6">{children}</div>
-      </div>
-    </div>
-  );
-}
+export { ModalShell };
 
 /* ============= 表单字段容器 ============= */
 

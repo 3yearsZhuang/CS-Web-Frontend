@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronDown, Music2, Pause, Play, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
+import { DnaCard } from '@/components';
 import { MusicPanel } from './music-panel';
 import { SettingsPanel } from './settings-panel';
 import { usePomodoro } from './use-pomodoro';
@@ -42,7 +43,7 @@ export function PomodoroPlayer() {
   };
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
+    <DnaCard corner="FCS" className="p-5 flex flex-col gap-4 h-full min-h-0">
       <audio ref={audioRef} className="hidden" />
 
       <div className="flex items-center justify-between">
@@ -69,8 +70,8 @@ export function PomodoroPlayer() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-6">
-        <div className="relative w-[128px] h-[128px] shrink-0">
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3 overflow-y-auto">
+        <div className="relative w-[clamp(88px,60%,128px)] aspect-square shrink-0">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r={RING_R} fill="none" stroke="var(--border)" strokeWidth="6" />
             <circle
@@ -100,18 +101,19 @@ export function PomodoroPlayer() {
           {!pomo.state.running ? (
             <Button
               size="sm"
+              variant="pixel"
               onClick={pomo.state.phase === 'idle' || pomo.state.finishedAt == null ? pomo.start : pomo.resume}
             >
               <Play className="w-4 h-4" />
               {pomo.state.phase === 'idle' ? t('startFocus') : t('resume')}
             </Button>
           ) : (
-            <Button size="sm" variant="outline" onClick={pomo.pause}>
+            <Button size="sm" variant="pixel-outline" onClick={pomo.pause}>
               <Pause className="w-4 h-4" />
               {t('pause')}
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={pomo.reset}>
+          <Button size="sm" variant="pixel-outline" onClick={pomo.reset}>
             <RotateCcw className="w-4 h-4" />
             {t('reset')}
           </Button>
@@ -151,28 +153,30 @@ export function PomodoroPlayer() {
         </button>
       </div>
 
-      {showMusic && (
-        <MusicPanel
-          musicItems={pomo.musicItems}
-          currentSound={pomo.currentSound}
-          onPlay={playUploaded}
-          onUpload={(file) => {
-            if (file) void pomo.upload(file).then((id) => playUploaded(id));
-          }}
-          onRemove={(id) => void pomo.remove(id)}
-        />
-      )}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {showMusic && (
+          <MusicPanel
+            musicItems={pomo.musicItems}
+            currentSound={pomo.currentSound}
+            onPlay={playUploaded}
+            onUpload={(file) => {
+              if (file) void pomo.upload(file).then((id) => playUploaded(id));
+            }}
+            onRemove={(id) => void pomo.remove(id)}
+          />
+        )}
 
-      {showConfig && (
-        <SettingsPanel
-          settings={pomo.settings}
-          musicItems={pomo.musicItems}
-          onChangeDuration={(key, value) =>
-            pomo.setSettings((prev) => ({ ...prev, [key]: value }))
-          }
-          onChangeSound={pomo.changePhaseSound}
-        />
-      )}
-    </div>
+        {showConfig && (
+          <SettingsPanel
+            settings={pomo.settings}
+            musicItems={pomo.musicItems}
+            onChangeDuration={(key, value) =>
+              pomo.setSettings((prev) => ({ ...prev, [key]: value }))
+            }
+            onChangeSound={pomo.changePhaseSound}
+          />
+        )}
+      </div>
+    </DnaCard>
   );
 }

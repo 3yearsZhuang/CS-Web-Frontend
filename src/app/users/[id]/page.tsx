@@ -8,12 +8,13 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SkeletonBlock } from '@/components';
+import { Button, SkeletonBlock, Title } from '@/components';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 type ProfileTab = 'profile' | 'exam' | 'community';
 
@@ -103,22 +104,25 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
     let cancelled = false;
     async function load() {
       try {
-        const [userRes, topicsRes] = await Promise.all([
-          fetch(`/api/users/${id}`),
-          fetch(`/api/community/users/${id}/topics?page=1&page_size=5`),
+        const [userR, topicsR] = await Promise.all([
+          apiRequest<{ user: PublicUser; stats: UserStats }>(`/api/users/${id}`),
+          apiRequest<{ items: CommunityPost[] }>(`/api/community/users/${id}/topics?page=1&page_size=5`),
         ]);
-        if (!userRes.ok) {
-          const data = await userRes.json();
-          throw new Error(data.error || t('notFound'));
+        if (!userR.ok) {
+          throw new Error(userR.error ?? t('notFound'));
         }
-        const userData = await userRes.json();
+        const userData = userR.data;
         if (cancelled) return;
+        if (!userData) {
+          setError(t('notFound'));
+          setLoading(false);
+          return;
+        }
         setUser(userData.user);
         setStats(userData.stats);
 
-        if (topicsRes.ok) {
-          const topicsData = await topicsRes.json();
-          if (!cancelled) setTopics(topicsData.items || []);
+        if (topicsR.ok) {
+          if (!cancelled) setTopics(topicsR.data?.items || []);
         }
       } catch (e) {
         if (cancelled) return;
@@ -133,7 +137,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24">
           <SkeletonBlock rows={2} />
         </div>
@@ -143,11 +147,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
 
   if (error || !user) {
     return (
-      <main className="relative pt-16">
+      <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24 text-center">
           <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ 404 ]</div>
           <h1 className="display-serif text-4xl mb-4">{error || t('notFound')}</h1>
-          <Button variant="outline" onClick={() => router.push('/')}>
+          <Button variant="pixel-outline" onClick={() => router.push('/')}>
             {t('backHome')}
           </Button>
         </div>
@@ -158,7 +162,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
   const displayName = user.displayName || user.email.split('@')[0];
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       {/* [00] Hero — 用户身份 */}
       <CollapsingHero
         index="00"
@@ -183,16 +187,16 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
               size={hero.collapsed ? 32 : 64}
             />
             <div>
-              <h1
-                className={`display-serif transition-all duration-700 ease-[var(--ease-ark)] ${
-                  hero.collapsed
-                    ? 'text-xl cursor-pointer hover:text-[var(--primary)]'
-                    : 'text-4xl md:text-5xl'
-                }`}
+              <Title
+                level={1}
+                collapsed={hero.collapsed}
+                collapsedSize="text-xl cursor-pointer hover:text-[var(--primary)] duration-700 ease-[var(--ease-ark)]"
+                expandedSize="text-4xl md:text-5xl duration-700 ease-[var(--ease-ark)]"
+                echo={displayName}
                 onClick={hero.collapsed ? hero.onTitleClick : undefined}
               >
                 {displayName}
-              </h1>
+              </Title>
               <p className="meta-mono text-[var(--muted-foreground)] mt-1">
                 <span className={user.role === 'root' ? 'text-[var(--destructive)]' : user.role === 'admin' ? 'text-[var(--primary)]' : undefined}>
                   {user.role === 'root' ? t('roleRoot') : user.role === 'admin' ? t('roleAdmin') : t('roleMember')}
@@ -223,7 +227,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">{t('profileTitle')}</h2>
+                <Title level={2} className="text-3xl mb-8">{t('profileTitle')}</Title>
 
                 {/* 技术标签 */}
                 <div className="mb-8">
@@ -310,7 +314,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">{t('examTitle')}</h2>
+                <Title level={2} className="text-3xl mb-8">{t('examTitle')}</Title>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                   <div className="card-minimal p-4 text-center">
                     <div className="display-serif text-2xl">{stats.examCount}</div>
@@ -341,7 +345,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <h2 className="display-serif text-3xl mb-8">{t('recentTopics')}</h2>
+                <Title level={2} className="text-3xl mb-8">{t('recentTopics')}</Title>
                 {topics.length > 0 ? (
                   <div className="space-y-2">
                     {topics.map((topic) => (

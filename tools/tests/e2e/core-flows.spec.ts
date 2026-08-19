@@ -49,9 +49,11 @@ test.describe('Core User Flows', () => {
     await expect(page.getByRole('main').first()).toBeVisible();
   });
 
-  test('Join page loads with form', async ({ page }) => {
-    await page.goto('/join');
-    await expect(page.getByRole('main').first()).toBeVisible();
+  test('Join application form present on About process tab', async ({ page }) => {
+    await page.goto('/about');
+    // 切换到「加入 / Join」标签（胶囊侧栏），报名表即合并自原 /join
+    await page.getByRole('button', { name: /Join/i }).first().click();
+    await expect(page.locator('#applicantName')).toBeVisible();
   });
 
   test('About page loads', async ({ page }) => {

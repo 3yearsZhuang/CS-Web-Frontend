@@ -1,5 +1,7 @@
 'use client';
 
+import { Badge } from '@/components';
+import type { BadgeVariant } from '@/components';
 import type { EventStatus } from '../types';
 
 /**
@@ -67,7 +69,7 @@ export function EventStatusDot({
   );
 }
 
-/** 状态徽章 — 编辑式：直角框 + 等宽小字 + 前置圆点 */
+/** 状态徽章 — 编辑式：直角框 + 等宽小字 + 前置圆点（基于共享 <Badge> 语义色） */
 export function EventStatusBadge({
   status,
   withDot = true,
@@ -79,21 +81,19 @@ export function EventStatusBadge({
 }) {
   if (!status) {
     return (
-      <span
-        className={`inline-flex items-center gap-1.5 border border-[var(--border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--muted-foreground)] ${className}`}
-      >
+      <Badge variant="muted" className={className}>
         {withDot && <EventStatusDot status={null} />}
         Unknown
-      </span>
+      </Badge>
     );
   }
   const meta = EVENT_STATUS_META[status];
+  const variant: BadgeVariant =
+    status === 'ongoing' ? 'success' : status === 'upcoming' ? 'primary' : 'muted';
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 border ${meta.border} px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] ${meta.text} ${className}`}
-    >
+    <Badge variant={variant} className={className}>
       {withDot && <EventStatusDot status={status} />}
       {meta.label}
-    </span>
+    </Badge>
   );
 }

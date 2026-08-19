@@ -7,11 +7,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, X, ExternalLink, BookOpen } from 'lucide-react';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { Pagination } from '@/components';
 import {
   formatDate,
   RESOURCE_PAGE_SIZE,
   type PendingResource,
 } from './tool-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 资源审核子面板 — 待审核资源列表 + 通过/拒绝 */
 export function ResourceReviewPanel() {
@@ -28,14 +31,13 @@ export function ResourceReviewPanel() {
     setResourceLoading(true);
     setResourceError(null);
     try {
-      const res = await fetch(`/api/admin/tools/resource?page=${pg}&pageSize=${RESOURCE_PAGE_SIZE}`);
-      if (res.ok) {
-        const json = await res.json();
-        setResources(json.resources);
-        setResourceTotal(json.total);
+      const r = await apiRequest<{ resources?: PendingResource[]; total?: number }>(`/api/admin/tools/resource?page=${pg}&pageSize=${RESOURCE_PAGE_SIZE}`);
+      if (r.ok) {
+        const json = r.data ?? {};
+        setResources(json.resources ?? []);
+        setResourceTotal(json.total ?? 0);
       } else {
-        const json = await res.json();
-        setResourceError(json.error || t('loadFailed'));
+        setResourceError(r.error ?? t('loadFailed'));
       }
     } catch {
       setResourceError(t('networkError'));
@@ -49,21 +51,19 @@ export function ResourceReviewPanel() {
   }, [resourcePage, fetchResources]);
 
   const handleReview = async (resourceId: string, status: 'published' | 'hidden') => {
-    const res = await fetch(`/api/admin/tools/resource?id=${resourceId}`, {
+    const r = await apiRequest(`/api/admin/tools/resource?id=${resourceId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      body: {
         status,
         note: reviewNote[resourceId]?.trim() || undefined,
-      }),
+      },
     });
 
-    if (res.ok) {
-      setResources((prev) => prev.filter((r) => r.id !== resourceId));
+    if (r.ok) {
+      setResources((prev) => prev.filter((it) => it.id !== resourceId));
       setResourceTotal((prev) => prev - 1);
     } else {
-      const json = await res.json();
-      alert(json.error || t('actionFailed'));
+      alert(r.error ?? t('actionFailed'));
     }
   };
 
@@ -162,7 +162,7 @@ export function ResourceReviewPanel() {
                     onChange={(e) => setReviewNote((prev) => ({ ...prev, [r.id]: e.target.value }))}
                     placeholder={t('reviewNotePlaceholder')}
                     maxLength={500}
-                    className="flex-1 bg-transparent border border-[var(--border)] px-3 py-1.5 text-[12px] font-mono text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)]"
+                    className={`${INPUT_CLASS} flex-1 px-3 py-1.5 text-[12px]`}
                   />
                   <button
                     type="button"
@@ -184,22 +184,12 @@ export function ResourceReviewPanel() {
           })}
 
           {resourcePages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              {Array.from({ length: resourcePages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setResourcePage(p)}
-                  className={`text-[11px] font-mono px-3 py-1.5 border transition-colors ${
-                    p === resourcePage
-                      ? 'border-[var(--primary)] text-[var(--primary)]'
-                      : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/40'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <Pagination
+              page={resourcePage}
+              totalPages={resourcePages}
+              onPageChange={setResourcePage}
+              variant="all"
+            />
           )}
         </div>
       )}

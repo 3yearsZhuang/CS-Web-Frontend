@@ -10,6 +10,8 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Button, ArkDivider } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
 import { EASE } from '@/shared/utils/ui-constants';
 import type { ResourcesState, TFn, ResourceType } from './use-resources';
@@ -35,7 +37,7 @@ export function SubmitResourceModal(props: ResourcesState) {
     <AnimatePresence>
       {showSubmit && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-[var(--z-header)] flex items-center justify-center bg-black/70 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -52,7 +54,7 @@ export function SubmitResourceModal(props: ResourcesState) {
             <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
               <h2 className="display-serif text-[20px] text-[var(--foreground)]">
                 {t('submit')}
-                <span className="ark-divider ml-2">Submit</span>
+                <ArkDivider className="ml-2">Submit</ArkDivider>
               </h2>
               <button
                 onClick={closeSubmit}
@@ -66,12 +68,13 @@ export function SubmitResourceModal(props: ResourcesState) {
               <div className="p-6 text-center">
                 <p className="display-serif text-[18px] text-emerald-500 mb-2">{t('successTitle')}</p>
                 <p className="text-[13px] text-[var(--muted-foreground)] mb-4">{t('successDesc')}</p>
-                <button
+                <Button
+                  variant="primary-outline"
+                  type="button"
                   onClick={closeSubmit}
-                  className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
                 >
                   {t('close')}
-                </button>
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -83,7 +86,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     required
                     maxLength={200}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                     placeholder={t('phTitle')}
                   />
                 </div>
@@ -96,7 +99,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
                     required
                     maxLength={2000}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
                     placeholder="https://..."
                   />
                 </div>
@@ -108,7 +111,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     maxLength={5000}
                     rows={3}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none resize-none placeholder:text-[var(--muted-foreground)]"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px] resize-none`}
                     placeholder={t('phDesc')}
                   />
                 </div>
@@ -118,7 +121,7 @@ export function SubmitResourceModal(props: ResourcesState) {
                   <select
                     value={form.resourceType}
                     onChange={(e) => setForm((f) => ({ ...f, resourceType: e.target.value as ResourceType }))}
-                    className="w-full bg-transparent border border-[var(--border)] px-3 py-2 text-[14px] text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+                    className={`${INPUT_CLASS} px-3 py-2 text-[14px] appearance-none pr-8 cursor-pointer`}
                   >
                     {(['article', 'video', 'course', 'tool', 'book', 'other'] as const).map((key) => (
                       <option key={key} value={key}>{resourceTypeLabel(t, key)}</option>
@@ -138,24 +141,27 @@ export function SubmitResourceModal(props: ResourcesState) {
                   {form.fileUrl ? (
                     <div className="flex items-center gap-2">
                       <span className="text-[12px] text-emerald-500 meta-mono flex-1 truncate">{t('uploaded')}</span>
-                      <button
+                      <Button
                         type="button"
+                        variant="outline-danger"
+                        size="xs"
                         onClick={() => setForm((f) => ({ ...f, fileUrl: '' }))}
-                        className="text-[11px] px-2 py-1 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-red-400 transition-colors"
                       >
                         {t('remove')}
-                      </button>
+                      </Button>
                     </div>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="flex items-center gap-2 text-[12px] px-3 py-2 border border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/40 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-2"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       {uploading ? t('uploading') : t('uploadBtn')}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -188,13 +194,14 @@ export function SubmitResourceModal(props: ResourcesState) {
 
                 {submitError && <p className="text-[13px] text-red-400">{submitError}</p>}
 
-                <button
+                <Button
+                  variant="primary-outline"
                   type="submit"
                   disabled={submitLoading}
-                  className="w-full meta-mono text-[12px] py-3 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors disabled:opacity-50"
+                  className="w-full"
                 >
                   {submitLoading ? t('submitting') : t('submitReview')}
-                </button>
+                </Button>
 
                 <p className="meta-mono text-[10px] text-[var(--muted-foreground)] text-center">
                   {t('pendingHint')}

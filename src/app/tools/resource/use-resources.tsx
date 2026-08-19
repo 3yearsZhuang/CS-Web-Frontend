@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BookOpen, Video, GraduationCap, Wrench, BookMarked, Package } from 'lucide-react';
 import { useAuth } from '@/shared/hooks/use-auth';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { TECH_TAGS, type TechTag } from '@/shared/utils/tech-tags';
 
 export type ResourceType = 'all' | 'article' | 'video' | 'course' | 'tool' | 'book' | 'other';
@@ -123,10 +124,9 @@ export function useResources() {
       params.set('page', String(page));
       params.set('pageSize', '20');
 
-      const res = await fetch(`/api/tools/resource?${params.toString()}`);
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
+      const r = await apiRequest<ResourceListData>(`/api/tools/resource?${params.toString()}`);
+      if (r.ok) {
+        setData(r.data);
       }
     } catch {
       // ignore
@@ -164,17 +164,15 @@ export function useResources() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/tools/resource/upload', {
+      const r = await apiRequest<{ url: string }>('/api/tools/resource/upload', {
         method: 'POST',
         body: formData,
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        setForm((f) => ({ ...f, fileUrl: json.url }));
+      if (r.ok) {
+        setForm((f) => ({ ...f, fileUrl: r.data?.url ?? '' }));
       } else {
-        const json = await res.json();
-        setSubmitError(json.error || t('uploadFailed'));
+        setSubmitError(r.error ?? t('uploadFailed'));
       }
     } catch {
       setSubmitError(t('uploadFailed'));
@@ -190,26 +188,24 @@ export function useResources() {
       setSubmitError(null);
 
       try {
-        const res = await fetch('/api/tools/resource', {
+        const r = await apiRequest('/api/tools/resource', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: {
             title: form.title,
             url: form.url,
             description: form.description || undefined,
             resourceType: form.resourceType,
             techTags: form.techTags.length ? form.techTags : undefined,
             fileUrl: form.fileUrl || undefined,
-          }),
+          },
         });
 
-        if (res.ok) {
+        if (r.ok) {
           setSubmitSuccess(true);
           setForm({ title: '', url: '', description: '', resourceType: 'article', techTags: [], fileUrl: '' });
           fetchData();
         } else {
-          const json = await res.json();
-          setSubmitError(json.error || t('submitFailed'));
+          setSubmitError(r.error ?? t('submitFailed'));
         }
       } catch {
         setSubmitError(t('networkError'));

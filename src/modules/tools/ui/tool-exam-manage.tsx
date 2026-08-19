@@ -11,11 +11,13 @@ import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useToast } from '@/components/feedback/toast';
 import { TECH_TAGS } from '@/shared/utils/tech-tags';
+import { Badge, Button } from '@/components';
 import {
   formatDate,
   EXAM_PAGE_SIZE,
   type Exam,
 } from './tool-types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 const EMPTY_EXAM_FORM = {
   title: '',
@@ -47,14 +49,13 @@ export function ExamManagePanel() {
     setExamLoading(true);
     setExamError(null);
     try {
-      const res = await fetch(`/api/admin/tools/exam?page=${pg}&pageSize=${EXAM_PAGE_SIZE}`);
-      if (res.ok) {
-        const json = await res.json();
+      const r = await apiRequest<{ exams?: Exam[]; data?: Exam[]; total?: number }>(`/api/admin/tools/exam?page=${pg}&pageSize=${EXAM_PAGE_SIZE}`);
+      if (r.ok) {
+        const json = r.data ?? {};
         setExams(json.exams || json.data || []);
         setExamTotal(json.total || 0);
       } else {
-        const json = await res.json();
-        setExamError(json.error || '加载失败');
+        setExamError(r.error ?? '加载失败');
       }
     } catch {
       setExamError('网络错误');
@@ -94,22 +95,20 @@ export function ExamManagePanel() {
 
     setExamCreating(true);
     try {
-      const res = await fetch('/api/admin/tools/exam', {
+      const r = await apiRequest('/api/admin/tools/exam', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           title: examForm.title.trim(),
           description: examForm.description.trim() || undefined,
           startTime: new Date(examForm.startTime).toISOString(),
           endTime: new Date(examForm.endTime).toISOString(),
           durationMinutes: duration,
           techTags: examForm.techTags.length > 0 ? examForm.techTags : undefined,
-        }),
+        },
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setExamFormError(data.error || t('examCreateFailed'));
+      if (!r.ok) {
+        setExamFormError(r.error ?? t('examCreateFailed'));
         return;
       }
 
@@ -131,13 +130,14 @@ export function ExamManagePanel() {
       <div className="flex items-center justify-between mb-4">
         <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">{t('examCount', { count: examTotal })}</span>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="primary-outline"
+            size="sm"
             type="button"
             onClick={() => setExamModalOpen(true)}
-            className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5 transition-colors"
           >
             {t('newExam')}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => fetchExams(examPage)}
@@ -191,15 +191,11 @@ export function ExamManagePanel() {
                     </Link>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className={`meta-mono text-[10px] px-2 py-0.5 border ${
-                      exam.status === 'published' ? 'border-emerald-500/40 text-emerald-500' :
-                      exam.status === 'draft' ? 'border-amber-500/40 text-amber-500' :
-                      'border-[var(--border)] text-[var(--muted-foreground)]'
-                    }`}>
+                    <Badge variant={exam.status === 'published' ? 'success' : exam.status === 'draft' ? 'amber' : 'muted'}>
                       {exam.status === 'published' ? t('statusPublished') :
                        exam.status === 'draft' ? t('statusDraft') :
                        exam.status === 'ended' ? t('statusEnded') : exam.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="py-3 pr-4 meta-mono text-[11px] text-[var(--muted-foreground)]">
                     {exam.start_time ? new Date(exam.start_time + 'Z').toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
@@ -363,14 +359,14 @@ export function ExamManagePanel() {
               >
                 {tc('cancel')}
               </button>
-              <button
+              <Button
+                variant="primary-outline"
                 type="button"
                 onClick={handleCreateExam}
                 disabled={examCreating}
-                className="focus-amber meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors disabled:opacity-50"
               >
                 {examCreating ? t('creating') : t('createExamBtn')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>

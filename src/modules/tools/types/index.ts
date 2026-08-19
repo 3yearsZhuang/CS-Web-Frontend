@@ -292,37 +292,6 @@ export interface ResourceListResult {
   techTagCounts: Record<string, number>;
 }
 
-// ============= Auxilio Agent =============
-
-/** 薄弱标签分析结果 */
-export interface WeaknessTag {
-  tag: string;
-  total: number;
-  correct: number;
-  accuracy: number;
-}
-
-/** 推荐资源 */
-export interface RecommendedResource {
-  id: string;
-  title: string;
-  url: string;
-  description: string | null;
-  resourceType: string;
-  techTags: string[];
-  matchedTag: string;
-}
-
-/** 学习画像分析结果 */
-export interface AuxilioAnalysis {
-  summary: string;
-  totalQuestions: number;
-  totalCorrect: number;
-  overallAccuracy: number;
-  weaknesses: WeaknessTag[];
-  recommendations: RecommendedResource[];
-}
-
 // ============= 积分系统 =============
 
 /** 积分交易记录 */
@@ -384,6 +353,8 @@ export interface ComponentItem {
   description: string;
   migrationStatus: MigrationStatus;
   sortOrder: number;
+  /** 可见性闭环：slug 对应可见性模块当前是否全开（未接入时为 undefined） */
+  visibilityOpen?: boolean;
   variants: ComponentVariant[];
   guide: ComponentGuide;
   createdAt: string;
@@ -443,3 +414,58 @@ export const ALL_VARIANT_SIZES: VariantSize[] = ['sm', 'md', 'lg'];
 export const ALL_VARIANT_COLORS: VariantColor[] = ['primary', 'muted', 'danger'];
 /** 变体全量状态集合 */
 export const ALL_VARIANT_STATES: VariantState[] = ['default', 'hover', 'disabled'];
+
+/** 变体矩阵预设 key（与后端 VARIANT_PRESETS 保持一致） */
+export type VariantPresetKey = 'all' | 'none' | 'primary' | 'minimal';
+
+/** 变体矩阵预设展示配置（应用按钮使用） */
+export const VARIANT_PRESETS: { key: VariantPresetKey; label: string; hint: string }[] = [
+  { key: 'all', label: '全部启用', hint: 'Enable all' },
+  { key: 'primary', label: '仅主色', hint: 'Primary only' },
+  { key: 'minimal', label: '最小集', hint: 'Primary·MD·Default' },
+  { key: 'none', label: '全部关闭', hint: 'Disable all' },
+];
+
+// ============= 组件注册表共享 UI 配置（避免 shell / detail 重复定义） =============
+
+/** 迁移状态展示配置 */
+export const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string }> = {
+  legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20' },
+  migrating: { label: 'Migrating', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  done: { label: 'Done', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+};
+
+/** 兜底：后端若返回未定义的迁移状态，使用中性样式，避免读取 undefined.bg 崩溃。 */
+export const STATUS_FALLBACK: { label: string; color: string; bg: string } = {
+  label: 'Unknown',
+  color: 'text-[var(--muted-foreground)]',
+  bg: 'bg-[var(--muted)]/20',
+};
+
+/** 安全读取迁移状态配置 */
+export function getStatusConfig(
+  status: MigrationStatus | undefined | null,
+): { label: string; color: string; bg: string } {
+  if (status && STATUS_CONFIG[status]) return STATUS_CONFIG[status];
+  return STATUS_FALLBACK;
+}
+
+/** 迁移状态排序（用于列表排序） */
+export const STATUS_ORDER: MigrationStatus[] = ['legacy', 'migrating', 'done'];
+
+/** 分类展示配置 */
+export const CATEGORY_CONFIG: Record<string, { label: string; en: string; order: number }> = {
+  'ui-primitives': { label: '基础控件', en: 'UI Primitives', order: 1 },
+  feedback: { label: '反馈组件', en: 'Feedback', order: 2 },
+  overlays: { label: '弹窗组件', en: 'Overlays', order: 3 },
+  layout: { label: '布局组件', en: 'Layout', order: 4 },
+};
+
+/** 尺寸简写标签 */
+export const SIZE_LABEL: Record<string, string> = { sm: 'SM', md: 'MD', lg: 'LG' };
+/** 颜色简写标签 */
+export const COLOR_LABEL: Record<string, string> = {
+  primary: 'Primary',
+  muted: 'Muted',
+  danger: 'Danger',
+};

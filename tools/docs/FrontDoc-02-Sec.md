@@ -64,7 +64,7 @@
 
 | # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
 |---|------|------|------|:---:|------|:---:|
-| 9 | SQL 注入防护 | - | 全部 DB 查询 | **[后端]** | 运行时 SQL 由后端 SQLAlchemy ORM 参数化（原 `better-sqlite3` 遗留代码已删除） | ✅ 良好 |
+| 9 | SQL 注入防护 | - | 全部 DB 查询 | **[后端]** | 运行时 SQL 由后端 SQLAlchemy ORM 参数化（`better-sqlite3` 遗留代码已删除） | ✅ 良好 |
 
 ### A04: 不安全的设计
 
@@ -310,7 +310,7 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 ## 4.1 变更记录包
 
-> ℹ️ 安全加固变更记录（第一轮/第二轮共 20 项）已迁移至 `docs/项目演变历史.md`。
+> ℹ️ 安全加固变更记录（第一轮/第二轮共 20 项）已迁移至根仓 [`CHANGELOG.md`](../../../CHANGELOG.md)。
 
 ## 4.2 记分卡（Scorecard）
 
@@ -333,11 +333,11 @@ BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-clie
 
 ## 4.3 例外登记（Exception Register）
 
-> ℹ️ 例外登记条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 例外登记条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ## 4.4 标准更新积压（Backlog）
 
-> ℹ️ 标准更新积压（Backlog）条目已迁移至 `docs/项目待办事项.md`。
+> ℹ️ 标准更新积压（Backlog）条目已迁移至 `docs/项目待办事项-优先级重排.md`。
 
 ## 4.5 验证收据
 

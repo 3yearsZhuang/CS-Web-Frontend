@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 export type NotificationType = 'system' | 'admin' | 'activity' | 'like' | 'reply' | 'favorite' | 'follow';
 export type FilterType = 'all' | 'unread' | NotificationType;
@@ -91,20 +92,20 @@ export function useNotifications() {
         params.set('type', filter);
       }
 
-      const res = await fetch(`/api/notifications?${params.toString()}`);
+      const r = await apiRequest<NotificationsResponse>(`/api/notifications?${params.toString()}`);
 
-      if (res.status === 401) {
+      if (r.status === 401) {
         router.push('/login');
         return;
       }
 
-      if (!res.ok) throw new Error('加载失败');
+      if (!r.ok) throw new Error('加载失败');
 
-      const data: NotificationsResponse = await res.json();
-      setNotifications(data.notifications);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
-      setUnreadCount(data.unreadCount);
+      const data = r.data;
+      setNotifications(data?.notifications ?? []);
+      setTotal(data?.total ?? 0);
+      setTotalPages(data?.totalPages ?? 1);
+      setUnreadCount(data?.unreadCount ?? 0);
     } catch {
       setError('加载失败，请稍后再试');
     } finally {
@@ -140,7 +141,8 @@ export function useNotifications() {
       setUnreadCount((prev) => Math.max(0, prev - 1));
 
       try {
-        await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+        const r = await apiRequest(`/api/notifications/${id}/read`, { method: 'POST' });
+        if (!r.ok) throw new Error('failed');
       } catch {
         setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: false } : n)));
         setUnreadCount((prev) => prev + 1);
@@ -157,8 +159,8 @@ export function useNotifications() {
     setUnreadCount(0);
 
     try {
-      const res = await fetch('/api/notifications/read-all', { method: 'POST' });
-      if (!res.ok) throw new Error('failed');
+      const r = await apiRequest('/api/notifications/read-all', { method: 'POST' });
+      if (!r.ok) throw new Error('failed');
     } catch {
       setNotifications((prev) =>
         prev.map((n) =>

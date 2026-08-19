@@ -3,21 +3,20 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityCategory } from '@/modules/community/types';
-import { getError, type CategoryInput, type CategoriesResponse } from './community-admin-utils';
+import { getError, type CategoryInput } from './community-admin-utils';
+import { useCategoriesManager } from './use-categories-manager';
 
 /** 版块管理 — 新建/编辑/删除版块 */
 export function CategoriesManager() {
   const t = useTranslations('communityAdmin');
-  const [categories, setCategories] = useState<CommunityCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const { categories, loading, error, loadCategories, createCategory, updateCategory, deleteCategory } =
+    useCategoriesManager();
   const { confirm } = useConfirm();
 
   // 新建表单
@@ -43,24 +42,6 @@ export function CategoriesManager() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  const loadCategories = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/community/community/categories');
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, t('loadFailed')));
-      }
-      const data = (await res.json()) as CategoriesResponse;
-      setCategories(data.items ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     void loadCategories();
   }, [loadCategories]);
@@ -74,29 +55,13 @@ export function CategoriesManager() {
       return;
     }
     setCreating(true);
-    try {
-      const res = await fetch('/api/admin/community/community/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: createForm.slug.trim(),
-          name: createForm.name.trim(),
-          description: createForm.description?.trim() || null,
-          icon: createForm.icon?.trim() || null,
-          sortOrder: createForm.sortOrder ?? 0,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(getError(data, t('createFailed')));
-      }
+    const result = await createCategory(createForm);
+    if (!result.ok) {
+      setCreateError(getError(result.data, t('createFailed')));
+    } else {
       setCreateForm({ slug: '', name: '', description: '', icon: '', sortOrder: 0 });
-      await loadCategories();
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : t('createFailed'));
-    } finally {
-      setCreating(false);
     }
+    setCreating(false);
   };
 
   /** 进入编辑模式 */
@@ -120,29 +85,13 @@ export function CategoriesManager() {
       return;
     }
     setSavingEdit(true);
-    try {
-      const res = await fetch(`/api/admin/community/community/categories/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: editForm.slug.trim(),
-          name: editForm.name.trim(),
-          description: editForm.description?.trim() || null,
-          icon: editForm.icon?.trim() || null,
-          sortOrder: editForm.sortOrder ?? 0,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(getError(data, t('saveFailed')));
-      }
+    const result = await updateCategory(id, editForm);
+    if (!result.ok) {
+      setEditError(getError(result.data, t('saveFailed')));
+    } else {
       setEditingId(null);
-      await loadCategories();
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : t('saveFailed'));
-    } finally {
-      setSavingEdit(false);
     }
+    setSavingEdit(false);
   };
 
   /** 删除版块（带二次确认） */
@@ -154,19 +103,7 @@ export function CategoriesManager() {
       confirmLabel: t('confirmDelete'),
     });
     if (!confirmed) return;
-
-    try {
-      const res = await fetch(`/api/admin/community/community/categories/${cat.id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(getError(data, t('deleteFailed')));
-      }
-      await loadCategories();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('deleteFailed'));
-    }
+    await deleteCategory(cat.id);
   };
 
   if (loading) {
@@ -296,12 +233,8 @@ export function CategoriesManager() {
                     {cat.postCount}
                   </div>
                   <div className="md:col-span-2 flex gap-2 md:justify-end">
-                    <button type="button" onClick={() => startEdit(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors focus-amber">
-                      {t('editBtn')}
-                    </button>
-                    <button type="button" onClick={() => handleDelete(cat)} className="px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] font-mono text-[10px] uppercase tracking-wider hover:text-[var(--destructive)] hover:border-[var(--destructive)] transition-colors focus-amber">
-                      {t('deleteBtn')}
-                    </button>
+                    <Button variant="outline" size="sm" type="button" onClick={() => startEdit(cat)}>{t('editBtn')}</Button>
+                    <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDelete(cat)}>{t('deleteBtn')}</Button>
                   </div>
                 </>
               )}

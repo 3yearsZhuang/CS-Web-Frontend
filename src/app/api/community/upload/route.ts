@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: '/community/community/upload',
+    path: '/community/upload',
     method: 'POST',
     formData,
   });

@@ -180,7 +180,7 @@ export function EventModals({
       {/* ============ 模态框：创建 / 编辑活动（桌面端双列布局） ============ */}
       {(modal.type === 'eventCreate' || modal.type === 'eventEdit') && form && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-[var(--z-header)] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm"
           onClick={onClose}
         >
           <div
@@ -286,11 +286,7 @@ export function EventModals({
                           key={s.v || 'none'}
                           type="button"
                           onClick={() => setForm((f) => ({ ...f!, status: s.v }))}
-                          className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                            form.status === s.v
-                              ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                              : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                          }`}
+                          className={`tab-chip focus-ring ${form.status === s.v ? 'tab-chip-active' : ''}`}
                         >
                           {s.label}
                         </button>
@@ -328,11 +324,7 @@ export function EventModals({
                     <button
                       type="button"
                       onClick={() => setForm((f) => (f ? { ...f, isPinned: !f.isPinned } : f))}
-                      className={`focus-amber px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border transition-colors w-full ${
-                        form.isPinned
-                          ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                          : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                      }`}
+                      className={`tab-chip focus-ring w-full ${form.isPinned ? 'tab-chip-active' : ''}`}
                     >
                       {form.isPinned ? t('pinnedOn') : t('pinnedOff')}
                     </button>
@@ -365,22 +357,14 @@ export function EventModals({
                       <button
                         type="button"
                         onClick={() => setEventFormTab('edit')}
-                        className={`focus-amber px-4 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                          eventFormTab === 'edit'
-                            ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                            : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                        }`}
+                        className={`tab-chip focus-ring ${eventFormTab === 'edit' ? 'tab-chip-active' : ''}`}
                       >
                         {t('tabEdit')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setEventFormTab('preview')}
-                        className={`focus-amber px-4 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors -ml-px ${
-                          eventFormTab === 'preview'
-                            ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                            : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                        }`}
+                        className={`tab-chip focus-ring -ml-px ${eventFormTab === 'preview' ? 'tab-chip-active' : ''}`}
                       >
                         {t('tabPreview')}
                       </button>

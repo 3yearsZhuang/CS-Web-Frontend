@@ -11,6 +11,7 @@ import { MarkdownRenderer } from './community-markdown-renderer';
 import { CommunityActions } from './community-actions';
 import { formatDateTime } from '@/shared/utils/utils';
 import type { CommunityCommentDetail, NestedCommentsResult } from '@/modules/community/types';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useTranslations } from 'next-intl';
 
 interface CommunityReplyItemProps {
@@ -113,20 +114,21 @@ export function CommunityReplyItem({
       }),
     );
     try {
-      const res = await fetch('/api/community/like', {
+      const result = await apiRequest<{ liked: boolean; likeCount: number }>('/api/community/like', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType, targetId }),
+        body: { targetType, targetId },
       });
-      if (!res.ok) throw new Error('操作失败');
-      const data = (await res.json()) as { liked: boolean; likeCount: number };
-      setNested((prev) =>
-        prev.map((r) =>
-          r.id === targetId
-            ? { ...r, isLikedByMe: data.liked, likeCount: data.likeCount }
-            : r,
-        ),
-      );
+      if (!result.ok) throw new Error(result.error ?? '操作失败');
+      const data = result.data;
+      if (data) {
+        setNested((prev) =>
+          prev.map((r) =>
+            r.id === targetId
+              ? { ...r, isLikedByMe: data.liked, likeCount: data.likeCount }
+              : r,
+          ),
+        );
+      }
     } catch {
       // 回滚 — 重新加载楼中楼
       void loadNested();

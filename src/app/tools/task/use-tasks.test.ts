@@ -47,8 +47,8 @@ describe('useTasks', () => {
     expect(result.current.tasksLoading).toBe(true);
     await waitFor(() => expect(result.current.tasksLoading).toBe(false));
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/me');
-    expect(fetchMock).toHaveBeenCalledWith('/api/tools/task?status=published&pageSize=50');
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/me', expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith('/api/tools/task?status=published&pageSize=50', expect.anything());
     expect(result.current.tasks).toHaveLength(1);
     expect(result.current.user?.id).toBe('u1');
     expect(result.current.filteredTasks).toHaveLength(1);

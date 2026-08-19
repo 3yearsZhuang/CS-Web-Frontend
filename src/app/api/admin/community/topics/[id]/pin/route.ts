@@ -1,5 +1,5 @@
 /**
- * @file 内容审核 API — POST /api/admin/community/community/topics/[id]/{hide|restore|pin|feature}（BFF 薄转发）
+ * @file 内容审核 API — POST /api/admin/community/topics/[id]/{hide|restore|pin|feature}（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -20,7 +20,7 @@ export async function POST(
 
   const body = await req.json().catch(() => ({}));
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/topics/${encodeURIComponent(id)}/${action}`,
+    path: `/admin/community/topics/${encodeURIComponent(id)}/${action}`,
     method: 'POST',
     jsonBody: action === 'hide' && (body as Record<string, unknown>).reason
       ? { reason: (body as Record<string, unknown>).reason }

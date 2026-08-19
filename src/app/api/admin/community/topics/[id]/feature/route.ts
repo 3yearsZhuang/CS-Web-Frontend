@@ -1,5 +1,5 @@
 /**
- * @file 内容加精 API — POST /api/admin/community/community/topics/[id]/feature（BFF 薄转发）
+ * @file 内容加精 API — POST /api/admin/community/topics/[id]/feature（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -16,7 +16,7 @@ export async function POST(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/admin/community/community/topics/${encodeURIComponent(id)}/feature`,
+    path: `/admin/community/topics/${encodeURIComponent(id)}/feature`,
     method: 'POST',
   });
 

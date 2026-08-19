@@ -1,5 +1,5 @@
 /**
- * @file 管理端内容列表 API — GET /api/admin/community/community/topics（BFF 薄转发）
+ * @file 管理端内容列表 API — GET /api/admin/community/topics（BFF 薄转发）
  */
 import { NextResponse } from 'next/server';
 import { proxyBackend, setAuthCookies, toCommunityPost } from '@/shared/backend-client';
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   if (status) params.set('status', status);
   if (search) params.set('search', search);
 
-  const proxy = await proxyBackend(req, { path: `/admin/community/community/topics?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/admin/community/topics?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({

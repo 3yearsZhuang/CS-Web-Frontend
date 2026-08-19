@@ -6,9 +6,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
+import { DnaCard } from '@/components';
 import { Input } from '@/components/primitives/input';
 import { toDateStr, useClock } from '../hooks/use-clock';
 import { useLocalStorage } from '../hooks/use-local-storage';
@@ -93,7 +94,7 @@ export default function TodayTasks() {
   }, [setTasks, t]);
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
+    <DnaCard corner="TSK" className="p-5 flex flex-col gap-4 h-full min-h-0">
       <div className="flex items-center justify-between">
         <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
           {t('todayTasks')}
@@ -138,66 +139,49 @@ export default function TodayTasks() {
           className="w-[140px]"
           onChange={(e) => setDueDate(e.target.value)}
         />
-        <Button size="sm" aria-label={t('addTask')} onClick={add}>
+        <Button size="sm" variant="pixel" aria-label={t('addTask')} onClick={add}>
           <Plus className="w-4 h-4" />
         </Button>
       </div>
 
-      <ul className="flex flex-col gap-1.5 max-h-[280px] overflow-y-auto">
-        {sorted.length === 0 && (
-          <li className="text-[13px] text-[var(--muted-foreground)] py-4 text-center">{t('noTasks')}</li>
-        )}
-        {sorted.map((task) => {
-          const isOverdue = !task.done && task.dueDate < today;
-          const isDueToday = !task.done && task.dueDate === today;
-          return (
-            <li
-              key={task.id}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded border ${
-                isOverdue
-                  ? 'border-red-500/40 bg-red-50'
-                  : isDueToday
-                    ? 'border-amber-500/40 bg-amber-50/60'
-                    : 'border-[var(--border)]'
-              } ${task.done ? 'opacity-50' : ''}`}
-            >
-              <button type="button" aria-label="toggle" className="shrink-0" onClick={() => toggle(task.id)}>
-                {task.done ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                ) : (
-                  <Circle className="w-5 h-5 text-[var(--muted-foreground)]" />
-                )}
-              </button>
-              <span
-                className={`flex-1 min-w-0 text-[14px] truncate ${
-                  task.done ? 'line-through text-[var(--muted-foreground)]' : 'text-[var(--foreground)]'
-                }`}
-              >
-                {task.title}
-              </span>
-              <span
-                className={`shrink-0 text-[11px] ${
-                  isOverdue
-                    ? 'text-[var(--destructive)] font-medium'
-                    : isDueToday
-                      ? 'text-amber-600'
-                      : 'text-[var(--muted-foreground)]'
-                }`}
-              >
-                {isOverdue ? `${t('overdue')} · ${task.dueDate}` : task.dueDate}
-              </span>
-              <button
-                type="button"
-                aria-label="delete"
-                className="shrink-0 p-1 rounded hover:bg-[var(--border)]"
-                onClick={() => remove(task.id)}
-              >
-                <Trash2 className="w-4 h-4 text-[var(--muted-foreground)]" />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+      {sorted.length === 0 ? (
+        <p className="text-[13px] text-[var(--muted-foreground)] py-4 text-center">{t('noTasks')}</p>
+      ) : (
+        <ul className="idx-rail flex-1 min-h-0 overflow-y-auto">
+          {sorted.map((task, i) => {
+            const isOverdue = !task.done && task.dueDate < today;
+            const isDueToday = !task.done && task.dueDate === today;
+            return (
+              <li key={task.id}>
+                <span className="idx">{String(i + 1).padStart(2, '0')}</span>
+                <div className="min-w-0">
+                  <div className={`idx-ttl truncate ${task.done ? 'line-through opacity-60' : ''}`}>
+                    {task.title}
+                  </div>
+                  <div className="idx-mt">
+                    <span className="k">{task.dueDate}</span>
+                    {isOverdue && <span className="text-[var(--destructive)]">{t('overdue')}</span>}
+                    {isDueToday && <span>{t('todayTasks')}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="button" aria-label="toggle" className="idx-arw" onClick={() => toggle(task.id)}>
+                    {task.done ? '✓' : '→'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="delete"
+                    className="shrink-0 p-1 rounded hover:bg-[var(--border)] text-[var(--muted-foreground)]"
+                    onClick={() => remove(task.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </DnaCard>
   );
 }

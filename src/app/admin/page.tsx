@@ -12,6 +12,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { ToastProvider } from '@/components/feedback/toast';
+import { ArkDivider } from '@/components';
 import { AdminUsersPanel } from '@/modules/admin/ui/admin-users-panel';
 import { AdminMessagesPanel } from '@/modules/admin/ui/admin-messages-panel';
 import { AdminLogsPanel } from '@/modules/admin/ui/admin-logs-panel';
@@ -19,6 +20,7 @@ import { AdminRolesPanel } from '@/modules/admin/ui/admin-roles-panel';
 import { AdminJoinPanel } from '@/modules/admin/ui/admin-join-panel';
 import { AdminFeatureVisibilityPanel } from '@/modules/admin/ui/admin-feature-visibility-panel';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { SectionNav } from '@/components/primitives/section-nav';
 import { type AdminTab, type SafeUser } from '@/modules/admin/ui/types';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -73,34 +75,29 @@ export default function AdminPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const res = await fetch('/api/auth/me', { cache: 'no-store' });
-        if (res.status === 401) {
-          if (!cancelled) router.replace('/login');
-          return;
-        }
-        if (!res.ok) {
-          if (!cancelled) {
-            setAuthLoading(false);
-            setForbidden(true);
-          }
-          return;
-        }
-        const data = (await res.json()) as { user: SafeUser };
-        if (cancelled) return;
-        if ((data.user.role !== 'admin' && data.user.role !== 'root') || !data.user.isActive) {
-          setForbidden(true);
-          setAuthLoading(false);
-          return;
-        }
-        setCurrentUser(data.user);
-        setAuthLoading(false);
-      } catch {
+      const result = await apiRequest<{ user: SafeUser }>('/api/auth/me', {
+        cache: 'no-store',
+      });
+      if (result.status === 401) {
+        if (!cancelled) router.replace('/login');
+        return;
+      }
+      if (!result.ok) {
         if (!cancelled) {
           setAuthLoading(false);
           setForbidden(true);
         }
+        return;
       }
+      const data = result.data!;
+      if (cancelled) return;
+      if ((data.user.role !== 'admin' && data.user.role !== 'root') || !data.user.isActive) {
+        setForbidden(true);
+        setAuthLoading(false);
+        return;
+      }
+      setCurrentUser(data.user);
+      setAuthLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -193,7 +190,7 @@ export default function AdminPage() {
           >
             <RevealItem>
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 meta-mono text-[12px] text-[var(--muted-foreground)]">
-                <span className="ark-divider">3yearsZ Design</span>
+                <ArkDivider>3yearsZ Design</ArkDivider>
                 <span>{t('currentAdmin', { email: currentUser.email })}</span>
               </div>
             </RevealItem>

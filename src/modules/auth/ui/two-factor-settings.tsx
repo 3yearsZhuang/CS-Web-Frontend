@@ -19,11 +19,11 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
+import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useTwoFA } from './use-two-fa';
 
-/** 验证码输入框样式（题目指定） */
-const CODE_INPUT_CLASS =
-  'w-full bg-transparent border border-[var(--border)] px-4 py-2.5 text-[13px] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--primary)] font-mono transition-colors';
+/** 验证码输入框样式（INPUT_CLASS 基础 + 覆盖 padding/字号） */
+const CODE_INPUT_CLASS = `${INPUT_CLASS} px-4 py-2.5 text-[13px]`;
 
 /** 次要按钮样式（题目指定） */
 const OUTLINE_BTN_CLASS =
@@ -329,17 +329,11 @@ export function TwoFactorSettings() {
                 <Key size={14} />
                 {t('regenerateBackupCodes')}
               </button>
-              <button
-                onClick={() => {
+              <Button variant="outline-danger" size="sm" type="button" onClick={() => {
                   setActionMode('disable');
                   setActionCode('');
                   setError(null);
-                }}
-                className="px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--destructive)]/40 text-[var(--destructive)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)] transition-colors focus-amber"
-              >
-                <Shield size={14} />
-                {t('disable2fa')}
-              </button>
+                }} className="flex items-center gap-1.5"><Shield size={14} />{t('disable2fa')}</Button>
             </div>
           ) : (
             <div className="p-5 border border-[var(--border)] space-y-4">

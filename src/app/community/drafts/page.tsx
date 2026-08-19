@@ -12,8 +12,9 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
-import { SectionLoading } from '@/components';
+import { SectionLoading, Title } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 export default function DraftsPage() {
   const t = useTranslations('communityDrafts');
@@ -30,29 +31,30 @@ export default function DraftsPage() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // 以一次探测请求判断登录态（草稿 API 未登录返回 401）
-    fetch('/api/community/drafts?page=1&pageSize=1', { cache: 'no-store' })
-      .then((res) => {
-        setLoginRequired(res.status === 401);
-      })
-      .catch(() => setLoginRequired(true))
-      .finally(() => setChecked(true));
+    // 以一次探测请求判断登录态（草稿 API 未登录返回 401；网络异常等同未登录）
+    void (async () => {
+      const result = await apiRequest('/api/community/drafts?page=1&pageSize=1', {
+        cache: 'no-store',
+      });
+      setLoginRequired(result.status === 401 || result.status === 0);
+      setChecked(true);
+    })();
   }, []);
 
   return (
-    <main className="relative pt-16">
+    <main className="relative pt-16 pixel-page">
       <CollapsingHero index="00" label="Drafts" hero={hero} pageKey="drafts">
         <RevealTitle>
-          <h1
-            className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]'
-                : 'text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]'
-            }`}
+          <Title
+            level={1}
+            collapsed={hero.collapsed}
+            collapsedSize="cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2]"
+            expandedSize="text-[clamp(36px,9vw,120px)] leading-[1.05] sm:leading-[0.95]"
+            echo={t('heroTitle')}
             onClick={hero.collapsed ? hero.onTitleClick : undefined}
           >
             {t('heroTitle')}
-          </h1>
+          </Title>
         </RevealTitle>
         <RevealItem>
           <div

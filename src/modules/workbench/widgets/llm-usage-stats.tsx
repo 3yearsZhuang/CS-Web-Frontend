@@ -10,6 +10,7 @@ import { Activity, Gauge, Settings2, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface LlmUsage {
   ok: boolean;
@@ -34,7 +35,12 @@ const W = 300;
 const H = 90;
 const PAD = 6;
 
-export default function LlmUsageStats() {
+interface LlmUsageStatsProps {
+  /** 嵌入合并卡片（llm-widget）时去掉外层 card-minimal 与标题，仅渲染内容主体 */
+  embedded?: boolean;
+}
+
+export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) {
   const t = useTranslations('workbench');
   const [data, setData] = useState<LlmUsage | null>(null);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
@@ -45,26 +51,20 @@ export default function LlmUsageStats() {
   const [saved, setSaved] = useState(false);
 
   const loadUsage = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workbench/stats/llm-usage?days=30', { cache: 'no-store' });
-      if (res.status === 401) {
-        setNotLoggedIn(true);
-        return;
-      }
-      if (!res.ok) return;
-      const json = (await res.json()) as LlmUsage;
-      setData(json);
-    } catch {
-      // 静默
+    const r = await apiRequest<LlmUsage>('/api/workbench/stats/llm-usage?days=30', { cache: 'no-store' });
+    if (r.status === 401) {
+      setNotLoggedIn(true);
+      return;
     }
+    if (!r.ok) return;
+    setData(r.data);
   }, []);
 
   const loadConfig = useCallback(async () => {
-    try {
-      const res = await fetch('/api/workbench/llm-config', { cache: 'no-store' });
-      if (!res.ok) return;
-      const json = (await res.json()) as LlmConfigResp;
-      if (json.ok && json.configured) {
+    const r = await apiRequest<LlmConfigResp>('/api/workbench/llm-config', { cache: 'no-store' });
+    if (!r.ok) return;
+    const json = r.data;
+    if (json && json.ok && json.configured) {
         setForm((prev) => ({
           ...prev,
           provider: json.provider ?? 'openai',
@@ -73,9 +73,6 @@ export default function LlmUsageStats() {
         }));
         setMasked(json.apiKeyMasked ?? '');
       }
-    } catch {
-      // 静默
-    }
   }, []);
 
   useEffect(() => {
@@ -86,17 +83,16 @@ export default function LlmUsageStats() {
   const saveConfig = useCallback(async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/workbench/llm-config', {
+      const r = await apiRequest('/api/workbench/llm-config', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           provider: form.provider,
           apiKey: form.apiKey.trim(),
           baseUrl: form.baseUrl.trim(),
           model: form.model.trim() || 'gpt-4o-mini',
-        }),
+        },
       });
-      if (res.ok) {
+      if (r.ok) {
         setForm((prev) => ({ ...prev, apiKey: '' }));
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
@@ -128,23 +124,25 @@ export default function LlmUsageStats() {
 
   if (notLoggedIn) {
     return (
-      <div className="card-minimal p-5">
+      <div className="p-5">
         <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
       </div>
     );
   }
 
   return (
-    <div className="card-minimal p-5 flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
-          {t('llmUsageTitle', { days: data?.days ?? 30 })}
-        </h3>
-        <Button size="sm" variant="outline" onClick={() => setShowSettings((v) => !v)}>
-          <Settings2 className="w-4 h-4" />
-          {t('llmSettings')}
-        </Button>
-      </div>
+    <div className={embedded ? 'flex flex-col gap-4' : 'card-minimal p-5 flex flex-col gap-4'}>
+      {!embedded && (
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+            {t('llmUsageTitle', { days: data?.days ?? 30 })}
+          </h3>
+          <Button size="sm" variant="pixel-outline" onClick={() => setShowSettings((v) => !v)}>
+            <Settings2 className="w-4 h-4" />
+            {t('llmSettings')}
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded p-3 bg-[var(--border)]/30">
@@ -220,7 +218,7 @@ export default function LlmUsageStats() {
         </div>
       )}
 
-      {showSettings && (
+      {(showSettings || embedded) && (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-3">
           {masked && (
             <p className="text-[12px] text-[var(--muted-foreground)]">
@@ -267,7 +265,7 @@ export default function LlmUsageStats() {
             </label>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm" loading={saving} onClick={() => void saveConfig()}>
+            <Button size="sm" variant="pixel" loading={saving} onClick={() => void saveConfig()}>
               <Save className="w-4 h-4" />
               {t('llmSave')}
             </Button>

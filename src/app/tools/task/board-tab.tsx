@@ -9,9 +9,9 @@
 
 import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Button, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './use-tasks';
-import { categoryLabel, categoryOptions, INPUT_CLASS } from './task-shared';
+import { categoryLabel, categoryOptions, TASK_INPUT_CLASS } from './task-shared';
 
 export function BoardTab(props: ReturnType<typeof useTasks>) {
   const t = useTranslations('toolsTask');
@@ -43,9 +43,9 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
 
   return (
     <div>
-      <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+      <Title level={2} className="mb-10 sm:mb-16">
         {t('boardTitle')}
-      </h2>
+      </Title>
 
       {/* 分类筛选 */}
       {categories.length > 0 && (
@@ -54,11 +54,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
           <div className="flex gap-0 overflow-x-auto flex-wrap">
             <button
               onClick={() => setCategoryFilter('')}
-              className={`whitespace-nowrap px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                !categoryFilter
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                  : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-              }`}
+              className={`tab-chip focus-ring whitespace-nowrap ${!categoryFilter ? 'tab-chip-active' : ''}`}
             >
               {t('filterAll')} ({tasks.length})
             </button>
@@ -66,11 +62,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
-                className={`whitespace-nowrap px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] transition-colors ${
-                  cat === categoryFilter
-                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]'
-                    : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)]'
-                }`}
+                className={`tab-chip focus-ring whitespace-nowrap ${cat === categoryFilter ? 'tab-chip-active' : ''}`}
               >
                 {categoryLabel(t, cat)}
               </button>
@@ -105,7 +97,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             <input
               value={newTask.title}
               onChange={(e) => setNewTask((f) => ({ ...f, title: e.target.value }))}
-              className={INPUT_CLASS}
+              className={TASK_INPUT_CLASS}
               placeholder={t('titlePlaceholder')}
               required
             />
@@ -115,7 +107,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             <textarea
               value={newTask.description}
               onChange={(e) => setNewTask((f) => ({ ...f, description: e.target.value }))}
-              className={INPUT_CLASS}
+              className={TASK_INPUT_CLASS}
               rows={3}
               placeholder={t('descPlaceholder')}
               required
@@ -127,7 +119,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
               <select
                 value={newTask.category}
                 onChange={(e) => setNewTask((f) => ({ ...f, category: e.target.value }))}
-                className={INPUT_CLASS}
+                className={TASK_INPUT_CLASS}
               >
                 {categoryOptions(t).map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
@@ -140,7 +132,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 type="number"
                 value={newTask.points}
                 onChange={(e) => setNewTask((f) => ({ ...f, points: parseInt(e.target.value) || 0 }))}
-                className={INPUT_CLASS}
+                className={TASK_INPUT_CLASS}
                 min={0}
                 max={100}
               />
@@ -151,7 +143,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 type="number"
                 value={newTask.maxClaimants}
                 onChange={(e) => setNewTask((f) => ({ ...f, maxClaimants: parseInt(e.target.value) || 1 }))}
-                className={INPUT_CLASS}
+                className={TASK_INPUT_CLASS}
                 min={1}
                 max={50}
               />
@@ -162,7 +154,7 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             <input
               value={newTask.tags}
               onChange={(e) => setNewTask((f) => ({ ...f, tags: e.target.value }))}
-              className={INPUT_CLASS}
+              className={TASK_INPUT_CLASS}
               placeholder={t('tagsPlaceholder')}
             />
           </div>
@@ -193,13 +185,14 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 >
                   {t('reviewPass')}
                 </button>
-                <button
+                <Button
+                  variant="outline-danger"
+                  size="sm"
                   onClick={() => handleReview(c.id, false)}
                   disabled={reviewingId === c.id}
-                  className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors"
                 >
                   {t('reviewReject')}
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -273,9 +266,9 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                     <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
                       {user && task.status === 'published' && (
                         <Button
+                          size="sm"
                           onClick={(e) => { e.stopPropagation(); handleClaim(task.id); }}
                           disabled={claimingId === task.id || task.claimCount >= task.maxClaimants}
-                          className="text-[11px] px-4 py-2"
                         >
                           {task.claimCount >= task.maxClaimants ? t('claimFull') : claimingId === task.id ? t('claiming') : t('claimTask')}
                         </Button>

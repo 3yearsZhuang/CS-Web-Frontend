@@ -149,12 +149,8 @@ export function CommunityActions({
         variant="outline"
         onClick={handleLike}
         disabled={!isLoggedIn || likeBusy}
-        aria-pressed={isLikedByMe}
-        className={`flex items-center font-mono uppercase tracking-wider ${btnCls} ${
-          isLikedByMe
-            ? 'border-[var(--primary)] !text-[var(--primary)] bg-[var(--primary)]/5'
-            : ''
-        }`}
+        active={isLikedByMe}
+        className={`flex items-center font-mono uppercase tracking-wider ${btnCls}`}
         title={isLoggedIn ? (isLikedByMe ? t('unlike') : t('like')) : t('pleaseLoginTitle')}
       >
         <span aria-hidden="true">{isLikedByMe ? '♥' : '♡'}</span>
@@ -167,12 +163,8 @@ export function CommunityActions({
           variant="outline"
           onClick={handleFavorite}
           disabled={!isLoggedIn || favBusy}
-          aria-pressed={isFavoritedByMe}
-          className={`flex items-center font-mono uppercase tracking-wider ${btnCls} ${
-            isFavoritedByMe
-              ? 'border-[var(--primary)] !text-[var(--primary)] bg-[var(--primary)]/5'
-              : ''
-          }`}
+          active={isFavoritedByMe}
+          className={`flex items-center font-mono uppercase tracking-wider ${btnCls}`}
           title={isLoggedIn ? (isFavoritedByMe ? t('unfavorite') : t('favorite')) : t('pleaseLoginTitle')}
         >
           <span aria-hidden="true">{isFavoritedByMe ? '★' : '☆'}</span>

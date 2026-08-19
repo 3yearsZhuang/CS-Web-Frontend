@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
 import { useToast } from '@/components/feedback/toast';
@@ -60,21 +61,19 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
     setEventListLoading(true);
     setEventListError(null);
     try {
-      const res = await fetch('/api/admin/events', { cache: 'no-store' });
-      if (res.status === 401) {
+      const r = await apiRequest<{ events: EventItem[] }>('/api/admin/events', { cache: 'no-store' });
+      if (r.status === 401) {
         router.replace('/login');
         return;
       }
-      if (res.status === 403) {
+      if (r.status === 403) {
         onForbidden();
         return;
       }
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error || t('loadFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('loadFailed'));
       }
-      const data = (await res.json()) as { events: EventItem[] };
-      setEvents(data.events ?? []);
+      setEvents(r.data?.events ?? []);
     } catch (err) {
       setEventListError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
@@ -85,12 +84,11 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   const fetchEventStats = useCallback(async () => {
     setEventStatsLoading(true);
     try {
-      const res = await fetch('/api/admin/events/stats', {
+      const r = await apiRequest<{ stats?: EventStat[] }>('/api/admin/events/stats', {
         cache: 'no-store',
       });
-      if (res.ok) {
-        const data = await res.json();
-        setEventStats(data.stats ?? []);
+      if (r.ok) {
+        setEventStats(r.data?.stats ?? []);
       }
     } catch {
       // 静默失败
@@ -102,10 +100,11 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   const fetchRegistrations = useCallback(async (eventId: string) => {
     setRegistrationsLoading(true);
     try {
-      const res = await fetch(`/api/admin/events/${eventId}/registrations`);
-      if (!res.ok) throw new Error(t('loadFailed'));
-      const data = await res.json();
-      setRegistrations(data.registrations ?? []);
+      const r = await apiRequest<{ registrations?: RegistrationRecord[] }>(
+        `/api/admin/events/${eventId}/registrations`,
+      );
+      if (!r.ok) throw new Error(t('loadFailed'));
+      setRegistrations(r.data?.registrations ?? []);
     } catch {
       setRegistrations([]);
     } finally {
@@ -203,14 +202,12 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   ) => {
     setRegManageSaving(registrationId);
     try {
-      const res = await fetch(`/api/admin/events/${eventId}/registrations/manage`, {
+      const r = await apiRequest(`/api/admin/events/${eventId}/registrations/manage`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ registrationId, status }),
+        body: { registrationId, status },
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('operationFailed'));
+      if (!r.ok) {
+        throw new Error(r.error ?? t('operationFailed'));
       }
       await fetchRegistrations(eventId);
     } catch (err) {
@@ -319,29 +316,25 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
           ? '/api/admin/events'
           : `/api/admin/events/${modal.event.id}`;
       const method = modal.type === 'eventCreate' ? 'POST' : 'PUT';
-      const res = await fetch(url, {
+      const r = await apiRequest<{ event?: EventItem }>(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: payload,
       });
-      const data = (await res.json().catch(() => null)) as {
-        event?: EventItem;
-        error?: string;
-      } | null;
-      if (!res.ok || !data?.event) {
-        setEventError(data?.error || t('saveFailed'));
+      if (!r.ok || !r.data?.event) {
+        setEventError(r.error ?? t('saveFailed'));
         return;
       }
+      const ev = r.data.event;
       setEvents((prev) => {
-        const idx = prev.findIndex((it) => it.id === data.event!.id);
-        if (idx === -1) return [...prev, data.event!];
+        const idx = prev.findIndex((it) => it.id === ev.id);
+        if (idx === -1) return [...prev, ev];
         const next = [...prev];
-        next[idx] = data.event!;
+        next[idx] = ev;
         return next;
       });
       pushToast(
         'success',
-        modal.type === 'eventCreate' ? t('eventCreated', { title: data.event.title }) : t('eventUpdated', { title: data.event.title }),
+        modal.type === 'eventCreate' ? t('eventCreated', { title: ev.title }) : t('eventUpdated', { title: ev.title }),
       );
       closeModal();
     } catch {
@@ -357,10 +350,9 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
     setEventDeleteSaving(true);
     setEventError(null);
     try {
-      const res = await fetch(`/api/admin/events/${target.id}`, { method: 'DELETE' });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        setEventError(data?.error || t('deleteFailed'));
+      const r = await apiRequest<{ ok?: boolean }>(`/api/admin/events/${target.id}`, { method: 'DELETE' });
+      if (!r.ok || !r.data?.ok) {
+        setEventError(r.error ?? t('deleteFailed'));
         return;
       }
       setEvents((prev) => prev.filter((it) => it.id !== target.id));

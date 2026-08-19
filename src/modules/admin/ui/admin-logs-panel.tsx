@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import { Button, SectionLoading } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
@@ -53,24 +54,23 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
       try {
         const params = new URLSearchParams({ limit: String(LOGS_LIMIT) });
         if (action) params.set('action', action);
-        const res = await fetch(`/api/admin/actions?${params.toString()}`, {
-          cache: 'no-store',
-        });
-        if (res.status === 401) {
+        const result = await apiRequest<{ actions?: AdminAction[] }>(
+          `/api/admin/actions?${params.toString()}`,
+          { cache: 'no-store' },
+        );
+        if (result.status === 401) {
           router.replace('/login');
           return;
         }
-        if (res.status === 403) {
+        if (result.status === 403) {
           // 非 root — 静默返回
           onForbidden();
           return;
         }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || t('loadFailed'));
+        if (!result.ok) {
+          throw new Error(result.error ?? t('loadFailed'));
         }
-        const data = (await res.json()) as { actions?: AdminAction[] };
-        setLogs(data.actions ?? []);
+        setLogs(result.data?.actions ?? []);
       } catch (err) {
         setLogsError(err instanceof Error ? err.message : t('loadFailed'));
       } finally {
@@ -104,10 +104,12 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
     setLogDeleteSaving(true);
     setLogDeleteError(null);
     try {
-      const res = await fetch(`/api/admin/actions/${target.id}`, { method: 'DELETE' });
-      const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
-      if (!res.ok || !data?.ok) {
-        setLogDeleteError(data?.error || t('deleteFailed'));
+      const result = await apiRequest<{ ok?: boolean; error?: string }>(
+        `/api/admin/actions/${target.id}`,
+        { method: 'DELETE' },
+      );
+      if (!result.ok || !result.data?.ok) {
+        setLogDeleteError(result.error ?? t('deleteFailed'));
         return;
       }
       pushToast('success', t('logDeleted'));
@@ -131,19 +133,15 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
         return;
       }
       const before = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      const res = await fetch('/api/admin/actions', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ before }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { ok?: boolean; count?: number; error?: string }
-        | null;
-      if (!res.ok || !data?.ok) {
-        setLogDeleteError(data?.error || t('batchDeleteFailed'));
+      const result = await apiRequest<{ ok?: boolean; count?: number; error?: string }>(
+        '/api/admin/actions',
+        { method: 'DELETE', body: { before } },
+      );
+      if (!result.ok || !result.data?.ok) {
+        setLogDeleteError(result.error ?? t('batchDeleteFailed'));
         return;
       }
-      pushToast('success', t('batchDeleted', { count: data.count ?? 0 }));
+      pushToast('success', t('batchDeleted', { count: result.data?.count ?? 0 }));
       closeModal();
       fetchLogs(logsActionFilter);
     } catch {
@@ -174,11 +172,7 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
                       setLogsActionFilter(s.v);
                       fetchLogs(s.v);
                     }}
-                    className={`focus-amber px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider border transition-colors ${
-                      logsActionFilter === s.v
-                        ? 'border-[var(--primary)] bg-[var(--primary)]/[0.08] text-[var(--primary)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:border-[var(--primary)]/60 hover:text-[var(--foreground)]'
-                    }`}
+                    className={`tab-chip focus-ring ${logsActionFilter === s.v ? 'tab-chip-active' : ''}`}
                   >
                     {s.label}
                   </button>

@@ -9,7 +9,7 @@
 
 import { Trophy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { SectionLoading } from '@/components';
+import { SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './use-tasks';
 
 const LEVEL_THRESHOLDS = [
@@ -28,9 +28,9 @@ export function PointsTab(props: ReturnType<typeof useTasks>) {
 
   return (
     <div>
-      <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
+      <Title level={2} className="mb-10 sm:mb-16">
         {t('pointsSystem')}
-      </h2>
+      </Title>
 
       {!user ? (
         <div className="py-12 text-center">

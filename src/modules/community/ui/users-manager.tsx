@@ -3,87 +3,28 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
-import { getError } from './community-admin-utils';
-
-interface AdminUserItem {
-  id: string;
-  displayName: string | null;
-  email: string;
-  role: 'user' | 'admin' | 'root';
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface UsersResponse {
-  users: AdminUserItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
+import { useUsersManager, type AdminUserItem } from './use-users-manager';
 
 /** 用户管理 — 搜索/禁言/解禁用户 */
 export function UsersManager() {
-  const [users, setUsers] = useState<AdminUserItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
-
+  const { users, loading, error, actionError, total, totalPages, busyIds, loadUsers, disableUser, enableUser } =
+    useUsersManager();
   const { confirm } = useConfirm();
   const t = useTranslations('userList');
 
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
-      if (search.trim()) params.set('search', search.trim());
-      const res = await fetch(`/api/admin/users?${params}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(getError(data, t('loadFailed')));
-      }
-      const data = (await res.json()) as UsersResponse;
-      setUsers(data.users ?? []);
-      setTotal(data.total ?? 0);
-      setTotalPages(data.totalPages ?? 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('loadFailed'));
-    } finally {
-      setLoading(false);
-    }
-  }, [search, page]);
+  // 视图态（搜索/分页）
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
-  useEffect(() => { void loadUsers(); }, [loadUsers]);
-
-  const doUserAction = async (userId: string, action: () => Promise<Response>) => {
-    setActionError(null);
-    setBusyIds((s) => new Set(s).add(userId));
-    try {
-      const res = await action();
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(getError(data, t('actionFailed')));
-      await loadUsers();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : t('actionFailed'));
-    } finally {
-      setBusyIds((s) => {
-        const next = new Set(s);
-        next.delete(userId);
-        return next;
-      });
-    }
-  };
+  useEffect(() => {
+    void loadUsers({ search, page });
+  }, [loadUsers, search, page]);
 
   const handleDisable = (user: AdminUserItem) => {
     void (async () => {
@@ -94,27 +35,13 @@ export function UsersManager() {
         confirmLabel: t('muteConfirm'),
       });
       if (!confirmed) return;
-      doUserAction(user.id, () =>
-        fetch(`/api/admin/users/${user.id}/disable`, { method: 'POST' }),
-      );
+      await disableUser(user.id);
     })();
   };
 
   const handleEnable = (user: AdminUserItem) => {
-    void doUserAction(user.id, () =>
-      fetch(`/api/admin/users/${user.id}/enable`, { method: 'POST' }),
-    );
+    void enableUser(user.id);
   };
-
-  const pageNums = (() => {
-    const max = totalPages;
-    const cur = page;
-    const range: number[] = [];
-    const start = Math.max(1, Math.min(cur - 2, max - 4));
-    const end = Math.min(max, start + 4);
-    for (let i = start; i <= end; i++) range.push(i);
-    return range;
-  })();
 
   return (
     <div className="space-y-6">
@@ -169,19 +96,19 @@ export function UsersManager() {
                   <span className="font-mono text-[12px] text-[var(--muted-foreground)] truncate block">{user.email}</span>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.role === 'root' ? 'border-[var(--destructive)] text-[var(--destructive)]' : user.role === 'admin' ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--muted-foreground)]'}`}>
+                  <Badge variant={user.role === 'root' ? 'danger' : user.role === 'admin' ? 'primary' : 'muted'}>
                     {user.role === 'root' ? 'ROOT' : user.role === 'admin' ? 'ADMIN' : 'USER'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-1">
-                  <span className={`meta-mono text-[10px] px-2 py-0.5 border ${user.isActive ? 'border-[var(--border)] text-[var(--muted-foreground)]' : 'border-[var(--destructive)] text-[var(--destructive)]'}`}>
+                  <Badge variant={user.isActive ? 'muted' : 'danger'}>
                     {user.isActive ? 'ACTIVE' : 'MUTED'}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="lg:col-span-2 meta-mono text-[10px] text-[var(--muted-foreground)]">{formatDateTime(user.createdAt)}</div>
                 <div className="lg:col-span-3 flex flex-wrap gap-1.5 lg:justify-end">
                   {user.isActive ? (
-                    <Button variant="outline" size="sm" type="button" onClick={() => handleDisable(user)} disabled={busy} className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]">
+                    <Button variant="outline-danger" size="sm" type="button" onClick={() => handleDisable(user)} disabled={busy}>
                       {t('mute')} / Mute
                     </Button>
                   ) : (
@@ -196,17 +123,7 @@ export function UsersManager() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 py-6 border-t border-[var(--border)]">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber">←</button>
-          {pageNums.map((n) => (
-            <button key={n} onClick={() => setPage(n)} className={`font-mono text-[12px] px-3 py-1.5 border transition-colors focus-amber ${page === n ? 'border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)]'}`}>
-              {String(n).padStart(2, '0')}
-            </button>
-          ))}
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="meta-mono px-3 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors disabled:opacity-30 focus-amber">→</button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

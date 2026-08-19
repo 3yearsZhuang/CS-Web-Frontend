@@ -6,6 +6,7 @@
 import { useTranslations } from 'next-intl';
 import { Field } from '@/modules/admin/ui/shared';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { Button } from '@/components';
 import type { PermissionModule } from './roles-types';
 
 interface CreateRoleFormProps {
@@ -125,14 +126,14 @@ export function CreateRoleForm({
         >
           {t('cancel')}
         </button>
-        <button
+        <Button
+          variant="primary-outline"
           type="button"
           onClick={onSubmit}
           disabled={saving}
-          className="meta-mono text-[12px] px-4 py-2 border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--background)] transition-colors disabled:opacity-50"
         >
           {saving ? t('creating') : t('createRole')}
-        </button>
+        </Button>
       </div>
     </div>
   );

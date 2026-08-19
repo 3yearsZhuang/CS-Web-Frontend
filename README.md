@@ -1,12 +1,13 @@
-# FZTBU CS — 计算机协会官网
+# CS-Web-Frontend
 
-编辑式技术极简美学的校园技术社区官网，融合工业终端质感与粒子莫比乌斯环视觉元素。
+> 计算机协会官网前端 — Next.js BFF 薄转发层
+>
+> 编辑式技术极简美学的校园技术社区官网，融合工业终端质感与粒子莫比乌斯环视觉元素。
 
----
 
 ## 快速开始
 
-环境要求：Node.js 20+ · pnpm 9+
+环境要求：Node.js 22+（与根仓 `CS-Web-Frontend/package.json` 的 `engines.node` 一致）· pnpm 9+
 
 ```bash
 pnpm install          # 安装依赖
@@ -14,7 +15,7 @@ cp .env.example .env  # 复制环境变量模板
 pnpm dev              # 启动开发服务器 → http://localhost:2333
 ```
 
-> ⚠️ 前端为 BFF，需后端 FastAPI 运行才能完整工作。推荐在根仓库用 `make dev-up` 并行启动前后端（后端 :9000 / 前端 :2333）；或单独启动后端（见 [根 README](../README.md)）。需配置 `BACKEND_URL` 指向后端。
+> 前端为 BFF，需后端 FastAPI 运行才能完整工作。推荐在根仓库用 `make dev-up` 并行启动前后端（后端 :9000 / 前端 :2333）；或单独启动后端（见 [根 README](../README.md)）。需配置 `BACKEND_URL` 指向后端。
 
 生产部署：
 
@@ -34,19 +35,17 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 > 前置条件：需先启动本地服务器（`pnpm dev`）。运行 `pnpm tunnel` 会自动清理旧进程、启动 Cloudflare Tunnel、提取公网地址并更新 `.env` 中的 `ALLOWED_ORIGINS` 和 `NEXT_PUBLIC_SITE_URL`。
 
----
 
 ## 项目架构
 
-前端为 **BFF（Backend-for-Frontend）薄转发层**，基于 Next.js 16 App Router；业务数据、认证、邮件均由后端 FastAPI + PostgreSQL 承载，前端 API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
+前端为 **BFF（Backend-for-Frontend）薄转发层**，基于 Next.js 16 App Router；业务数据、认证、邮件均由后端 FastAPI + PostgreSQL 承载（前后端职责边界与架构图见根仓库 [README.md](../README.md) 的「架构」章节）。前端 API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
 
 - 业务模块：位于 `src/modules/`，按业务域拆分（admin / announcement / auth / community / events / join / notification / tools / user）。其中 `community` 已扁平化合并原 forum / blog / members 三个子域
 - 共享基础设施：`src/shared/`（BFF 客户端 / 安全 / 配置 / hooks）。其中 `db/`、`utils/mail.ts`、`events/` 为迁移前单体遗留代码，**运行时不被任何 API 路由引用**，待清理
 - 测试：`tools/tests/`（Vitest 单元 + Playwright E2E）
 
-> 顶层编排与全栈架构见根仓库 [README.md](../README.md) 与 [docs/RootDoc-Deploy.md](../docs/RootDoc-Deploy.md)；详细前端结构见 [架构文档](tools/docs/FrontDoc-01-Arch.md)。
+> 详细前端结构见 [架构文档](tools/docs/FrontDoc-01-Arch.md)；全栈部署见根仓库 [docs/RootDoc-Deploy.md](../docs/RootDoc-Deploy.md)。
 
----
 
 ## 页面
 
@@ -76,7 +75,6 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `/join` | 入社申请 |
 | `/users/[id]` | 用户主页 |
 
----
 
 ## 技术栈
 
@@ -86,13 +84,12 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | 样式 | Tailwind CSS v4 · CSS 变量双主题 |
 | 动画 | Motion (Framer Motion 下一代) |
 | 数据库 | 无本地业务库——前端为 BFF，业务数据由后端 PostgreSQL 承载（`better-sqlite3` 依赖已于 2026-08-07 移除，前端零 SQLite） |
-| 认证 | 后端 JWT 双 token（access 15min / refresh 7day）· BFF 以 HttpOnly Cookie 托管 · 401 静默刷新 · TOTP 2FA / GitHub OAuth 由后端处理 |
+| 认证 | BFF 以 HttpOnly Cookie 托管后端签发的 JWT 双 token · 401 静默刷新（签发/校验/轮换均由后端处理） |
 | 邮件 | 由后端 aiosmtplib 承载（前端 `nodemailer` 为迁移前遗留，运行时未使用） |
 | 测试 | Vitest（单元，441+）· Playwright（E2E） |
 | 代码检查 | ESLint 9 · TypeScript 5 |
 | 日志/监控 | pino 结构化日志（NDJSON）· 请求 ID 链路 · 健康检查 `/api/health`（转发后端）· 错误率监控 · 可选 Sentry（`SENTRY_DSN` 动态接入） |
 
----
 
 ## 认证与权限
 
@@ -140,9 +137,10 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | LAST_ADMIN | 禁止降级/禁用/删除最后一个活跃管理员 |
 | ADMIN_CROSS_PROTECT | 管理员不能禁用/重置其他管理员的密码 |
 
----
 
 ## 环境变量
+
+> 跨端必填密钥（`SECRET_KEY` / `DATABASE_PASSWORD` / `TOTP_ENCRYPTION_KEY` / `AUTH_SESSION_SECRET` 等）的生成与全量清单见仓库根 README「安装 · 生成必填密钥」，以根仓为唯一事实源。下表仅列前端侧变量。
 
 | 变量 | 说明 | 默认 |
 |------|------|------|
@@ -154,7 +152,6 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 
 > 以下为迁移前单体遗留变量，运行时**不被任何 API 路由引用**（认证/邮件/OAuth 已由后端承载），待后续清理：`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`（`SQLITE_DB_PATH` 已随 SQLite 清理于 2026-08-07 移除）。
 
----
 
 ## 常用命令
 
@@ -177,7 +174,6 @@ pnpm tunnel --port 3000  # 指定端口（默认 2333）
 | `pnpm deploy:down` | 停止部署 |
 | `pnpm deploy:logs` | 跟踪部署日志 |
 
----
 
 ## 测试
 
@@ -199,7 +195,6 @@ tools/tests/
 └── totp.test.ts                 # TOTP 双因素认证
 ```
 
----
 
 ## 文档
 
@@ -213,11 +208,10 @@ tools/tests/
 | [演进与 ADR](../docs/RootDoc-ADR.md) | 已完成功能 + 未来迭代规划 + 架构决策记录（ADR-001~019） |
 | [Markdown 编辑器](tools/docs/FrontDoc-01-Arch.md#257-社区-markdown-编辑器ui-组件) | 编辑器使用指南（Arch §2.5.7） |
 | [入职指南 + 项目规则](../docs/Onboarding.md) | 新开发者快速上手 + 开发约定、模块协作规范、防再犯清单（根级手册，含附录 A 前端工程规则） |
-| [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节原-frontdoc-pgmigmd-并入已归档) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
+| [PG 数据迁移](../docs/RootDoc-MigEval.md#八前端迁移执行细节) | SQLite → PostgreSQL 迁移历史记录（已归档：迁移 2026-08-05 完成，脚本已删除；并入根 MigEval §八） |
 | [国际化 i18n](tools/docs/FrontDoc-i18n.md) | next-intl 迁移状态与流程（已完成/剩余清单） |
-| [变更日志](CHANGELOG.md) | 版本变更记录 |
+| [变更日志](../CHANGELOG.md) | 版本变更记录（根仓唯一权威，前端不再维护独立 CHANGELOG） |
 
----
 
 ## 许可证
 

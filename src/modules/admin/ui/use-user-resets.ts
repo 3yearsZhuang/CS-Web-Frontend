@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { PasswordResetRequest } from '@/modules/admin/ui/types';
 import type { ResetStatusFilter } from './users-panel-utils';
 
@@ -27,23 +28,22 @@ export function useUserResets(onForbidden: () => void) {
       try {
         const params = new URLSearchParams();
         if (s !== 'all') params.set('status', s);
-        const res = await fetch(`/api/admin/password-resets?${params.toString()}`, {
-          cache: 'no-store',
-        });
-        if (res.status === 401) {
+        const r = await apiRequest<{ requests: PasswordResetRequest[] }>(
+          `/api/admin/password-resets?${params.toString()}`,
+          { cache: 'no-store' },
+        );
+        if (r.status === 401) {
           router.replace('/login');
           return;
         }
-        if (res.status === 403) {
+        if (r.status === 403) {
           onForbidden();
           return;
         }
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(data?.error || '加载失败');
+        if (!r.ok) {
+          throw new Error(r.error ?? '加载失败');
         }
-        const data = (await res.json()) as { requests: PasswordResetRequest[] };
-        setResetRequests(data.requests ?? []);
+        setResetRequests(r.data?.requests ?? []);
       } catch (err) {
         setResetListError(err instanceof Error ? err.message : '加载失败');
       } finally {

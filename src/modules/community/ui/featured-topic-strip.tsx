@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { ScrollIndicator } from '@/components/effects/scroll-indicator';
 import { Avatar } from '@/components/avatar';
+import { Badge } from '@/components';
 import type { CommunityPost } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
 
@@ -39,18 +40,14 @@ export function FeaturedTopicStrip({ topics, className = '' }: FeaturedTopicStri
                 href={href}
                 className="block group focus-amber flex-shrink-0 w-[260px] sm:w-[300px]"
               >
-                <article className="border border-[var(--border)] p-4 sm:p-5 card-minimal hover:border-[var(--primary)] transition-colors h-full flex flex-col">
+                <article className="dna-card h-full flex flex-col">
                   {/* 标签行 */}
                   <div className="flex items-center gap-1.5 mb-3">
                     {topic.isPinned && (
-                      <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                        PIN
-                      </span>
+                      <Badge variant="primary">PIN</Badge>
                     )}
                     {topic.isFeatured && (
-                      <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--primary)] text-[var(--primary)]">
-                        FEAT
-                      </span>
+                      <Badge variant="primary">FEAT</Badge>
                     )}
                     <span className="meta-mono text-[10px] text-[var(--muted-foreground)] ml-auto">
                       {topic.category?.name ?? ''}

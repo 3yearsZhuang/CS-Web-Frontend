@@ -12,7 +12,7 @@ export async function GET(
 ) {
   const { filename } = await params;
   const upstream = await fetch(
-    `${BACKEND_URL}/api/v1/community/community/images/${encodeURIComponent(filename)}`,
+    `${BACKEND_URL}/api/v1/community/images/${encodeURIComponent(filename)}`,
     { cache: 'no-store' },
   );
 
