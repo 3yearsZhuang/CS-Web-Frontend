@@ -76,15 +76,6 @@ export interface ResourceListData {
   techTagCounts: Record<string, number>;
 }
 
-export function formatDate(iso: string): string {
-  const d = new Date(iso + 'Z');
-  if (isNaN(d.getTime())) return '—';
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}.${m}.${day}`;
-}
-
 export function useResources() {
   const { isLoggedIn } = useAuth();
   const searchParams = useSearchParams();
