@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import { FeedItemCard } from './feed-item-card';
 import { EmptyState, SectionLoading } from '@/components';
-import { useCommunityPostList, POST_LIST_PAGE_SIZE } from './use-community-post-list';
+import { useCommunityPostList, POST_LIST_PAGE_SIZE } from './hooks/use-community-post-list';
 import { useTranslations } from 'next-intl';
 
 interface CommunityPostListProps {

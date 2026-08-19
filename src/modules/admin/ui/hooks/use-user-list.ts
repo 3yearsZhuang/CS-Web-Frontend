@@ -11,7 +11,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import { PAGE_SIZE, type SafeUser, type UserListResult } from '@/modules/admin/ui/types';
-import type { ActiveFilter, RoleFilter } from './users-panel-utils';
+import type { ActiveFilter, RoleFilter } from '../users-panel-utils';
 
 export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
   const router = useRouter();

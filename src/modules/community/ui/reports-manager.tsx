@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { Button } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
-import { useReportsManager, type ReportRow, type ReportStatusFilter } from './use-reports-manager';
+import { useReportsManager, type ReportRow, type ReportStatusFilter } from './hooks/use-reports-manager';
 
 const REPORT_STATUS_FILTERS: { value: ReportStatusFilter; label: string }[] = [
   { value: 'pending', label: '待处理 / Pending' },

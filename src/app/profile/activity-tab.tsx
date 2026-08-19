@@ -10,7 +10,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils/utils';
-import type { ActivityParticipation } from '@/modules/user/types';
+import type { ActivityParticipation } from '@/modules/users/types';
 
 export interface ActivityTabProps {
   activities: ActivityParticipation[];

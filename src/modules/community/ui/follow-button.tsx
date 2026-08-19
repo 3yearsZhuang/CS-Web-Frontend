@@ -13,7 +13,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useFollow } from './use-follow';
+import { useFollow } from './hooks/use-follow';
 
 interface FollowButtonProps {
   targetUserId: string;

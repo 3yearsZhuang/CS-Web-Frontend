@@ -11,7 +11,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
-import { getError } from './community-admin-utils';
+import { getError } from '../community-admin-utils';
 
 export interface AnnouncementItem {
   id: string;

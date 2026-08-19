@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button, ModalShell } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import { useReport } from './use-report';
+import { useReport } from './hooks/use-report';
 
 type TargetType = 'topic' | 'reply';
 

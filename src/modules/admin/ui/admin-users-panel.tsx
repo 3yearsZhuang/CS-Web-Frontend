@@ -10,7 +10,7 @@ import type { SafeUser } from '@/modules/admin/ui/types';
 import { UserModals } from './user-modals';
 import { UserListView } from './user-list-view';
 import { UserResetsView } from './user-resets-view';
-import { useAdminUsers } from './use-admin-users';
+import { useAdminUsers } from './hooks/use-admin-users';
 
 /* ============= 面板组件 ============= */
 

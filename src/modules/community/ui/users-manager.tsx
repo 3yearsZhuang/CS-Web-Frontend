@@ -9,7 +9,7 @@ import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
-import { useUsersManager, type AdminUserItem } from './use-users-manager';
+import { useUsersManager, type AdminUserItem } from './hooks/use-users-manager';
 
 /** 用户管理 — 搜索/禁言/解禁用户 */
 export function UsersManager() {

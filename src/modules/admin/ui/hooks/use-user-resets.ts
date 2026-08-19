@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { PasswordResetRequest } from '@/modules/admin/ui/types';
-import type { ResetStatusFilter } from './users-panel-utils';
+import type { ResetStatusFilter } from '../users-panel-utils';
 
 export function useUserResets(onForbidden: () => void) {
   const router = useRouter();

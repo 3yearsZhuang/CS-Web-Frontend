@@ -10,7 +10,7 @@ import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityCategory } from '@/modules/community/types';
 import { getError, type CategoryInput } from './community-admin-utils';
-import { useCategoriesManager } from './use-categories-manager';
+import { useCategoriesManager } from './hooks/use-categories-manager';
 
 /** 版块管理 — 新建/编辑/删除版块 */
 export function CategoriesManager() {

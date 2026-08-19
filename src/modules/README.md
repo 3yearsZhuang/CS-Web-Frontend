@@ -9,13 +9,13 @@
 |------|--------|------|
 | `admin/` | 管理员后台 | 用户/角色/事件/公告/日志/消息管理面板（含 `ui/shared` 通用件） |
 | `auth/` | 认证 | 2FA、登录相关 UI 与逻辑 |
-| `announcement/` | 公告 | 公告管理 UI |
+| `announcements/` | 公告 | 公告管理 UI（复数，对齐后端 `/api/v1/announcements` 契约） |
 | `community/` | 社区 | 社区帖子/回复/版块/举报 + 管理员社区面板 |
 | `events/` | 活动 | 活动日历/卡片/筛选 |
 | `join/` | 报名 | 加入/报名流程 |
-| `notification/` | 通知 | 通知相关 |
+| `notifications/` | 通知 | 通知相关（复数，对齐后端 `/api/v1/notifications` 契约） |
 | `tools/` | 工具集 | 资源/考试/任务管理（含管理员工具面板） |
-| `user/` | 用户 | 用户资料类型与逻辑 |
+| `users/` | 用户 | 用户资料类型与逻辑（复数，对齐后端 `/api/v1/users` 契约） |
 | `workbench/` | 工作台 | 个人化信息聚合工作中心（registry 驱动 + widgets + hooks + lib，见域内 README） |
 
 ## 目录即模块约定

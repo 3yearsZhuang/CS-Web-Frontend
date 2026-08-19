@@ -10,8 +10,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { AVATAR_PRESETS, PASSWORD_MIN_LENGTH } from '@/shared/config';
-import type { User, ActivityParticipation } from '@/modules/user/types';
-import { USER_LIMITS as LIMITS, isValidHttpUrl as isValidUrl } from '@/modules/user/types';
+import type { User, ActivityParticipation } from '@/modules/users/types';
+import { USER_LIMITS as LIMITS, isValidHttpUrl as isValidUrl } from '@/modules/users/types';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
 /** 资料编辑表单状态 */

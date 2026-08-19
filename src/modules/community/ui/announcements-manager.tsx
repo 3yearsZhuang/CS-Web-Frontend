@@ -10,7 +10,7 @@ import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
 import { getError } from './community-admin-utils';
-import { useAnnouncementsManager, type AnnouncementItem } from './use-announcements-manager';
+import { useAnnouncementsManager, type AnnouncementItem } from './hooks/use-announcements-manager';
 
 const LEVEL_OPTIONS: { value: AnnouncementItem['level']; label: string }[] = [
   { value: 'info', label: '信息 / Info' },

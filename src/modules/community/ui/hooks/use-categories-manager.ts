@@ -11,7 +11,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
-import { getError, type CategoryInput, type CategoriesResponse } from './community-admin-utils';
+import { getError, type CategoryInput, type CategoriesResponse } from '../community-admin-utils';
 import type { CommunityCategory } from '@/modules/community/types';
 
 const CATEGORIES_URL = '/api/admin/community/community/categories';

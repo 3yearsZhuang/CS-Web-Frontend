@@ -2,7 +2,7 @@
  * @file 管理员面板共享类型与常量（跨面板领域类型 + PAGE_SIZE/LIMITS，面板专属类型保留在各面板内）
  */
 
-import { USER_LIMITS } from '@/modules/user/types';
+import { USER_LIMITS } from '@/modules/users/types';
 import { PASSWORD_MIN_LENGTH } from '@/modules/auth/types/constants';
 import type { EventItem, RegistrationField } from '@/modules/events/types';
 

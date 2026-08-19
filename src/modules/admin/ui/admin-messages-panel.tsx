@@ -14,7 +14,7 @@ import { useToast } from '@/components/feedback/toast';
 import { Button } from '@/components';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import { AnnouncementsPanel } from '@/modules/announcement/ui/admin-announcements-panel';
+import { AnnouncementsPanel } from '@/modules/announcements/ui/admin-announcements-panel';
 import { BroadcastHistoryPanel } from './broadcast-history-panel';
 
 /* ============= 子 Tab 类型 ============= */

@@ -11,7 +11,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
-import { getError, TOPICS_PAGE_SIZE, type SortValue, type TopicStatus } from './community-admin-utils';
+import { getError, TOPICS_PAGE_SIZE, type SortValue, type TopicStatus } from '../community-admin-utils';
 import type { CommunityCategory, CommunityPost, PaginatedPosts } from '@/modules/community/types';
 
 export interface TopicsQuery {

@@ -12,7 +12,7 @@ import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityPost } from '@/modules/community/types';
-import { useTopicsManager } from './use-topics-manager';
+import { useTopicsManager } from './hooks/use-topics-manager';
 import {
   STATUS_OPTIONS,
   SORT_OPTIONS,

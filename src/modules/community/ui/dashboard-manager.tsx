@@ -6,7 +6,7 @@
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { SectionLoading } from '@/components';
-import { useDashboardManager, type DashboardStats } from './use-dashboard-manager';
+import { useDashboardManager, type DashboardStats } from './hooks/use-dashboard-manager';
 
 /** 数据看板 — 社区运营数据概览 */
 export function DashboardManager() {

@@ -18,7 +18,7 @@ import {
   type SafeUser,
   type PasswordResetRequest,
 } from '@/modules/admin/ui/types';
-import { isValidHttpUrl as isValidUrl } from '@/modules/user/types';
+import { isValidHttpUrl as isValidUrl } from '@/modules/users/types';
 import { passwordSchema } from '@/shared/security/schemas/auth-schemas';
 import { useUserList } from './use-user-list';
 import { useUserResets } from './use-user-resets';
@@ -26,7 +26,7 @@ import type {
   EditForm,
   UserModal,
   UserSubView,
-} from './users-panel-utils';
+} from '../users-panel-utils';
 
 export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
   // 列表数据（用户列表 / 搜索 / 筛选 / 分页）

@@ -19,7 +19,7 @@ import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading, ArkDivider, Title } from '@/components';
 import { formatDate } from '@/shared/utils/utils';
-import { useProfile } from '@/modules/user/ui/hooks/use-profile';
+import { useProfile } from '@/modules/users/ui/hooks/use-profile';
 import { ProfileTab } from './profile-tab';
 import { SecurityTab } from './security-tab';
 import { ActivityTab } from './activity-tab';

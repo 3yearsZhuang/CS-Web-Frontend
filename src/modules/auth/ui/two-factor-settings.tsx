@@ -20,7 +20,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
-import { useTwoFA } from './use-two-fa';
+import { useTwoFA } from './hooks/use-two-fa';
 
 /** 验证码输入框样式（INPUT_CLASS 基础 + 覆盖 padding/字号） */
 const CODE_INPUT_CLASS = `${INPUT_CLASS} px-4 py-2.5 text-[13px]`;

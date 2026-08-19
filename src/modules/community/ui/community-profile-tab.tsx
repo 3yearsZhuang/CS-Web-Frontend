@@ -15,7 +15,7 @@ import { SectionNav } from '@/components/primitives/section-nav';
 import {
   useProfileCommunityTab,
   type CommunitySubTab,
-} from './use-profile-community-tab';
+} from './hooks/use-profile-community-tab';
 
 const PAGE_SIZE = 10;
 

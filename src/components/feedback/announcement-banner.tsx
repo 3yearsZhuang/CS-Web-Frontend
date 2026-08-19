@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, AlertTriangle, Info, CheckCircle, AlertCircle } from 'lucide-react';
-import { useAnnouncements, saveDismissed, type AnnouncementLevel } from '@/modules/community/ui/use-announcements';
+import { useAnnouncements, saveDismissed, type AnnouncementLevel } from '@/modules/community/ui/hooks/use-announcements';
 
 const levelConfig: Record<AnnouncementLevel, {
   icon: React.ComponentType<{ className?: string; size?: number }>;
