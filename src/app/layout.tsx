@@ -18,6 +18,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { PageTransition } from '@/components/effects/page-transition';
 import { AnnouncementBanner } from '@/components/feedback/announcement-banner';
 import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
+import { DemoModeInit } from '@/components/demo/demo-mode-init';
+import { DemoBanner } from '@/components/demo/demo-banner';
 import './globals.css';
 
 /**
@@ -212,6 +214,9 @@ export default async function RootLayout({
         <NextIntlClientProvider>
           <ThemeProvider nonce={nonce}>
             <ConfirmProvider>
+              {/* 演示模式：URL 参数开关（?demo=1/0）+ 全局演示横幅（手动/自动降级标识） */}
+              <DemoModeInit />
+              <DemoBanner />
               <VisibilityGate componentKey="chrome-navbar">
                 <Navbar />
               </VisibilityGate>

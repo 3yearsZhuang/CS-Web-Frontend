@@ -13,6 +13,9 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 import { getCookieValue } from '@/shared/security/security';
+import { isDemoActive, markBackendUnreachable, resolveDemoMock } from '@/shared/demo/demo-mode';
+// 副作用导入：注册演示模式 mock 路由表（幂等，仅在服务端加载）
+import '@/shared/demo/mock-data';
 import type { SafeUser, UserRole } from '@/shared/types';
 import type { components } from '@/shared/api/backend-api';
 
@@ -100,13 +103,42 @@ function readPair(req: Request): { access: string | null; refresh: string | null
   };
 }
 
+/** 后端网络层不可达标记错误（requestJson 内部使用，proxyBackend 捕获后 mock 兜底） */
+class BackendUnreachableError extends Error {
+  constructor() {
+    super('BACKEND_UNREACHABLE');
+    this.name = 'BackendUnreachableError';
+  }
+}
+
+/** 后端请求超时：网络黑洞时避免 TTL 过期重试卡顿（ECONNREFUSED 即时返回不受影响） */
+const BACKEND_FETCH_TIMEOUT_MS = 3_000;
+
+/** 带超时的 fetch（仅限建立连接阶段；流式响应返回后不受影响） */
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), BACKEND_FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: ac.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** 请求后端并把错误体规范化为 {error, code?} */
 async function requestJson(path: string, init: RequestInit): Promise<{ status: number; body: unknown }> {
-  const res = await fetch(`${BACKEND_URL}${API_PREFIX}${path}`, {
-    ...init,
-    cache: 'no-store',
-    headers: { ...(init.headers as Record<string, string> | undefined) },
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(`${BACKEND_URL}${API_PREFIX}${path}`, {
+      ...init,
+      cache: 'no-store',
+      headers: { ...(init.headers as Record<string, string> | undefined) },
+    });
+  } catch {
+    // 后端网络层不可达（含超时）：标记自动降级（TTL 内后续请求直接进演示），并抛专用错误供上层 mock 兜底
+    markBackendUnreachable();
+    throw new BackendUnreachableError();
+  }
   let body: unknown = null;
   const text = await res.text();
   if (text) {
@@ -136,9 +168,25 @@ async function refreshPair(refreshToken: string): Promise<BackendTokenPair | nul
 export async function fetchMeWithPair(
   pair: BackendTokenPair,
 ): Promise<{ user: SafeUser; roles: string[] } | null> {
-  const { status, body } = await requestJson('/auth/me', {
-    headers: { Authorization: `Bearer ${pair.accessToken}` },
-  });
+  let status: number;
+  let body: unknown;
+  try {
+    ({ status, body } = await requestJson('/auth/me', {
+      headers: { Authorization: `Bearer ${pair.accessToken}` },
+    }));
+  } catch (err) {
+    // 后端不可达（自动/手动演示）：回落到 mock /auth/me（登录闭环的关键兜底）
+    if (err instanceof BackendUnreachableError) {
+      const demo = resolveDemoMock('/auth/me', 'GET');
+      if (demo) {
+        ({ status, body } = demo.route.respond({ searchParams: demo.searchParams, pathParams: demo.pathParams }));
+      } else {
+        return null;
+      }
+    } else {
+      throw err;
+    }
+  }
   if (status !== 200 || !body || typeof body !== 'object') return null;
   const b = body as { user?: BackendUser; roles?: string[] };
   if (!b.user) return null;
@@ -171,7 +219,7 @@ export async function fetchCurrentUserId(req: Request): Promise<string | null> {
 }
 
 /**
- * 代理请求到后端：注入 Authorization → 401 时刷新一次并重试 → 返回结果与 cookie 操作。
+ * 代理请求到后端：演示模式优先 mock；否则注入 Authorization → 401 时刷新一次并重试 → 返回结果与 cookie 操作。
  *
  * @param opts.skipAuth  认证端点（登录/注册/验证码/OAuth）为 true：不注入 Authorization
  * @param accessOverride 刷新后重试时注入的新 access token
@@ -189,57 +237,116 @@ export async function proxyBackend(
   retried = false,
   accessOverride?: string,
 ): Promise<ProxyResult> {
-  const { access, refresh } = readPair(req);
-
-  const headers: Record<string, string> = { ...(opts.headers ?? {}) };
-  if (!opts.skipAuth && (accessOverride ?? access)) {
-    headers.Authorization = `Bearer ${accessOverride ?? access}`;
-  }
-  let body: BodyInit | undefined;
-  if (opts.formData) {
-    body = opts.formData;
-  } else if (opts.jsonBody !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    body = JSON.stringify(opts.jsonBody);
-  }
-
-  const first = await requestJson(opts.path, {
-    method: opts.method || 'GET',
-    headers,
-    body,
-  });
-
-  if (first.status === 401 && !opts.skipAuth && refresh && !retried) {
-    const pair = await refreshPair(refresh);
-    if (pair) {
-      const retriedResult = await proxyBackend(req, opts, true, pair.accessToken);
-      return { ...retriedResult, authPair: pair };
+  // 演示模式主拦截：手动/自动激活时优先走 mock，避免误连真实后端
+  if (isDemoActive(req)) {
+    const demo = resolveDemoMock(opts.path, opts.method || 'GET');
+    if (demo) {
+      const { status, body } = demo.route.respond({
+        searchParams: demo.searchParams,
+        pathParams: demo.pathParams,
+        body: opts.jsonBody,
+      });
+      return { status, body, clearAuth: false };
     }
-    return { status: first.status, body: first.body, clearAuth: true };
+    return {
+      status: 404,
+      body: { message: '演示模式暂未覆盖该接口', errorCode: 'DEMO_NOT_IMPLEMENTED' },
+      clearAuth: false,
+    };
   }
 
-  return { status: first.status, body: first.body, clearAuth: false };
+  try {
+    const { access, refresh } = readPair(req);
+
+    const headers: Record<string, string> = { ...(opts.headers ?? {}) };
+    if (!opts.skipAuth && (accessOverride ?? access)) {
+      headers.Authorization = `Bearer ${accessOverride ?? access}`;
+    }
+    let body: BodyInit | undefined;
+    if (opts.formData) {
+      body = opts.formData;
+    } else if (opts.jsonBody !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(opts.jsonBody);
+    }
+
+    const first = await requestJson(opts.path, {
+      method: opts.method || 'GET',
+      headers,
+      body,
+    });
+
+    if (first.status === 401 && !opts.skipAuth && refresh && !retried) {
+      const pair = await refreshPair(refresh);
+      if (pair) {
+        const retriedResult = await proxyBackend(req, opts, true, pair.accessToken);
+        return { ...retriedResult, authPair: pair };
+      }
+      return { status: first.status, body: first.body, clearAuth: true };
+    }
+
+    return { status: first.status, body: first.body, clearAuth: false };
+  } catch (err) {
+    // 后端网络层不可达：requestJson 已置自动降级标记，此处尝试 mock 兜底（本次请求直接演示）
+    if (err instanceof BackendUnreachableError) {
+      markBackendUnreachable();
+      const demo = resolveDemoMock(opts.path, opts.method || 'GET');
+      if (demo) {
+        const { status, body } = demo.route.respond({
+          searchParams: demo.searchParams,
+          pathParams: demo.pathParams,
+          body: opts.jsonBody,
+        });
+        return { status, body, clearAuth: false };
+      }
+      return {
+        status: 502,
+        body: { message: '后端服务暂不可达，已进入演示模式', errorCode: 'BACKEND_UNREACHABLE' },
+        clearAuth: false,
+      };
+    }
+    throw err;
+  }
 }
 
 /**
  * SSE 流式透传：注入 Authorization 后把后端响应体原样 pipe 给客户端。
  * 用于学习助手对话（stream: true），不做 JSON 解析与 401 自动刷新（前端处理）。
+ * 演示模式：流式接口不提供 mock，明确返回占位错误。
  */
 export async function proxyStream(
   req: Request,
   opts: { path: string; method?: string; jsonBody?: unknown },
 ): Promise<Response> {
+  // 演示模式：流式接口（学习助手 SSE）无 mock，明确占位，避免误连真实后端
+  if (isDemoActive(req)) {
+    return new Response(
+      JSON.stringify({ error: '演示模式不支持流式接口', code: 'DEMO_NOT_IMPLEMENTED' }),
+      { status: 404, headers: { 'Content-Type': 'application/json; charset=utf-8' } },
+    );
+  }
+
   const { access } = readPair(req);
   const headers: Record<string, string> = {};
   if (opts.jsonBody !== undefined) headers['Content-Type'] = 'application/json';
   if (access) headers.Authorization = `Bearer ${access}`;
 
-  const upstream = await fetch(`${BACKEND_URL}${API_PREFIX}${opts.path}`, {
-    method: opts.method || 'POST',
-    headers,
-    body: opts.jsonBody !== undefined ? JSON.stringify(opts.jsonBody) : undefined,
-    cache: 'no-store',
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetchWithTimeout(`${BACKEND_URL}${API_PREFIX}${opts.path}`, {
+      method: opts.method || 'POST',
+      headers,
+      body: opts.jsonBody !== undefined ? JSON.stringify(opts.jsonBody) : undefined,
+      cache: 'no-store',
+    });
+  } catch {
+    // 后端网络层不可达：标记自动降级并返回 502（流式接口不 mock）
+    markBackendUnreachable();
+    return new Response(
+      JSON.stringify({ error: '后端服务暂不可达', code: 'BACKEND_UNREACHABLE' }),
+      { status: 502, headers: { 'Content-Type': 'application/json; charset=utf-8' } },
+    );
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,
