@@ -15,7 +15,7 @@
 | widget | `widgets/quick-notes.tsx` | 快捷便签（localStorage） |
 | widget | `widgets/exam-countdown.tsx` | 考试倒计时（后端 exams 数据） |
 | widget | `widgets/github-heatmap.tsx` | GitHub 贡献热力图（后端缓存 6h） |
-| widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：对话优先左主列（类 DeepSeek 网页版），头部「用量与设置」统一入口展开用量统计 + 模型接入设置面板；取代旧 /tools/auxilio 分析页 |
+| widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：对话优先左主列布局，头部「用量与设置」统一入口展开用量统计 + 模型接入设置面板；取代旧 /tools/auxilio 分析页 |
 | widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（embedded 时无内部按钮、设置表单常显） |
 | widget | `widgets/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态；embedded 内嵌于 llm-widget） |
 | 模块 | `widgets/pomodoro/` | 番茄钟×播放器（目录即模块：use-pomodoro 状态机 + settings/music 面板） |

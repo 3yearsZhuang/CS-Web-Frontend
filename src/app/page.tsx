@@ -221,7 +221,7 @@ export default function Home() {
          * 冒泡到 <main> 的 onClick 彩蛋处理器。CTA 按钮通过 pointer-events-auto
          * 恢复可点击，彩蛋 handler 中通过 closest('a, button') 跳过这些点击。 */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          {/* 像素星空底层 — 叠于莫比乌斯环之下，营造暗夜氛围（Kimi 风格融合 M3） */}
+          {/* 像素星空底层 — 叠于莫比乌斯环之下，营造暗夜氛围（像素融合 M3） */}
           <StarfieldCanvas className="absolute inset-0" />
           <div className={mobius.positionClass} style={mobius.sizeStyle}>
             <MobiusRing

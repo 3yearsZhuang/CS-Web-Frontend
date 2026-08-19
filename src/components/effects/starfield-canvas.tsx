@@ -1,5 +1,5 @@
 /**
- * @file 像素星空 — Canvas 2D 星点闪烁背景层（Kimi 暗夜氛围，叠于 MobiusRing 之下）
+ * @file 像素星空 — Canvas 2D 星点闪烁背景层（暗夜氛围，叠于 MobiusRing 之下）
  *
  * 约定与 MobiusRing 对齐：
  * - DPR 上限 2 + ResizeObserver 自适应

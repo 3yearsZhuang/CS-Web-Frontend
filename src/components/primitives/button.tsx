@@ -2,7 +2,7 @@
  * @file Button — 统一按钮组件，封装 primary / outline / primary-outline / danger /
  * outline-danger / ghost / amber / filled / pixel / pixel-outline / pixel-danger 十一套变体（FrontDoc-UIButton.md §7）
  *
- * pixel 对：Kimi 风格硬阴影 + steps(2) 按压位移，用于首页 Hero CTA 等像素元数据层场景；
+ * pixel 对：像素风格硬阴影 + steps(2) 按压位移，用于首页 Hero CTA 等像素元数据层场景；
  * 主次按钮统一实色硬阴影，颜色走双主题令牌。
  * pixel-danger：破坏性像素按钮，底色走 --destructive 令牌，硬阴影 3px + steps(2)，
  * 用于清空 / 删除等高风险操作的像素元数据层场景。
