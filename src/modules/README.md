@@ -19,6 +19,12 @@
 | `users/` | 用户 | 用户资料类型与逻辑（复数，对齐后端 `/api/v1/users` 契约） |
 | `workbench/` | 工作台 | 个人化信息聚合工作中心（registry 驱动 + widgets + hooks + lib，见域内 README） |
 
+## 命名规范（对齐 API 契约）
+
+- **模块名 = API 资源名（复数）**：与 `openapi.baseline.json` 中 `/api/v1` 路径第一段一致（`users/announcements/notifications/events/community/join/tools/workbench/profile/auth/admin`），与 BFF 路由、后端契约三方对齐。权威映射见根 `docs/模块命名映射表.md`（SSOT）。
+- **门禁**：`make check-module-naming`（根仓）强制三端模块名 ⊆ 契约资源名，已接入根 CI；新增业务模块先入契约 → 三端目录同名 → 门禁通过。
+- **组件归属**：业务组件/hook 一律进本模块 `ui/` + `ui/hooks/`；公共层 `components/` 只留跨 ≥2 域复用件，禁止公共层依赖业务层（数据经业务域容器注入）。
+
 ## 目录即模块约定
 
 - 每域 `types/`（集中类型）`ui/`（组件）；数据访问统一经 BFF API（`src/app/api/**/route.ts` → `shared/backend-client.ts`），模块内不再有 `server/`
