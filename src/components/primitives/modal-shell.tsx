@@ -15,10 +15,16 @@ export function ModalShell({
   title,
   children,
   onClose,
+  size = 'md',
+  scrollable = false,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  /** 容器宽度：md=max-w-lg（默认）/ lg=max-w-2xl（宽双列表单） */
+  size?: 'md' | 'lg';
+  /** 内容区独立滚动（容器 max-h-[90vh] flex-col，标题栏固定、内容区 overflow-y-auto flex-1） */
+  scrollable?: boolean;
 }) {
   const containerRef = useFocusTrap<HTMLDivElement>({
     active: true,
@@ -33,11 +39,13 @@ export function ModalShell({
     >
       <div
         ref={containerRef}
-        className="relative w-full max-w-lg my-8 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]"
+        className={`relative w-full ${size === 'lg' ? 'max-w-2xl' : 'max-w-lg'} ${
+          scrollable ? 'max-h-[90vh] flex flex-col' : ''
+        } my-8 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 标题栏 */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)] shrink-0">
           <div className="meta-mono text-[var(--primary)]">{title}</div>
           <button
             type="button"
@@ -49,7 +57,7 @@ export function ModalShell({
           </button>
         </div>
         {/* 内容 */}
-        <div className="px-5 sm:px-6 py-6">{children}</div>
+        <div className={`px-5 sm:px-6 py-6 ${scrollable ? 'overflow-y-auto flex-1' : ''}`}>{children}</div>
       </div>
     </div>
   );

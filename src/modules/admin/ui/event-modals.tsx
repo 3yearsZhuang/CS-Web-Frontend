@@ -179,28 +179,12 @@ export function EventModals({
 
       {/* ============ 模态框：创建 / 编辑活动（桌面端双列布局） ============ */}
       {(modal.type === 'eventCreate' || modal.type === 'eventEdit') && form && (
-        <div
-          className="fixed inset-0 z-[var(--z-header)] flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm"
-          onClick={onClose}
+        <ModalShell
+          title={modal.type === 'eventCreate' ? '[ Create Event ]' : '[ Edit Event ]'}
+          onClose={onClose}
+          size="lg"
+          scrollable
         >
-          <div
-            className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-modal)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--border)] shrink-0">
-              <div className="meta-mono text-[var(--primary)]">
-                {modal.type === 'eventCreate' ? '[ Create Event ]' : '[ Edit Event ]'}
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-[14px] leading-none"
-                aria-label={t('close')}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="px-5 sm:px-6 py-6 overflow-y-auto flex-1">
               <form onSubmit={onFormSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   {/* 标题 — 跨两列 */}
@@ -419,9 +403,7 @@ export function EventModals({
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* ============ 模态框：删除活动确认 ============ */}
