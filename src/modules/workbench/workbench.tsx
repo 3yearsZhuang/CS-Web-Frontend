@@ -47,7 +47,15 @@ const SIZE_ORDER: WidgetSizeKey[] = [
 ];
 
 const BACKUP_PREFIX = 'wb_';
-const BACKUP_KEYS = ['wb_tasks', 'wb_notes', 'wb_pomodoro_settings', 'wb_pomodoro_state'];
+const BACKUP_KEYS = [
+  'wb_tasks',
+  'wb_notes',
+  'wb_pomodoro_settings',
+  'wb_pomodoro_state',
+  'wb_github_username',
+  'wb_widget_prefs',
+  'wb_schema_widgets',
+];
 const PREFS_KEY = 'wb_widget_prefs';
 
 interface WidgetPrefs {
@@ -446,7 +454,7 @@ function SortableWidget({
       <button
         type="button"
         aria-label="拖拽排序"
-        className="absolute top-2 right-2 z-10 p-1 rounded bg-[var(--background)]/80 border border-[var(--border)] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+        className="absolute top-2 right-2 z-10 p-1 rounded bg-[var(--background)]/80 border border-[var(--border)] opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity cursor-grab active:cursor-grabbing touch-none"
         {...attributes}
         {...listeners}
       >

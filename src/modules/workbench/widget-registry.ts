@@ -14,6 +14,7 @@ import GreetingBar from './widgets/greeting-bar';
 import { PomodoroPlayer } from './widgets/pomodoro';
 import QuickNotes from './widgets/quick-notes';
 import TodayTasks from './widgets/today-tasks';
+import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
   id: string;
@@ -38,7 +39,7 @@ export const WIDGETS: WorkbenchWidget[] = [
   },
   {
     id: 'github-heatmap',
-    titleKey: 'examCountdown',
+    titleKey: 'githubHeatmap',
     component: GithubHeatmap,
     defaultSize: '2x1',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3'],
@@ -70,5 +71,12 @@ export const WIDGETS: WorkbenchWidget[] = [
     component: ExamCountdown,
     defaultSize: '1x2',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
+  },
+  {
+    id: 'schema-widget',
+    titleKey: 'schemaWidget',
+    component: SchemaWidgetRenderer,
+    defaultSize: '2x2',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3', 'full'],
   },
 ];

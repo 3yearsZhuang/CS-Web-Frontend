@@ -8,9 +8,10 @@
 | 层级 | 文件 | 职责 |
 |------|------|------|
 | 组合 | `workbench.tsx` | 组装全部 widget；数据备份（导出/导入/清空）；布局显隐设置（问候条顶部全宽 + Auxilio v1 左主列 + 其余右栏） |
+| 外壳 | `workbench-card.tsx` | 卡片统一外壳：DnaCard corner + meta-mono 标题头 + 右上操作区 + loading/empty/error 三态；children 在 flex-1 容器内透传 |
 | 注册表 | `widget-registry.ts` | widget 声明 → 配置 → 注册（§2.6），slot 分组渲染（full / primary / main+side） |
 | 桶导出 | `index.ts` | 模块对外出口（§3.3） |
-| widget | `widgets/greeting-bar.tsx` | 问候条：当前时间 / 日期 / 本次会话在线时长 |
+| widget | `widgets/greeting-bar.tsx` | 问候条：当前时间 / 日期 / 本次会话在线时长（顶部全宽状态条，双行横排布局，**例外：不套 WorkbenchCard**，保留 DnaCard 定制结构） |
 | widget | `widgets/today-tasks.tsx` | 今日任务：个人待办（localStorage），逾期置顶标红 |
 | widget | `widgets/quick-notes.tsx` | 快捷便签（localStorage） |
 | widget | `widgets/exam-countdown.tsx` | 考试倒计时（后端 exams 数据） |
@@ -19,6 +20,10 @@
 | widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（embedded 时无内部按钮、设置表单常显） |
 | widget | `widgets/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态；embedded 内嵌于 llm-widget） |
 | 模块 | `widgets/pomodoro/` | 番茄钟×播放器（目录即模块：use-pomodoro 状态机 + settings/music 面板） |
+| schema | `schema/widget-schema.ts` | Schema 配置驱动卡类型 + 校验器（count/list/progress/countdown/note/link；api 白名单防契约漂移） |
+| schema | `schema/use-schema-data.ts` | Schema 卡数据源 hook（local/api/static 三源统一） |
+| schema | `schema/use-schema-widgets.ts` | Schema 卡配置集合（localStorage `wb_schema_widgets`，读写过校验器） |
+| schema | `schema/schema-widget-renderer.tsx` | Schema 卡渲染器：六种卡型全部复用 WorkbenchCard 外壳 |
 | hook | `hooks/use-clock.ts` | 时钟 + 会话时长 |
 | hook | `hooks/use-local-storage.ts` | localStorage 持久化 state |
 | hook | `hooks/use-idb-media.ts` | IndexedDB 音频库（上传音乐） |
@@ -42,4 +47,5 @@
 | `wb_pomodoro_settings` / `wb_pomodoro_state` | 番茄钟配置与计时状态 |
 | `wb_github_username` | GitHub 用户名绑定 |
 | `wb_widget_prefs` | 布局显隐偏好 |
+| `wb_schema_widgets` | Schema 配置驱动卡集合（JSON 声明数组） |
 | `wb_session_started_at`（sessionStorage） | 会话开始时间 |

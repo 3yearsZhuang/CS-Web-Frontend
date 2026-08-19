@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { DnaCard } from '@/components';
 import { Input } from '@/components/primitives/input';
+import { WorkbenchCard } from '../workbench-card';
 import { useLocalStorage } from '../hooks/use-local-storage';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
@@ -125,12 +125,11 @@ export default function GithubHeatmap() {
   }, [data]);
 
   return (
-    <DnaCard corner="GIT" className="p-5 flex flex-col gap-4 h-full min-h-0">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
-          {t('heatmapTitle', { year })}
-        </h3>
-        <div className="flex items-center gap-2">
+    <WorkbenchCard
+      corner="GIT"
+      title={t('heatmapTitle', { year })}
+      actions={
+        <>
           {data?.stale && (
             <span className="text-[11px] text-amber-600 border border-amber-500/40 rounded-full px-2 py-0.5">
               stale
@@ -150,82 +149,82 @@ export default function GithubHeatmap() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
+        </>
+      }
+      error={
+        notLoggedIn ? <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p> : undefined
+      }
+      empty={!notLoggedIn && !data?.need_username && !data ? t('heatmapNoData') : false}
+    >
+      {data?.need_username ? (
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            value={input}
+            placeholder={t('heatmapUsernamePlaceholder')}
+            className="flex-1 min-w-0"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') bind();
+            }}
+          />
+          <Button size="sm" variant="pixel" onClick={bind}>
+            {t('heatmapBind')}
+          </Button>
         </div>
-      </div>
-
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {notLoggedIn ? (
-          <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
-        ) : data?.need_username ? (
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              value={input}
-              placeholder={t('heatmapUsernamePlaceholder')}
-              className="flex-1 min-w-0"
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') bind();
-              }}
-            />
-            <Button size="sm" variant="pixel" onClick={bind}>
-              绑定
-            </Button>
+      ) : data ? (
+        <>
+          <div className="flex items-center gap-5 flex-wrap">
+            <div className="flex items-baseline gap-1.5">
+              <span className="display-serif text-[clamp(26px,3vw,36px)] leading-none tabular-nums text-[var(--foreground)]">
+                {data.total ?? 0}
+              </span>
+              <span className="text-[12px] text-[var(--muted-foreground)]">{t('heatmapContributions')}</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="display-serif text-[clamp(20px,2.5vw,28px)] leading-none tabular-nums text-[var(--foreground)]">
+                {data.streak ?? 0}
+              </span>
+              <span className="text-[12px] text-[var(--muted-foreground)]">{t('heatmapStreak')}</span>
+            </div>
+            <span className="text-[12px] text-[var(--muted-foreground)]">@{data.username}</span>
           </div>
-        ) : data ? (
-          <>
-            <div className="flex items-center gap-5 flex-wrap">
-              <div className="flex items-baseline gap-1.5">
-                <span className="display-serif text-[clamp(26px,3vw,36px)] leading-none tabular-nums text-[var(--foreground)]">
-                  {data.total ?? 0}
-                </span>
-                <span className="text-[12px] text-[var(--muted-foreground)]">{t('heatmapContributions')}</span>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="display-serif text-[clamp(20px,2.5vw,28px)] leading-none tabular-nums text-[var(--foreground)]">
-                  {data.streak ?? 0}
-                </span>
-                <span className="text-[12px] text-[var(--muted-foreground)]">{t('heatmapStreak')}</span>
-              </div>
-              <span className="text-[12px] text-[var(--muted-foreground)]">@{data.username}</span>
-            </div>
 
-            <div className="overflow-x-auto pb-1 -mx-1 px-1">
-              <div
-                className="grid gap-[2px] min-w-[640px]"
-                style={{
-                  gridTemplateColumns: 'repeat(53, 1fr)',
-                  gridTemplateRows: 'repeat(7, 10px)',
-                  gridAutoFlow: 'column',
-                }}
-              >
-                {cells.map((date, i) => {
-                  const count = countByDate.get(date) ?? 0;
-                  const level = levelOf(count);
-                  return (
-                    <div
-                      key={i}
-                      title={`${date}: ${count}`}
-                      className={`rounded-[2px] ${LEVEL_COLORS[level]}`}
-                      style={level === 0 ? { outline: '1px solid var(--border)' } : undefined}
-                    />
-                  );
-                })}
-              </div>
+          <div className="overflow-x-auto pb-1 -mx-1 px-1">
+            <div
+              className="grid gap-[2px] min-w-[640px]"
+              style={{
+                gridTemplateColumns: 'repeat(53, 1fr)',
+                gridTemplateRows: 'repeat(7, 10px)',
+                gridAutoFlow: 'column',
+              }}
+            >
+              {cells.map((date, i) => {
+                const count = countByDate.get(date) ?? 0;
+                const level = levelOf(count);
+                return (
+                  <div
+                    key={i}
+                    title={`${date}: ${count}`}
+                    className={`rounded-[2px] ${LEVEL_COLORS[level]}`}
+                    style={level === 0 ? { outline: '1px solid var(--border)' } : undefined}
+                  />
+                );
+              })}
             </div>
+          </div>
 
-            <div className="flex items-center justify-between text-[11px] text-[var(--muted-foreground)]">
-              <span>{t('heatmapLess')}</span>
-              <div className="flex gap-1">
-                {LEVEL_COLORS.map((c) => (
-                  <span key={c} className={`w-2.5 h-2.5 rounded-[2px] ${c}`} />
-                ))}
-              </div>
-              <span>{t('heatmapMore')} · {t('heatmapMax')} {maxCount}</span>
+          <div className="flex items-center justify-between text-[11px] text-[var(--muted-foreground)]">
+            <span>{t('heatmapLess')}</span>
+            <div className="flex gap-1">
+              {LEVEL_COLORS.map((c) => (
+                <span key={c} className={`w-2.5 h-2.5 rounded-[2px] ${c}`} />
+              ))}
             </div>
-          </>
-        ) : null}
-      </div>
-    </DnaCard>
+            <span>{t('heatmapMore')} · {t('heatmapMax')} {maxCount}</span>
+          </div>
+        </>
+      ) : null}
+    </WorkbenchCard>
   );
 }

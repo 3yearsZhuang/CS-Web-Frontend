@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 import { BarChart3, Bot, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { DnaCard } from '@/components';
+import { WorkbenchCard } from '../workbench-card';
 import AssistantChat from './assistant-chat';
 import LlmUsageStats from './llm-usage-stats';
 
@@ -19,20 +19,24 @@ export default function LlmWidget() {
   const [showPanel, setShowPanel] = useState(false);
 
   return (
-    <DnaCard corner="AUX" className="p-4 sm:p-5 flex flex-col gap-4 h-full min-h-0">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-1.5">
+    <WorkbenchCard
+      corner="AUX"
+      title={
+        <>
           <Bot className="w-3.5 h-3.5" />
           Auxilio v1
-        </h3>
+        </>
+      }
+      actions={
         <Button size="sm" variant="pixel-outline" onClick={() => setShowPanel((v) => !v)}>
           {showPanel ? <X className="w-4 h-4" /> : <BarChart3 className="w-4 h-4" />}
           {t('llmUsageEntry')}
         </Button>
-      </div>
+      }
+    >
       <div className="flex-1 min-h-0 overflow-y-auto">
         {showPanel ? <LlmUsageStats embedded /> : <AssistantChat embedded />}
       </div>
-    </DnaCard>
+    </WorkbenchCard>
   );
 }

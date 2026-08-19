@@ -390,6 +390,8 @@ export interface ToolsMessages {
     allTools: string;
     toolsHint: string;
     heatmapTitle: string;
+    githubHeatmap: string;
+    heatmapNoData: string;
     heatmapBind: string;
     heatmapContributions: string;
     heatmapStreak: string;
@@ -430,6 +432,9 @@ export interface ToolsMessages {
     resetLayout: string;
     confirmResetLayout: string;
     dragHint: string;
+    schemaWidget: string;
+    schemaEmpty: string;
+    schemaEmptyHint: string;
   }
 }
 
@@ -820,6 +825,8 @@ export const zhCN: ToolsMessages = {
     allTools: '全部工具',
     toolsHint: '原有工具入口，收编于此',
     heatmapTitle: 'GitHub · {year}',
+    githubHeatmap: 'GitHub 热力图',
+    heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
     heatmapContributions: 'contributions',
     heatmapStreak: 'streak',
@@ -860,6 +867,9 @@ export const zhCN: ToolsMessages = {
     resetLayout: '重置布局',
     confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
     dragHint: '拖拽卡片可排序 · 点击规格键改积木大小（如 1×1 / 2×2 / 2×3）',
+    schemaWidget: 'Schema 卡',
+    schemaEmpty: '暂无数据',
+    schemaEmptyHint: '暂无 Schema 卡，可在布局设置中添加',
   }
 };
 
@@ -1250,6 +1260,8 @@ export const en: ToolsMessages = {
     allTools: 'All tools',
     toolsHint: 'Legacy tool entries, kept here',
     heatmapTitle: 'GitHub · {year}',
+    githubHeatmap: 'GitHub heatmap',
+    heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
     heatmapContributions: 'contributions',
     heatmapStreak: 'streak',
@@ -1290,5 +1302,8 @@ export const en: ToolsMessages = {
     resetLayout: 'Reset layout',
     confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
     dragHint: 'Drag cards to reorder · click a size key to resize (e.g. 1×1 / 2×2 / 2×3)',
+    schemaWidget: 'Schema cards',
+    schemaEmpty: 'No data',
+    schemaEmptyHint: 'No schema cards yet — add one in layout settings',
   }
 };

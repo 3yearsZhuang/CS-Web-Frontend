@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl';
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { DnaCard } from '@/components';
 import { Input } from '@/components/primitives/input';
+import { WorkbenchCard } from '../workbench-card';
 import { toDateStr, useClock } from '../hooks/use-clock';
 import { useLocalStorage } from '../hooks/use-local-storage';
 import type { WorkTask } from '../types';
@@ -94,17 +94,20 @@ export default function TodayTasks() {
   }, [setTasks, t]);
 
   return (
-    <DnaCard corner="TSK" className="p-5 flex flex-col gap-4 h-full min-h-0">
-      <div className="flex items-center justify-between">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+    <WorkbenchCard
+      corner="TSK"
+      title={
+        <>
           {t('todayTasks')}
           {overdueCount > 0 && (
-            <span className="ml-2 normal-case text-[var(--destructive)] border border-red-500/40 rounded-full px-2 py-0.5">
+            <span className="normal-case text-[var(--destructive)] border border-red-500/40 rounded-full px-2 py-0.5">
               {overdueCount} {t('overdue')}
             </span>
           )}
-        </h3>
-        <div className="flex items-center gap-1">
+        </>
+      }
+      actions={
+        <>
           <button
             type="button"
             className="text-[12px] text-[var(--muted-foreground)] px-2 py-1 rounded hover:bg-[var(--border)]"
@@ -119,9 +122,9 @@ export default function TodayTasks() {
           >
             {t('clearAll')}
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="flex gap-2">
         <Input
           type="text"
@@ -182,6 +185,6 @@ export default function TodayTasks() {
           })}
         </ul>
       )}
-    </DnaCard>
+    </WorkbenchCard>
   );
 }

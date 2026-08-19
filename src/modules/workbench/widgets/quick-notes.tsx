@@ -6,10 +6,10 @@
 
 import { useTranslations } from 'next-intl';
 import { NotebookPen, Plus, Trash2 } from 'lucide-react';
-import { DnaCard } from '@/components';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
+import { WorkbenchCard } from '../workbench-card';
 import { useLocalStorage } from '../hooks/use-local-storage';
 import type { WorkNote } from '../types';
 
@@ -40,12 +40,15 @@ export default function QuickNotes() {
   );
 
   return (
-    <DnaCard corner="NOTE" className="p-5 flex flex-col gap-3 h-full min-h-0">
-      <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
-        <NotebookPen className="w-4 h-4" />
-        {t('quickNotes')}
-      </h3>
-
+    <WorkbenchCard
+      corner="NOTE"
+      title={
+        <>
+          <NotebookPen className="w-4 h-4" />
+          {t('quickNotes')}
+        </>
+      }
+    >
       <div className="flex gap-2">
         <Input
           type="text"
@@ -83,6 +86,6 @@ export default function QuickNotes() {
           </li>
         ))}
       </ul>
-    </DnaCard>
+    </WorkbenchCard>
   );
 }
