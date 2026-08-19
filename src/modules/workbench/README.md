@@ -12,8 +12,7 @@
 | 注册表 | `widget-registry.ts` | widget 声明 → 配置 → 注册（§2.6），slot 分组渲染（full / primary / main+side） |
 | 桶导出 | `index.ts` | 模块对外出口（§3.3） |
 | widget | `widgets/greeting-bar.tsx` | 问候条：当前时间 / 日期 / 本次会话在线时长（顶部全宽状态条，双行横排布局，**例外：不套 WorkbenchCard**，保留 DnaCard 定制结构） |
-| widget | `widgets/today-tasks.tsx` | 今日任务：个人待办（localStorage），逾期置顶标红 |
-| widget | `widgets/quick-notes.tsx` | 快捷便签（localStorage） |
+| widget | `widgets/tasks-and-notes.tsx` | 任务与便签（合并卡）：今日待办 + 快捷便签双区共存（各自持久化 wb_tasks/wb_notes；便签可一键转今日任务） |
 | widget | `widgets/exam-countdown.tsx` | 考试倒计时（后端 exams 数据） |
 | widget | `widgets/github-heatmap.tsx` | GitHub 贡献热力图（后端缓存 6h） |
 | widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：对话优先左主列布局，头部「用量与设置」统一入口展开用量统计 + 模型接入设置面板；取代旧 /tools/auxilio 分析页 |
@@ -23,8 +22,8 @@
 | schema | `schema/widget-schema.ts` | Schema 配置驱动卡类型 + 校验器（count/list/progress/countdown/note/link；api 白名单防契约漂移） |
 | schema | `schema/use-schema-data.ts` | Schema 卡数据源 hook（local/api/static 三源统一） |
 | schema | `schema/use-schema-widgets.ts` | Schema 卡配置集合（localStorage `wb_schema_widgets`，读写过校验器） |
-| schema | `schema/schema-widget-renderer.tsx` | Schema 卡渲染器：六种卡型全部复用 WorkbenchCard 外壳 |
-| schema | `schema/schema-card-form.tsx` | Schema 卡简易表单：布局面板内嵌「添加 Schema 卡」，标题/类型/数据源三要素零代码建卡 |
+| schema | `schema/schema-widget-renderer.tsx` | Schema 管理卡：表单 + 实时预览 + 已建卡列表三合一（六卡型复用 WorkbenchCard；复杂卡走手写） |
+| schema | `schema/schema-card-form.tsx` | Schema 卡表单（受控）：标题/类型/数据源三要素，随管理卡渲染 |
 | hook | `hooks/use-clock.ts` | 时钟 + 会话时长 |
 | hook | `hooks/use-local-storage.ts` | localStorage 持久化 state |
 | hook | `hooks/use-idb-media.ts` | IndexedDB 音频库（上传音乐） |

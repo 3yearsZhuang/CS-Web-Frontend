@@ -125,3 +125,52 @@ export function validateSchemaConfig(input: unknown): string[] {
 export function parseSchemaConfig(input: unknown): SchemaWidgetConfig | null {
   return validateSchemaConfig(input).length === 0 ? (input as SchemaWidgetConfig) : null;
 }
+
+/** 简易表单草稿（SchemaCardForm 表单状态） */
+export interface SchemaFormDraft {
+  title: string;
+  type: SchemaWidgetType;
+  dataKind: 'local' | 'api';
+  dataKey: string;
+  apiUrl: string;
+  fieldsText: string;
+}
+
+export const EMPTY_DRAFT: SchemaFormDraft = {
+  title: '',
+  type: 'count',
+  dataKind: 'local',
+  dataKey: '',
+  apiUrl: '',
+  fieldsText: '',
+};
+
+/** 由表单草稿构建 config（id 由标题派生，local key 自动补 wb_ 前缀） */
+export function buildConfigFromDraft(draft: SchemaFormDraft): SchemaWidgetConfig {
+  const trimmedTitle = draft.title.trim();
+  return {
+    id:
+      trimmedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') ||
+      `card-${Date.now()}`,
+    title: trimmedTitle,
+    type: draft.type,
+    data:
+      draft.dataKind === 'local'
+        ? {
+            kind: 'local',
+            key: draft.dataKey.trim().startsWith('wb_')
+              ? draft.dataKey.trim()
+              : `wb_${draft.dataKey.trim() || 'data'}`,
+          }
+        : { kind: 'api', url: draft.apiUrl.trim() },
+    ...(draft.type === 'list' && draft.fieldsText.trim()
+      ? {
+          fields: draft.fieldsText
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((key) => ({ key })),
+        }
+      : {}),
+  };
+}

@@ -12,8 +12,7 @@ import ExamCountdown from './widgets/exam-countdown';
 import GithubHeatmap from './widgets/github-heatmap';
 import GreetingBar from './widgets/greeting-bar';
 import { PomodoroPlayer } from './widgets/pomodoro';
-import QuickNotes from './widgets/quick-notes';
-import TodayTasks from './widgets/today-tasks';
+import TasksAndNotes from './widgets/tasks-and-notes';
 import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
@@ -31,11 +30,11 @@ export interface WorkbenchWidget {
 export const WIDGETS: WorkbenchWidget[] = [
   { id: 'greeting', titleKey: 'wbTitle', component: GreetingBar, defaultSize: 'full', sizeOptions: ['full'] },
   {
-    id: 'today-tasks',
-    titleKey: 'todayTasks',
-    component: TodayTasks,
-    defaultSize: '1x2',
-    sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
+    id: 'tasks-and-notes',
+    titleKey: 'tasksAndNotes',
+    component: TasksAndNotes,
+    defaultSize: '2x2',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3'],
   },
   {
     id: 'github-heatmap',
@@ -50,13 +49,6 @@ export const WIDGETS: WorkbenchWidget[] = [
     component: LlmWidget,
     defaultSize: '2x2',
     sizeOptions: ['2x2', '2x3', '3x2'],
-  },
-  {
-    id: 'quick-notes',
-    titleKey: 'quickNotes',
-    component: QuickNotes,
-    defaultSize: '1x2',
-    sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
   },
   {
     id: 'pomodoro',
@@ -76,7 +68,7 @@ export const WIDGETS: WorkbenchWidget[] = [
     id: 'schema-widget',
     titleKey: 'schemaWidget',
     component: SchemaWidgetRenderer,
-    defaultSize: '2x2',
-    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3', 'full'],
+    defaultSize: '2x3',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3', '3x2', 'full'],
   },
 ];

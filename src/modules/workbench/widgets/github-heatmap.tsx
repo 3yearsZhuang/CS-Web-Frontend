@@ -67,6 +67,7 @@ export default function GithubHeatmap() {
   const [data, setData] = useState<HeatmapData | null>(null);
   const [loading, setLoading] = useState(false);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
   // 年份初始取一次（SSR/CSR 通常一致）；挂载后再次校准，规避跨年边界 SSR/CSR 不一致
   const [year, setYear] = useState(() => new Date().getFullYear());
   const cells = useMemo(() => buildYearGrid(year), [year]);
@@ -80,6 +81,7 @@ export default function GithubHeatmap() {
       const user = (username || '').trim();
       if (!user) {
         setData({ ok: false, need_username: true });
+        setUnreachable(false);
         return;
       }
       setLoading(true);
@@ -94,8 +96,16 @@ export default function GithubHeatmap() {
           setNotLoggedIn(true);
           return;
         }
+        // 后端返回 ok:false + error:github_unreachable → 明确「不可达」错误态
+        if (!r.ok && r.status < 500 && (r.data as { error?: string } | null)?.error === 'github_unreachable') {
+          setUnreachable(true);
+          setData(null);
+          return;
+        }
+        setUnreachable(false);
         setData(r.data);
       } catch {
+        setUnreachable(true);
         setData(null);
       } finally {
         setLoading(false);
@@ -152,7 +162,17 @@ export default function GithubHeatmap() {
         </>
       }
       error={
-        notLoggedIn ? <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p> : undefined
+        notLoggedIn ? (
+          <p className="text-[13px] text-[var(--muted-foreground)]">{t('loginRequired')}</p>
+        ) : unreachable ? (
+          <div className="flex flex-col items-center gap-2 py-4 text-center">
+            <p className="text-[13px] text-[var(--muted-foreground)]">{t('heatmapUnreachable')}</p>
+            <Button size="sm" variant="pixel-outline" disabled={loading} onClick={() => void load(true)}>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              {t('heatmapRetry')}
+            </Button>
+          </div>
+        ) : undefined
       }
       empty={!notLoggedIn && !data?.need_username && !data ? t('heatmapNoData') : false}
     >

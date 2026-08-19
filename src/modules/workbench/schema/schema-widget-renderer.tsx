@@ -11,9 +11,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import { Input } from '@/components/primitives/input';
 import { WorkbenchCard } from '../workbench-card';
-import { cornerFor, type SchemaField, type SchemaWidgetConfig } from './widget-schema';
+import {
+  buildConfigFromDraft,
+  cornerFor,
+  EMPTY_DRAFT,
+  validateSchemaConfig,
+  type SchemaField,
+  type SchemaFormDraft,
+  type SchemaWidgetConfig,
+} from './widget-schema';
 import { pickByPath, useSchemaData } from './use-schema-data';
 import { useSchemaWidgets } from './use-schema-widgets';
+import { SchemaCardForm } from './schema-card-form';
 
 function asText(v: unknown): string {
   if (v == null) return '';
@@ -334,22 +343,91 @@ export function SchemaCard({ config }: { config: SchemaWidgetConfig }) {
   }
 }
 
-/** 内置注册 widget：渲染全部已配置的 schema 卡（纵向堆叠） */
+/** 内置注册 widget：Schema 管理卡 — 表单 + 实时预览 + 已建卡列表三合一 */
 export function SchemaWidgetRenderer() {
   const t = useTranslations('workbench');
-  const { configs } = useSchemaWidgets();
-  if (configs.length === 0) {
-    return (
-      <WorkbenchCard corner="SCH" title={t('schemaWidget')} empty={t('schemaEmptyHint')}>
-        <div />
-      </WorkbenchCard>
-    );
-  }
+  const { configs, add, remove } = useSchemaWidgets();
+
+  const [draft, setDraft] = useState<SchemaFormDraft>(EMPTY_DRAFT);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [saved, setSaved] = useState(false);
+
+  /** 由当前表单草稿构建的 config（用于实时预览，可能不合法） */
+  const previewConfig = useMemo(() => {
+    const cfg = buildConfigFromDraft(draft);
+    return validateSchemaConfig(cfg).length === 0 ? cfg : null;
+  }, [draft]);
+
+  const patchDraft = useCallback((patch: Partial<SchemaFormDraft>) => {
+    setDraft((prev) => ({ ...prev, ...patch }));
+    setErrors([]);
+    setSaved(false);
+  }, []);
+
+  const save = useCallback(() => {
+    const cfg = buildConfigFromDraft(draft);
+    const errs = validateSchemaConfig(cfg);
+    if (errs.length > 0) {
+      setErrors(errs);
+      setSaved(false);
+      return;
+    }
+    const res = add(cfg);
+    if (!res.ok) {
+      setErrors(res.errors ?? ['配置无效']);
+      setSaved(false);
+      return;
+    }
+    setErrors([]);
+    setSaved(true);
+    setDraft(EMPTY_DRAFT);
+  }, [draft, add]);
+
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0 overflow-y-auto">
-      {configs.map((cfg) => (
-        <SchemaCard key={cfg.id} config={cfg} />
-      ))}
-    </div>
+    <WorkbenchCard corner="SCH" title={t('schemaWidget')} className="gap-3">
+      {/* 实时预览：draft 合法即渲染 */}
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
+            {t('schemaPreview')}
+          </span>
+          {previewConfig && (
+            <span className="text-[11px] text-emerald-600">{t('schemaPreviewLive')}</span>
+          )}
+        </div>
+        {previewConfig ? (
+          <div className="rounded border border-dashed border-[var(--border)] p-3">
+            <SchemaCard config={previewConfig} />
+          </div>
+        ) : (
+          <div className="rounded border border-dashed border-[var(--border)] p-4 text-center text-[12px] text-[var(--muted-foreground)]">
+            {t('schemaPreviewHint')}
+          </div>
+        )}
+      </div>
+
+      {/* 表单 */}
+      <SchemaCardForm draft={draft} onChange={patchDraft} onSave={save} errors={errors} saved={saved} />
+
+      {/* 已建卡列表 */}
+      {configs.length > 0 && (
+        <ul className="flex flex-col gap-1 border-t border-[var(--border)] pt-3">
+          {configs.map((cfg) => (
+            <li key={cfg.id} className="flex items-center gap-2 text-[12px] text-[var(--muted-foreground)]">
+              <span className="meta-mono text-[11px]">{cfg.id}</span>
+              <span className="truncate flex-1">{cfg.title}</span>
+              <button
+                type="button"
+                aria-label="delete schema card"
+                className="shrink-0 p-1 rounded hover:bg-[var(--border)]"
+                onClick={() => remove(cfg.id)}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </WorkbenchCard>
   );
 }
