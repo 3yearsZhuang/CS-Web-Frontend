@@ -10,6 +10,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { isPastDate } from '@/shared/utils/event-date';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
@@ -85,19 +86,20 @@ export default function EventDetailPage() {
   }, [eventId]);
 
   const fetchRegistration = useCallback(async () => {
-    const r = await apiRequest<{ registered: boolean }>(`/api/events/${eventId}/registration`);
-    if (r.status === 401) {
-      return { registered: false, isLoggedIn: false };
-    }
+    const r = await apiRequest<{ registration: { status?: string } | null }>(
+      `/api/events/${eventId}/registration`,
+    );
     if (!r.ok) {
-      throw new Error(r.error ?? '加载报名状态失败');
+      throw new Error(r.error ?? t('regStateFailed'));
     }
-    const data = r.data;
+    // BFF 将后端 404（无报名记录）归一为 registration: null；
+    // status === 'cancelled' 视为未报名（可重新报名）
+    const reg = r.data?.registration ?? null;
     return {
-      registered: data!.registered,
+      registered: reg?.status === 'registered',
       isLoggedIn: true,
     };
-  }, [eventId]);
+  }, [eventId, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -128,8 +130,15 @@ export default function EventDetailPage() {
     };
   }, [fetchEvent, fetchRegistration]);
 
+  const isFull = event ? event.capacity !== UNLIMITED_CAPACITY && registeredCount >= event.capacity : false;
+  const isEnded = event?.status === 'ended';
+  /** 报名是否已截止：状态已结束，或活动日期已过（同日/未排期不算过期，与后端归档语义一致）。
+   *  已报名用户仍可取消报名（后端取消接口不做结束校验）。 */
+  const isExpired = isEnded || isPastDate(event?.date ?? null);
+
   const handleRegister = useCallback(async () => {
     if (!event) return;
+    if (isExpired) return; // 过期活动不予报名（UI 已置灰，此处兜底）
 
     const fields = event.registrationFields || [];
     const errors: Record<string, string> = {};
@@ -154,6 +163,10 @@ export default function EventDetailPage() {
       });
 
       if (!r.ok) {
+        // 后端对已结束活动返回 409 EVENT_ENDED：同步本地状态为 ended，报名入口立即置灰
+        if (r.status === 409 && r.code === 'EVENT_ENDED') {
+          setEvent((prev) => (prev ? { ...prev, status: 'ended' } : prev));
+        }
         throw new Error(r.error ?? t('registerFailed'));
       }
 
@@ -164,7 +177,7 @@ export default function EventDetailPage() {
     } finally {
       setActionLoading(false);
     }
-  }, [eventId, event, formData]);
+  }, [eventId, event, formData, isExpired, t]);
 
   const handleCancel = useCallback(async () => {
     setActionLoading(true);
@@ -186,10 +199,7 @@ export default function EventDetailPage() {
     } finally {
       setActionLoading(false);
     }
-  }, [eventId]);
-
-  const isFull = event ? event.capacity !== UNLIMITED_CAPACITY && registeredCount >= event.capacity : false;
-  const isEnded = event?.status === 'ended';
+  }, [eventId, t]);
 
   if (loading) {
     return (
@@ -335,139 +345,143 @@ export default function EventDetailPage() {
               </section>
             </RevealItem>
 
-            {/* 报名区 */}
-            {!isEnded && (
-              <RevealItem>
-                <section className="border-t border-[var(--border)] pt-12 sm:pt-16">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-                    <div>
-                      <div className="display-serif text-2xl text-[var(--foreground)] mb-2">
-                        {t('participateTitle')}
-                      </div>
-                      <div className="meta-mono text-[var(--muted-foreground)]">
-                        {isFull
-                          ? t('fullMsg')
-                          : registered
-                            ? t('registeredMsg')
-                            : t('clickToRegister')}
-                      </div>
+            {/* 报名区（过期活动保留区块并置灰按钮，提示报名已结束） */}
+            <RevealItem>
+              <section className="border-t border-[var(--border)] pt-12 sm:pt-16">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+                  <div>
+                    <div className="display-serif text-2xl text-[var(--foreground)] mb-2">
+                      {t('participateTitle')}
                     </div>
-
-                    <div className="flex flex-col gap-4 sm:min-w-[320px]">
-                      {!registered && event.registrationFields && event.registrationFields.length > 0 && (
-                        <div className="space-y-4 p-5 border border-[var(--border)]">
-                          <div className="meta-mono text-[var(--muted-foreground)]">{t('regInfo')}</div>
-                          {event.registrationFields.map((field) => (
-                            <div key={field.key}>
-                              {field.type === 'textarea' ? (
-                                <textarea
-                                  value={formData[field.key] || ''}
-                                  onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
-                                  }
-                                  placeholder={field.required ? `${field.label} *` : field.label}
-                                  rows={3}
-                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
-                                />
-                              ) : field.type === 'select' ? (
-                                <select
-                                  value={formData[field.key] || ''}
-                                  onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
-                                  }
-                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
-                                >
-                                  <option value="" disabled>
-                                    {field.required ? `${field.label} *` : field.label}
-                                  </option>
-                                  {(field.options || []).map((o) => (
-                                    <option key={o} value={o}>
-                                      {o}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : field.type === 'checkbox' ? (
-                                <label className="flex items-center gap-3 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                  checked={formData[field.key] === CHECKBOX_CHECKED_VALUE}
-                                  onChange={(e) =>
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      [field.key]: e.target.checked ? CHECKBOX_CHECKED_VALUE : '',
-                                    }))
-                                  }
-                                    className="w-4 h-4 border border-[var(--border)] bg-transparent accent-[var(--primary)] focus-amber"
-                                  />
-                                  <span className="text-[14px] font-mono text-[var(--muted-foreground)]">
-                                    {field.label}
-                                    {field.required && ' *'}
-                                  </span>
-                                </label>
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={formData[field.key] || ''}
-                                  onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
-                                  }
-                                  placeholder={field.required ? `${field.label} *` : field.label}
-                                  className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
-                                />
-                              )}
-                              {formErrors[field.key] && (
-                                <div className="meta-mono text-[var(--destructive)] mt-1">{formErrors[field.key]}</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {actionError && (
-                        <div className="meta-mono text-[var(--destructive)] text-right">
-                          {actionError}
-                        </div>
-                      )}
-
-                      {isLoggedIn === false ? (
-                        <Button variant="pixel" onClick={() => router.push('/login')}>
-                          <span>{t('loginToRegister')}</span>
-                          <span>→</span>
-                        </Button>
-                      ) : registered ? (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
-                            <span>{t('registered')}</span>
-                            <span>✓</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={handleCancel}
-                            disabled={actionLoading}
-                            className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]"
-                          >
-                            {actionLoading ? t('processing') : t('cancelReg')}
-                          </Button>
-                        </div>
-                      ) : isFull ? (
-                        <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
-                          <span>{t('full')}</span>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="pixel"
-                          onClick={handleRegister}
-                          disabled={actionLoading}
-                        >
-                          <span>{actionLoading ? t('processing') : t('registerNow')}</span>
-                          <span>→</span>
-                        </Button>
-                      )}
+                    <div className="meta-mono text-[var(--muted-foreground)]">
+                      {registered
+                        ? t('registeredMsg')
+                        : isExpired
+                          ? t('eventExpired')
+                          : isFull
+                            ? t('fullMsg')
+                            : t('clickToRegister')}
                     </div>
                   </div>
-                </section>
-              </RevealItem>
-            )}
+
+                  <div className="flex flex-col gap-4 sm:min-w-[320px]">
+                    {!isExpired && !registered && event.registrationFields && event.registrationFields.length > 0 && (
+                      <div className="space-y-4 p-5 border border-[var(--border)]">
+                        <div className="meta-mono text-[var(--muted-foreground)]">{t('regInfo')}</div>
+                        {event.registrationFields.map((field) => (
+                          <div key={field.key}>
+                            {field.type === 'textarea' ? (
+                              <textarea
+                                value={formData[field.key] || ''}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                                }
+                                placeholder={field.required ? `${field.label} *` : field.label}
+                                rows={3}
+                                className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
+                              />
+                            ) : field.type === 'select' ? (
+                              <select
+                                value={formData[field.key] || ''}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                                }
+                                className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
+                              >
+                                <option value="" disabled>
+                                  {field.required ? `${field.label} *` : field.label}
+                                </option>
+                                {(field.options || []).map((o) => (
+                                  <option key={o} value={o}>
+                                    {o}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : field.type === 'checkbox' ? (
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                checked={formData[field.key] === CHECKBOX_CHECKED_VALUE}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    [field.key]: e.target.checked ? CHECKBOX_CHECKED_VALUE : '',
+                                  }))
+                                }
+                                  className="w-4 h-4 border border-[var(--border)] bg-transparent accent-[var(--primary)] focus-amber"
+                                />
+                                <span className="text-[14px] font-mono text-[var(--muted-foreground)]">
+                                  {field.label}
+                                  {field.required && ' *'}
+                                </span>
+                              </label>
+                            ) : (
+                              <input
+                                type="text"
+                                value={formData[field.key] || ''}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                                }
+                                placeholder={field.required ? `${field.label} *` : field.label}
+                                className={`${INPUT_CLASS} px-3 py-2 text-[14px]`}
+                              />
+                            )}
+                            {formErrors[field.key] && (
+                              <div className="meta-mono text-[var(--destructive)] mt-1">{formErrors[field.key]}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {actionError && (
+                      <div className="meta-mono text-[var(--destructive)] text-right">
+                        {actionError}
+                      </div>
+                    )}
+
+                    {registered ? (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
+                          <span>{t('registered')}</span>
+                          <span>✓</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleCancel}
+                          disabled={actionLoading}
+                          className="hover:text-[var(--destructive)] hover:border-[var(--destructive)]"
+                        >
+                          {actionLoading ? t('processing') : t('cancelReg')}
+                        </Button>
+                      </div>
+                    ) : isExpired ? (
+                      <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
+                        <span>{t('eventExpired')}</span>
+                      </Button>
+                    ) : isLoggedIn === false ? (
+                      <Button variant="pixel" onClick={() => router.push('/login')}>
+                        <span>{t('loginToRegister')}</span>
+                        <span>→</span>
+                      </Button>
+                    ) : isFull ? (
+                      <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
+                        <span>{t('full')}</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="pixel"
+                        onClick={handleRegister}
+                        disabled={actionLoading}
+                      >
+                        <span>{actionLoading ? t('processing') : t('registerNow')}</span>
+                        <span>→</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </RevealItem>
         </div>
       </article>
 

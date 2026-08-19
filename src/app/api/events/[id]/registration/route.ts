@@ -1,9 +1,9 @@
 /**
- * @file 我的报名状态 API — GET/DELETE /api/events/[id]/registration（BFF 薄转发）
+ * @file 我的报名状态 API — GET /api/events/[id]/registration（BFF 薄转发）
+ * 取消报名走 DELETE /api/events/[id]/register（见 register/route.ts），与后端路由一致。
  */
 import { NextResponse } from 'next/server';
-import { assertAllowedOrigin } from '@/shared/security/security';
-import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { clearAuthCookies, proxyBackend, setAuthCookies } from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -22,30 +22,6 @@ export async function GET(
     return res;
   }
   const res = NextResponse.json({ registration: proxy.body });
-  if (proxy.authPair) setAuthCookies(res, proxy.authPair);
-  return res;
-}
-
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const originErr = assertAllowedOrigin(req);
-  if (originErr) return originErr;
-
-  const { id } = await params;
-  const proxy = await proxyBackend(req, {
-    path: `/events/${encodeURIComponent(id)}/registration`,
-    method: 'DELETE',
-  });
-
-  if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '取消报名失败');
-    const res = NextResponse.json(err, { status: proxy.status });
-    if (proxy.clearAuth) clearAuthCookies(res);
-    return res;
-  }
-  const res = NextResponse.json({ ok: true });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

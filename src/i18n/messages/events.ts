@@ -41,6 +41,7 @@ export interface EventsMessages {
     clickToRegister: string;
     regInfo: string;
     loginToRegister: string;
+    eventExpired: string;
     registered: string;
     cancelReg: string;
     full: string;
@@ -128,6 +129,7 @@ export const zhCN: EventsMessages = {
     fullMsg: '名额已满',
     registeredMsg: '你已报名，活动当天见！',
     clickToRegister: '点击下方按钮完成报名',
+    eventExpired: '活动报名已结束',
     regInfo: '报名信息',
     loginToRegister: '登录后报名',
     registered: '已报名',
@@ -216,6 +218,7 @@ export const en: EventsMessages = {
     participateTitle: 'Participation',
     fullMsg: 'Fully booked',
     registeredMsg: 'You are registered. See you there!',
+    eventExpired: 'Registration has closed',
     clickToRegister: 'Click below to complete registration',
     regInfo: 'Registration info',
     loginToRegister: 'Sign in to register',

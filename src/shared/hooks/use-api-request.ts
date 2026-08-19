@@ -19,6 +19,7 @@ export interface ApiRequestResult<T> {
   status: number;
   data: T | null;
   error: string | null;
+  code?: string | null;
 }
 
 export interface ApiRequestInit {
@@ -40,6 +41,14 @@ function extractError(body: unknown, fallback: string): string {
   if (typeof b.message === 'string' && b.message.length > 0) return b.message;
   if (typeof b.error === 'string' && b.error.length > 0) return b.error;
   return fallback;
+}
+
+/** 从响应体提取业务错误码：兼容 BFF normalizeError 的 `code` 与后端 ErrorResponse 的 `errorCode`。 */
+function extractCode(body: unknown): string | null {
+  const b = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
+  if (typeof b.code === 'string') return b.code;
+  if (typeof b.errorCode === 'string') return b.errorCode;
+  return null;
 }
 
 /**
@@ -94,6 +103,7 @@ export async function apiRequest<T = unknown>(
         status: res.status,
         data: null,
         error: extractError(data, `请求失败 (${res.status})`),
+        code: extractCode(data),
       };
     }
     return { ok: true, status: res.status, data, error: null };
