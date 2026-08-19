@@ -17,7 +17,9 @@ import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
   id: string;
-  /** i18n 词条 key（workbench namespace，布局设置面板展示用） */
+  /** i18n 词条 key（workbench namespace，布局设置面板/排序模式展示用）。
+   *  注意：必须是无插值参数的纯标题词条（如 llmUsageTitleShort），
+   *  带参数的词条（如 llmUsageTitle 含 {days}）会被 t() 直接调用时报 FORMATTING_ERROR。 */
   titleKey: string;
   component: ComponentType;
   /** 默认尺寸规格 key（栅格单元 {w,h}）；用户可在布局面板覆盖 */
@@ -45,7 +47,7 @@ export const WIDGETS: WorkbenchWidget[] = [
   },
   {
     id: 'llm-usage',
-    titleKey: 'llmUsageTitle',
+    titleKey: 'llmUsageTitleShort',
     component: LlmWidget,
     defaultSize: '2x2',
     sizeOptions: ['2x2', '2x3', '3x2'],

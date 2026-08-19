@@ -418,6 +418,7 @@ export interface ToolsMessages {
     requestFailed: string;
     networkError: string;
     llmUsageTitle: string;
+    llmUsageTitleShort: string;
     llmTodayCalls: string;
     llmTodayTokens: string;
     llmLatencyMs: string;
@@ -882,6 +883,7 @@ export const zhCN: ToolsMessages = {
     requestFailed: '（请求失败，请稍后重试）',
     networkError: '（网络异常：{msg}）',
     llmUsageTitle: 'LLM 用量 · 近 {days} 天',
+    llmUsageTitleShort: 'LLM 用量',
     llmTodayCalls: '今日调用',
     llmTodayTokens: '今日 Tokens',
     llmLatencyMs: '延迟',
@@ -1346,6 +1348,7 @@ export const en: ToolsMessages = {
     requestFailed: '(Request failed, please retry)',
     networkError: '(Network error: {msg})',
     llmUsageTitle: 'LLM usage · last {days} days',
+    llmUsageTitleShort: 'LLM usage',
     llmTodayCalls: 'Calls today',
     llmTodayTokens: 'Tokens today',
     llmLatencyMs: 'Latency',
