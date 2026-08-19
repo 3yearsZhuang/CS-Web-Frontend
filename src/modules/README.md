@@ -14,6 +14,7 @@
 | `events/` | 活动 | 活动日历/卡片/筛选 |
 | `join/` | 报名 | 加入/报名流程 |
 | `notifications/` | 通知 | 通知相关（复数，对齐后端 `/api/v1/notifications` 契约） |
+| `profile/` | 个人资料 | 资料/安全/活动/入社 tab 与 useProfile（2026-08-19 自 app/profile 与 users 域归位） |
 | `tools/` | 工具集 | 资源/考试/任务管理（含管理员工具面板） |
 | `users/` | 用户 | 用户资料类型与逻辑（复数，对齐后端 `/api/v1/users` 契约） |
 | `workbench/` | 工作台 | 个人化信息聚合工作中心（registry 驱动 + widgets + hooks + lib，见域内 README） |

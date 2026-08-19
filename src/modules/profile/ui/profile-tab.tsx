@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl';
 import { EASE, INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { USER_LIMITS as LIMITS } from '@/modules/users/types';
 import { formatDate } from '@/shared/utils/utils';
-import type { useProfile } from '@/modules/users/ui/hooks/use-profile';
+import type { useProfile } from '@/modules/profile/ui/hooks/use-profile';
 
 /** ProfileTab 接收父页面注入的 useProfile 返回值 */
 export type ProfileTabProps = ReturnType<typeof useProfile>;

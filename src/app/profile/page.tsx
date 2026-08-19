@@ -19,11 +19,11 @@ import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { Button, SectionLoading, ArkDivider, Title } from '@/components';
 import { formatDate } from '@/shared/utils/utils';
-import { useProfile } from '@/modules/users/ui/hooks/use-profile';
-import { ProfileTab } from './profile-tab';
-import { SecurityTab } from './security-tab';
-import { ActivityTab } from './activity-tab';
-import { JoinTab } from './join-tab';
+import { useProfile } from '@/modules/profile/ui/hooks/use-profile';
+import { ProfileTab } from '@/modules/profile/ui/profile-tab';
+import { SecurityTab } from '@/modules/profile/ui/security-tab';
+import { ActivityTab } from '@/modules/profile/ui/activity-tab';
+import { JoinTab } from '@/modules/profile/ui/join-tab';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
 type ProfileTabKey = 'profile' | 'activity' | 'join';
