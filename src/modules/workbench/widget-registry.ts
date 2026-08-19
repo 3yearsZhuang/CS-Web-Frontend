@@ -12,12 +12,14 @@ import ExamCountdown from './widgets/exam-countdown';
 import GithubHeatmap from './widgets/github-heatmap';
 import GreetingBar from './widgets/greeting-bar';
 import { PomodoroPlayer } from './widgets/pomodoro';
-import QuickNotes from './widgets/quick-notes';
-import TodayTasks from './widgets/today-tasks';
+import TasksAndNotes from './widgets/tasks-and-notes';
+import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
   id: string;
-  /** i18n 词条 key（workbench namespace，布局设置面板展示用） */
+  /** i18n 词条 key（workbench namespace，布局设置面板/排序模式展示用）。
+   *  注意：必须是无插值参数的纯标题词条（如 llmUsageTitleShort），
+   *  带参数的词条（如 llmUsageTitle 含 {days}）会被 t() 直接调用时报 FORMATTING_ERROR。 */
   titleKey: string;
   component: ComponentType;
   /** 默认尺寸规格 key（栅格单元 {w,h}）；用户可在布局面板覆盖 */
@@ -30,32 +32,25 @@ export interface WorkbenchWidget {
 export const WIDGETS: WorkbenchWidget[] = [
   { id: 'greeting', titleKey: 'wbTitle', component: GreetingBar, defaultSize: 'full', sizeOptions: ['full'] },
   {
-    id: 'today-tasks',
-    titleKey: 'todayTasks',
-    component: TodayTasks,
-    defaultSize: '1x2',
-    sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
+    id: 'tasks-and-notes',
+    titleKey: 'tasksAndNotes',
+    component: TasksAndNotes,
+    defaultSize: '2x2',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3'],
   },
   {
     id: 'github-heatmap',
-    titleKey: 'examCountdown',
+    titleKey: 'githubHeatmap',
     component: GithubHeatmap,
     defaultSize: '2x1',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3'],
   },
   {
     id: 'llm-usage',
-    titleKey: 'llmUsageTitle',
+    titleKey: 'llmUsageTitleShort',
     component: LlmWidget,
     defaultSize: '2x2',
     sizeOptions: ['2x2', '2x3', '3x2'],
-  },
-  {
-    id: 'quick-notes',
-    titleKey: 'quickNotes',
-    component: QuickNotes,
-    defaultSize: '1x2',
-    sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
   },
   {
     id: 'pomodoro',
@@ -70,5 +65,12 @@ export const WIDGETS: WorkbenchWidget[] = [
     component: ExamCountdown,
     defaultSize: '1x2',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
+  },
+  {
+    id: 'schema-widget',
+    titleKey: 'schemaWidget',
+    component: SchemaWidgetRenderer,
+    defaultSize: '2x3',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3', '3x2', 'full'],
   },
 ];

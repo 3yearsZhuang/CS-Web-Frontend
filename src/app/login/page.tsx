@@ -15,6 +15,7 @@ import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useAuthForm } from '@/modules/auth/ui/hooks/use-auth-form';
+import { DEMO_COOKIE, DEMO_COOKIE_MAX_AGE } from '@/shared/constants/demo';
 import { AuthForm } from './auth-form';
 import { TwoFactorForm } from './two-factor-form';
 import { ForgotPasswordForm } from './forgot-password-form';
@@ -31,6 +32,12 @@ function LoginContent() {
   const { user } = useAuth();
 
   const switching = searchParams.get('switch') === '1';
+
+  /** 进入演示模式：写 cookie 后跳首页（服务端 route 据此走内置 mock 数据） */
+  function enterDemo() {
+    document.cookie = `${DEMO_COOKIE}=1; path=/; max-age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+    router.push('/');
+  }
 
   useEffect(() => {
     if (switching) return;
@@ -85,6 +92,19 @@ function LoginContent() {
                 {t('backToHome')}
               </Link>
             </div>
+
+            {/* 演示模式入口：后端未连接时也可浏览界面（内置示例数据） */}
+            {isLogin && (
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={enterDemo}
+                  className="meta-mono text-[var(--primary)] hover:text-[var(--foreground)] underline-grow"
+                >
+                  进入演示模式 →
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

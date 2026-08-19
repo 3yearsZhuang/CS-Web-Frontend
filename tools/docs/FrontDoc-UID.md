@@ -32,7 +32,7 @@
 - [12. 新增页面 Checklist](#12-新增页面-checklist)
 - [13. 参考文件](#13-参考文件)
 - [14. Markdown 编辑器](#14-markdown-编辑器)
-- [15. 像素融合层（Pixel Fusion / Kimi 风格）](#15-像素融合层pixel-fusion--kimi-风格)
+- [15. 像素融合层（Pixel Fusion）](#15-像素融合层pixel-fusion)
 - [变更记录](#变更记录)
 
 ## 文档结构
@@ -618,11 +618,11 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ---
 
-## 15. 像素融合层（Pixel Fusion / Kimi 风格）
+## 15. 像素融合层（Pixel Fusion）
 
-> 2026-08 引入：从 careers.kimi.com（月之暗面招聘站）提取视觉语言，与「编辑式技术极简」做**平衡融合**。
+> 2026-08 引入：从第三方招聘站提取视觉语言，与「编辑式技术极简」做**平衡融合**。
 > 核心原则：像素语言只注入**元数据层与交互**（标签 / 编号 / 角标 / 按钮 / 卡片皮肤），**不动** Fraunces 衬线标题与正文栈。全站像素化与 scroll-jacking 不采用。
-> 参照 demo：`tools/demo/kimi-pixel-style-demo.html`（风格 DNA + 融合示范）、`tools/demo/cards-pixel-options.html`（卡片方案对照）。
+> 参照 demo：`.design_library/fztbucs/demos/pixel-style-demo.html`（风格 DNA + 融合示范）、`.design_library/fztbucs/demos/cards-pixel-options.html`（卡片方案对照）。
 
 ### 15.1 字体令牌
 
@@ -704,7 +704,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ### 15.9 列表（列表行）选型落地
 
-像素融合列表三档（`tools/demo/list-and-title-demos.html`）已按页面选型落地。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
+像素融合列表三档已按页面选型落地（原型与选型对照见 `.design_library/fztbucs/demos/list-and-title-demos.html`「一、列表」三方案；标题虚影可行性评估同文件「二、标题底部虚影」）。列表行（border-b 密度优先）**不套 `<DnaCard>`**（§15.3 边界）；各档对应共享 CSS 类（均全局生效、双主题自适应）：
 
 | 页面 | 选型 | 共享类 | 视觉特征 |
 |------|------|--------|----------|
@@ -762,7 +762,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 2026-08-18 | **标题虚影全量应用 + 提炼共享组件 `<GhostTitle>`**：① 新建 `<GhostTitle>`（`primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`），支持纯文本自动虚影 / 复杂节点 `echo` / 块级 `wrapContent=false` / `...rest` 透传 `onClick`（折叠 Hero）；② 虚影由 Hero 专用扩展至**全站主标题**——所有页面 Hero 主标题与大号章节标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 各 tab 区等）；`globals.css` `.ghost-title` 去掉强制 `inline-block`、新增 `.ghost-title__content`；③ 排除 admin / 卡片·列表项 / 统计数字 / navbar / 弹窗小标题 / markdown 标题。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 已更新） |
 | 2026-08-18 | **`/about` process 标签页精简 + 步骤/表单左右布局**：① 删除「详细步骤文章（C 流程行）」——`STEPS` 常量与 `StepItem` 接口一并移除，`processSection` 子标题不再渲染；② 仅保留「加入流程」**B DNA 行卡**（`JOIN_STEPS`）作为步骤呈现；③ process 标签页改为 `grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start` 同屏双栏——左栏「加入流程（`.lg:col-span-5`）」、右栏「报名表（`.lg:col-span-7`）」，移动端单列（步骤在上、表单在下）。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.9 选型边界 / 双栏说明已更新） |
 | 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
-| 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion / Kimi 风格）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
+| 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
 | 2026-08-18 | 像素融合全站化：① 新建共享组件 `<DnaCard>`（`primitives/dna-card.tsx`），`/about`、`/events` 重构其使用，DNA 卡皮肤改全局生效（§15.3/§15.8 更新）；② 像素元数据层 opt-in 统一为 `.pixel-page`（兼容 about/events），覆盖 join/login/profile/users/[id]/notifications/events/[id]/community*/tools*，`/admin` 排除（§15.2）；③ 上述页面主 CTA 切 `pixel`/`pixel-outline`；④ 盒装卡 `featured-topic-strip`、tools 工具卡转 `dna-card`，Feed/主题列表行保持列表样式 |
 | 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
 | 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |

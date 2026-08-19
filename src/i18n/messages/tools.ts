@@ -387,10 +387,16 @@ export interface ToolsMessages {
     noExam: string;
     quickNotes: string;
     notePlaceholder: string;
+    tasksAndNotes: string;
+    noteToTask: string;
     allTools: string;
     toolsHint: string;
     heatmapTitle: string;
+    githubHeatmap: string;
+    heatmapNoData: string;
     heatmapBind: string;
+    heatmapUnreachable: string;
+    heatmapRetry: string;
     heatmapContributions: string;
     heatmapStreak: string;
     heatmapLess: string;
@@ -412,6 +418,7 @@ export interface ToolsMessages {
     requestFailed: string;
     networkError: string;
     llmUsageTitle: string;
+    llmUsageTitleShort: string;
     llmTodayCalls: string;
     llmTodayTokens: string;
     llmLatencyMs: string;
@@ -430,6 +437,34 @@ export interface ToolsMessages {
     resetLayout: string;
     confirmResetLayout: string;
     dragHint: string;
+    orderHint: string;
+    sortingEnter: string;
+    sortingExit: string;
+    schemaWidget: string;
+    schemaEmpty: string;
+    schemaEmptyHint: string;
+    schemaPreview: string;
+    schemaPreviewLive: string;
+    schemaPreviewHint: string;
+    schemaFormTitle: string;
+    schemaFormTitlePlaceholder: string;
+    schemaFormTitleRequired: string;
+    schemaFormTypeLabel: string;
+    schemaFormDataLabel: string;
+    schemaFormDataLocal: string;
+    schemaFormDataApi: string;
+    schemaFormKeyPlaceholder: string;
+    schemaFormUrlPlaceholder: string;
+    schemaFormFieldsPlaceholder: string;
+    schemaFormSizeHint: string;
+    schemaFormAdd: string;
+    schemaFormAdded: string;
+    schemaType_count: string;
+    schemaType_list: string;
+    schemaType_progress: string;
+    schemaType_countdown: string;
+    schemaType_note: string;
+    schemaType_link: string;
   }
 }
 
@@ -817,10 +852,16 @@ export const zhCN: ToolsMessages = {
     noExam: '暂无考试安排',
     quickNotes: '快捷便签',
     notePlaceholder: '随手记点什么…',
+    tasksAndNotes: '任务与便签',
+    noteToTask: '转为今日任务',
     allTools: '全部工具',
     toolsHint: '原有工具入口，收编于此',
     heatmapTitle: 'GitHub · {year}',
+    githubHeatmap: 'GitHub 热力图',
+    heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
+    heatmapUnreachable: '无法连接 GitHub，请检查网络后重试',
+    heatmapRetry: '重试',
     heatmapContributions: 'contributions',
     heatmapStreak: 'streak',
     heatmapLess: 'less',
@@ -842,6 +883,7 @@ export const zhCN: ToolsMessages = {
     requestFailed: '（请求失败，请稍后重试）',
     networkError: '（网络异常：{msg}）',
     llmUsageTitle: 'LLM 用量 · 近 {days} 天',
+    llmUsageTitleShort: 'LLM 用量',
     llmTodayCalls: '今日调用',
     llmTodayTokens: '今日 Tokens',
     llmLatencyMs: '延迟',
@@ -859,7 +901,35 @@ export const zhCN: ToolsMessages = {
     llmUsageEntry: '用量与设置',
     resetLayout: '重置布局',
     confirmResetLayout: '确定恢复默认布局吗？将清除所有排序与尺寸自定义。',
-    dragHint: '拖拽卡片可排序 · 点击规格键改积木大小（如 1×1 / 2×2 / 2×3）',
+    dragHint: '点击规格键改积木大小（如 1×1 / 2×2 / 2×3）· 进入排序模式拖拽排序',
+    orderHint: '顺序调整（精确上移/下移）',
+    sortingEnter: '排序模式',
+    sortingExit: '完成排序',
+    schemaWidget: 'Schema 卡',
+    schemaEmpty: '暂无数据',
+    schemaEmptyHint: '暂无 Schema 卡，可在布局设置中添加',
+    schemaPreview: '实时预览',
+    schemaPreviewLive: '已就绪',
+    schemaPreviewHint: '填写标题与数据源后，这里实时预览卡片效果',
+    schemaFormTitle: '添加 Schema 卡',
+    schemaFormTitlePlaceholder: '卡片标题，如：剩余课程',
+    schemaFormTitleRequired: '标题不能为空',
+    schemaFormTypeLabel: '类型',
+    schemaFormDataLabel: '数据源',
+    schemaFormDataLocal: '本地数据',
+    schemaFormDataApi: '接口数据',
+    schemaFormKeyPlaceholder: '存储 key（自动补 wb_）',
+    schemaFormUrlPlaceholder: '/api/tools/...',
+    schemaFormFieldsPlaceholder: '字段 key，逗号分隔（如 title,due,status）',
+    schemaFormSizeHint: '可选尺寸：',
+    schemaFormAdd: '添加',
+    schemaFormAdded: '已添加',
+    schemaType_count: '计数',
+    schemaType_list: '列表',
+    schemaType_progress: '进度',
+    schemaType_countdown: '倒计时',
+    schemaType_note: '便签',
+    schemaType_link: '链接',
   }
 };
 
@@ -1247,10 +1317,16 @@ export const en: ToolsMessages = {
     noExam: 'No exams scheduled',
     quickNotes: 'Quick notes',
     notePlaceholder: 'Jot something down…',
+    tasksAndNotes: 'Tasks & notes',
+    noteToTask: 'Move to today\'s tasks',
     allTools: 'All tools',
     toolsHint: 'Legacy tool entries, kept here',
     heatmapTitle: 'GitHub · {year}',
+    githubHeatmap: 'GitHub heatmap',
+    heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
+    heatmapUnreachable: 'Cannot reach GitHub — check your network and retry',
+    heatmapRetry: 'Retry',
     heatmapContributions: 'contributions',
     heatmapStreak: 'streak',
     heatmapLess: 'less',
@@ -1272,6 +1348,7 @@ export const en: ToolsMessages = {
     requestFailed: '(Request failed, please retry)',
     networkError: '(Network error: {msg})',
     llmUsageTitle: 'LLM usage · last {days} days',
+    llmUsageTitleShort: 'LLM usage',
     llmTodayCalls: 'Calls today',
     llmTodayTokens: 'Tokens today',
     llmLatencyMs: 'Latency',
@@ -1289,6 +1366,34 @@ export const en: ToolsMessages = {
     llmUsageEntry: 'Usage & Settings',
     resetLayout: 'Reset layout',
     confirmResetLayout: 'Reset to default layout? This clears all order and size customizations.',
-    dragHint: 'Drag cards to reorder · click a size key to resize (e.g. 1×1 / 2×2 / 2×3)',
+    dragHint: 'Click a size key to resize (e.g. 1×1 / 2×2 / 2×3) · enter sort mode to drag reorder',
+    orderHint: 'Reorder (precise move up/down)',
+    sortingEnter: 'Sort mode',
+    sortingExit: 'Done',
+    schemaWidget: 'Schema cards',
+    schemaEmpty: 'No data',
+    schemaEmptyHint: 'No schema cards yet — add one in layout settings',
+    schemaPreview: 'Live preview',
+    schemaPreviewLive: 'Ready',
+    schemaPreviewHint: 'Fill title & data source to preview the card here',
+    schemaFormTitle: 'Add schema card',
+    schemaFormTitlePlaceholder: 'Card title, e.g. Courses left',
+    schemaFormTitleRequired: 'Title is required',
+    schemaFormTypeLabel: 'Type',
+    schemaFormDataLabel: 'Data source',
+    schemaFormDataLocal: 'Local data',
+    schemaFormDataApi: 'API data',
+    schemaFormKeyPlaceholder: 'Storage key (auto wb_ prefix)',
+    schemaFormUrlPlaceholder: '/api/tools/...',
+    schemaFormFieldsPlaceholder: 'Field keys, comma-separated (e.g. title,due,status)',
+    schemaFormSizeHint: 'Sizes:',
+    schemaFormAdd: 'Add',
+    schemaFormAdded: 'Added',
+    schemaType_count: 'Count',
+    schemaType_list: 'List',
+    schemaType_progress: 'Progress',
+    schemaType_countdown: 'Countdown',
+    schemaType_note: 'Note',
+    schemaType_link: 'Link',
   }
 };

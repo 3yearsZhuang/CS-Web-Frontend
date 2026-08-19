@@ -226,7 +226,7 @@ interface TypewriterTitleProps {
 }
 
 /**
- * 打字机大标题 — 字符级 steps(6) 逐字入场（Kimi 风格融合 M4）
+ * 打字机大标题 — 字符级 steps(6) 逐字入场（像素融合 M4）
  *
  * 与 RevealTitle 同级原语，遵守同一 StaggerContainer 协议：
  * - 挂载 register / 卸载 unregister

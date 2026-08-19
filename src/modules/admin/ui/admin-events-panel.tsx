@@ -17,6 +17,7 @@ import {
   type RegistrationRecord,
 } from '@/modules/admin/ui/types';
 import { EventModals } from './event-modals';
+import { AdminEventsSettings } from './admin-events-settings';
 import { EventYearGroups } from './event-list';
 import {
   blankEventForm,
@@ -52,6 +53,7 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   const [eventStatsLoading, setEventStatsLoading] = useState(false);
   const [regManageSaving, setRegManageSaving] = useState<string | null>(null);
   const [modal, setModal] = useState<EventModal>({ type: 'none' });
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { pushToast } = useToast();
 
@@ -396,6 +398,14 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
                 <span className="text-[14px] leading-none">+</span>
                 New Event
               </Button>
+              <Button
+                size="sm"
+                type="button"
+                variant="outline"
+                onClick={() => setSettingsOpen((v) => !v)}
+              >
+                Settings
+              </Button>
               <button
                 type="button"
                 onClick={() => fetchEvents()}
@@ -408,6 +418,9 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
           </div>
         </div>
       </RevealItem>
+
+      {/* 活动设置（内联可折叠面板） */}
+      <AdminEventsSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* 列表区 */}
       <RevealItem>

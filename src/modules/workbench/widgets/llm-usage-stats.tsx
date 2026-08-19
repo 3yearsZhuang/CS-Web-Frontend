@@ -233,7 +233,7 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
                 value={form.provider}
                 onChange={(e) => setForm((prev) => ({ ...prev, provider: e.target.value }))}
               >
-                <option value="openai">OpenAI 兼容（DeepSeek / 通义 / Kimi…）</option>
+                <option value="openai">OpenAI 兼容网关（Ollama / vLLM 等）</option>
                 <option value="anthropic">Anthropic</option>
               </Input>
             </label>
@@ -259,7 +259,7 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
               <Input
                 type="text"
                 value={form.baseUrl}
-                placeholder="https://api.deepseek.com/v1"
+                placeholder="https://your-gateway.example.com/v1"
                 onChange={(e) => setForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
               />
             </label>

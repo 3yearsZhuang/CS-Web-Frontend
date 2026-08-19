@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronDown, Music2, Pause, Play, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/primitives/button';
-import { DnaCard } from '@/components';
+import { WorkbenchCard } from '../../workbench-card';
 import { MusicPanel } from './music-panel';
 import { SettingsPanel } from './settings-panel';
 import { usePomodoro } from './use-pomodoro';
@@ -43,17 +43,12 @@ export function PomodoroPlayer() {
   };
 
   return (
-    <DnaCard corner="FCS" className="p-5 flex flex-col gap-4 h-full min-h-0">
-      <audio ref={audioRef} className="hidden" />
-
-      <div className="flex items-center justify-between">
-        <h3 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)]">
-          {t('pomodoro')}
-        </h3>
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-[11px] px-2 py-0.5 rounded-full border ${phaseClass}`}
-          >
+    <WorkbenchCard
+      corner="FCS"
+      title={t('pomodoro')}
+      actions={
+        <>
+          <span className={`text-[11px] px-2 py-0.5 rounded-full border ${phaseClass}`}>
             {phaseLabel}
             {pomo.state.round > 0 && ` · ${t('roundN', { n: pomo.state.round })}`}
           </span>
@@ -67,8 +62,10 @@ export function PomodoroPlayer() {
               className={`w-4 h-4 transition-transform ${showConfig ? 'rotate-180' : ''}`}
             />
           </button>
-        </div>
-      </div>
+        </>
+      }
+    >
+      <audio ref={audioRef} className="hidden" />
 
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-3 overflow-y-auto">
         <div className="relative w-[clamp(88px,60%,128px)] aspect-square shrink-0">
@@ -177,6 +174,6 @@ export function PomodoroPlayer() {
           />
         )}
       </div>
-    </DnaCard>
+    </WorkbenchCard>
   );
 }
