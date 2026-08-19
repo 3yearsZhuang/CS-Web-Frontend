@@ -435,6 +435,25 @@ export interface ToolsMessages {
     schemaWidget: string;
     schemaEmpty: string;
     schemaEmptyHint: string;
+    schemaFormTitle: string;
+    schemaFormTitlePlaceholder: string;
+    schemaFormTitleRequired: string;
+    schemaFormTypeLabel: string;
+    schemaFormDataLabel: string;
+    schemaFormDataLocal: string;
+    schemaFormDataApi: string;
+    schemaFormKeyPlaceholder: string;
+    schemaFormUrlPlaceholder: string;
+    schemaFormFieldsPlaceholder: string;
+    schemaFormSizeHint: string;
+    schemaFormAdd: string;
+    schemaFormAdded: string;
+    schemaType_count: string;
+    schemaType_list: string;
+    schemaType_progress: string;
+    schemaType_countdown: string;
+    schemaType_note: string;
+    schemaType_link: string;
   }
 }
 
@@ -870,6 +889,25 @@ export const zhCN: ToolsMessages = {
     schemaWidget: 'Schema 卡',
     schemaEmpty: '暂无数据',
     schemaEmptyHint: '暂无 Schema 卡，可在布局设置中添加',
+    schemaFormTitle: '添加 Schema 卡',
+    schemaFormTitlePlaceholder: '卡片标题，如：剩余课程',
+    schemaFormTitleRequired: '标题不能为空',
+    schemaFormTypeLabel: '类型',
+    schemaFormDataLabel: '数据源',
+    schemaFormDataLocal: '本地数据',
+    schemaFormDataApi: '接口数据',
+    schemaFormKeyPlaceholder: '存储 key（自动补 wb_）',
+    schemaFormUrlPlaceholder: '/api/tools/...',
+    schemaFormFieldsPlaceholder: '字段 key，逗号分隔（如 title,due,status）',
+    schemaFormSizeHint: '可选尺寸：',
+    schemaFormAdd: '添加',
+    schemaFormAdded: '已添加',
+    schemaType_count: '计数',
+    schemaType_list: '列表',
+    schemaType_progress: '进度',
+    schemaType_countdown: '倒计时',
+    schemaType_note: '便签',
+    schemaType_link: '链接',
   }
 };
 
@@ -1305,5 +1343,24 @@ export const en: ToolsMessages = {
     schemaWidget: 'Schema cards',
     schemaEmpty: 'No data',
     schemaEmptyHint: 'No schema cards yet — add one in layout settings',
+    schemaFormTitle: 'Add schema card',
+    schemaFormTitlePlaceholder: 'Card title, e.g. Courses left',
+    schemaFormTitleRequired: 'Title is required',
+    schemaFormTypeLabel: 'Type',
+    schemaFormDataLabel: 'Data source',
+    schemaFormDataLocal: 'Local data',
+    schemaFormDataApi: 'API data',
+    schemaFormKeyPlaceholder: 'Storage key (auto wb_ prefix)',
+    schemaFormUrlPlaceholder: '/api/tools/...',
+    schemaFormFieldsPlaceholder: 'Field keys, comma-separated (e.g. title,due,status)',
+    schemaFormSizeHint: 'Sizes:',
+    schemaFormAdd: 'Add',
+    schemaFormAdded: 'Added',
+    schemaType_count: 'Count',
+    schemaType_list: 'List',
+    schemaType_progress: 'Progress',
+    schemaType_countdown: 'Countdown',
+    schemaType_note: 'Note',
+    schemaType_link: 'Link',
   }
 };

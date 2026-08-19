@@ -24,6 +24,7 @@
 | schema | `schema/use-schema-data.ts` | Schema 卡数据源 hook（local/api/static 三源统一） |
 | schema | `schema/use-schema-widgets.ts` | Schema 卡配置集合（localStorage `wb_schema_widgets`，读写过校验器） |
 | schema | `schema/schema-widget-renderer.tsx` | Schema 卡渲染器：六种卡型全部复用 WorkbenchCard 外壳 |
+| schema | `schema/schema-card-form.tsx` | Schema 卡简易表单：布局面板内嵌「添加 Schema 卡」，标题/类型/数据源三要素零代码建卡 |
 | hook | `hooks/use-clock.ts` | 时钟 + 会话时长 |
 | hook | `hooks/use-local-storage.ts` | localStorage 持久化 state |
 | hook | `hooks/use-idb-media.ts` | IndexedDB 音频库（上传音乐） |

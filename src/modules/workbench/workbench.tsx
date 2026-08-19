@@ -31,6 +31,7 @@ import { DnaCard, GhostTitle, SectionMarker, Title } from '@/components';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS, type WorkbenchWidget } from './widget-registry';
 import { WIDGET_SIZE_SPECS, GRID_COLS, type WidgetSizeKey } from './types';
+import { SchemaCardForm } from './schema/schema-card-form';
 import GreetingBar from './widgets/greeting-bar';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -348,6 +349,8 @@ export function Workbench() {
                   );
                 })}
               </div>
+
+              <SchemaCardForm />
             </DnaCard>
           )}
 
