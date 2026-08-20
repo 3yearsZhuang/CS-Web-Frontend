@@ -51,22 +51,10 @@ export function typeIconOf(t: string): React.ReactNode {
   return TYPE_ICONS[t as Exclude<ResourceType, 'all'>] ?? TYPE_ICONS.other;
 }
 
-export interface ResourceItem {
-  id: string;
-  title: string;
-  url: string;
-  description: string | null;
-  resource_type: string;
-  tech_tags: string | null;
-  status: string;
-  submitted_by: string;
-  author_display_name: string | null;
-  author_avatar_url: string | null;
-  author_tech_tags: string | null;
-  view_count: number;
-  like_count: number;
-  created_at: string;
-}
+import type { ResourceWithAuthor } from '@/modules/tools/types';
+
+// 类型收敛（波次 B1c）：复用 tools/types 的 ResourceWithAuthor（同构 snake_case）
+export type ResourceItem = ResourceWithAuthor;
 
 export interface ResourceListData {
   resources: ResourceItem[];

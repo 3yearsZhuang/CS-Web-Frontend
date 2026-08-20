@@ -15,7 +15,7 @@ import { Button, ModalShell } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useReport } from './hooks/use-report';
 
-type TargetType = 'topic' | 'reply';
+import type { LikeTargetType as TargetType } from '@/modules/community/types';
 
 const REASONS = [
   { id: 'spam', key: 'reasons.spam' },

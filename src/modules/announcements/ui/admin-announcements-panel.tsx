@@ -13,23 +13,7 @@ import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { SectionLoading, Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
-
-type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string | null;
-  level: AnnouncementLevel;
-  isActive: boolean;
-  isDismissible: boolean;
-  priority: number;
-  expiresAt: string | null;
-  targetRoles: string[] | null;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
 interface AnnouncementForm {
   title: string;

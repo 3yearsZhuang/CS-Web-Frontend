@@ -10,7 +10,7 @@ import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { useTranslations } from 'next-intl';
 import { ReportButton } from './report-button';
 
-type TargetType = 'topic' | 'reply';
+import type { LikeTargetType as TargetType } from '@/modules/community/types';
 
 /** 社区操作栏属性 */
 interface CommunityActionsProps {

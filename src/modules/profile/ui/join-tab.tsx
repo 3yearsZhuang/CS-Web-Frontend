@@ -15,19 +15,7 @@ import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils/utils';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
-/** 入社申请记录 */
-interface JoinApplication {
-  id: string;
-  applicantName: string;
-  studentId: string;
-  major: string;
-  techTags: string[];
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected';
-  reviewNote: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { JoinApplication } from '@/modules/join/types';
 
 export function JoinTab() {
   const t = useTranslations('profile');

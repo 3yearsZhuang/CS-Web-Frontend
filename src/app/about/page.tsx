@@ -54,13 +54,12 @@ const JOIN_STEPS = [
   { num: '04', titleKey: 'step4Title', duration: '1 day', descKey: 'step4Desc' },
 ] as const;
 
-interface ExistingApplication {
-  id: string;
-  applicantName: string;
-  status: 'pending' | 'approved' | 'rejected';
-  reviewNote: string | null;
-  createdAt: string;
-}
+import type { JoinApplication } from '@/modules/join/types';
+
+type ExistingApplication = Pick<
+  JoinApplication,
+  'id' | 'applicantName' | 'status' | 'reviewNote' | 'createdAt'
+>;
 
 export default function AboutPage() {
   const router = useRouter();

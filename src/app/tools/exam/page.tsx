@@ -29,19 +29,9 @@ function formatDuration(minutes: number, t: TFn): string {
   return m > 0 ? t('durHm', { h, m }) : t('durH', { h });
 }
 
-interface ExamItem {
-  id: string;
-  title: string;
-  description: string | null;
-  status: 'draft' | 'published' | 'ended';
-  startTime: string | null;
-  endTime: string | null;
-  durationMinutes: number;
-  techTags: string[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Exam } from '@/modules/tools/types';
+
+type ExamItem = Exam;
 
 export default function ExamListPage() {
   const t = useTranslations('toolsExam');

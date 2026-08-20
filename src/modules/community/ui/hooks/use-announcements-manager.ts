@@ -12,25 +12,16 @@ import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
 import { getError } from '../community-admin-utils';
+import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
-export interface AnnouncementItem {
-  id: string;
-  title: string;
-  content: string | null;
-  level: 'info' | 'warning' | 'success' | 'error';
-  isActive: boolean;
-  isDismissible: boolean;
-  priority: number;
-  expiresAt: string | null;
-  createdAt: string;
-}
+// 类型收敛（重复实现治理波次 B1a）：复用 announcements 域规范类型（子集字段兼容）
+export type AnnouncementItem = Announcement;
+export type { AnnouncementLevel } from '@/modules/announcements/types';
 
 interface AnnouncementsResponse {
   items: AnnouncementItem[];
   total: number;
 }
-
-export type AnnouncementLevel = AnnouncementItem['level'];
 
 export interface CreateAnnouncementInput {
   title: string;

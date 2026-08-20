@@ -4,7 +4,9 @@
 
 import type { CommunityCategory } from '@/modules/community/types';
 
-export type TopicStatus = 'published' | 'hidden';
+import type { PostStatus } from '@/modules/community/types';
+
+export type TopicStatus = Extract<PostStatus, 'published' | 'hidden'>;
 
 export type SubView =
   | 'categories'

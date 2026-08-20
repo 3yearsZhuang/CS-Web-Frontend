@@ -12,16 +12,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
-export type AnnouncementLevel = 'info' | 'warning' | 'success' | 'error';
-
-export interface Announcement {
-  id: string;
-  title: string;
-  content: string | null;
-  level: AnnouncementLevel;
-  isDismissible: boolean;
-}
+// 类型收敛（重复实现治理波次 B1a）：统一来自 modules/announcements/types，re-export 保持引用方兼容
+export type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
 const STORAGE_KEY = 'dismissed_announcements';
 

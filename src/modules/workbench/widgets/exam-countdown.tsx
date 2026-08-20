@@ -11,11 +11,10 @@ import { WorkbenchCard } from '../workbench-card';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
-interface ExamItem {
-  id: string;
-  title: string;
-  endedAt: string | null;
-}
+import type { Exam } from '@/modules/tools/types';
+
+// 类型收敛（波次 B1c）：exam API 返回 camelCase endTime（原 endedAt 读取 bug）
+type ExamItem = Pick<Exam, 'id' | 'title' | 'endTime'>;
 
 function diffText(diffMs: number): { n: number; unit: 'daysLater' | 'hoursLater' | 'minutesLater' } {
   const ms = Math.max(0, diffMs);
@@ -53,10 +52,10 @@ export default function ExamCountdown() {
       } else if (r.ok && r.data) {
         const nowTs = Date.now();
         const upcoming = (r.data.exams ?? [])
-          .filter((e) => e.endedAt && new Date(e.endedAt).getTime() > nowTs)
+          .filter((e) => e.endTime && new Date(e.endTime).getTime() > nowTs)
           .sort(
             (a, b) =>
-              new Date(a.endedAt as string).getTime() - new Date(b.endedAt as string).getTime(),
+              new Date(a.endTime as string).getTime() - new Date(b.endTime as string).getTime(),
           )
           .slice(0, 3);
         setExams(upcoming);
@@ -91,7 +90,7 @@ export default function ExamCountdown() {
     >
       <ul className="flex flex-col gap-2.5">
         {exams.map((exam, i) => {
-          const diff = exam.endedAt ? new Date(exam.endedAt).getTime() - nowTs : 0;
+          const diff = exam.endTime ? new Date(exam.endTime).getTime() - nowTs : 0;
           const { n, unit } = diffText(diff);
           return (
             <li key={exam.id} className="flex items-baseline justify-between gap-3">

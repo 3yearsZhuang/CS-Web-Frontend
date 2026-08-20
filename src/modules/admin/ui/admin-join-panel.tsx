@@ -16,26 +16,9 @@ import type { BadgeVariant } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 
-/* ============= 类型定义 ============= */
+/* ============= 类型定义（收敛自 join/types，波次 B1b） ============= */
 
-type AppStatus = 'pending' | 'approved' | 'rejected';
-
-interface JoinApplication {
-  id: string;
-  applicantName: string;
-  studentId: string;
-  major: string;
-  techTags: string[];
-  reason: string;
-  contactQq: string | null;
-  contactPhone: string | null;
-  userId: string | null;
-  status: AppStatus;
-  reviewedBy: string | null;
-  reviewNote: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { JoinApplication, JoinApplicationStatus as AppStatus } from '@/modules/join/types';
 
 type ReviewModal =
   | { type: 'none' }
