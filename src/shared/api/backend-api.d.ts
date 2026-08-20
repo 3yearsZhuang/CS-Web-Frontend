@@ -2554,6 +2554,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Global Search
+         * @description 全站聚合搜索：hero 页传 scope=all；模块页传对应单 scope。
+         */
+        get: operations["global_search_api_v1_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tools/admin/exam": {
         parameters: {
             query?: never;
@@ -5028,6 +5048,58 @@ export interface components {
             sort_order?: number | null;
         };
         /**
+         * SearchGroup
+         * @description 单个范围的搜索结果组。
+         */
+        SearchGroup: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["SearchResultItem"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
+        /**
+         * SearchResponse
+         * @description 全站搜索聚合响应。
+         */
+        SearchResponse: {
+            /** Query */
+            query: string;
+            /** Results */
+            results: {
+                [key: string]: components["schemas"]["SearchGroup"];
+            };
+            /** Scope */
+            scope: string;
+        };
+        /**
+         * SearchResultItem
+         * @description 统一搜索结果项：type / id / title / subtitle / url。
+         */
+        SearchResultItem: {
+            /** Id */
+            id: number;
+            /**
+             * Subtitle
+             * @default
+             */
+            subtitle: string;
+            /** Title */
+            title: string;
+            /** Type */
+            type: string;
+            /**
+             * Url
+             * @default
+             */
+            url: string;
+        };
+        /**
          * SendCodeRequest
          * @description 发送邮箱验证码。
          */
@@ -5623,8 +5695,14 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
                 skip?: number;
+                /** @description 每页返回的最大记录数 */
                 limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
             };
             header?: never;
             path?: never;
@@ -5721,8 +5799,14 @@ export interface operations {
                 status?: string | null;
                 search?: string | null;
                 sort?: string;
+                /** @description 跳过的记录数（与 page 互斥） */
                 skip?: number;
+                /** @description 每页返回的最大记录数 */
                 limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
             };
             header?: never;
             path?: never;
@@ -8350,8 +8434,14 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string;
-                page?: number;
-                pageSize?: number;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
             };
             header?: never;
             path?: never;
@@ -10461,6 +10551,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    global_search_api_v1_search_get: {
+        parameters: {
+            query: {
+                /** @description 搜索关键词 */
+                q: string;
+                /** @description 搜索范围 */
+                scope?: string;
+                /** @description 每类返回条数 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
                 };
             };
             /** @description Validation Error */

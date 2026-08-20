@@ -12,7 +12,6 @@ import { YearAccordionTimeline, type YearGroup } from '@/modules/events/ui/year-
 import { MonthCalendar } from '@/modules/events/ui/month-calendar';
 import { AdminEventsPanel } from '@/modules/admin/ui/admin-events-panel';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { useDebounce } from '@/shared/hooks/use-debounce';
 import type { EventItem } from '@/modules/events/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { useRouter } from 'next/navigation';
@@ -84,24 +83,20 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
 
   // 年份手风琴：展开的年份集合（默认全部展开）
   const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
-  const debouncedSearch = useDebounce(searchInput, 300);
-
   const fetchEvents = useCallback(async () => {
     const params = new URLSearchParams();
-    if (debouncedSearch) params.set('search', debouncedSearch);
     if (statusFilter) params.set('status', statusFilter);
 
     const r = await apiRequest<{ events?: EventItem[] }>(`/api/events?${params.toString()}`);
     if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
     const data = r.data;
     return data?.events ?? [];
-  }, [debouncedSearch, statusFilter, t]);
+  }, [statusFilter, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -237,11 +232,9 @@ export default function EventsPage() {
                   </Title>
                 </div>
 
-                {/* 筛选区域 — 同时作用于日历与时间线 */}
+                {/* 筛选区域 — 仅状态筛选（搜索已聚合至顶栏） */}
                 <EventFilterBar
-                  searchInput={searchInput}
                   statusFilter={statusFilter}
-                  onSearchChange={setSearchInput}
                   onStatusChange={setStatusFilter}
                 />
 

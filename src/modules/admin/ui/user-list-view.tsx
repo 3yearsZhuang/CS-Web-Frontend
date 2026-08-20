@@ -1,13 +1,12 @@
 /**
  * @file 用户列表子视图 — 从 admin-users-panel 拆出（GENERAL 2.4 按关注点拆分）
- * 工具栏（搜索/角色/状态筛选）+ 用户表格/卡片 + 分页
+ * 工具栏（角色/状态筛选）+ 用户表格/卡片 + 分页（搜索已聚合至顶栏，2026-08-20）
  */
 'use client';
 
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
 import { SectionLoading, Pagination } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
@@ -19,8 +18,6 @@ interface UserListViewProps {
   total: number;
   page: number;
   totalPages: number;
-  searchInput: string;
-  setSearchInput: (v: string) => void;
   roleFilter: RoleFilter;
   setRoleFilter: (v: RoleFilter) => void;
   activeFilter: ActiveFilter;
@@ -45,8 +42,6 @@ export function UserListView({
   total,
   page,
   totalPages,
-  searchInput,
-  setSearchInput,
   roleFilter,
   setRoleFilter,
   activeFilter,
@@ -71,21 +66,7 @@ export function UserListView({
       <RevealItem>
         <div className="border-t border-[var(--border)] border-b border-[var(--border)] py-5 sm:py-6 mb-0">
           <div className="grid grid-cols-12 gap-4 sm:gap-6 items-center">
-            <div className="col-span-12 md:col-span-5">
-              <label htmlFor="admin-search" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
-                {t('search')}
-              </label>
-              <input
-                id="admin-search"
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className={`${INPUT_CLASS} w-full px-4 py-2.5 text-[13px]`}
-                placeholder={t('searchPlaceholder')}
-              />
-            </div>
-
-            <div className="col-span-6 md:col-span-3">
+            <div className="col-span-6 md:col-span-5">
               <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('role')}</div>
               <div className="flex gap-1.5">
                 {(['all', 'admin', 'user'] as RoleFilter[]).map((r) => (
@@ -101,7 +82,7 @@ export function UserListView({
               </div>
             </div>
 
-            <div className="col-span-6 md:col-span-3">
+            <div className="col-span-6 md:col-span-5">
               <div className="meta-mono mb-2 text-[var(--muted-foreground)]">{t('status')}</div>
               <div className="flex gap-1.5">
                 {(
@@ -123,7 +104,7 @@ export function UserListView({
               </div>
             </div>
 
-            <div className="col-span-12 md:col-span-1 flex md:justify-end">
+            <div className="col-span-12 md:col-span-2 flex md:justify-end">
               <button
                 type="button"
                 onClick={() => onFetch()}

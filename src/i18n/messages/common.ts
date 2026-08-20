@@ -54,6 +54,21 @@ export interface CommonMessages {
     communityEn: string;
     toolsEn: string;
     homeEn: string;
+    searchAria: string;
+    searchPlaceholder: string;
+    searchPlaceholderModule: string;
+    searchLoading: string;
+    searchNoResults: string;
+    searchHint: string;
+    searchGroupAll: string;
+    searchGroupEvents: string;
+    searchGroupCommunity: string;
+    searchGroupTools: string;
+    searchGroupAnnouncements: string;
+    searchGroupUsers: string;
+    searchViewAll: string;
+    searchPageTitle: string;
+    searchPageTotal: string;
   },
   footer: {
     aboutJoin: string;
@@ -233,6 +248,21 @@ export const zhCN: CommonMessages = {
     communityEn: 'Community',
     toolsEn: 'Tools',
     homeEn: 'Home',
+    searchAria: '全站搜索',
+    searchPlaceholder: '搜索全站…',
+    searchPlaceholderModule: '搜索{scope}…',
+    searchLoading: '搜索中…',
+    searchNoResults: '未找到相关内容',
+    searchHint: '输入 2 个以上字符开始搜索',
+    searchGroupAll: '全站',
+    searchGroupEvents: '活动',
+    searchGroupCommunity: '社区帖子',
+    searchGroupTools: '学习资源',
+    searchGroupAnnouncements: '公告',
+    searchGroupUsers: '成员',
+    searchViewAll: '查看全部结果 →',
+    searchPageTitle: '搜索结果',
+    searchPageTotal: '共 {count} 条结果',
   },
   footer: {
     aboutJoin: '关于我们 & 加入',
@@ -412,6 +442,21 @@ export const en: CommonMessages = {
     communityEn: 'Community',
     toolsEn: 'Tools',
     homeEn: 'Home',
+    searchAria: 'Site-wide search',
+    searchPlaceholder: 'Search the site…',
+    searchPlaceholderModule: 'Search {scope}…',
+    searchLoading: 'Searching…',
+    searchNoResults: 'No matching results',
+    searchHint: 'Type at least 2 characters to search',
+    searchGroupAll: 'All',
+    searchGroupEvents: 'Events',
+    searchGroupCommunity: 'Community Posts',
+    searchGroupTools: 'Resources',
+    searchGroupAnnouncements: 'Announcements',
+    searchGroupUsers: 'Members',
+    searchViewAll: 'View all results →',
+    searchPageTitle: 'Search Results',
+    searchPageTotal: '{count} results in total',
   },
   footer: {
     aboutJoin: 'About us & Join',

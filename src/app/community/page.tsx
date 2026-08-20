@@ -8,7 +8,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { Suspense } from 'react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -19,7 +18,6 @@ import { FeaturedTopicStrip } from '@/modules/community/ui/featured-topic-strip'
 import { AdminCommunityPanel } from '@/modules/community/ui/community-admin-panel';
 import { ProfileCommunityTab } from '@/modules/community/ui/community-profile-tab';
 import { Button, Pagination, SectionLoading, GhostTitle, Title } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useCommunityFeed } from './use-community-feed';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 
@@ -53,8 +51,6 @@ function CommunityPageContent() {
     totalPages,
     page,
     setPage,
-    searchQuery,
-    setSearchQuery,
     selectedTag,
     tags,
     stats,
@@ -64,12 +60,9 @@ function CommunityPageContent() {
     hotTopics,
     activeMembers,
     featuredTopics,
-    searchInputRef,
     hasSearch,
     isInitialLoading,
     handleTabChange,
-    handleSearchSubmit,
-    handleClearSearch,
     handleTagClick,
     PAGE_SIZE,
   } = c;
@@ -161,9 +154,6 @@ function CommunityPageContent() {
                   <Title level={2} className="mb-4"
                     echo={hasSearch ? t('searchResults') : t('communityFeed')}>
                     {hasSearch ? t('searchResults') : t('communityFeed')}
-                    {hasSearch && searchQuery.trim() && (
-                      <span className="text-[var(--primary)] ml-2">「{searchQuery.trim()}」</span>
-                    )}
                     {selectedTag && <span className="text-[var(--primary)] ml-2">#{selectedTag}</span>}
                   </Title>
                   <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[13px]">
@@ -180,56 +170,10 @@ function CommunityPageContent() {
                 </div>
               </div>
 
-              {/* 搜索条 */}
+              {/* 搜索已聚合至顶栏全站搜索（2026-08-20），此处不再提供搜索条 */}
+
               {activeTab !== 'mine' && (
               <>
-              <VisibilityGate componentKey="community-search">
-              <form onSubmit={handleSearchSubmit} className="mb-8">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <input
-                      ref={searchInputRef}
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setPage(1);
-                      }}
-                      maxLength={80}
-                      placeholder={t('searchPlaceholderFull')}
-                      aria-label={t('searchPlaceholderFull')}
-                      className={`${INPUT_CLASS} w-full px-4 py-4 text-[16px] pr-12`}
-                    />
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={handleClearSearch}
-                        aria-label={t('clearSearch')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber w-6 h-6 flex items-center justify-center"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={loading || searchQuery.trim().length < 2}
-                    className="disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {loading ? t('searching') : t('search')}
-                  </Button>
-                  <Link href="/community/new" className="shrink-0">
-                    <Button className="whitespace-nowrap">{t('publish')}</Button>
-                  </Link>
-                </div>
-                {searchQuery.length > 0 && (
-                  <div className="mt-2 meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[11px]">
-                    {searchQuery.length} / 80 {t('chars')}
-                  </div>
-                )}
-              </form>
-              </VisibilityGate>
-
               {/* 精选/置顶横滑区 */}
               {!hasSearch && activeTab === 'all' && featuredTopics.length > 0 && (
                 <VisibilityGate componentKey="community-featured">
@@ -309,7 +253,7 @@ function CommunityPageContent() {
                   </div>
                   {hasSearch && (
                     <button
-                      onClick={handleClearSearch}
+                      onClick={() => selectedTag && handleTagClick(selectedTag)}
                       className="meta-mono text-[var(--primary)] underline-grow"
                     >
                       {t('clearFilter')}

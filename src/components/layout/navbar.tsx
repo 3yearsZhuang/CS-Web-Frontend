@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
+import { GlobalSearch } from '@/modules/search/ui/global-search';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useFeatureVisibility, deriveUserClass, DEFAULT_VISIBILITY } from '@/shared/hooks/use-feature-visibility';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
@@ -112,6 +113,9 @@ export function Navbar() {
               })}
             </nav>
 
+            {/* 全站搜索（桌面）— hero 页搜全站，模块页搜对应模块 */}
+            <GlobalSearch className="w-44 lg:w-60" />
+            <span className="h-4 w-px bg-[var(--border)] mx-2" />
             <VisibilityGate componentKey="chrome-theme-toggle">
               <ThemeToggle />
             </VisibilityGate>
@@ -155,6 +159,10 @@ export function Navbar() {
         }`}
       >
         <div className="flex-1 flex flex-col justify-between px-6 py-12">
+          {/* 全站搜索（移动） */}
+          <div className="mb-8">
+            <GlobalSearch className="w-full" />
+          </div>
           <nav className="flex flex-col gap-2">
             {visibleLinks.map((link, idx) => {
               const isActive =

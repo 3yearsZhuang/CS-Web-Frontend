@@ -3,7 +3,7 @@
 /**
  * @file useUserList — 管理员用户列表 Hook（从 use-admin-users 拆出，GENERAL 2.4）
  *
- * 专注用户列表数据：分页 / 搜索 / 角色筛选 / 启用状态筛选。
+ * 专注用户列表数据：分页 / 角色筛选 / 启用状态筛选（搜索已聚合至顶栏，2026-08-20）。
  * 暴露 setUsers / setTotal / setPage 供父级模态框操作后原地更新列表。
  */
 
@@ -24,16 +24,13 @@ export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
 
-  // 筛选 / 搜索
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  // 筛选
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
 
   const fetchUsers = useCallback(
-    async (opts?: { page?: number; search?: string; role?: RoleFilter; active?: ActiveFilter }) => {
+    async (opts?: { page?: number; role?: RoleFilter; active?: ActiveFilter }) => {
       const p = opts?.page ?? page;
-      const s = opts?.search ?? search;
       const r = opts?.role ?? roleFilter;
       const a = opts?.active ?? activeFilter;
 
@@ -46,7 +43,6 @@ export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
           role: r,
           active: a,
         });
-        if (s) params.set('search', s);
 
         const result = await apiRequest<UserListResult>(`/api/admin/users?${params.toString()}`, {
           cache: 'no-store',
@@ -75,20 +71,13 @@ export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
         setListLoading(false);
       }
     },
-    [page, search, roleFilter, activeFilter, router, onForbidden],
+    [page, roleFilter, activeFilter, router, onForbidden],
   );
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  useEffect(() => {
-    fetchUsers({ page: 1, search, role: roleFilter, active: activeFilter });
+    fetchUsers({ page: 1, role: roleFilter, active: activeFilter });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchUsers 已 useCallback 稳定化
-  }, [search, roleFilter, activeFilter]);
+  }, [roleFilter, activeFilter]);
 
   return {
     // 列表
@@ -99,8 +88,6 @@ export function useUserList(currentUser: SafeUser, onForbidden: () => void) {
     setUsers,
     setTotal,
     setPage,
-    searchInput,
-    setSearchInput,
     roleFilter,
     setRoleFilter,
     activeFilter,

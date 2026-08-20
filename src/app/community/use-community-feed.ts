@@ -7,7 +7,7 @@
  * 2.4「逻辑 > 150 行提为 Hook / 组件 > 500 行拆分」。各渲染子组件复用本 Hook 返回值。
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
@@ -32,8 +32,6 @@ interface FeedStats {
 type TabKey = 'all' | 'following' | FeedKind | 'mine' | 'admin';
 
 const PAGE_SIZE = 20;
-export const SEARCH_MIN_LEN = 2;
-export const SEARCH_MAX_LEN = 80;
 
 const TAB_OPTIONS: { key: TabKey; num: string; labelKey: string; requiresLogin?: boolean }[] = [
   { key: 'all', num: '01', labelKey: 'tabAll' },
@@ -52,7 +50,6 @@ export function useCommunityFeed() {
   const searchParams = useSearchParams();
   const t = useTranslations('community');
 
-  const initialSearchQuery = searchParams.get('q') ?? '';
   const initialTab = (searchParams.get('tab') as TabKey) ?? 'all';
 
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
@@ -99,7 +96,6 @@ export function useCommunityFeed() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [tags, setTags] = useState<FeedTag[]>([]);
   const [stats, setStats] = useState<FeedStats | null>(null);
@@ -112,13 +108,10 @@ export function useCommunityFeed() {
   const [activeMembers, setActiveMembers] = useState<MemberItem[]>([]);
   const [featuredTopics, setFeaturedTopics] = useState<CommunityPost[]>([]);
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   /** 同步 URL */
   const syncUrl = useCallback(
-    (q: string, tab: TabKey, p: number, tag: string | null) => {
+    (tab: TabKey, p: number, tag: string | null) => {
       const params = new URLSearchParams();
-      if (q.trim()) params.set('q', q.trim());
       if (tab !== 'all') params.set('tab', tab);
       if (p > 1) params.set('page', String(p));
       if (tag) params.set('tag', tag);
@@ -194,8 +187,6 @@ export function useCommunityFeed() {
         if (kind) params.set('kind', kind);
         if (activeTab === 'all') params.set('exclude', 'member');
       }
-      const q = searchQuery.trim();
-      if (q.length >= SEARCH_MIN_LEN) params.set('search', q);
       if (selectedTag) params.set('tag', selectedTag);
       params.set('page', String(page));
       params.set('pageSize', String(PAGE_SIZE));
@@ -224,32 +215,17 @@ export function useCommunityFeed() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, searchQuery, selectedTag, page, isLoggedIn, authChecked]);
+  }, [activeTab, selectedTag, page, isLoggedIn, authChecked]);
 
   useEffect(() => {
     void loadFeed();
-    syncUrl(searchQuery, activeTab, page, selectedTag);
-  }, [loadFeed, syncUrl, searchQuery, activeTab, page, selectedTag]);
+    syncUrl(activeTab, page, selectedTag);
+  }, [loadFeed, syncUrl, activeTab, page, selectedTag]);
 
   /** Tab 切换 */
   const handleTabChange = (key: string) => {
     setActiveTab(key as TabKey);
     setPage(1);
-  };
-
-  /** 搜索提交 */
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    void loadFeed();
-  };
-
-  /** 清空搜索 */
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setSelectedTag(null);
-    setPage(1);
-    searchInputRef.current?.focus();
   };
 
   /** 点击标签 */
@@ -269,7 +245,8 @@ export function useCommunityFeed() {
     return range;
   })();
 
-  const hasSearch = searchQuery.trim().length >= SEARCH_MIN_LEN || !!selectedTag;
+  // 标签筛选激活（搜索已聚合至顶栏，2026-08-20）
+  const hasSearch = !!selectedTag;
   const isInitialLoading = loading && items.length === 0;
 
   return {
@@ -291,8 +268,6 @@ export function useCommunityFeed() {
     totalPages,
     page,
     setPage,
-    searchQuery,
-    setSearchQuery,
     selectedTag,
     tags,
     stats,
@@ -302,13 +277,10 @@ export function useCommunityFeed() {
     hotTopics,
     activeMembers,
     featuredTopics,
-    searchInputRef,
     pageNums,
     hasSearch,
     isInitialLoading,
     handleTabChange,
-    handleSearchSubmit,
-    handleClearSearch,
     handleTagClick,
     PAGE_SIZE,
   };

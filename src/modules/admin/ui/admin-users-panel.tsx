@@ -19,7 +19,7 @@ interface AdminUsersPanelProps {
   onForbidden: () => void;
 }
 
-/** 管理员用户管理面板 — 用户列表（搜索/分页/筛选）+ 密码重置申请审核 */
+/** 管理员用户管理面板 — 用户列表（分页/筛选）+ 密码重置申请审核（搜索已聚合至顶栏，2026-08-20） */
 export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelProps) {
   const {
     // 列表
@@ -27,8 +27,6 @@ export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelPro
     total,
     page,
     totalPages,
-    searchInput,
-    setSearchInput,
     roleFilter,
     setRoleFilter,
     activeFilter,
@@ -118,8 +116,6 @@ export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelPro
           total={total}
           page={page}
           totalPages={totalPages}
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
           roleFilter={roleFilter}
           setRoleFilter={setRoleFilter}
           activeFilter={activeFilter}

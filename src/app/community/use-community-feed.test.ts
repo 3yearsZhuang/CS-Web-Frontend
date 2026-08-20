@@ -6,7 +6,8 @@ import { useCommunityFeed } from './use-community-feed';
 
 /**
  * useCommunityFeed 单测（GENERAL 3.8「tests 覆盖拆分后组件」、2.4「拆分即补测」）
- * mock next-intl / next/navigation / fetch，聚焦 auth、feed 加载、搜索、标签过滤。
+ * mock next-intl / next/navigation / fetch，聚焦 auth、feed 加载、标签过滤。
+ * 注：搜索逻辑已聚合至顶栏（2026-08-20），本 hook 不再包含搜索。
  */
 
 vi.mock('next-intl', () => ({
@@ -59,30 +60,6 @@ describe('useCommunityFeed', () => {
     expect(result.current.isLoggedIn).toBe(false);
     expect(result.current.items).toHaveLength(1);
     expect(result.current.communityTabs.length).toBe(3); // 非管理员无 admin tab
-  });
-
-  it('搜索：设置 searchQuery 触发 feed 重新加载', async () => {
-    const fetchMock = vi.fn((input: string) => {
-      if (typeof input === 'string' && input.includes('/api/auth/me')) {
-        return Promise.resolve({ status: 401, ok: false, json: async () => null });
-      }
-      if (typeof input === 'string' && input.includes('/api/community/feed?')) {
-        return Promise.resolve({ ok: true, status: 200, json: async () => mockFeed });
-      }
-      return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
-    });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const { result } = renderHook(() => useCommunityFeed());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    act(() => {
-      result.current.setSearchQuery('react');
-    });
-    await waitFor(() =>
-      expect(fetchMock.mock.calls.some((c) => typeof c[0] === 'string' && c[0].includes('search=react'))).toBe(true),
-    );
-    expect(result.current.hasSearch).toBe(true);
   });
 
   it('标签点击：切换 selectedTag 并重置页码', async () => {

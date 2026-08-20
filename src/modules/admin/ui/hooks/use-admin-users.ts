@@ -29,7 +29,7 @@ import type {
 } from '../users-panel-utils';
 
 export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
-  // 列表数据（用户列表 / 搜索 / 筛选 / 分页）
+  // 列表数据（用户列表 / 筛选 / 分页；搜索已聚合至顶栏，2026-08-20）
   const {
     users,
     total,
@@ -37,8 +37,6 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     totalPages,
     setUsers,
     setTotal,
-    searchInput,
-    setSearchInput,
     roleFilter,
     setRoleFilter,
     activeFilter,
@@ -371,8 +369,6 @@ export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
     total,
     page,
     totalPages,
-    searchInput,
-    setSearchInput,
     roleFilter,
     setRoleFilter,
     activeFilter,
