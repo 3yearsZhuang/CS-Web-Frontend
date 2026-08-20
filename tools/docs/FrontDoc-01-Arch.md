@@ -8,7 +8,7 @@
 
 > **约定类文档边界**：专项权威与所有权矩阵见 [DocGovernance.md](../../../docs/DocGovernance.md) §2；通用规范见根 `RootDoc-EngConv.md`（细则指回权威文件）。
 
-> **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
+> **当前进度 / 真实状态**：前端已纯 BFF（B1 闭环，`src/app/api/**` 纯薄转发，无 SQLite/业务存储）；`src/shared/events/event-bus.ts` 已无调用（死代码，站内通知由后端产生，后端事件总线跨实例）；正文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
 > **范围声明（BFF 视角）**：前端为 BFF 薄转发层（Next.js 16 App Router），业务数据/认证/邮件/OAuth/RBAC 由后端承载；BFF 路由经 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理（JWT 注入 + 401 静默刷新 + snake→camel 翻译）。
 
