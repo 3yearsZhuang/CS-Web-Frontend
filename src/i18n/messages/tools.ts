@@ -436,6 +436,8 @@ export interface ToolsMessages {
     llmSaved: string;
     llmMaskedHint: string;
     llmNoData: string;
+    webSearchToggle: string;
+    trajectoryToggle: string;
     llmUsageEntry: string;
     agentTitle: string;
     presetLabel: string;
@@ -923,6 +925,8 @@ export const zhCN: ToolsMessages = {
     llmSaved: '已保存',
     llmMaskedHint: '当前 Key：{masked}',
     llmNoData: '暂无用量数据，先和学习助手聊几句',
+    webSearchToggle: '启用联网搜索',
+    trajectoryToggle: '记录对话轨迹（Trajectory）',
     llmUsageEntry: '用量与设置',
     agentTitle: 'Auxilio · 全量 Agent',
     presetLabel: '预设',
@@ -1410,6 +1414,8 @@ export const en: ToolsMessages = {
     llmSaved: 'Saved',
     llmMaskedHint: 'Current key: {masked}',
     llmNoData: 'No usage yet — chat with the assistant first',
+    webSearchToggle: 'Enable web search',
+    trajectoryToggle: 'Record trajectory events',
     llmUsageEntry: 'Usage & Settings',
     agentTitle: 'Auxilio · Full Agent',
     presetLabel: 'Preset',

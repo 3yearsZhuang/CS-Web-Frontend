@@ -28,6 +28,8 @@ export async function PUT(req: Request) {
     api_key: typeof body.apiKey === 'string' ? body.apiKey : null,
     base_url: typeof body.baseUrl === 'string' ? body.baseUrl : null,
     model: typeof body.model === 'string' ? body.model : 'gpt-4o-mini',
+    web_search_enabled: typeof body.webSearchEnabled === 'boolean' ? body.webSearchEnabled : true,
+    trajectory_enabled: typeof body.trajectoryEnabled === 'boolean' ? body.trajectoryEnabled : true,
   };
   const proxy = await proxyBackend(req, {
     path: '/workbench/llm-config',

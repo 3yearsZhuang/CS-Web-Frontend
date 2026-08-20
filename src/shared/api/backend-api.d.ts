@@ -4491,6 +4491,16 @@ export interface components {
              * @default openai
              */
             provider: string;
+            /**
+             * Trajectory Enabled
+             * @default true
+             */
+            trajectory_enabled: boolean;
+            /**
+             * Web Search Enabled
+             * @default true
+             */
+            web_search_enabled: boolean;
         };
         /** LoginRequest */
         LoginRequest: {

@@ -29,6 +29,8 @@ interface LlmConfigResp {
   baseUrl?: string | null;
   model?: string;
   apiKeyMasked?: string;
+  webSearchEnabled?: boolean;
+  trajectoryEnabled?: boolean;
 }
 
 const W = 300;
@@ -45,7 +47,14 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
   const [data, setData] = useState<LlmUsage | null>(null);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [form, setForm] = useState({ provider: 'openai', apiKey: '', baseUrl: '', model: 'gpt-4o-mini' });
+  const [form, setForm] = useState({
+    provider: 'openai',
+    apiKey: '',
+    baseUrl: '',
+    model: 'gpt-4o-mini',
+    webSearchEnabled: true,
+    trajectoryEnabled: true,
+  });
   const [masked, setMasked] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -70,6 +79,8 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
           provider: json.provider ?? 'openai',
           baseUrl: json.baseUrl ?? '',
           model: json.model ?? 'gpt-4o-mini',
+          webSearchEnabled: json.webSearchEnabled ?? true,
+          trajectoryEnabled: json.trajectoryEnabled ?? true,
         }));
         setMasked(json.apiKeyMasked ?? '');
       }
@@ -90,6 +101,8 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
           apiKey: form.apiKey.trim(),
           baseUrl: form.baseUrl.trim(),
           model: form.model.trim() || 'gpt-4o-mini',
+          webSearchEnabled: form.webSearchEnabled,
+          trajectoryEnabled: form.trajectoryEnabled,
         },
       });
       if (r.ok) {
@@ -262,6 +275,26 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
                 placeholder="https://your-gateway.example.com/v1"
                 onChange={(e) => setForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
               />
+            </label>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <label className="flex items-center gap-2 text-[13px] text-[var(--foreground)] cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-[var(--primary)]"
+                checked={form.webSearchEnabled}
+                onChange={(e) => setForm((prev) => ({ ...prev, webSearchEnabled: e.target.checked }))}
+              />
+              {t('webSearchToggle')}
+            </label>
+            <label className="flex items-center gap-2 text-[13px] text-[var(--foreground)] cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-[var(--primary)]"
+                checked={form.trajectoryEnabled}
+                onChange={(e) => setForm((prev) => ({ ...prev, trajectoryEnabled: e.target.checked }))}
+              />
+              {t('trajectoryToggle')}
             </label>
           </div>
           <div className="flex items-center gap-3">
