@@ -25,7 +25,7 @@ import {
   COMPONENT_REGISTRY,
   type ComponentMeta,
 } from '@/shared/feature-visibility/registry';
-import { Spinner, Button } from '@/components';
+import { Spinner, Button, ModalShell } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 type UserField = 'guest' | 'member' | 'admin';
@@ -266,16 +266,9 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
 
       {/* ============ 二次确认 + 2FA 输入弹窗 ============ */}
       {pending && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={() => !submitting && setPending(null)}
-        >
-          <div
-            className="w-full max-w-md bg-[var(--background)] border border-[var(--border)] p-6 space-y-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="display-serif text-[20px] text-[var(--foreground)]">{t('confirmTitle')}</h3>
+        <ModalShell title={t('confirmTitle')} onClose={() => !submitting && setPending(null)}>
 
+            <div className="space-y-5">
             {/* 变更摘要 */}
             <div className="space-y-2 border border-[var(--border)] p-4">
               <div className="text-[12px] text-[var(--muted-foreground)]">
@@ -339,8 +332,8 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
                 {submitting ? t('saving') : t('confirm')}
               </Button>
             </div>
-          </div>
-        </div>
+            </div>
+        </ModalShell>
       )}
     </section>
   );
