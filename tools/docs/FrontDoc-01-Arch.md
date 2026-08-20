@@ -671,7 +671,7 @@ i18n `notifications` namespace；⚠️ 遗留进程内事件总线（Part A §1
 通知归属校验（只能读自己）由后端 enforce。
 
 ### 测试
-[待填写]（前端通知模块未见专属测试文件；后端侧见 `openapi.baseline.json`）。
+[待填写] 前端通知模块专属测试缺失（汇入 `docs/项目待办v2.md` W-6）
 
 ### 前后端联动
 - 前端页面：`/notifications`
@@ -1056,7 +1056,7 @@ widget 注册 `widget-registry.ts`（`WIDGETS` 声明：id / slot / titleKey / c
 无独立业务库；需后端数据的 widget 经 BFF 转发；API Key 不落前端（`llm-config` 脱敏回显，后端 AES-256-GCM 加密存储）。
 
 ### 测试
-[待填写]（工作台新模块，未见专属测试文件；后端侧见 `BackDoc-01-Arch.md` Part B「五、工作台」测试节）。
+[待填写] 工作台模块专属测试缺失（汇入 W-7）
 
 ### 前后端联动
 - 前端页面：`/tools`（工作台视图）
@@ -1088,7 +1088,7 @@ i18n `workbench` namespace（assistant-chat 词条）；LLM Key 由用户在前�
 - 会话归属校验（非本人 404）由后端 enforce（`_own_conversation`）。
 
 ### 测试
-[待填写]（前端学习助手新模块未见专属测试；后端侧见 `BackDoc-01-Arch.md` Part B「六、学习助手」测试节：`test_phase5_tools.py::test_auxilio`）。
+[待填写] 学习助手模块专属测试缺失（汇入 W-8）
 
 ### 前后端联动
 - 前端页面：`/tools/auxilio`、工作台 assistant 视图
