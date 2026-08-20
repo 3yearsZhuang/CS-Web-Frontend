@@ -10,15 +10,9 @@
 
 > **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
-> **范围声明（BFF 视角）**：前端为 BFF（Backend-for-Frontend）薄转发层，基于 Next.js 16 App Router。业务数据、认证、邮件、OAuth、RBAC enforce 均由后端 FastAPI + PostgreSQL 承载。BFF API 路由（`src/app/api/**/route.ts`）统一通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理到后端（注入 JWT、401 静默刷新、snake_case→camelCase 翻译）。
-> - **BFF 层（本文档覆盖）**：页面路由、UI 组件、API 路由薄转发、Origin/Content-Type 校验、JWT Cookie 托管、UI 层角色兜底
-> - **后端层（见后端 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md`）**：业务数据存储、RBAC enforce、Alembic 迁移、密码哈希、2FA、限流、审计日志
-> - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/shared/utils/mail.ts`、`src/shared/events/`（event-bus.ts / event-types.ts）。`src/shared/db.ts`、`src/shared/db/`、`src/modules/*/server/` 已于 2026-08-06/07 删除（含遗留脚本与 `better-sqlite3` 依赖）；其余遗留文件仍存在但运行时不被引用，待清理；其历史结构保留在本文作为审计证据。
+> **范围声明（BFF 视角）**：前端为 BFF 薄转发层（Next.js 16 App Router），业务数据/认证/邮件/OAuth/RBAC 由后端承载；BFF 路由经 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 代理（JWT 注入 + 401 静默刷新 + snake→camel 翻译）。
 
 ---
-
-
-
 
 ## 章节速查（导航）
 

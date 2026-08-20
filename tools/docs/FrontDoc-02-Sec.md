@@ -9,10 +9,7 @@
 > 变更触发：BFF 安全发现 / UI 层角色变更 / 后端鉴权契约变更 / 新漏洞类
 > Stale 信号：发现项状态与代码现状不一致 / 权限矩阵与实际 handler 不符 / 仍把后端职责（JWT 签发/密码哈希/TOTP/RBAC enforce/审计日志）写成前端职责
 
-> **范围声明（BFF 视角）**：前端为 BFF 薄转发层。安全责任划分如下：
-> - **BFF 层（本文档覆盖）**：Origin/Referer 白名单（防 Login CSRF）、Content-Type 与 Zod body 校验、JWT HttpOnly Cookie 托管（`__Host-` 前缀、Secure、SameSite=Lax）、401 静默刷新轮换、UI 层角色路由保护与按钮显隐
-> - **后端层（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`）**：JWT 签发与校验、密码哈希（bcrypt）、TOTP/2FA 加密与验证、RBAC `require_permission(resource, action)` 强制、速率限制、审计日志写入、session/refresh_token 表
-> - **遗留代码层（迁移前单体，运行时不被任何 API 路由引用）**：`src/modules/auth/server/identity.ts`（scrypt 密码哈希）、`src/modules/auth/server/totp.ts`（前端 TOTP）、`src/modules/auth/server/session.ts`（HMAC session）、`src/modules/auth/server/verification-code.ts`（验证码 HMAC）。这些文件仍存在但运行时不被引用，待清理；其历史安全发现保留在 Part A 作为审计证据。
+> **范围声明（BFF 视角）**：前端为 BFF 薄转发层；本文覆盖 BFF 层安全（Origin 校验、JWT Cookie 托管、UI 路由保护），后端安全见 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`；遗留单体层（`modules/auth/server/*`）运行时不再引用、待清理（详见 Part A）。
 
 ## 文档结构
 

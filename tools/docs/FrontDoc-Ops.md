@@ -8,7 +8,7 @@
 > 变更触发：BFF 部署架构变更 / SLO 阈值调整 / 新增故障场景 / 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行 / 仍引用 SQLite/Litestream（应为后端职责）
 
-> **范围声明**：前端为 BFF（Backend-for-Frontend）薄转发层，**不持有业务数据**。业务数据、认证、邮件、OAuth 均由后端 FastAPI + PostgreSQL 承载。本文只覆盖 BFF 自身的部署、SLO 与 Runbook；PostgreSQL 备份、Alembic 迁移、Litestream、后端运维端点（`/health /readyz /metrics/json /status`）等**后端职责**见上方"关联"链接，不在本文重复。
+> **范围声明**：本文只覆盖前端 BFF 自身的部署 / SLO / Runbook；业务数据与后端职责（备份 / Alembic / 运维端点）见上方"关联"链接，不在本文重复。
 
 
 
