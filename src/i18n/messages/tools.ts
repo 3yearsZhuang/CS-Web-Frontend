@@ -440,6 +440,10 @@ export interface ToolsMessages {
     trajectoryToggle: string;
     llmUsageEntry: string;
     agentTitle: string;
+    agentEn: string;
+    agentChatSection: string;
+    agentBackTools: string;
+    settingsBack: string;
     presetLabel: string;
     presetAuto: string;
     presetGeneral: string;
@@ -929,6 +933,10 @@ export const zhCN: ToolsMessages = {
     trajectoryToggle: '记录对话轨迹（Trajectory）',
     llmUsageEntry: '用量与设置',
     agentTitle: 'Auxilio · 全量 Agent',
+    agentEn: 'Full Agent',
+    agentChatSection: '对话',
+    agentBackTools: '← 工具',
+    settingsBack: '← 返回学习助手',
     presetLabel: '预设',
     presetAuto: '自动',
     presetGeneral: '通用答疑',
@@ -1418,6 +1426,10 @@ export const en: ToolsMessages = {
     trajectoryToggle: 'Record trajectory events',
     llmUsageEntry: 'Usage & Settings',
     agentTitle: 'Auxilio · Full Agent',
+    agentEn: 'Full Agent',
+    agentChatSection: 'Conversation',
+    agentBackTools: '← Tools',
+    settingsBack: '← Back to assistant',
     presetLabel: 'Preset',
     presetAuto: 'Auto',
     presetGeneral: 'General',
