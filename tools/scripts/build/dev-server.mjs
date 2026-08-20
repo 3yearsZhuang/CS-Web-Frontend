@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/fe/build/dev-server.mjs — 开发服务器启动脚本
+ * @file tools/scripts/build/dev-server.mjs — 开发服务器启动脚本
  *
  * 释放目标端口后通过 pnpm tsx watch 启动 src/server.ts，文件变更自动重启；默认端口 2333。
  */
@@ -9,9 +9,9 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// 脚本位于 tools/scripts/，向上两级才是仓库根（CS-Web-Frontend/）
+// 脚本位于 tools/scripts/<域>/，向上三级才是仓库根（CS-Web-Frontend/）
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const projectRoot = resolve(__dirname, '../..');
+const projectRoot = resolve(__dirname, '../../..');
 
 /** 默认端口 2333，避开 macOS AirPlay 占用的 5000 */
 const DEFAULT_PORT = 2333;

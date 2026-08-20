@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/fe/build/build-app.mjs — 应用构建脚本
+ * @file tools/scripts/build/build-app.mjs — 应用构建脚本
  *
  * 安装依赖、构建 Next.js 生产版本、打包自定义服务器到 dist/server.js。
  *
@@ -15,9 +15,9 @@ import { execSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// 脚本位于 tools/scripts/，向上两级才是仓库根（CS-Web-Frontend/）
+// 脚本位于 tools/scripts/<域>/，向上三级才是仓库根（CS-Web-Frontend/）
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const projectRoot = resolve(__dirname, '../..');
+const projectRoot = resolve(__dirname, '../../..');
 
 function run(cmd) {
   console.log(`▶ ${cmd}`);

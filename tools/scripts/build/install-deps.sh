@@ -1,5 +1,5 @@
 #!/bin/bash
-# @file tools/scripts/fe/build/install-deps.sh — 依赖安装脚本
+# @file tools/scripts/build/install-deps.sh — 依赖安装脚本
 #
 # 通过 pnpm install 安装依赖（frozen-lockfile + prefer-offline），用于 CI/CD 流水线前。
 

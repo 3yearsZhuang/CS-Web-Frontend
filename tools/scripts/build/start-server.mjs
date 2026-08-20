@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @file tools/scripts/fe/build/start-server.mjs — 启动打包后的生产服务器
+ * @file tools/scripts/build/start-server.mjs — 启动打包后的生产服务器
  *
  * 检查 dist/server.js 是否存在并通过 node 启动；默认端口 2333。
  */
@@ -8,9 +8,9 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// 脚本位于 tools/scripts/，向上两级才是仓库根（CS-Web-Frontend/）
+// 脚本位于 tools/scripts/<域>/，向上三级才是仓库根（CS-Web-Frontend/）
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const projectRoot = resolve(__dirname, '../..');
+const projectRoot = resolve(__dirname, '../../..');
 
 /** 默认端口 2333，避开 macOS AirPlay 占用的 5000 */
 const DEFAULT_PORT = 2333;

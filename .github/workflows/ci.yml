@@ -63,7 +63,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} --depth=1
-          node tools/scripts/fe/check/diff-coverage.mjs --base origin/${{ github.base_ref }} --threshold 80
+          node tools/scripts/check/diff-coverage.mjs --base origin/${{ github.base_ref }} --threshold 80
 
   build:
     name: Build Verification
