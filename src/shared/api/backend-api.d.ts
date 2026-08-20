@@ -3309,10 +3309,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /** Submit Proof */
-        post: operations["submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post"];
+        get: operations["submit_proof_api_v1_tools_tasks_claims__claim_id__submit_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -12424,7 +12424,7 @@ export interface operations {
             };
         };
     };
-    submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post: {
+    submit_proof_api_v1_tools_tasks_claims__claim_id__submit_get: {
         parameters: {
             query: {
                 proof: string;

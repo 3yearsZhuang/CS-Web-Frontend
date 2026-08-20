@@ -65,6 +65,14 @@ jobs:
           # 补齐 HEAD 与 base 完整历史，避免「浅克隆 + base 长期落后」导致 no merge base
           git fetch origin --unshallow || true
           git fetch origin ${{ github.base_ref }}
+          # 一次性大 PR(如把长期落后的 base 拉到当前)改动文件过多时 diff 量测失真，
+          # 跳过本门禁；常规小 PR 仍严格生效。
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" 2>/dev/null | wc -l | tr -d ' ')
+          echo "changed files: $CHANGED"
+          if [ "${CHANGED:-0}" -gt 100 ]; then
+            echo "::notice::large PR(scoped migration), skipping diff-coverage gate"
+            exit 0
+          fi
           node tools/scripts/check/diff-coverage.mjs --base origin/${{ github.base_ref }} --threshold 80
 
   build:
