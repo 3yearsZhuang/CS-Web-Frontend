@@ -1,386 +1,364 @@
-# FZTBUCS-Sec-安全与权限设计文档
+# FrontDoc-02-Sec：前端 BFF 层安全（Reference · Origin/Cookie/路由保护/加固的权威定义）
 
-> 文档定位：**前端 BFF 层**的安全与权限设计权威文档（reference）
-> 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
-> Source of truth：**BFF 层**的安全审计发现、UI 层角色与权限矩阵、安全不变量、加固变更记录
-> 关联：后端鉴权/RBAC/密码/2FA/限流/审计日志权威见 [BackDoc-02-Sec.md](../../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)；权限矩阵与部署模型见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；运维见 FrontDoc-Ops、演进见 RootDoc-ADR
-> 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任 + 新增 Part E）
 > 更新人：3yearsZ
-> 变更触发：BFF 安全发现 / UI 层角色变更 / 后端鉴权契约变更 / 新漏洞类
-> Stale 信号：发现项状态与代码现状不一致 / 权限矩阵与实际 handler 不符 / 仍把后端职责（JWT 签发/密码哈希/TOTP/RBAC enforce/审计日志）写成前端职责
+> 更新日：2026-08-20
+> 版本：1.0.1 · 七夕（Diátaxis R 类规范，BFF 层安全约束 SSOT 权威）
+> Diátaxis：R（Reference · 回答「是什么」，提供前端 BFF 层运行时安全机制的接口、配置、不变量的精确权威定义；不包含可执行步骤）
+> 适用读者：安全审计人员 / 前端 Next.js/BFF 开发工程师 / 运维部署者 / UI 权限矩阵维护者
+> 变更触发：BFF proxyBackend 签名变更 / `ALLOWED_ORIGINS` / CSP 策略变更 / assertAllowedOrigin 路径清单变动 / UI 层角色路由保护矩阵变动 / Cookie 前缀与安全头策略变更
 
-> **范围声明（BFF 视角）**：前端为 BFF 薄转发层；本文覆盖 BFF 层安全（Origin 校验、JWT Cookie 托管、UI 路由保护），后端安全见 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`；遗留单体层（`modules/auth/server/*`）运行时不再引用、待清理（详见 Part A）。
+> **SSOT 分工声明**：
+> - 本文档是「**前端 BFF 层 + UI 层安全机制（转发鉴权/会话托管/路由保护/安全加固/运行时监测）**」的唯一权威（SSOT）。
+> - 后端安全基础设施（JWT 签发/RBAC0 enforce/限流/密钥）→ [BackDoc-02-Sec.md](../../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)。
+> - 前端编码约定（分层/命名/状态管理）→ [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md)。
+> - 前端架构总览（BFF 分层、路由规范）→ [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)。
+> - 通用工程红线（跨仓 DDD 分层、命名门禁）→ [RootDoc-EngConv.md](../../../docs/RootDoc-EngConv.md)。
+> - 深层威胁模型（STRIDE 15 条）→ [Mobile/tools/docs/arch/安全设计.md](../../../CS-Mobile/tools/docs/arch/安全设计.md)。
 
-## 文档结构
-
-- **Part A: 安全审计** - 对照 OWASP Top 10 (2021) 的历史发现与修复状态（28 项，全部已修复），每项标注当前责任层
-- **Part B: 角色与权限设计（BFF 视角）** - BFF UI 层角色展示与路由保护、权限矩阵（真实 RBAC enforce 在后端）
-- **Part C: 事件驱动安全与运行时监测** - 前端事件总线、BFF 转发链路监测、后端 2FA/限流/审计的边界
-- **Part D: 安全加固变更记录** - 可审计证据包
-
----
-
-# Part A: 安全审计
-
-> 项目：fztbucs-projects | 审计日期：2026-07-27 | 范围：全量代码审查，对照 OWASP Top 10 (2021)
-> 方法：静态代码分析 + 架构审查 | 状态：所有发现已于 2026-07-31 修复（ADR-015 及第二轮加固）
-> **责任层标注（2026-08-05 追加）**：审计于单体时代完成，发现项涉及的前端代码多为**遗留代码层**（运行时不被 API 路由引用）。迁移到 BFF 后，对应安全控制的真实运行时位置已迁至后端。下表"责任层"列说明每项发现的当前归属。
-
-## 风险总览
-
-| 风险等级 | 数量 | 状态 |
-|---------|------|------|
-| 🔴 严重  | 0    | 无已知严重漏洞 |
-| 🟠 高    | 4    | ✅ 已全部修复（2026-07-31，ADR-015） |
-| 🟡 中    | 7    | ✅ 已全部修复（2026-07-31，第二轮）|
-| 🟢 低    | 5    | ✅ 已全部修复（2026-07-31，第二轮）|
-
-## OWASP Top 10 逐项检查
-
-> 责任层图例：**[BFF]** = BFF 运行时仍执行 · **[后端]** = 已迁移至后端 FastAPI · **[遗留]** = 前端单体时代代码，运行时不被引用，待清理
-
-### A01: 访问控制失效
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 1 | 2FA 端点缺少 `assertAllowedOrigin` | 🟠高 | `api/auth/2fa/verify` | **[BFF]** | verify/setup/disable/backup-codes 全部补齐，移至 body 解析前；BFF 路由仍执行 Origin 校验 | ✅ |
-| 2 | 2FA 设置端点缺少速率限制 | 🟡中 | `api/auth/2fa/setup` `disable` | **[后端]** | 原 `twoFactorSetupLimiter`（3 次/分/IP+用户）为前端内存限流；迁移后由后端限流（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §3） | ✅ |
-| 3 | Admin 路由权限检查一致性 | - | `admin/server/require.ts` | **[BFF]+[后端]** | BFF `requireAdmin`/`requireRoot` 做 UI 层兜底；真实 RBAC enforce 由后端 `require_permission` | ✅ 良好 |
-| 4 | 细粒度角色缺少模块级 enforce | 🟡中 | `auth/types` `admin/server/require` | **[后端]** | 原 `ROLE_MODULE_MAP` + `requireModuleAdmin` 为前端实现；迁移后由后端 `require_permission(resource, action)` 统一 enforce | ✅ |
-
-### A02: 加密失效
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 5 | TOTP Secret 密钥派生不够健壮 | 🟡中 | `auth/server/totp.ts` | **[遗留]**→**[后端]** | 前端 `totp.ts` 为遗留代码（运行时不引用）；TOTP 加密/派生由后端处理（`TOTP_ENCRYPTION_KEY`） | ✅ |
-| 6 | 密码哈希实现 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 `scryptSync` 为遗留代码；运行时密码哈希由后端 bcrypt（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1） | ✅ 良好 |
-| 7 | Session Token 存储 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 HMAC session 为遗留代码；运行时 JWT 对（access/refresh）由后端签发，BFF 以 HttpOnly Cookie 托管 | ✅ 良好 |
-| 8 | 生产 `AUTH_SESSION_SECRET` 缺失仅警告 | 🟠高 | `auth/server/identity.ts` | **[遗留]** | 前端 `session.ts` 仍保留生产 `[FATAL]`+退出逻辑（遗留代码自保护）；运行时 JWT 签名密钥为后端 `SECRET_KEY` | ✅ |
-
-### A03: 注入
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 9 | SQL 注入防护 | - | 全部 DB 查询 | **[后端]** | 运行时 SQL 由后端 SQLAlchemy ORM 参数化（`better-sqlite3` 遗留代码已删除） | ✅ 良好 |
-
-### A04: 不安全的设计
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 10 | 速率限制为单进程内存实现 | 🟡中 | `shared/security/security.ts` | **[BFF]+[后端]** | BFF 仍为单进程内存限流（仅 Origin 校验等 BFF 自身用）；业务限流已由后端 Redis 实现 | ✅ 已标注 |
-| 11 | 输入校验 | - | `shared/security/security.ts` | **[BFF]** | BFF 全入口 Zod `validateBody` + Content-Type 校验；密码上限 1024 字节防 scrypt DoS（遗留，后端 bcrypt 也有 72 字节限制） | ✅ 良好 |
-| 12 | 速率限制覆盖 | - | `shared/security/security.ts` | **[后端]** | 前端 18 场景限流器多为遗留；业务限流覆盖由后端统一 | ✅ 良好 |
-
-### A05: 安全配置错误
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 13 | CSP 含 `unsafe-inline` | 🟢低 | `next.config.ts` `proxy.ts` | **[BFF]** | `buildCsp(nonce)` 按环境分流：生产 `script-src 'self' 'nonce-...'`（移除 unsafe-eval/inline） | ✅ |
-| 14 | 安全头总体配置 | - | `next.config.ts` | **[BFF]** | HSTS(2年+preload)/X-Frame-Options DENY/nosniff/Permissions-Policy 合理 | ✅ 良好 |
-| 15 | 错误响应泄露 | - | `shared/security/security.ts` | **[BFF]** | `errorResponse` 未知错误返回通用消息，不泄露堆栈 | ✅ 良好 |
-| 16 | 生产 `ALLOWED_ORIGINS` 回退 localhost | 🟠高 | `shared/config/auth-constants.ts` | **[BFF]** | 生产未配置 `[FATAL]`+退出；开发回退 localhost+局域网 IP | ✅ |
-
-### A06: 脆弱的组件
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 17 | 缺少自动化漏洞扫描 | 🟡中 | `package.json` | **[BFF]** | 新增 `.github/workflows/audit.yml`：`pnpm audit --audit-level=high` 阻断构建 | ✅ |
-
-### A07: 认证失效
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 18 | 登录尝试限制 | - | `api/auth/login` | **[BFF]+[后端]** | BFF 路由仍做 Origin->Content-Type->Zod 链路；登录限流由后端统一 | ✅ 良好 |
-| 19 | 2FA 登录模式重复传密码 | 🟠高 | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端预认证 token 为遗留；后端 2FA 流程由后端实现（`/auth/2fa/verify`） | ✅ |
-| 20 | 2FA 验证码无速率限制 | 🟠高 | `api/auth/2fa/verify` | **[后端]** | verify/disable/backup-codes 限流由后端统一执行 | ✅ |
-| 21 | Cookie 缺 `__Host-` 前缀 | 🟢低 | `api/auth/login` `auth-constants.ts` | **[BFF]** | 生产 JWT Cookie 用 `__Host-fztbu_access` / `__Host-fztbu_refresh`（Secure+Path=/+无 Domain）；开发无前缀 | ✅ |
-| 22 | Session 管理 | - | `auth/server/identity.ts` | **[遗留]**→**[后端]** | 前端 7 天 TTL session 为遗留；运行时 JWT access 15min / refresh 7day，BFF 401 静默刷新，refresh token 轮换由后端 | ✅ 良好 |
-
-### A08: 软件和数据完整性故障
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 23 | 文件上传安全 | - | `community/server/community/uploads.ts` | **[后端]** | 上传校验（大小/MIME/扩展名/魔数/文件名随机化/路径遍历防护）由后端执行；BFF 薄转发 FormData | ✅ 良好 |
-| 24 | 社区图片读取无访问控制 | 🟡中 | `api/community/community/images/[filename]` | **[后端]** | 图片访问鉴权由后端执行；BFF 转发时注入 JWT | ✅ |
-
-### A09: 安全日志和监控故障
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 25 | 审计日志设计 | - | `admin/server/audit.ts` | **[后端]** | `admin_actions` 表由后端写入；BFF 仅薄转发，不直接写审计日志 | ✅ 良好 |
-| 26 | 登录历史只记录成功 | 🟢低 | `auth/server/identity.ts` `api/auth/login` | **[后端]** | `login_history` / `attempted_email` 由后端记录 | ✅ |
-| 27 | 错误日志仅 console.error | 🟢低 | `shared/logger.ts` | **[BFF]** | BFF 集成 pino + pino-pretty；`createRequestLogger(req)` 绑定 `x-request-id`；33 模块替换 console.error | ✅ |
-
-### A10: SSRF
-
-| # | 发现 | 等级 | 位置（审计时） | 当前责任层 | 修复 | 状态 |
-|---|------|------|------|:---:|------|:---:|
-| 28 | 无明显 SSRF 风险 | - | - | **[BFF]** | BFF 仅向固定 `BACKEND_URL` 转发，无用户可控 URL 请求；无 webhook/反代 | ✅ 良好 |
-
-### 附加检查
-
-| 类别 | 发现 | 责任层 | 状态 |
-|------|------|:---:|:---:|
-| CSRF | 所有 POST 端点 Origin/Referer 白名单 + `SameSite=Lax` 双重防护；精确 `URL().origin` 比较防子域名绕过 | **[BFF]** | ✅ 良好 |
-| XSS | `react-markdown` + `rehype-sanitize`（GitHub 默认白名单）+ `rehype-highlight` | **[BFF]** | ✅ 良好 |
-
-## 加固清单（发现 -> 行动索引）
-
-| 优先级 | 发现 | 行动 | 状态 |
-|:---:|------|------|:---:|
-| 🔴 立即 | 1/2/20 | 2FA `assertAllowedOrigin` + `twoFactorLimiter` | ✅ ADR-015 |
-| 🔴 立即 | 19 | 预认证 token 消除密码二次传输 + OAuth `__Host-oauth_2fa` cookie | ✅ ADR-015 |
-| 🔴 立即 | 16 | 生产缺失 `ALLOWED_ORIGINS` 即退出 | ✅ |
-| 🟠 尽快 | 5/8 | 2FA setup 限流 + HKDF 派生 + `AUTH_SESSION_SECRET` 缺失退出 | ✅ |
-| 🟠 尽快 | 4 | `requireModuleAdmin` 落地 19 路由 | ✅ |
-| 🟡 计划 | 17/24/10 | `pnpm audit` CI + 社区图片 session 校验 + 单进程标注 | ✅ |
-| 🟢 加固 | 13/21/26/27 | CSP nonce + `__Host-` 前缀 + 失败登录记录 + pino | ✅ |
-
-> ⚠️ **迁移后注意**：上表"行动"列描述的是单体时代的修复动作。迁移到 BFF 后，涉及 [后端] 责任层的控制（2FA 限流、HKDF、`requireModuleAdmin`、社区图片鉴权、失败登录记录等）真实运行时位置在后端，前端代码为遗留。后续清理遗留代码时，对应"行动"描述需同步更新为后端实现引用。
+> **治理红线**：
+> - MUST 所有安全约束在 BFF 路由层、Next.js 配置、Zod 校验链路中落地；正文与实现不一致时，以本节约束为准
+> - MUST NOT 在前端代码或 Cookie 中存储任何后端业务密钥（SECRET_KEY/TOTP_ENCRYPTION_KEY 等）
+> - MUST 真实鉴权（JWT 签发/密码哈希/RBAC0 enforce）由后端 FastAPI 执行；BFF 仅做 UI 兜底与薄转发
+> - MUST 新增 BFF 路由或修改安全配置时同步更新 `gen_doc_facts.py` 派生事实（`make gen-doc-facts`）
 
 ---
 
-# Part B: 角色与权限设计（BFF 视角）
+## 快速索引
 
-> 描述 BFF UI 层的角色展示与路由保护逻辑。**真实 RBAC enforce（`require_permission(resource, action)`）在后端**，BFF 仅做 UI 层兜底与按钮显隐，任何 BFF 层鉴权都不能替代后端鉴权。
-
-## 1. 角色层级
-
-| 角色 | 后端存储 | BFF 解析来源 | 用途 |
-|------|----------|------|------|
-| 超级管理员 | `is_superuser=true`（PG） | JWT `/auth/me` 返回 `isSuperuser` → BFF 解析为 `root` | 系统级管控、审计、自定义重置密码 |
-| 普通管理员 | `admin` 角色（后端 RBAC 表） | `/auth/me` `roles` 数组含 `admin` | 用户管理、活动、通知群发、社区管理 |
-| 内容管理员 | `content_moderator` | `roles` 数组含 `content_moderator` | 社区审核 |
-| 考试管理员 | `exam_admin` | `roles` 数组含 `exam_admin` | 考试组卷/发布/排名 |
-| 任务发布者 | `task_publisher` | `roles` 数组含 `task_publisher` | 任务发布/认领审核 |
-| 普通用户 | `user`（默认） | `roles` 为空或含 `user` | 站点功能使用 |
-
-优先级：`root > admin > 细粒度角色 > user`。BFF `resolvePrimaryRole()` 按此优先级从后端 `roles` 数组解析主角色；`is_superuser` 优先于显式角色列表解析为 `root`（保证 root 专属 UI/端点对超级用户可见）。
-
-> 角色数据真实存储与权限分配见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1 与 `CS-Web-Backend/tools/docs/BackDoc-01-Arch.md` RBAC 章节。
-
-## 2. BFF 层权限保护（UI 兜底）
-
-BFF 在 API 路由层提供轻量角色兜底，**真实权限判定在后端**：
-
-| BFF 保护 | 位置 | 说明 |
-|---------|------|------|
-| `requireAdmin()` | `admin/server/require.ts` | 读 `/auth/me` roles，非 admin/root 返回 403；后端仍会二次 enforce |
-| `requireRoot()` | `admin/server/require.ts` | 读 `/auth/me` roles，非 root 返回 403；后端仍会二次 enforce |
-| `requireModuleAdmin(req, module)` | `admin/server/require.ts` | 细粒度角色模块级兜底（遗留实现，运行时后端 `require_permission` 为权威） |
-| `requirePasswordConfirmation()` | `admin/server/require.ts` | 高危操作要求密码确认（转发后端校验） |
-| UI 按钮显隐 | 各模块 UI | 根据 `SafeUser.role` 条件渲染管理入口 |
-
-> ⚠️ **不变量**：BFF 鉴权失败必返回 403/401，但 BFF 鉴权通过**不等于**授权成立。后端 `require_permission` 是最终权威。任何绕过后端直连 DB 的遗留代码路径（已全部不再被 API 路由引用）都违反此不变量。
-
-## 3. 权限矩阵（用户视角）
-
-> 以下矩阵描述**用户可见的操作权限**（BFF UI 显隐 + 后端 enforce 的综合效果）。真实 RBAC 权限点定义在后端 `rbac.py` 与 seed 数据。
-
-| 操作 | admin | root |
-|------|:---:|:---:|
-| 查看用户列表/详情 | ✅ | ✅ |
-| 编辑/删除用户（硬删除） | ❌ | ✅ |
-| 禁用/启用用户（仅普通用户） | ✅ | ✅ |
-| 重置密码（默认/自定义） | ✅ / ❌ | ✅ / ✅ |
-| 操作其他管理员（跨级保护） | ❌ | ✅ |
-| 活动 / 通知 管理 | ✅ | ✅ |
-| 社区审核（隐藏/恢复/置顶/加精/删除） | ✅ | ✅ |
-| 查看/删除审计日志 | ❌ | ✅ |
-| 密码重置审批（不能审批自己） | ✅ | ✅ |
-
-**细粒度角色**（`admin`/`root` 自动继承）：
-
-| 模块 | content_moderator | exam_admin | task_publisher |
-|------|:-:|:-:|:-:|
-| 社区：主题/回复审核、版块管理 | ✅ / ❌ | ❌ | ❌ |
-| 考试：创建/发布/结束/题目/排名 | ❌ | ✅ | ❌ |
-| 任务：创建发布关闭/认领审核 | ❌ | ❌ | ✅ |
-| 社区 / 资源 | ✅(登录用户) / ❌ | - | - |
-
-## 4. 安全约束（6 种保护机制）
-
-> 以下保护由**后端**在 service 层强制；BFF 不实现这些约束，仅转发请求。
-
-| 保护 | 说明 | enforce 位置 |
-|------|------|------|
-| SELF_DEMOTE / SELF_DISABLE / SELF_DELETE | 管理员不能降级/禁用/删除自己 | 后端 service |
-| SELF_APPROVE | 管理员不能批准自己的密码重置申请 | 后端 service |
-| LAST_ADMIN | 禁止降级/禁用/删除最后一个活跃管理员 | 后端 service |
-| ADMIN_CROSS_PROTECT | 管理员不能禁用/重置其他管理员的密码 | 后端 service |
-
-root 额外保护：不可降级/禁用/删除、不可被任何角色重置密码、唯一且重复创建被拒（后端 enforce）。
-
-## 5. 审计日志
-
-> 审计日志由**后端**写入 `admin_actions` 表。BFF 仅薄转发管理员写请求，不直接写审计日志。
-
-后端 `logAdminAction` 覆盖：用户管理（update/delete/disable/enable/reset）、群发通知、活动管理、密码重置审批、公告管理、社区版块/主题/回复审核、入社申请审批、考试/题目管理、资源审核、任务管理/认领审核、活动签到核销、删除审计日志（自我审计）。
-
-BFF 通过 `toAdminAction()`（[backend-client.ts](../../src/shared/backend-client.ts)）把后端 `AuditLogItem` 翻译为前端 `AdminAction` 形状供 UI 展示。
-
-## 6. API 端点权限（节选高敏）
-
-> 以下为 BFF 路由层的 UI 兜底鉴权。**后端对同一资源有独立的 `require_permission` enforce**，即使 BFF 被绕过，后端仍会拒绝越权请求。
-
-| 端点（BFF） | BFF 鉴权 | 后端鉴权 |
-|------|------|------|
-| `GET /api/admin/users` `GET /api/admin/users/[id]` | admin / root | `require_permission` |
-| `PUT /api/admin/users/[id]` `DELETE /api/admin/users/[id]` | root only | `require_permission` |
-| `POST /api/admin/users/[id]/disable` `enable` `reset-password-default` | admin / root | `require_permission` |
-| `POST /api/admin/users/[id]/reset-password` | root only | `require_permission` |
-| `GET/DELETE /api/admin/actions` `DELETE /api/admin/actions/[id]` | root only | `require_permission` |
-
-> 完整端点鉴权见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) Part B（管理后台 §7）；后端权限点定义见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md` §1。
-
-## 7. 管理后台 Tab 结构
-
-```
-[ 01 ] Users         - 用户列表（按钮按角色显示）
-[ 02 ] Activities     - 活动管理
-[ 03 ] Notifications  - 通知管理
-[ 04 ] Community          - 社区管理
-[ 05 ] Logs           - 审计日志（仅 root 可见）
-```
-
-## 8. 迁移影响
-
-- 角色 RBAC 由后端 `rbac.py` + seed 数据承载（旧前端 SQLite `users.role` 单列已随迁移与清理移除）
-- 旧 `role='admin'` 账号在迁移时映射为后端 `admin` 角色 + 必要权限
-- 仅新增后端 partial index / RBAC seed，无破坏性变更，可安全回滚（后端 Alembic 管理）
+| 安全领域 | 概述 | 接口/配置 | 不变量(RFC2119) | 自检 Checklist | 代码位置 |
+|---|---|---|---|---|---|
+| **§1 BFF 转发安全与 Origin 边界** | 同源 BFF 薄转发 + Origin 白名单 + Zod 校验 | §1.2 | §1.3 | §1.4 | `src/shared/backend-client.ts`、`src/shared/security/security.ts` |
+| **§2 JWT Cookie 托管与 401 静默刷新** | `__Host-` HttpOnly Cookie + RefreshMutex 单飞 | §2.2 | §2.3 | §2.4 | `src/shared/backend-client.ts` `setAuthCookies`、`auth/login` route |
+| **§3 UI 层角色与路由保护（UI 兜底）** | BFF 轻量角色兜底 + UI 按钮显隐矩阵 | §3.2 | §3.3 | §3.4 | `admin/server/require.ts`、`src/modules/**/ui/` 显隐逻辑 |
+| **§4 安全头、CSP、i18n 词表管理** | HSTS/CSP/nonce/token 体系/i18n 三处同步 | §4.2 | §4.3 | §4.4 | `next.config.ts` `buildCsp(nonce)`、`src/i18n/messages/` |
+| **§5 运行时监测与遗留代码责任划分** | 事件总线/结构化日志/遗留清理 | §5.2 | §5.3 | §5.4 | `instrumentation.ts` 事件总线、`src/shared/logger.ts` pino |
+| **§6 变更门禁** | Pre-commit 必查清单 | — | — | §6 | — |
 
 ---
 
-# Part C: 事件驱动安全与运行时监测
+## §1 BFF 转发安全与 Origin 边界
 
-> 承接 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) ADR-013 / ADR-014 / R7 / R8。
-> **责任划分**：事件总线为 BFF 前端实现；2FA/限流/审计日志/失败登录记录为后端实现；BFF 仅做转发与 UI 监测。
+### 1.1 概述
 
-## 9. 事件总线安全（BFF 前端实现）
+FztbuCS 前端是**同源 BFF 薄转发层架构**：浏览器仅与 Next.js BFF 同源通信，所有业务 API 由 BFF API 路由（`src/app/api/**/route.ts`）通过 `proxyBackend()` 向固定 `BACKEND_URL + /api/v1` 转发，并在转发层统一注入 Bearer、执行 401 静默刷新、翻译 snake_case→camelCase、写回 HttpOnly Cookie。浏览器**不存在直连后端的客户端代码**。
 
-- **监听器显式初始化（ADR-013 ✅）**：`src/instrumentation.ts` 显式调用 `initNotificationEvents()`；函数幂等（`initialized` 标志）；删除 `notification/server/index.ts` 的副作用 `_initEvents()`。
-- **事件载荷完整性**：仅含序列化安全类型；用户输入先经 Zod 校验；跨模块载荷定义 TS 接口于 `shared/events/event-types.ts`；监听器内 try-catch 不中断 emit 链。
-- **异步化时机（ADR-014）**：活跃用户 ≤ 500 维持同步 emit；触发异步化条件为 > 500 或某监听器 P95 > 500ms。
+### 1.2 接口与配置清单
 
-> ⚠️ 迁移后：事件总线的业务效果（如通知写入）实际由后端承载，前端事件总线为遗留机制。新增通知场景应直接走 BFF→后端转发，不再新增前端事件监听器。
+| 符号 / 配置项 | 默认值 / 签名 | 用途 |
+|---|---|---|
+| `proxyBackend(req, path, opts?)` | `src/shared/backend-client.ts` | BFF 路由统一调用；注入 Authorization + 401 静默重试一次 + 翻译 + 写 Cookie |
+| `proxyStream(req, path)` | `src/shared/backend-client.ts` | SSE 流透传（Auxilio 对话）；Authorization 注入后原样 pipe，不做 JSON 解析 |
+| `BACKEND_URL` | `http://localhost:9000`（开发）/ `http://backend:8000`（compose） | 固定转发上游目标；无用户可控 URL 拼接 |
+| `assertAllowedOrigin(req, origins, trustedProxies)` | `src/shared/security/security.ts` | 写端点 Origin/Referer 白名单校验；精确 `URL().origin` 比较防子域名绕过 |
+| `ALLOWED_ORIGINS` | 生产必须显式配置；缺失则 FATAL 退出 | Origin 白名单（逗号分隔）；开发自动回退 `localhost` + 局域网 IP |
+| `validateBody(schema, body)` / `ContentType` | Zod schema + 严格 `application/json` | BFF 全入口入参校验链；写端点 MUST 叠加 |
+| `Content-Security-Policy` | `buildCsp(nonce)` 按环境生成 | 生产 `script-src 'self' 'nonce-…'`，移除 unsafe-inline / unsafe-eval |
 
-## 10. 2FA 流程加固（责任层：后端）
+### 1.3 不变量与约束（RFC2119）
 
-> 2FA 的加密、验证、限流、token 签发均由**后端**实现。BFF 仅薄转发 `/api/auth/2fa/*` 请求并管理 Cookie。
+**MUST（铁律红线）：**
+1. 所有业务 API **MUST** 经 BFF 路由 → `proxyBackend()` 转发到固定 `BACKEND_URL + /api/v1`；**MUST NOT** 允许组件/模块直接 `fetch(后端地址)`，后端地址/端口 **MUST NOT** 进入客户端 bundle
+2. `proxyBackend()` 转发目标 **MUST** 仅拼接后端资源路径（`/api/v1/**`），**MUST NOT** 接受用户可控 URL，消除 SSRF 风险（BFF 不实现 webhook/任意 URL 反代）
+3. 写端点（POST/PUT/DELETE/PATCH）**MUST** 在进入 Zod 校验前调用 `assertAllowedOrigin(req)`：Origin 必须落入 `ALLOWED_ORIGINS`，**MUST NOT** 用后缀匹配/正则子域名宽松匹配
+4. `ALLOWED_ORIGINS` **MUST** fail-fast：生产缺失 → 进程 `[FATAL]` 退出；**MUST NOT** 回退 `localhost` 或 `*`
+5. BFF 写端点 **MUST** 叠加 Zod `validateBody` + `Content-Type: application/json` 严格检查双重防线，**MUST NOT** 直接 `await req.json()` 无校验
+6. `assertAllowedOrigin` **MUST** 对 `2FA verify/setup/disable/backup-codes`、登录、注册、管理员写操作等高敏路径强制开启；**MUST NOT** 有遗漏
+7. `BACKEND_URL`（含后端 host/port）**MUST NOT** 出现在 `NEXT_PUBLIC_*` 环境变量或任何客户端可访问的 JS bundle；仅存在于 BFF server 运行时
+8. `Content-Type` 白名单 **MUST** 为严格 `application/json`（FormData 例外须单独声明，如文件上传走 `multipart/form-data` 且后端执行 MIME/魔数/扩展名三重校验）
+9. CSP `buildCsp(nonce)` **MUST** 随 `nonce` 按请求随机生成；生产 **MUST** 移除 `unsafe-inline`/`unsafe-eval`，style-src 保留 unsafe-inline 作为唯一例外（Next.js 注入限制），并在 §6 门禁中追踪
 
-- **后端 2FA 端点**：`/auth/2fa/verify` `/auth/2fa/setup` `/auth/2fa/disable` `/auth/2fa/backup-codes`，详见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`
-- **BFF 转发行为**：
-  - 所有 2FA POST 路由先 `assertAllowedOrigin(req)`（BFF 层 CSRF 防护）
-  - login 模式：`twoFactorToken` 来自请求体或 `__Host-oauth_2fa` HttpOnly cookie，BFF 转发至后端 `skipAuth: true`
-  - 成功后 BFF 用后端返回的 `accessToken/refreshToken` 写入 `__Host-fztbu_access/refresh` Cookie
-- **历史缺陷回顾（已修复，ADR-015）**：verify 缺 Origin 校验(高)、无速率限制(高)、登录模式重复传密码(高)、setup/disable 缺限流(中)、backup-codes 缺限流+Origin(高)、GitHub OAuth 绕过 2FA(严重)。修复动作在单体时代完成，迁移后真实 enforce 位置在后端。
+**MUST NOT（禁止事项）：**
+1. **MUST NOT** 把 `ALLOWED_ORIGINS` 配置为 `*` 或含公网 0.0.0.0/0 的宽泛网段；该错误等价于禁用 CSRF，必须 CI 配置检查阻断
+2. **MUST NOT** 在 BFF 层直连数据库（`better-sqlite3` 依赖已整体移除，遗留代码仍在清理，运行时路径为零引用）；BFF 仅转发、不落业务库
+3. **MUST NOT** 暴露运维端点（`/readyz`、`/metrics/json`、`/status`）给浏览器；BFF 运维接口仅有 `/api/health`（公开，转发后端 `/health`，仅返回 `{ok:true/false}`，不泄露细节）
+4. **MUST NOT** 允许 BFF 代码路径「先写响应再做 assertAllowedOrigin」；校验必须是 handler 第一行
+5. **MUST NOT** 允许 `proxyBackend()` 与上游的 HTTP 通信明文；生产 MUST 走 HTTPS 或 compose 内网隔离
+6. **MUST NOT** 把 `api_usage` 埋点记录的 user_id、请求体、查询参数、Header 写入 `api_call_logs` 表；匿名原则见后端 Sec §5.3（BFF 仅透传）
+7. **MUST NOT** 在 BFF 层实现业务级 RBAC enforce（只做 UI 兜底）；真实权限判定 MUST 由后端 `require_permission` 执行（§3.3 不变量）
 
-## 11. 运行时安全监测
+**SHOULD（建议事项）：**
+1. BFF 所有错误响应 **SHOULD** 走 `errorResponse` 统一格式；未知错误 **SHOULD** 返回通用消息，**SHOULD NOT** 暴露堆栈、内部路径、环境变量值
+2. `/health` **SHOULD** 返回 `{ok:true}` + 超简版时间戳；**SHOULD NOT** 把连接池状态、DB 版本、Redis latency 等内部信息暴露给公网
+3. **SHOULD** 后续接入 Dependabot / Snyk（pnpm audit 已 CI 阻断）做组件漏洞告警，形成分层扫描
+4. **SHOULD** BFF 日志字段携带 `requestId`（必填）、`module`（可选）、`userId`（有条件），不记录 token/参数/URL query；`createRequestLogger(req)` 已统一封装
 
-- **BFF 健康检查** `/api/health`（公开）：转发后端 `/health`，仅返回 `{"ok": true/false}`，不泄露细节
-- **后端运维端点**（不在 BFF 暴露）：`/readyz` `/metrics/json` `/status` 需超级用户，见后端 `CS-Web-Backend/tools/docs/BackDoc-Infra.md` §1.2
-- **失败登录记录**：由后端写入 `login_history`（含 `attempted_email`），用于检测暴力破解、账户枚举、凭证填充
-- **结构化日志（✅ 发现 27）**：BFF pino + pino-pretty；`createRequestLogger(req)` 绑定 `x-request-id`。字段：`level`/`time`/`msg`/`requestId`(必填)、`userId`/`ip`/`module`(视情况)
-- **依赖漏洞扫描（✅ 发现 17）**：`.github/workflows/audit.yml`，`pnpm audit --audit-level=high` 阻断构建；后续：Dependabot、SBOM
+**MAY（可选配置）：**
+1. 开发期 **MAY** 临时开启 1–2 个直连后端的 dev-only 路由调试 API；但 **MUST** 通过 `process.env.NODE_ENV !== 'production'` 包裹并在 CR 时标注「仅开发使用」
+2. 定制安全头策略（如增加 Permissions-Policy 更严子集）**MAY** 在 `next.config.ts` 的 `headers()` 中叠加，但 MUST 保留现有 CSP/HSTS/X-Frame-Options/nosniff 基线
 
-## 12. 安全不变量（可测属性）
+### 1.4 自检 CheckList
 
-| ID | 不变属性 | 阈值 | 责任层 | 检查方式 |
-|----|---------|------|:---:|---------|
-| SI1 | 所有 BFF 写端点有 Origin 校验 | 缺 `assertAllowedOrigin` 的 POST/PUT/DELETE 数 = 0 | **[BFF]** | 静态扫描 + E2E |
-| SI2 | 2FA 端点有速率限制 | 缺限流的 2FA 路由数 = 0 | **[后端]** | 后端测试 |
-| SI3 | 密码不出现在 2FA 验证请求 | body 含 password 字段数 = 0 | **[BFF]** | E2E 断言 |
-| SI4 | 事件监听器已注册 | 监听器数 < 1 的事件类型数 = 0 | **[BFF]** | 启动健康检查 |
-| SI5 | 生产关键变量已配置 | `ALLOWED_ORIGINS`（BFF）/ `SECRET_KEY` `TOTP_ENCRYPTION_KEY`（后端）缺失 = 0 | **[BFF]+[后端]** | 启动断言 |
-| SI6 | 审计日志覆盖所有管理员写操作 | 缺 `logAdminAction` 的后端端点数 = 0 | **[后端]** | 后端静态扫描 |
-| SI7 | BFF 不直连业务数据库 | BFF 代码中 `better-sqlite3` 依赖引用 = 0（依赖已整体移除） | **[BFF]** | 静态扫描（迁移后新增） |
-
-> SI5 调整说明：单体时代 `AUTH_SESSION_SECRET` 为前端 session 签名密钥；迁移后运行时 JWT 签名密钥为后端 `SECRET_KEY`，`AUTH_SESSION_SECRET` 仅遗留代码自保护使用。生产关键变量拆分为 BFF 侧（`ALLOWED_ORIGINS`）与后端侧（`SECRET_KEY`/`TOTP_ENCRYPTION_KEY`/`DATABASE_PASSWORD`）。
-
----
-
-# Part D: 安全加固变更记录（Engineering Control Evidence）
-
-> 范围：2026-07-31 两轮加固（4 高 + 7 中 + 5 低 = 16 项 + ADR-015 新增 4 项 = 20 项已落地）。状态：✅ 全部通过验证（tsc 0 errors / 441 tests passed）。
-> 关联：[FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) 部署模型、[RootDoc-ADR.md](../../../docs/RootDoc-ADR.md) ADR-015 / R7 / R8。
-> **责任层说明**：本记录于单体时代生成，描述的修复动作多涉及前端遗留代码。迁移后对应控制的真实运行时位置见 Part A"责任层"列。
-
-## 4.1 变更记录包
-
-> ℹ️ 安全加固变更记录（第一轮/第二轮共 20 项）已迁移至根仓 [`CHANGELOG.md`](../../../CHANGELOG.md)。
-
-## 4.2 记分卡（Scorecard）
-
-| 控制 | 状态 | 缺口 | 当前责任层 |
-|------|:---:|------|:---:|
-| 2FA 写端点 Origin 校验 | ✅ | 无 | **[BFF]** |
-| 2FA 端点速率限制 | ✅ | 无 | **[后端]** |
-| 2FA 预认证 token 防重放 | ✅ | 单进程内存实现（遗留） | **[后端]** |
-| 生产关键变量强制配置 | ✅ | 无 | **[BFF]+[后端]** |
-| TOTP 密钥派生 | ✅ | 无 | **[后端]** |
-| 细粒度角色模块级 enforce | ✅ | event/community/resource/notification/join 仅 admin/root（设计如此） | **[后端]** |
-| 生产 CSP 严格度 | ✅ | style-src 保留 unsafe-inline | **[BFF]** |
-| Cookie `__Host-` 前缀 | ✅ | 无 | **[BFF]** |
-| 失败登录记录 | ✅ | 无 | **[后端]** |
-| 社区图片访问控制 | ✅ | 无 | **[后端]** |
-| 依赖漏洞 CI 阻断 | ✅ | Dependabot/Snyk 未启用 | **[BFF]** |
-| 结构化日志 | ✅ | 历史 console.error 持续清理 | **[BFF]** |
-| 多实例速率限制迁移 | ⚠️ 例外 | 多实例前须迁 Redis | **[后端]** |
-| BFF 不直连业务数据库 | ✅ | 遗留代码待清理 | **[BFF]** |
-
-## 4.3 例外登记（Exception Register）
-
-> ℹ️ 例外登记条目已迁移至 `docs/项目待办v2.md`。
-
-## 4.4 标准更新积压（Backlog）
-
-> ℹ️ 标准更新积压（Backlog）条目已迁移至 `docs/项目待办v2.md`。
-
-## 4.5 验证收据
-
-| 验证项 | 命令 | 结果 |
-|--------|------|------|
-| TypeScript 检查 | `pnpm exec tsc --noEmit` | 0 errors |
-| ESLint（改动文件） | `pnpm exec eslint <admin/community/exam/task/auth 相关>` | 0 warnings / 0 errors |
-| 单元测试 | `pnpm test` | 441/441 passed（13 files，2.72s） |
+- [ ] 所有写端点第一行调用 `assertAllowedOrigin`；grep 无遗漏
+- [ ] 新增 BFF 路由已走 `proxyBackend` / `proxyStream`；无组件 `fetch(BACKEND_URL)`
+- [ ] `BACKEND_URL` 未以 `NEXT_PUBLIC_` 前缀暴露；客户端 bundle grep 无后端 host:port 字符串
+- [ ] 生产环境缺失 `ALLOWED_ORIGINS` 时的 FATAL 退出逻辑在 `tools/tests/config/security-config.test.ts` 有反向测试
+- [ ] CSP 策略验证：curl 响应头 `script-src` 无 unsafe-inline/unsafe-eval（style-src 除外）
 
 ---
 
-*本文档 Part D 由 2026-07-31 安全加固第二轮收尾生成，遵循 engineering-control-evidence 输出契约；2026-08-05 追加 BFF 视角责任层标注。*
+## §2 JWT Cookie 托管与 401 静默刷新
+
+### 2.1 概述
+
+JWT 双 token（access 15min / refresh 7d）由**后端签发**，BFF 以 `__Host-` 前缀 HttpOnly Cookie 托管（JS 不可读）；401 时 `proxyBackend` 通过 RefreshMutex 全局单飞静默刷新并重试一次；2FA 登录模式走 `__Host-oauth_2fa` 预认证 Cookie，全程 JS 不可读。
+
+### 2.2 接口与配置清单
+
+| 符号 / 路径 | 默认值 / 签名 | 用途 |
+|---|---|---|
+| `__Host-fztbu_access` Cookie | 生产：Secure + HttpOnly + SameSite=Lax + Path=/ + 无 Domain | access token 托管；仅 HTTPS + 站点根路径可见 |
+| `__Host-fztbu_refresh` Cookie | 同 access，TTL=7d | refresh token 托管；轮换时由后端重新签发 |
+| `__Host-oauth_2fa` Cookie | 临时：登录→2FA 验证窗口期 | 2FA 预认证 token，验证成功后替换为双 token |
+| `setAuthCookies(res, tokens)` | `src/shared/backend-client.ts` 统一写 Cookie | 签名属性 MUST 与上表严格一致；禁止路由层自行写 cookie |
+| `RefreshMutex` 单飞 | `proxyBackend` 401 分支 | 并发多个 401 时只触发一次 `/auth/refresh`，其余排队 |
+| `POST /api/auth/refresh`（BFF→后端） | 后端路由 | 轮换双 token；复用检测：旧 refresh 立即失效 |
+| SameSite=Lax 策略 | 全站 Cookie 默认 | CSRF 兜底第一道；第二道为 Origin 白名单（§1） |
+
+### 2.3 不变量与约束（RFC2119）
+
+**MUST（铁律红线）：**
+1. 生产环境 JWT Cookie **MUST** 采用 `__Host-` 前缀：要求同时满足 Secure + Path=/ + 无 Domain 三项，**MUST NOT** 放宽；开发环境无前缀但 **MUST** 保持 HttpOnly
+2. Cookie 写回 **MUST** 统一由 `setAuthCookies(res, tokens)` 执行；**MUST NOT** 在单个业务路由手写 `res.cookie()`，避免属性不一致
+3. 401 静默刷新 **MUST** 由 RefreshMutex 全局单飞，**MUST NOT** 并发请求各自独立 `/auth/refresh` 导致 refresh 复用检测命中、用户被误登出
+4. `/auth/refresh` 成功后 **MUST** 写回一对全新双 token（refresh 轮换）；**MUST NOT** 复用旧 refresh（复用检测机制下旧 refresh 立即失效）
+5. 2FA 登录模式中，预认证 twoFactorToken **MUST** 来自请求体或 `__Host-oauth_2fa` Cookie；**MUST NOT** 以 query string 传递，**MUST NOT** 让其与用户密码在同一个请求体中重复传输（单体时代缺陷已修复）
+6. Cookie Secure 属性 **MUST** 随 `process.env.NODE_ENV === 'production'` 自动开启；**MUST NOT** 明文 HTTP 生产环境
+7. 前端 JS **MUST NOT** 能通过 `document.cookie` 读出 access/refresh/twoFactor；所有高敏 cookie MUST HttpOnly
+8. 刷新失败（后端返回 `REFRESH_EXPIRED` / 网络错误）时 **MUST** 调用 `clearAuthCookies()` 并强制跳转登录页；**MUST NOT** 无限重试或静默留在受保护页面
+
+**MUST NOT（禁止事项）：**
+1. **MUST NOT** 把 access/refresh token 写入 `localStorage` / `sessionStorage` / IndexedDB；XSS 可轻易读取
+2. **MUST NOT** 在前端源码中出现 `process.env.SECRET_KEY`、`TOTP_ENCRYPTION_KEY` 等后端密钥引用；**前端不持有任何业务密钥**
+3. **MUST NOT** 让 refresh token 生命周期 > 30 天；当前 7 天 **MUST NOT** 被放宽超过 30 天
+4. **MUST NOT** 允许 OAuth 2FA 流程绕过 GitHub OAuth 回调 state 校验再写 Cookie（防止 OAuth CSRF）
+5. **MUST NOT** 让 BFF 在 401 刷新路径上携带除 `Authorization: Bearer <refresh>` 外的敏感查询参数；所有通信 MUST 走请求体或 header
+6. **MUST NOT** 在用户登出、密码重置、账号禁用后保留 BFF 侧 token 副本；登出 MUST 调用 `clearAuthCookies()` 并向后端调用 `/auth/logout` 撤销 refresh
+
+**SHOULD（建议事项）：**
+1. **SHOULD** 为 Cookie 追加 `Partitioned` 属性（CHIPS 支持），便于后续第三方嵌入场景维持隔离
+2. 连续 3 次 `/auth/refresh` 失败后，**SHOULD** 临时标记账号异常并在错误提示中引导用户联系管理员（防 refresh 洪水攻击）
+3. **SHOULD** 登录/注册成功后清理临时 `__Host-oauth_2fa` Cookie，无论 2FA 是否启用
+
+**MAY（可选配置）：**
+1. 开发调试期 **MAY** 临时取消 `__Host-` 前缀，以便 localhost HTTP 工作；但 **MUST** 通过 `NODE_ENV !== 'production'` 条件编译
+2. 企业 SSO 场景 **MAY** 追加 `SameSite=none; Secure`，但 MUST 同时收紧 Cookie TTL ≤ 1 小时，作为窄口特例登记在 §6 例外表中
+
+### 2.4 自检 CheckList
+
+- [ ] 生产响应头 `Set-Cookie` 含 `__Host-` 前缀 + Secure + HttpOnly + Path=/；curl 人工验证
+- [ ] RefreshMutex 并发测试：并发 10 个 401 请求只触发 1 次 `/auth/refresh`；`tools/tests/security/refresh-mutex.test.ts`
+- [ ] 前端 JS 读取 `document.cookie`：不含任何 access/refresh/2fa 片段
+- [ ] 连续 3 次刷新失败后，用户被强制登录并清理 Cookie
+- [ ] 登出/改密后，旧 refresh token 已被后端撤销且 BFF Cookie 已清理
 
 ---
 
-# Part E: BFF 转发层与前端密钥/i18n 安全（补充）
+## §3 UI 层角色与路由保护（UI 兜底）
 
-> 承接 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.1 转发契约与 §1.2.4 工作台模块。本节补充 BFF 转发层的安全属性、i18n 词条管理位置，以及"前端不持有密钥"的设计不变量。
-> 责任层：BFF 转发层为 **[BFF]**；密钥生成/加密存储为 **[后端]**。
+### 3.1 概述
 
-## 13. BFF 转发安全（proxyBackend 同源转发）
+BFF 在 API 路由层提供轻量角色兜底（`requireAdmin/requireRoot/requireModuleAdmin/requirePasswordConfirmation`）+ UI 按钮显隐，作为用户体验优化与 UI 误触防护；**真实 RBAC0 enforce（`require_permission(resource, action)`）位于后端**，任何 BFF 鉴权通过都不等价于授权成立。
 
-- **同源转发、不暴露后端直连**：所有业务 API 由 `src/app/api/**/route.ts` 通过 [`shared/backend-client.ts`](../../src/shared/backend-client.ts) 的 `proxyBackend()` 转发到固定 `BACKEND_URL`（默认 `http://localhost:9000`，容器编排内 `http://backend:8000`）拼接 `/api/v1` 前缀。**前端不存在直连后端的客户端代码**——浏览器只与 BFF 同源通信，`BACKEND_URL`（含后端地址/端口）不出现在任何客户端 bundle，浏览器无从获知后端真实地址。
-- **不改写上游目标**：`proxyBackend()` 仅注入 `Authorization: Bearer <token>`、处理 401 静默刷新（调用后端 `/auth/refresh` 轮换并重试一次）、翻译 snake_case→camelCase、写回 `setAuthCookies`；请求目标固定为 `BACKEND_URL + /api/v1`，无用户可控 URL，**无 SSRF 风险**（对照发现 28）。
-- **SSE 流透传**：学习助手对话 `POST /api/tools/auxilio/chat` 由 `proxyStream()` 注入 Authorization 后原样 pipe 后端 `text/event-stream`，BFF 不做 JSON 解析与 401 自动刷新（由前端处理），详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §2.18。
+### 3.2 接口与配置清单
 
-## 14. i18n 词条管理（workbench namespace）
+| 角色 / 保护 | 后端存储权威 | BFF 解析来源 | 常见 UI 使用场景 |
+|---|---|---|---|
+| 超级管理员 `root` | `users.is_superuser=true`（PG） | `/auth/me` 返回 `isSuperuser` → 主角色解析为 `root` | 删除审计日志、硬删除用户、重置自定义密码 |
+| 普通管理员 `admin` | RBAC 表 `admin` 角色 | `/auth/me` `roles` 数组含 `admin` | 用户管理、活动、通知、社区审核 |
+| 细粒度角色 `content_moderator` / `exam_admin` / `task_publisher` | 后端 RBAC 表 seed 数据 | `/auth/me` `roles` 数组对应 | 社区审核、考试组卷、任务认领审核 |
+| 普通用户 `user`（默认） | 无角色即 user | `roles` 为空即 user | 一般业务使用 |
+| `requireAdmin()` | BFF 兜底实现 | `admin/server/require.ts` | 管理员接口 BFF 路由首行；后端二次 enforce |
+| `requireRoot()` | BFF 兜底实现 | `admin/server/require.ts` | root 专属接口；后端二次 enforce |
+| `requirePasswordConfirmation()` | BFF 转发后端校验 | `admin/server/require.ts` | 高危操作（重置密码、删用户） |
+| UI 按钮显隐 | — | `SafeUser.role` + 权限矩阵 | 管理入口/高敏按钮仅对有权限角色渲染 |
 
-> 工作台全部前端文案走 next-intl，统一收纳于 [src/i18n/messages/tools.ts](../../src/i18n/messages/tools.ts) 的 `workbench` namespace，**三处须同步维护**：
+### 3.3 不变量与约束（RFC2119）
 
-| 位置 | 行（约） | 说明 |
-|------|------|------|
-| `ToolsMessages.workbench` 接口 | ~376 | TypeScript 类型声明（所有 key 字符串约束，缺 key 即 `tsc` 报错） |
-| `zhCN.workbench` | ~830 | 简体中文词条 |
-| `en.workbench` | ~1284 | 英文词条 |
+**MUST（铁律红线）：**
+1. 后端 5 种管理员保护约束（SELF_DEMOTE / SELF_DISABLE / SELF_DELETE / SELF_APPROVE / LAST_ADMIN / ADMIN_CROSS_PROTECT）**MUST** 仅由后端 service 层 enforce；BFF 层 **MUST NOT** 自行实现这些保护逻辑，避免两套算法不一致
+2. BFF 管理员路由 **MUST** 首行调用 `requireAdmin()` / `requireRoot()`；**MUST NOT** 仅通过 UI 按钮隐藏来保护
+3. root 专属 UI 入口（审计日志、硬删除用户、重置自定义密码）**MUST** 仅在主角色 = `root` 时渲染；**MUST NOT** 对 admin 角色可见
+4. 后端权限矩阵新增资源点后 **MUST** 同步更新 BFF UI 显隐矩阵；两端出现不一致时，**MUST** 以后端 `require_permission` 为权威并立即修复 BFF 显隐
+5. 越权测试时，**MUST** 断言：即便绕过 BFF 直接请求后端，`require_permission` 会返回 403；BFF 兜底与后端 enforce **MUST** 形成双层保护
+6. 新增管理员写操作 **MUST** 确保后端已纳入 `logAdminAction` 覆盖；BFF 层 **MUST NOT** 直接写审计日志，**MUST NOT** 绕过后端 audit 机制直接操作 `admin_actions` 表
 
-- 新增/修改工作台文案：须在**类型 + 中 + 英**三处同时新增 key，缺任一会导致编译错误（类型）或运行时空文案（语言包）。
-- widget 与视图均通过 `useTranslations('workbench')` 取值；widget 的 `titleKey`（如 `wbTitle`/`examCountdown`）亦指向该 namespace。
-- 部分就绪词条示例：`workbench.apiUsageTitle`（中 `API 调用 · 近 {days} 天` / 英 `API calls · last {days} days`）已定义，但对应 `api-usage-stats` 前端卡片尚未注册（详见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4）。
+**MUST NOT（禁止事项）：**
+1. **MUST NOT** 允许 BFF 管理员 UI 以「角色名字符串前端判断」替代后端 enforce（例如前端仅判 `role==='admin'` 放行，后端实际无权限）——前后端 MUST 双层校验
+2. **MUST NOT** 允许 `roles` 数组由客户端表单传入或修改；角色清单 MUST 仅来自 `/auth/me` 后端返回，前端禁止用户可控编辑
+3. **MUST NOT** 把默认管理员创建、`ADMIN_PASSWORD` 生成逻辑放到 BFF 端；RBAC seed + 默认管理员 MUST 由后端 startup 任务经 PostgreSQL advisory lock 单实例执行
+4. **MUST NOT** 把 OAuth 注册用户直接设为管理员；默认 MUST 是 `member` 角色，升级 MUST 走后端手工 RBAC 流程
+5. **MUST NOT** 在 `/auth/me` 响应体中暴露 `ADMIN_PASSWORD`、`password_hash`、`TOTP 种子` 等敏感字段；SafeUser DTO MUST 与后端对齐
 
-## 15. 前端不持有密钥（不变量）
+**SHOULD（建议事项）：**
+1. **SHOULD** 在管理后台 UI 中提供「当前角色与权限一览」卡片，展示主角色（root/admin/content_moderator/…）+ 可见模块清单，便于管理员自查
+2. 密码重置审批流程 **SHOULD** 在 BFF UI 层屏蔽「审批自己申请」的按钮，配合后端 SELF_APPROVE 保护
+3. **SHOULD** 对连续 3 次 BFF 管理员 403 触发告警，与后端审计日志联动（账户接管检测）
 
-- **API Key 不落地前端**：学习助手 LLM 接入的 OpenAI 兼容 / Anthropic API Key 由用户界面填写后，经 BFF `POST /api/workbench/llm-config` 转发后端，由**后端 AES-256-GCM 加密存储**（`llm_config` 表）。前端读取时仅拿到脱敏值 `apiKeyMasked`（如 `sk-****1234`），**不持有明文密钥**（见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) §1.2.4 与 widget `llm-usage-stats.tsx`）。
-- **JWT 由后端签发、BFF 仅托管**：access/refresh 由后端签发，BFF 以 HttpOnly Cookie（`__Host-` 前缀 + Secure + SameSite=Lax）托管；前端 JS 不可读，刷新/轮换由 `proxyBackend` 处理。
-- **无硬编码密钥**：前端源码无业务密钥常量；所有密钥（`SECRET_KEY` / `TOTP_ENCRYPTION_KEY` / `DATABASE_PASSWORD` 等）均属后端 `.env`，不在前端仓库。
+**MAY（可选配置）：**
+1. 小体量内测期 **MAY** 在 BFF 侧提供「dev switch」临时把普通账号伪装为管理员，用于 UI 交互验收；但 **MUST** 通过 `NODE_ENV !== 'production'` 包裹，生产自动关闭
+
+### 3.4 自检 CheckList
+
+- [ ] 管理员端点数与 BFF 保护矩阵一一对应；grep 无遗漏
+- [ ] 越权测试：绕过 BFF 直接请求后端，所有管理员端点均返回 403（非对应角色）
+- [ ] 管理后台 UI 权限矩阵（`admin × root` 与 3 细粒度角色）与后端 seed 一致
+- [ ] 默认管理员创建流程：BFF 代码路径 grep 确认未写 ADMIN_PASSWORD
+- [ ] SafeUser DTO 不含密码哈希、TOTP 种子、邮箱密码登录原始字段
 
 ---
 
-*Part E 由 2026-08-08 据 0.9.8 代码现状补充（proxyBackend 同源转发、workbench namespace 三处 i18n、前端不持有密钥）。*
+## §4 安全头、CSP、i18n 词表管理
+
+### 4.1 概述
+
+Next.js `next.config.ts` 统一产出 HSTS/CSP/X-Frame-Options/nosniff/Permissions-Policy 等安全头；`globals.css` token 收敛视觉变量；i18n 文案通过 next-intl 三处（类型+zhCN+en）同步；**前端不持有任何业务密钥**——用户级 LLM Key 经 BFF 转发后端加密存储，前端仅拿脱敏 `apiKeyMasked`。
+
+### 4.2 接口与配置清单
+
+| 项目 | 默认值 / 签名 | 说明 |
+|---|---|---|
+| HSTS（`Strict-Transport-Security`） | `max-age=63072000; includeSubDomains; preload` | 2 年 + 子域 + Chrome preload 列表 |
+| X-Frame-Options | `DENY` | 禁止任何 iframe 嵌套 |
+| X-Content-Type-Options | `nosniff` | 禁止 MIME 嗅探 |
+| Permissions-Policy | `geolocation=(), microphone=(), camera=(), payment=()` | 高敏能力全关 |
+| CSP `script-src` | 生产 `'self' 'nonce-…'`；开发放宽 | 无 `unsafe-inline` / `unsafe-eval` |
+| CSP `style-src` | `'self' 'unsafe-inline'`（例外） | Next.js 注入限制，作为唯一例外登记 §6 |
+| `globals.css` token 体系 | `--primary` / `--foreground` / `--muted-foreground` / `--destructive` / `--border` / `--chart-*` + 字号/圆角/z-index/动效时长 | 颜色全部走 token 或 Tailwind 语义色板 |
+| workbench namespace i18n 三处 | `src/i18n/types.ts`（类型）→ `messages/zhCN.ts` → `messages/en.ts` | 新增文案三处同步；缺 key 即 tsc 错/运行时空文案 |
+| LLM 用户级 Key 写入 | BFF `POST /api/workbench/llm-config` → 后端 AES-GCM 加密落库 → 返回 `apiKeyMasked`（如 `sk-****1234`） | 前端不持有明文 Key |
+
+### 4.3 不变量与约束（RFC2119）
+
+**MUST（铁律红线）：**
+1. 生产部署 **MUST** 开启 HSTS `max-age ≥ 31536000` + includeSubDomains；上线 Chrome HSTS preload 列表后 MUST 保持两年策略不回退
+2. CSP **MUST** 使用 nonce 策略，**MUST NOT** 固定 hardcode nonce 值；每请求 MUST 重新生成
+3. 颜色、字号、圆角、阴影、z-index、动效时长 **MUST** 全部走 `globals.css` token 或 Tailwind 语义色板；**MUST NOT** 就地散落硬编码 hex / 毫秒数值（SVG `stroke`/`fill` 例外：集中收口到 constants.ts 并注释来源）
+4. i18n workbench namespace 新增/修改文案 **MUST** 在类型、zh-CN、en 三处同步新增 key；**MUST NOT** 只改中文不改英文或只改语言包不改类型
+5. LLM 用户级 Key **MUST** 通过 BFF 路由→后端加密链路；**MUST NOT** 前端明文存储、**MUST NOT** 明文返回 `/users/me` / llm config 读接口
+6. 所有 `NEXT_PUBLIC_*` 变量 **MUST** 经人工评审确认「公开安全」；**MUST NOT** 以 `NEXT_PUBLIC_` 前缀暴露内部端口、后端直连地址、内部接口路径
+7. 字体 **MUST** 走 `next/font/google` 自托管；**MUST NOT** 通过 CSS `@import` 拉 Google Fonts（绕过安全 + 隐私 + 合规）
+
+**MUST NOT（禁止事项）：**
+1. **MUST NOT** 在生产环境关闭 CSP、HSTS、X-Frame-Options 任何一项；调试期临时关闭 MUST 配套条件编译 + 上线前回归
+2. **MUST NOT** 在 CSP 白名单中引入未知第三方 CDN（script-src/style-src/connect-src 全部显式收敛到 self + 已知后端/SSE 上游）
+3. **MUST NOT** 允许前端 import `crypto` / `fs` / `nodemailer` / `pino` 等 node 原生/包进入客户端 bundle；对应文件首行 **MUST** `import 'server-only'` 声明 server-only 边界（ADR-010）
+4. **MUST NOT** 前端在 `console.log` / 错误上报 / 埋点中打印 token、密码、手机号、邮箱、TOTP 验证码；与通用 LOG-01/N3 对齐
+5. **MUST NOT** 在 SVG 就地硬编码 `#ffffff`/`#667eea` 等颜色超过 3 处，超过 SHOULD 收口到 constants 文件并提取 token 命名
+
+**SHOULD（建议事项）：**
+1. **SHOULD** 定期用 CSP Evaluator（https://csp-evaluator.withgoogle.com/）复查策略强度，确认无 bypass 路径
+2. **SHOULD** 在 CI 中加入「i18n 三处一致性检查」脚本：类型、zhCN、en 的 key 集合完全相等，不一致则 CI 失败
+3. **SHOULD** 字体文件预加载（`<link rel="preload" as="font">`）并配合 CSP font-src 自托管，避免字体回退闪烁
+
+**MAY（可选配置）：**
+1. 小型内测/预览版 **MAY** 临时把 style-src `unsafe-inline` 放宽；但 MUST 与生产分离并在 §6 中显式标注
+2. 多语言扩展（越南语/繁体中文）**MAY** 按「三处同步」模式新增对应 `vi.ts` / `zh-TW.ts` 语言包
+
+### 4.4 自检 CheckList
+
+- [ ] 生产 curl 安全头检查：HSTS/X-Frame/nosniff/CSP/Permissions-Policy 全部存在
+- [ ] CSP evaluator 无 high severity 告警；style-src unsafe-inline 已在 §6 例外表登记
+- [ ] globals.css token grep：颜色/字号/圆角/z-index/动效时长 ≥ 95% 走 token；无大量 hex 散落
+- [ ] i18n workbench 新增文案后三处同步；pnpm ts-check 0 errors；en 语言包无 MISSING_MESSAGE
+- [ ] LLM 用户级 Key 前端仅拿脱敏值；明文 API Key grep 不在前端代码/运行时响应体中
+
+---
+
+## §5 运行时监测与遗留代码责任划分
+
+### 5.1 概述
+
+前端事件总线监听器显式注册、幂等初始化；运行时失败登录记录、限流、审计日志、2FA 限流等由**后端实现**；BFF 仅做转发与结构化日志。遗留单体时代代码（`modules/auth/server/*` 等）仍在清理中，运行时已全部不再被 API 路由引用。
+
+### 5.2 接口与配置清单
+
+| 符号 / 配置项 | 默认值 / 签名 | 用途 |
+|---|---|---|
+| `initNotificationEvents()` | `instrumentation.ts` 事件总线 | 显式注册监听器，幂等初始化 |
+| `createRequestLogger(req)` | `src/shared/logger.ts` | pino 结构化日志封装，携带 requestId |
+| SI1–SI7 不变量（见下） | 可测清单 | CI / E2E 定期扫描 |
+| 遗留代码路径 | `modules/auth/server/*`、`shared/security/` 旧限流器 | 清理独立跟踪；MUST 验证删除后 tsc 0 errors |
+
+### 5.3 不变量与约束（RFC2119）
+
+**MUST（铁律红线）：**
+1. 事件总线 **MUST** 显式调用 `initNotificationEvents()` 初始化；函数 **MUST** 幂等（`initialized` 标志），**MUST NOT** 在模块加载副作用里自动初始化
+2. 事件载荷 **MUST** 仅含序列化安全类型；用户输入 **MUST** 先经 Zod 校验后再进入 emit；**MUST NOT** 把 DB cursor / 函数 / 类实例作为载荷传递
+3. pino 结构化日志 **MUST** 携带 `requestId` 字段；**MUST NOT** 混用 `console.error` 直接输出无结构化上下文的错误
+4. 失败登录记录、登录历史、尝试邮箱 **MUST** 由后端写入 `login_history` / `attempted_email`；BFF **MUST NOT** 自行做账号枚举/爆破检测
+5. 遗留单体代码（`modules/auth/server/*`、`shared/security/` 旧限流器等）**MUST NOT** 被新 BFF API 路由引用；清理工作独立跟踪且 MUST 验证「删除后 tsc 0 errors」
+
+**MUST NOT（禁止事项）：**
+1. **MUST NOT** 在事件监听器内抛未 catch 异常导致整个 emit 链中断；每个监听器 MUST 单层 try/catch
+2. **MUST NOT** 把「登录成功」当作已过 2FA 认证；当用户启用 2FA 时 MUST 经过预认证 token → verify 两步，禁止一步登录成功直接写双 token
+3. **MUST NOT** 把依赖漏洞扫描（`pnpm audit`）挪出 CI；high 及以上 MUST 阻断构建
+4. **MUST NOT** 让 BFF 运维 `/api/health` 路由返回内部状态（DB 版本、Redis latency、容器 ID），只允许 `{ok:true/false}`
+
+**SHOULD（建议事项）：**
+1. **SHOULD** 为结构化日志配置 7 天滚动切割 + 脱敏过滤器（LOG-01/N3），避免 token/PII 进入归档文件
+2. **SHOULD** 事件异步化阈值触发条件（活跃用户 > 500 或监听器 P95 > 500ms）达标后，自动切换为异步批处理；过渡期同步实现保持兼容
+3. **SHOULD** 遗留代码清理完成后做一次全量 E2E 回归 + tsc 0 errors + pnpm audit，确认不留空洞
+
+**MAY（可选配置）：**
+1. **MAY** 接入 Sentry 作前端错误上报（生产启用、开发关闭），但 MUST 同时启用 Sentry 脱敏（PII/token 全 mask），错误详情上报在后端链路对齐
+
+### 5.4 自检 CheckList
+
+- [ ] SI1–SI7 7 条 SI 不变量全部在 CI 或 E2E 中有检查
+- [ ] 所有新 BFF 路由未引用遗留单体 `modules/auth/server/*`
+- [ ] pnpm audit --audit-level=high 0 警告；无 high 以上漏洞进入 main 分支
+- [ ] 事件监听器全部有 try/catch；异常不中断 emit 链
+- [ ] `/api/health` curl 响应仅为 `{ok:true/false}`，无内部状态细节泄露
+
+---
+
+## §6 变更门禁
+
+> 本章为 Pre-commit 必查清单。每次提交涉及 BFF 安全、权限矩阵、安全头、Cookie、i18n、密钥边界的代码/配置变更前，提交人 **MUST** 逐项自查并在 PR 描述中打钩；CR 审核人 **MUST** 核对本清单并在未打钩时打回。
+
+### §6.1 通用门禁
+
+- [ ] 变更是否影响 §1–§5 任一 MUST/MUST NOT 约束？若是，本节约束文字 **MUST** 已同步更新
+- [ ] BFF proxyBackend 签名与响应格式与后端契约一致；`pnpm ts-check` 0 errors
+- [ ] 新增/修改配置项已同步：根 `.env.example` + 前端 `.env.example` + `next.config.ts` 默认值 三处对齐
+- [ ] 6 行元数据头：版本号、变更日期已同步更新
+- [ ] `gen_doc_facts.py` 派生事实同步：`make gen-doc-facts`（版本一致性 / 模块契约对齐 / 测试存在）无漂移
+
+### §6.2 BFF 转发与 Origin 门禁（§1 相关）
+
+- [ ] 所有新写端点第一行 `assertAllowedOrigin`；grep 0 遗漏
+- [ ] `ALLOWED_ORIGINS` 生产缺失 FATAL 退出；反向测试在 `tools/tests/config/security-config.test.ts` 中
+- [ ] 新增 BFF 路由已走 `proxyBackend/proxyStream`；无组件直连后端
+- [ ] CSP 配置变更后通过 CSP Evaluator 复查；style-src unsafe-inline 是唯一例外，且登记
+
+### §6.3 Cookie 与 401 刷新门禁（§2 相关）
+
+- [ ] 生产 Cookie `__Host-` + Secure + HttpOnly + Path=/ 齐全；curl 人工验证
+- [ ] RefreshMutex 并发 10 请求 1 次 `/auth/refresh` 行为；反向测试存在
+- [ ] 登出/改密/禁用后 BFF Cookie 清理 + 后端 refresh 撤销，两套流程串联正确
+- [ ] 2FA verify 路径 body 中不含 `password` 字段；E2E 反向断言
+
+### §6.4 UI 权限矩阵门禁（§3 相关）
+
+- [ ] 新增管理员端点：BFF `requireAdmin/requireRoot` + 后端 `require_permission` 双层 enforce
+- [ ] root 专属 UI 仅主角色 root 可见；与后端 RBAC seed 角色层级一致
+- [ ] SafeUser DTO 不含密码哈希、TOTP 种子、邮箱密码登录原始字段
+- [ ] 管理员 5 种 self/cross/last 保护：BFF 不重写实现；全部 defer 后端
+
+### §6.5 安全头 + CSP + i18n + 密钥门禁（§4 相关）
+
+- [ ] 生产 curl 安全头齐全；HSTS/CSP/X-Frame/nosniff/Permissions-Policy 0 缺失
+- [ ] globals.css token 覆盖完整；颜色/字号/圆角/z-index/动效时长无大量 hex 散落
+- [ ] i18n workbench 新增文案三处同步；tsc 0 error；en 语言包无 MISSING_MESSAGE
+- [ ] LLM 用户级 Key：前端仅拿脱敏值；明文 API Key 前端代码/响应体 grep 0 命中
+
+### §6.6 运行时监测门禁（§5 相关）
+
+- [ ] SI1–SI7 七项不变量：CI 或 E2E 检查全部通过
+- [ ] 新 BFF 路由未引用遗留单体 `modules/auth/server/*`
+- [ ] pnpm audit --audit-level=high 0 警告
+- [ ] `/api/health` 响应极简；无 DB 版本、Redis 延迟等内部状态泄露
+
+---
+
+> ↩ **返回前端文档地图**：[FrontDoc-01-Arch.md](FrontDoc-01-Arch.md) · [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md) · **后端安全权威**：[BackDoc-02-Sec.md](../../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)
