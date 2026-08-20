@@ -19,6 +19,7 @@ import { formatDate } from '@/shared/utils/utils';
 /* ============= 类型定义（收敛自 join/types，波次 B1b） ============= */
 
 import type { JoinApplication, JoinApplicationStatus as AppStatus } from '@/modules/join/types';
+import { joinStatusMeta } from '@/modules/join/ui/join-meta';
 
 type ReviewModal =
   | { type: 'none' }
@@ -33,30 +34,6 @@ const STATUS_FILTERS: Array<{ v: AppStatus; label: string }> = [
 ];
 
 /* ============= 工具函数 ============= */
-
-/** 状态中文标签 */
-function statusLabel(s: AppStatus): string {
-  switch (s) {
-    case 'pending':
-      return 'statusPending';
-    case 'approved':
-      return 'statusApproved';
-    case 'rejected':
-      return 'statusRejected';
-  }
-}
-
-/** 状态徽章语义色 */
-function statusBadgeVariant(s: AppStatus): BadgeVariant {
-  switch (s) {
-    case 'pending':
-      return 'amber';
-    case 'approved':
-      return 'success';
-    case 'rejected':
-      return 'danger';
-  }
-}
 
 /* ============= 面板组件 ============= */
 
@@ -236,8 +213,8 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                       <h3 className="display-serif text-[18px] text-[var(--foreground)]">
                         {app.applicantName}
                       </h3>
-                      <Badge variant={statusBadgeVariant(app.status)}>
-                        {t(statusLabel(app.status))}
+                      <Badge variant={joinStatusMeta(app.status).variant}>
+                        {t(joinStatusMeta(app.status).labelKey)}
                       </Badge>
                     </div>
                     <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">

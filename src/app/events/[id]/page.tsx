@@ -215,12 +215,9 @@ export default function EventDetailPage() {
       <main className="relative pt-16 min-h-screen flex items-center justify-center pixel-page">
         <div className="text-center">
           <div className="meta-mono text-[var(--destructive)] mb-4">{error || t('notFound')}</div>
-          <Link
-            href="/events"
-            className="meta-mono text-[var(--primary)] underline-grow inline-block"
-          >
-            ← {t('backToList')}
-          </Link>
+          <BackLink href="/events" className="mt-0 justify-center">
+            {t('backToList')}
+          </BackLink>
         </div>
       </main>
     );

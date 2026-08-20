@@ -8,6 +8,7 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { formatDate } from '@/shared/utils';
 import { BackLink, Button, SkeletonBlock, Title } from '@/components';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -205,7 +206,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                 <span className={user.role === 'root' ? 'text-[var(--destructive)]' : user.role === 'admin' ? 'text-[var(--primary)]' : undefined}>
                   {user.role === 'root' ? t('roleRoot') : user.role === 'admin' ? t('roleAdmin') : t('roleMember')}
                 </span>
-                {' · '}{t('joined', { date: new Date(user.createdAt).toLocaleDateString('zh-CN') })}
+                {' · '}{t('joined', { date: formatDate(user.createdAt) })}
               </p>
             </div>
           </div>
@@ -364,7 +365,7 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
                               {topic.title}
                             </h3>
                             <div className="meta-mono text-[11px] text-[var(--muted-foreground)]/60 mt-1">
-                              {topic.category?.name || t('defaultCat')} · {new Date(topic.createdAt).toLocaleDateString('zh-CN')}
+                              {topic.category?.name || t('defaultCat')} · {formatDate(topic.createdAt)}
                             </div>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">

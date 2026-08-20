@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components';
-import type { BadgeVariant } from '@/components';
+import { joinStatusMeta } from '@/modules/join/ui/join-meta';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils/utils';
 import { apiRequest } from '@/shared/hooks/use-api-request';
@@ -42,10 +42,6 @@ export function JoinTab() {
     };
   }, [t]);
 
-  const statusLabel = (s: string) =>
-    s === 'pending' ? t('statusPending') : s === 'approved' ? t('statusApproved') : t('statusRejected');
-  const statusVariant = (s: string): BadgeVariant =>
-    s === 'pending' ? 'amber' : s === 'approved' ? 'success' : 'danger';
 
   if (loading) {
     return (
@@ -96,8 +92,8 @@ export function JoinTab() {
                   <span className="meta-mono text-[var(--primary)] text-[12px]">
                     {formatDate(app.createdAt)}
                   </span>
-                  <Badge variant={statusVariant(app.status)}>
-                    {statusLabel(app.status)}
+                  <Badge variant={joinStatusMeta(app.status).variant}>
+                    {t(joinStatusMeta(app.status).labelKey)}
                   </Badge>
                 </div>
                 <div className="text-[15px] text-[var(--foreground)] mb-2">

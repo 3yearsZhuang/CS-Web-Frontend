@@ -8,6 +8,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatDate } from '@/shared/utils';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
@@ -356,10 +357,10 @@ export function AnnouncementsPanel() {
                     </td>
                     <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">{a.priority}</td>
                     <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
-                      {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('zh-CN') : '—'}
+                      {a.expiresAt ? formatDate(a.expiresAt) : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-[11px] font-mono text-[var(--muted-foreground)]">
-                      {new Date(a.createdAt).toLocaleDateString('zh-CN')}
+                      {formatDate(a.createdAt)}
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
