@@ -1,16 +1,17 @@
 /**
  * @file 全量 Agent 页（/tools/auxilio）— 完整学习助手能力：
- * full 对话（会话列表 + 工具调用可视化）+ Agent 预设切换 + Trajectory 回放 + 用量统计。
+ * full 对话（会话列表 + 工具调用可视化）+ Agent 预设切换 + Trajectory 回放；
+ * 「用量与设置」跳转独立详情页 /tools/auxilio/settings。
  */
 'use client';
 
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { BarChart3, Bot, History, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/primitives/button';
 import AssistantChat from './assistant-chat';
 import TrajectoryPanel from './trajectory-panel';
-import LlmUsageStats from '@/modules/workbench/widgets/llm-usage-stats';
 
 const PRESET_OPTIONS = [
   { id: 'general', labelKey: 'presetGeneral' },
@@ -24,11 +25,10 @@ export default function AgentPage() {
   const [presetId, setPresetId] = useState<string | null>(null);
   const [activeConv, setActiveConv] = useState<number | null>(null);
   const [showReplay, setShowReplay] = useState(false);
-  const [showUsage, setShowUsage] = useState(false);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 顶栏：标题 + 预设切换 + 回放 + 用量 */}
+      {/* 顶栏：标题 + 预设切换 + 回放 + 用量（跳转独立设置页） */}
       <div className="flex flex-wrap items-center gap-2 px-1">
         <div className="flex items-center gap-2 mr-auto">
           <Bot className="w-5 h-5 text-[var(--primary)]" />
@@ -60,28 +60,27 @@ export default function AgentPage() {
           {showReplay ? <RotateCcw className="w-4 h-4" /> : <History className="w-4 h-4" />}
           {t('replay')}
         </Button>
-        <Button size="sm" variant={showUsage ? 'pixel' : 'pixel-outline'} onClick={() => setShowUsage((v) => !v)}>
+        <Link
+          href="/tools/auxilio/settings"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border)] text-[12px] font-medium hover:bg-[var(--border)]/40"
+        >
           <BarChart3 className="w-4 h-4" />
           {t('llmUsageEntry')}
-        </Button>
+        </Link>
       </div>
 
-      {/* 主区：用量面板 / 全量对话 */}
-      {showUsage ? (
-        <LlmUsageStats />
-      ) : (
-        <AssistantChat
-          mode="full"
-          presetId={presetId}
-          onActiveConversation={(id) => {
-            setActiveConv(id);
-            if (id == null) setShowReplay(false);
-          }}
-        />
-      )}
+      {/* 主区：全量对话 */}
+      <AssistantChat
+        mode="full"
+        presetId={presetId}
+        onActiveConversation={(id) => {
+          setActiveConv(id);
+          if (id == null) setShowReplay(false);
+        }}
+      />
 
       {/* Trajectory 回放面板 */}
-      {showReplay && !showUsage && (
+      {showReplay && (
         <TrajectoryPanel conversationId={activeConv} onClose={() => setShowReplay(false)} />
       )}
     </div>

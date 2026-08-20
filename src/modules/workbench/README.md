@@ -15,8 +15,8 @@
 | widget | `widgets/tasks-and-notes.tsx` | 任务与便签（合并卡）：今日待办 + 快捷便签双区共存（各自持久化 wb_tasks/wb_notes；便签可一键转今日任务） |
 | widget | `widgets/exam-countdown.tsx` | 考试倒计时（后端 exams 数据） |
 | widget | `widgets/github-heatmap.tsx` | GitHub 贡献热力图（后端缓存 6h） |
-| widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：对话优先左主列布局，头部「用量与设置」统一入口展开用量统计 + 模型接入设置面板；取代旧 /tools/auxilio 分析页 |
-| widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（embedded 时无内部按钮、设置表单常显） |
+| widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：纯轻聊（lite 对话），头部「用量与设置」跳转独立详情页 /tools/auxilio/settings；取代旧 /tools/auxilio 分析页 |
+| widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（API Key/联网搜索/轨迹记录开关）；独立详情页 /tools/auxilio/settings 使用 |
 | 跨域 | `modules/auxilio/ui/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态；`mode="lite"` 纯轻聊内嵌于 llm-widget，`mode="full"` 全量能力供 /tools/auxilio 页） |
 | 模块 | `widgets/pomodoro/` | 番茄钟×播放器（目录即模块：use-pomodoro 状态机 + settings/music 面板） |
 | schema | `schema/widget-schema.ts` | Schema 配置驱动卡类型 + 校验器（count/list/progress/countdown/note/link；api 白名单防契约漂移） |
