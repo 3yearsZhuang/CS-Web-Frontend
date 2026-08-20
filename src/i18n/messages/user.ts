@@ -320,6 +320,7 @@ export interface UserMessages {
     roleMember: string;
     joined: string;
     profileTitle: string;
+    backToCommunity: string;
     techDir: string;
     links: string;
     noTags: string;
@@ -707,6 +708,7 @@ export const zhCN: UserMessages = {
     roleMember: '成员',
     joined: '加入于 {date}',
     profileTitle: '技术档案',
+    backToCommunity: '返回社区',
     techDir: '技术方向',
     links: '链接',
     noTags: '暂无技术标签',
@@ -1093,6 +1095,7 @@ export const en: UserMessages = {
     roleMember: 'Member',
     joined: 'Joined {date}',
     profileTitle: 'Tech Profile',
+    backToCommunity: 'Back to community',
     techDir: 'Tech Directions',
     links: 'Links',
     noTags: 'No tech tags',

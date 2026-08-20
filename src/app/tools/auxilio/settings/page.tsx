@@ -7,6 +7,7 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { BackLink } from '@/components';
 import { Title, ArkDivider } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -28,12 +29,7 @@ export default function AuxilioSettingsPage() {
         pageKey="auxilio"
         minHeight="40vh"
         sidebarBottom={
-          <Link
-            href="/tools/auxilio"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            {t('settingsBack')}
-          </Link>
+          <BackLink href="/tools/auxilio">{t('settingsBack')}</BackLink>
         }
       >
         <RevealTitle>

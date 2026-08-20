@@ -11,7 +11,7 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
+import { BackLink, Button } from '@/components';
 import { useExam } from './use-exam';
 import { QuestionList } from './question-list';
 import { QuestionPanel } from './question-panel';
@@ -73,12 +73,9 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
       <div className="border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-sm sticky top-16 z-[var(--z-banner)]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0">
-            <Link
-              href="/tools/exam"
-              className="meta-mono text-[11px] text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors shrink-0"
-            >
-              ← {t('back')}
-            </Link>
+            <BackLink href="/tools/exam" className="mt-0 shrink-0">
+              {t('back')}
+            </BackLink>
             <h1 className="text-lg font-semibold truncate">{detail.title}</h1>
             {timeRemaining !== null && (
               <span

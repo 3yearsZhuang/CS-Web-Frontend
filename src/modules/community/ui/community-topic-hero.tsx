@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
-import { Badge } from '@/components';
+import { BackLink, Badge } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { FollowButton } from './follow-button';
 import type { CommunityPostDetail } from '@/modules/community/types';
@@ -31,12 +31,9 @@ export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId
       hero={hero}
       minHeight="50vh"
       sidebarBottom={
-        <Link
-          href="/community"
-          className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-        >
+        <BackLink href="/community" arrow={false}>
           {t('backToCommunity')}
-        </Link>
+        </BackLink>
       }
     >
       <div

@@ -147,6 +147,7 @@ export interface CommunityMessages {
     loginRequiredTitle2: string;
     loginRequiredDesc: string;
     loginNow: string;
+    backToAll: string;
     heroTitle1: string;
     heroTitle2: string;
     heroDesc: string;
@@ -360,6 +361,7 @@ export const zhCN: CommunityMessages = {
     loginRequiredTitle2: '登录',
     loginRequiredDesc: '// 发布内容需要登录账户，加入社区讨论',
     loginNow: '立即登录 →',
+    backToAll: '返回社区',
     heroTitle1: '发布 ',
     heroTitle2: '内容',
     heroDesc: '选择版块，写下你的问题、思考或作品。支持 Markdown 与图片上传。',
@@ -573,6 +575,7 @@ export const en: CommunityMessages = {
     loginRequiredTitle2: 'sign in',
     loginRequiredDesc: '// Publishing requires an account. Join the community discussion.',
     loginNow: 'Sign in now →',
+    backToAll: 'Back to community',
     heroTitle1: 'Publish ',
     heroTitle2: 'content',
     heroDesc: 'Pick a category and write your question, thoughts, or work. Markdown and image uploads supported.',

@@ -12,7 +12,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { GhostTitle, Title } from '@/components';
+import { BackLink, GhostTitle, Title } from '@/components';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import { DevDocsViewer } from '@/modules/tools/ui/dev-docs-viewer';
@@ -67,6 +67,9 @@ export default function DevCenterPage() {
         hero={hero}
         pageKey="dev-center"
         minHeight="50vh"
+        sidebarBottom={
+          <BackLink href="/tools">{t('back')}</BackLink>
+        }
       >
         <RevealTitle>
           <Title

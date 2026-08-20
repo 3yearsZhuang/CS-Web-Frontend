@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { BackLink } from '@/components';
 import { Button, SectionLoading, SectionMarker, Title } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -233,12 +234,7 @@ export default function EventDetailPage() {
         hero={hero}
         maxWidth="1200px"
         sidebarBottom={
-          <Link
-            href="/events"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            ← {t('back')}
-          </Link>
+          <BackLink href="/events">{t('back')}</BackLink>
         }
       >
         <RevealTitle>

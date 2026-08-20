@@ -53,6 +53,8 @@ export type { CapsuleTab } from './layout/floating-capsule-sidebar';
 export { PageHeaderBackground } from './layout/page-header-background';
 export { CollapsingHero } from './layout/collapsing-hero';
 export type { HeroState, CollapsingHeroProps } from './layout/collapsing-hero';
+export { default as BackLink } from './layout/back-link';
+export type { BackLinkProps } from './layout/back-link';
 
 // ---- effects：视觉特效与动画 ----
 export { MobiusRing } from './effects/mobius-ring';

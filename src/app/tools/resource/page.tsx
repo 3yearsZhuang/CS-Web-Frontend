@@ -15,6 +15,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { BackLink } from '@/components';
 import { Button, Pagination, SectionLoading, ArkDivider, Title } from '@/components';
 import { motion } from 'motion/react';
 import { useResources } from '@/modules/tools/ui/hooks/use-resources';
@@ -55,12 +56,7 @@ export default function ResourcePage() {
           onTabChange: (key: string) => res.setType(key),
         }}
         sidebarBottom={
-          <Link
-            href="/tools"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            ← {t('back')}
-          </Link>
+          <BackLink href="/tools">{t('back')}</BackLink>
         }
       >
         <RevealTitle>

@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
+import { BackLink } from '@/components';
 import { Button, SectionLoading, Title, SectionMarker, ArkDivider } from '@/components';
 import { useCompose } from '@/modules/community/ui/hooks/use-compose';
 import { ComposeForm } from '@/modules/community/ui/compose-form';
@@ -79,7 +80,15 @@ function ComposePageContent() {
   return (
     <main className="relative pt-16 pixel-page">
       {/* ============ [ 00 ] Hero — 1s 后自动收缩悬浮 ============ */}
-      <CollapsingHero index="00" label="Compose" hero={hero} pageKey="posts-new">
+            <CollapsingHero
+        index="00"
+        label="Compose"
+        hero={hero}
+        pageKey="posts-new"
+        sidebarBottom={
+          <BackLink href="/community" arrow={false}>{t('backToAll')}</BackLink>
+        }
+      >
         <RevealTitle>
           <Title
             level={1}

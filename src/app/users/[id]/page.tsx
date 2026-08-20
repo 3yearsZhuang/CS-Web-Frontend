@@ -8,7 +8,7 @@ import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { Avatar } from '@/components/avatar';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, SkeletonBlock, Title } from '@/components';
+import { BackLink, Button, SkeletonBlock, Title } from '@/components';
 import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -175,7 +175,11 @@ export default function UserPublicPage({ params }: { params: Promise<{ id: strin
           activeKey: activeTab,
           onTabChange: (key) => setActiveTab(key as ProfileTab),
         }}
-        sidebarBottom={<span aria-hidden="true" />}
+        sidebarBottom={
+          <BackLink href="/community" arrow={false}>
+            {t('backToCommunity')}
+          </BackLink>
+        }
       >
         <RevealItem>
           <div className="flex items-center gap-4 mb-4">

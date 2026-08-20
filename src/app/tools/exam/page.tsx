@@ -5,6 +5,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BackLink } from '@/components';
 import { Badge, Title, ArkDivider } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -118,12 +119,7 @@ export default function ExamListPage() {
           onTabChange: (key) => setActiveTab(key as ExamTab),
         }}
         sidebarBottom={
-          <Link
-            href="/tools"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            ← {t('back')}
-          </Link>
+          <BackLink href="/tools">{t('back')}</BackLink>
         }
       >
         <RevealTitle>

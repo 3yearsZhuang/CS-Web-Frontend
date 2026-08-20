@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { BarChart3, History, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
+import { BackLink } from '@/components';
 import { Title, ArkDivider } from '@/components';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
@@ -43,12 +44,7 @@ export default function AuxilioPage() {
         pageKey="auxilio"
         minHeight="50vh"
         sidebarBottom={
-          <Link
-            href="/tools"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            {t('agentBackTools')}
-          </Link>
+          <BackLink href="/tools">{t('agentBackTools')}</BackLink>
         }
       >
         <RevealTitle>

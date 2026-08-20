@@ -12,6 +12,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
+import { BackLink } from '@/components';
 import { Title } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTasks } from '@/modules/tools/ui/hooks/use-tasks';
@@ -64,12 +65,7 @@ export default function TaskPage() {
           onTabChange: (key) => setActiveTab(key as TaskTab),
         }}
         sidebarBottom={
-          <Link
-            href="/tools"
-            className="meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors inline-block mt-2 text-[11px]"
-          >
-            ← {t('back')}
-          </Link>
+          <BackLink href="/tools">{t('back')}</BackLink>
         }
       >
         <Title

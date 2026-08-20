@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { CommunityPostList } from '@/modules/community/ui/community-post-list';
+import { BackLink } from '@/components';
 import { SectionLoading, Title } from '@/components';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { apiRequest } from '@/shared/hooks/use-api-request';
@@ -43,7 +44,15 @@ export default function DraftsPage() {
 
   return (
     <main className="relative pt-16 pixel-page">
-      <CollapsingHero index="00" label="Drafts" hero={hero} pageKey="drafts">
+            <CollapsingHero
+        index="00"
+        label="Drafts"
+        hero={hero}
+        pageKey="drafts"
+        sidebarBottom={
+          <BackLink href="/community" arrow={false}>{t('backToAll')}</BackLink>
+        }
+      >
         <RevealTitle>
           <Title
             level={1}
