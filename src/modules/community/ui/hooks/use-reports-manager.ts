@@ -12,6 +12,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useAdminCollection } from './use-admin-collection';
 import { getError } from '../community-admin-utils';
 
 export type ReportStatusFilter = 'pending' | 'resolved' | 'dismissed' | 'all';
@@ -27,14 +28,6 @@ export interface ReportRow {
   createdAt: string;
 }
 
-interface ReportsResponse {
-  items: ReportRow[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export interface UseReportsManagerResult {
   reports: ReportRow[];
   loading: boolean;
@@ -48,28 +41,17 @@ export interface UseReportsManagerResult {
 
 export function useReportsManager(): UseReportsManagerResult {
   const tc = useTranslations('communityAdmin');
-  const [reports, setReports] = useState<ReportRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { items: reports, loading, error, setItems: setReports, fetchList } = useAdminCollection<ReportRow>('communityAdmin');
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
 
   const loadReports = useCallback(
-    async (filter: ReportStatusFilter) => {
-      setLoading(true);
-      setError(null);
+    (filter: ReportStatusFilter) => {
       const params = new URLSearchParams();
       if (filter !== 'all') params.set('status', filter);
-      const result = await apiRequest<ReportsResponse>(`/api/admin/community/reports?${params.toString()}`);
-      if (!result.ok) {
-        setError(getError(result.data, tc('loadFailed')));
-        setReports([]);
-      } else {
-        setReports(result.data?.items ?? []);
-      }
-      setLoading(false);
+      return fetchList(`/api/admin/community/reports?${params.toString()}`);
     },
-    [tc],
+    [fetchList],
   );
 
   const runAction = useCallback(

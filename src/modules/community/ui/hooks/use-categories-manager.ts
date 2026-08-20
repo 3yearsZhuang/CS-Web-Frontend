@@ -11,6 +11,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
+import { useAdminCollection } from './use-admin-collection';
 import { getError, type CategoryInput, type CategoriesResponse } from '../community-admin-utils';
 import type { CommunityCategory } from '@/modules/community/types';
 
@@ -28,22 +29,9 @@ export interface UseCategoriesManagerResult {
 
 export function useCategoriesManager(): UseCategoriesManagerResult {
   const t = useTranslations('communityAdmin');
-  const [categories, setCategories] = useState<CommunityCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { items: categories, loading, error, setError, fetchList } = useAdminCollection<CommunityCategory>('communityAdmin');
 
-  const loadCategories = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const result = await apiRequest<CategoriesResponse>(CATEGORIES_URL);
-    if (!result.ok) {
-      setError(getError(result.data, t('loadFailed')));
-      setCategories([]);
-    } else {
-      setCategories(result.data?.items ?? []);
-    }
-    setLoading(false);
-  }, [t]);
+  const loadCategories = useCallback(() => fetchList(CATEGORIES_URL), [fetchList]);
 
   const createCategory = useCallback(
     async (input: CategoryInput): Promise<ApiRequestResult<unknown>> => {

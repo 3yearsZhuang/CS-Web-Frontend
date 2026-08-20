@@ -12,16 +12,12 @@ import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest, type ApiRequestResult } from '@/shared/hooks/use-api-request';
 import { getError } from '../community-admin-utils';
+import { useAdminCollection } from './use-admin-collection';
 import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
 // 类型收敛（重复实现治理波次 B1a）：复用 announcements 域规范类型（子集字段兼容）
 export type AnnouncementItem = Announcement;
 export type { AnnouncementLevel } from '@/modules/announcements/types';
-
-interface AnnouncementsResponse {
-  items: AnnouncementItem[];
-  total: number;
-}
 
 export interface CreateAnnouncementInput {
   title: string;
@@ -44,24 +40,16 @@ export interface UseAnnouncementsManagerResult {
 
 export function useAnnouncementsManager(): UseAnnouncementsManagerResult {
   const t = useTranslations('announcementsAdmin');
-  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    items: announcements,
+    loading,
+    error,
+    fetchList,
+  } = useAdminCollection<AnnouncementItem>('announcementsAdmin');
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
 
-  const loadAnnouncements = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const result = await apiRequest<AnnouncementsResponse>('/api/admin/announcements');
-    if (!result.ok) {
-      setError(getError(result.data, t('loadFailed')));
-      setAnnouncements([]);
-    } else {
-      setAnnouncements(result.data?.items ?? []);
-    }
-    setLoading(false);
-  }, [t]);
+  const loadAnnouncements = useCallback(() => fetchList('/api/admin/announcements'), [fetchList]);
 
   const runAction = useCallback(
     async (id: string, fetcher: () => Promise<ApiRequestResult<unknown>>) => {
