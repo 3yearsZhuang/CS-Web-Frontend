@@ -25,7 +25,7 @@ vi.mock('swr', () => ({
 }));
 
 // 隔离 useAuth，避免连带拉取 /api/auth/me
-const authState = { user: undefined as { role?: string } | null, isLoggedIn: false };
+const authState = { user: null as { role?: string } | null, isLoggedIn: false };
 vi.mock('@/shared/hooks/use-auth', () => ({
   useAuth: () => ({ user: authState.user, isLoggedIn: authState.isLoggedIn }),
 }));

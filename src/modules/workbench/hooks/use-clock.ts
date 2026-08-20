@@ -30,8 +30,8 @@ function formatDuration(ms: number): string {
 }
 
 export function useClock(intervalMs = 1000) {
-  // 初始用固定占位（避免 SSR/CSR 时间戳不一致导致 hydration mismatch），挂载后再启动真实时钟
-  const [now, setNow] = useState(() => 0);
+  // 初始用惰性 Date.now() 占位，挂载后再由 effect 启动真实时钟并持续更新
+  const [now, setNow] = useState(() => Date.now());
   const [sessionStart] = useState(() => getSessionStart());
   const [mounted, setMounted] = useState(false);
 
@@ -42,7 +42,7 @@ export function useClock(intervalMs = 1000) {
     return () => clearInterval(timer);
   }, [intervalMs]);
 
-  const safeNow = now || Date.now();
+  const safeNow = now;
   return {
     now: new Date(safeNow),
     timestamp: safeNow,

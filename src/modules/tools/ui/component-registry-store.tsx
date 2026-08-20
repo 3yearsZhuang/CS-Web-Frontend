@@ -37,6 +37,7 @@ type Action =
   | { type: 'LOAD_ERROR'; error: string }
   | { type: 'TOGGLE_VARIANT'; itemId: string; variantId: string; enabled: boolean }
   | { type: 'ROLLBACK_VARIANT'; itemId: string; variantId: string; enabled: boolean }
+  | { type: 'SYNC_VARIANTS'; itemId: string; variants: ComponentVariant[] }
   | { type: 'SET_MIGRATION_STATUS'; itemId: string; status: MigrationStatus; visibilityOpen?: boolean }
   | { type: 'ROLLBACK_MIGRATION_STATUS'; itemId: string; status: MigrationStatus }
   | { type: 'UPDATE_GUIDE'; itemId: string; guide: ComponentGuide }

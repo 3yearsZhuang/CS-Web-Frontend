@@ -47,11 +47,17 @@ function setMe(data: { user: unknown } | null, loading = false) {
 }
 
 vi.mock('swr', () => {
+  // vi.mock 工厂在 Vitest 中被提升到文件顶部执行，无法引用顶层静态 import，
+  // 因此这里需在工厂内 require('react') 以获取 React 运行时。
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   return {
     __esModule: true,
     default: (key: string) => {
       if (key === '/api/auth/me') {
+        // 模拟了 SWR 内部对 useSyncExternalStore 的订阅以驱动重渲染；该调用发生在
+        // mock 的 default 导出中（最终由组件渲染期调用），运行时合法但不符合名字规则。
+        // eslint-disable-next-line react-hooks/rules-of-hooks
         const data = React.useSyncExternalStore(
           (cb: () => void) => {
             meSubs.add(cb);
@@ -125,7 +131,7 @@ describe('useAuth.logout', () => {
     window.localStorage.setItem(SESSION_KEY, '1');
     setMe({ user: { ...LOGGED_IN_USER, role: 'member' } }, false);
 
-    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({}) }));
+    const fetchMock = vi.fn(async (_url: RequestInfo | URL, _opts?: RequestInit) => ({ ok: true, status: 200, json: async () => ({}) }));
     vi.stubGlobal('fetch', fetchMock);
 
     const { result } = renderHook(() => useAuth());

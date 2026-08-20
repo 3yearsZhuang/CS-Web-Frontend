@@ -79,7 +79,7 @@ export function useCategoriesManager(): UseCategoriesManagerResult {
       }
       return result;
     },
-    [loadCategories, t],
+    [loadCategories, t, setError],
   );
 
   return {

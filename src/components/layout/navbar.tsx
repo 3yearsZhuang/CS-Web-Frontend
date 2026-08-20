@@ -13,7 +13,12 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { GlobalSearch } from '@/modules/search/ui/global-search';
 import { useAuth } from '@/shared/hooks/use-auth';
-import { useFeatureVisibility, deriveUserClass, DEFAULT_VISIBILITY } from '@/shared/hooks/use-feature-visibility';
+import {
+  useFeatureVisibility,
+  deriveUserClass,
+  DEFAULT_VISIBILITY,
+  type UserClass,
+} from '@/shared/hooks/use-feature-visibility';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { useFocusTrap } from '@/shared/hooks/use-focus-trap';
 import type { NavMessageKey } from '@/i18n/types';
