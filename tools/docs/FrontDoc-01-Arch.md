@@ -6,7 +6,7 @@
 
 > **文档定位**：前端 BFF 层架构与业务模块契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、**业务模块契约（Part B：认证 / 个人资料 / 活动 / 社区论坛 / 社区文章 / 通知 / 管理后台 / 工具集 / 成员与入社 / 会话管理 / 工作台 / 学习助手）与前后端联动**、状态码、事件总线、依赖矩阵。
 
-> **约定类文档边界**：前端专项约定以本文件（架构/工程）、`FrontDoc-03-Conv.md`（编码规范）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
+> **约定类文档边界**：专项权威与所有权矩阵见 [DocGovernance.md](../../../docs/DocGovernance.md) §2；通用规范见根 `RootDoc-EngConv.md`（细则指回权威文件）。
 
 > **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
