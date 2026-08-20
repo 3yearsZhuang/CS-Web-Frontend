@@ -464,7 +464,6 @@ export interface AdminMessages {
   },
   userList: {
     search: string;
-    searchPlaceholder: string;
     role: string;
     status: string;
     all: string;
@@ -1018,7 +1017,6 @@ export const zhCN: AdminMessages = {
   },
   userList: {
     search: '[ 搜索 / Search ]',
-    searchPlaceholder: '搜索 email 或显示名...',
     role: '[ 角色 / Role ]',
     status: '[ 状态 / Status ]',
     all: '全部',
@@ -1572,7 +1570,6 @@ export const en: AdminMessages = {
   },
   userList: {
     search: '[ Search / 搜索 ]',
-    searchPlaceholder: 'Search email or display name...',
     role: '[ Role / 角色 ]',
     status: '[ Status / 状态 ]',
     all: 'All',

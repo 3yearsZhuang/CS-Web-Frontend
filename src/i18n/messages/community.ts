@@ -10,7 +10,6 @@ export interface CommunityMessages {
     categories: string;
     newTopic: string;
     noTopics: string;
-    searchPlaceholder: string;
     tabAll: string;
     tabFollowing: string;
     tabMember: string;
@@ -21,7 +20,6 @@ export interface CommunityMessages {
     searchCount: string;
     statsLine: string;
     feedDefaultDesc: string;
-    searchPlaceholderFull: string;
     clearSearch: string;
     searching: string;
     search: string;
@@ -59,8 +57,6 @@ export interface CommunityMessages {
     hardDeleteTitle: string;
     hardDeleteMessage: string;
     confirmDelete: string;
-    searchLabel: string;
-    searchPlaceholder: string;
     statusLabel: string;
     categoryLabel: string;
     allOption: string;
@@ -224,7 +220,6 @@ export const zhCN: CommunityMessages = {
     categories: '版块',
     newTopic: '发布主题',
     noTopics: '暂无主题',
-    searchPlaceholder: '搜索帖子...',
     tabAll: '全部 / All',
     tabFollowing: '关注流 / Following',
     tabMember: '成员 / Members',
@@ -235,7 +230,6 @@ export const zhCN: CommunityMessages = {
     searchCount: '// 找到 {count} 条结果',
     statsLine: '// {topics} 主题 · {posts} 文章 · {members} 成员',
     feedDefaultDesc: '// 聚合社区、社区、成员的最新动态',
-    searchPlaceholderFull: '搜索主题 / 文章 / 成员...',
     clearSearch: '清空搜索',
     searching: 'Searching...',
     search: 'Search →',
@@ -273,8 +267,6 @@ export const zhCN: CommunityMessages = {
     hardDeleteTitle: '硬删除主题',
     hardDeleteMessage: '硬删除主题「{title}」？\n该操作不可恢复，将级联删除所有回复、点赞、收藏。',
     confirmDelete: '确认删除',
-    searchLabel: '搜索 / Search',
-    searchPlaceholder: '搜索标题或正文...',
     statusLabel: '状态 / Status',
     categoryLabel: '分类 / Category',
     allOption: '全部 / All',
@@ -438,7 +430,6 @@ export const en: CommunityMessages = {
     categories: 'Categories',
     newTopic: 'New topic',
     noTopics: 'No topics',
-    searchPlaceholder: 'Search posts...',
     tabAll: 'All / 全部',
     tabFollowing: 'Following / 关注流',
     tabMember: 'Members / 成员',
@@ -449,7 +440,6 @@ export const en: CommunityMessages = {
     searchCount: '// {count} results found',
     statsLine: '// {topics} topics · {posts} posts · {members} members',
     feedDefaultDesc: '// Aggregate the latest from topics, posts, and members',
-    searchPlaceholderFull: 'Search topics / posts / members...',
     clearSearch: 'Clear search',
     searching: 'Searching...',
     search: 'Search →',
@@ -487,8 +477,6 @@ export const en: CommunityMessages = {
     hardDeleteTitle: 'Hard delete topic',
     hardDeleteMessage: 'Hard delete topic "{title}"?\nThis action is irreversible and will cascade-delete all replies, likes, and favorites.',
     confirmDelete: 'Confirm delete',
-    searchLabel: 'Search / 搜索',
-    searchPlaceholder: 'Search title or content...',
     statusLabel: 'Status / 状态',
     categoryLabel: 'Category / 分类',
     allOption: 'All / 全部',

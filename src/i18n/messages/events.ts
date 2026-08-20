@@ -62,7 +62,6 @@ export interface EventsMessages {
     filterUpcoming: string;
     filterOngoing: string;
     filterEnded: string;
-    searchPlaceholder: string;
     weekdayMon: string;
     weekdayTue: string;
     weekdayWed: string;
@@ -152,7 +151,6 @@ export const zhCN: EventsMessages = {
     filterUpcoming: '即将开始',
     filterOngoing: '进行中',
     filterEnded: '已结束',
-    searchPlaceholder: '搜索活动...',
     weekdayMon: '一',
     weekdayTue: '二',
     weekdayWed: '三',
@@ -242,7 +240,6 @@ export const en: EventsMessages = {
     filterUpcoming: 'Upcoming',
     filterOngoing: 'Ongoing',
     filterEnded: 'Ended',
-    searchPlaceholder: 'Search events...',
     weekdayMon: 'Mon',
     weekdayTue: 'Tue',
     weekdayWed: 'Wed',
