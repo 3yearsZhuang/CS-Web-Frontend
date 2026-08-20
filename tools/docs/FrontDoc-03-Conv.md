@@ -156,7 +156,7 @@ src/
 
 ## 9. i18n 约定
 
-> 本文为前端 i18n 权威（原 `FrontDoc-i18n.md` 并入，2026-08-20）；已完成迁移记录见根 `CHANGELOG.md`，剩余待迁移清单见 `docs/项目待办事项-优先级重排.md`。
+> 本文为前端 i18n 权威（原 `FrontDoc-i18n.md` 并入，2026-08-20）；已完成迁移记录见根 `CHANGELOG.md`，剩余待迁移清单见 `docs/项目待办v2.md`。
 
 **技术选型（决策固化）**：采用 **next-intl@4.x「无 i18n 路由」模式**——URL 不带 locale 前缀（`/community` 而非 `/zh-CN/community`），避免改动所有路由/重定向/SEO（自定义 server + CSP nonce 前提下路径前缀风险过高）。locale 解析优先级：cookie `locale` > Accept-Language > 默认 `zh-CN`；语言切换器 `src/components/layout/language-switcher.tsx` 写 cookie 后 reload。
 
