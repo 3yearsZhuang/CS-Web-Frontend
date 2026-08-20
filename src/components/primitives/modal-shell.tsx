@@ -1,5 +1,5 @@
 /**
- * @file ModalShell — 通用模态框外壳（FrontDoc-UIButton.md §7 Step-Modal）
+ * @file ModalShell — 通用模态框外壳（FrontDoc-UID.md §16）
  *
  * 从 admin/ui/shared.tsx 提升为全局原语：支持 focus trap、Escape 关闭、点击遮罩关闭、滚动锁定。
  * admin 的 shared.tsx 已改为 re-export 兼容（业务域代码无需改动）。

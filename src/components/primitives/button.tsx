@@ -1,6 +1,6 @@
 /**
  * @file Button — 统一按钮组件，封装 primary / outline / primary-outline / danger /
- * outline-danger / ghost / amber / filled / pixel / pixel-outline / pixel-danger 十一套变体（FrontDoc-UIButton.md §7）
+ * outline-danger / ghost / amber / filled / pixel / pixel-outline / pixel-danger 十一套变体（FrontDoc-UID.md §16）
  *
  * pixel 对：像素风格硬阴影 + steps(2) 按压位移，用于首页 Hero CTA 等像素元数据层场景；
  * 主次按钮统一实色硬阴影，颜色走双主题令牌。

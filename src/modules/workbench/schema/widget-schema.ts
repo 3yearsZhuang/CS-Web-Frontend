@@ -1,5 +1,5 @@
 /**
- * @file Schema 配置驱动卡 — 类型 + 校验器（设计见 docs/workbench-schema-widget-design.md）。
+ * @file Schema 配置驱动卡 — 类型 + 校验器（设计结论见根 CHANGELOG.md「工作台 Schema 卡」）。
  * 仅覆盖简单卡（count/list/progress/countdown/note/link）；
  * 复杂卡（SSE 流式 / 状态机 / 音频 / 加密 / 复杂图形）走手写组件，不进本 schema。
  */

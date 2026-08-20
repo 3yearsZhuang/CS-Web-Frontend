@@ -1,5 +1,5 @@
 /**
- * @file Badge — 统一状态/标签徽章组件（FrontDoc-UIButton.md §7 Step-Badge）
+ * @file Badge — 统一状态/标签徽章组件（FrontDoc-UID.md §16）
  *
  * 收口全站手写 `meta-mono px-2 py-0.5 border` 徽章三元（green/emerald/amber/red 各写各的）。
  * 统一视觉：直角、等宽 10px、uppercase、无圆角；语义色枚举 variant。

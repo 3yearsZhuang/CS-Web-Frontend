@@ -2,11 +2,11 @@
 
 > 更新人：3yearsZ
 > 最后更新：2026-08-09（新增 §2.5.7 社区 Markdown 编辑器 UI 组件契约，下沉自 UID §14；其余同 2026-08-08 重构：业务模块契约统一模板、前后端联动映射、2.5/2.8 标题消歧、api-usage-stats 部分就绪标注）
-> 关联：后端架构/RBAC/Alembic/OTel 权威见 [CS-Web-Backend/tools/docs/BackDoc-01-Arch.md](../../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维/SLO/Runbook 见 [FrontDoc-Ops.md](FrontDoc-Ops.md)；演进路线 ADR 见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)；全栈编排见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)
+> 关联：后端架构/RBAC/Alembic/OTel 权威见 [BackDoc-01-Arch.md](../../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维见 FrontDoc-Ops、演进见 RootDoc-ADR、工程规则见 Onboarding 附录 A、全栈编排见 RootDoc-Deploy
 
 > **文档定位**：前端 BFF 层架构与业务模块契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、**业务模块契约（Part B：认证 / 个人资料 / 活动 / 社区论坛 / 社区文章 / 通知 / 管理后台 / 工具集 / 成员与入社 / 会话管理 / 工作台 / 学习助手）与前后端联动**、状态码、事件总线、依赖矩阵。
 
-> **约定类文档边界**：前端专项约定以本文件（架构/工程）、`FrontDoc-Conv.md`（编码规范）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
+> **约定类文档边界**：前端专项约定以本文件（架构/工程）、`FrontDoc-03-Conv.md`（编码规范）与 `FrontDoc-UID.md`（UI 规范）为权威；通用（两端共用）规范见根 `docs/RootDoc-EngConv.md`；`docs/Onboarding.md` 附录 A 为新人聚合摘要（非权威），细则指回权威文件。
 
 > **当前进度 / 真实状态（2026-08-08）**：前端 `src/app/api/**` 为**纯薄转发**（B1 闭环），不含业务数据存储；`src/modules/*/server/`、`src/shared/db/` 与 SQLite 依赖已整体删除，前端零 SQLite。`src/shared/events/event-bus.ts`（appBus）已无 `emit` 调用，属死代码（站内通知由后端产生）；后端事件总线支持跨实例（ADR-014，arq/Redis 广播）。本文「规划中」段落以 `⚠️ 规划中` 标记，与已落地内容区分。
 
@@ -481,7 +481,7 @@ workbench/
 > TOTP 加密、验证、限流、token 签发均由后端实现（见后端 `CS-Web-Backend/tools/docs/BackDoc-02-Sec.md`）。BFF 转发时 `assertAllowedOrigin` + login 模式从 `__Host-oauth_2fa` cookie 读 `twoFactorToken`。
 
 ### 配置
-- JWT Cookie 托管：`__Host-fztbu_access`（生产）/ `fztbu_access`（开发），见 `shared/backend-client.ts`；i18n `auth` namespace（见 `FrontDoc-i18n.md`）。
+- JWT Cookie 托管：`__Host-fztbu_access`（生产）/ `fztbu_access`（开发），见 `shared/backend-client.ts`；i18n `auth` namespace（见 `FrontDoc-03-Conv.md §9`）。
 - 无独立业务表；令牌 / 验证码 / 重置申请由后端承载（见后端 `BackDoc-01-Arch.md` Part B「一、认证」配置节）。
 
 ### 安全要点

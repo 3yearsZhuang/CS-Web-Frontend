@@ -3,9 +3,9 @@
 > 文档定位：前端视觉与交互设计规范（reference）
 > 受众：前端开发者 / UI 评审 / 设计者
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
-> 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；前端编码规范见 [FrontDoc-Conv.md](FrontDoc-Conv.md)；新页面接入见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
-> 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-Conv.md`
-> 最后更新：2026-08-18（新增 §15 像素融合层；§15.9 列表选型落地 / §15.10 标题虚影提炼 `<GhostTitle>` 并全站主标题落地；§11 登记像素融合白名单例外；`/join` 合并入 `/about` 加入子区块并删除路由；process 标签页移除 C 流程行、步骤与报名表全屏左右布局；§15.11 统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` 全站主标题/章节标记/分隔落地；§15.12 工作台像素化——Workbench 9 widget DNA 卡 + 今日任务索引铁路 + 顶部 CTA 像素化 + 新增 `pixel-danger` 变体）
+> 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；编码规范见 [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md)；新页面接入见 Onboarding 附录 A
+> 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-03-Conv.md`
+> 最后更新：2026-08-20（合并原 `FrontDoc-UIStandard.md` 为 §16 组件用法统一契约 SSOT、原 `FrontDoc-UIButton.md` 按钮选型/禁止并入 §5.2；此前 2026-08-18 新增 §15 像素融合层等）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更
@@ -42,7 +42,7 @@
 - **§4** 悬浮折叠胶囊（Floating Capsule Sidebar；Tab 配置见 [capsule-tabs.md](capsule-tabs.md)）
 - **§5.0** 全局组件体系与复用契约（新增）
 - **§5–7** 组件规范 / 动效系统 / 视觉装饰
-- **§8–9** 移动端适配 / 交互规范（代码规范已迁至 [FrontDoc-Conv.md](FrontDoc-Conv.md)）
+- **§8–9** 移动端适配 / 交互规范（代码规范已迁至 [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md)）
 - **§11–12** UI 专属禁止清单 / 新增页面 Checklist
 - **§13** 参考文件
 - **§14** Markdown 编辑器（契约下沉至 Arch §2.5.7）
@@ -323,7 +323,30 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 4.8 各页面 Tab 配置
 
-各页面的 `tabs` 配置随功能增减高频变动，统一维护在独立数据文件 [capsule-tabs.md](capsule-tabs.md#1-各页面-tab-配置表)；新增页面须同步该表并在 `FloatingCapsuleSidebar` 传入 `CapsuleTab[]`（接口见 §4.5）。
+各页面在 `FloatingCapsuleSidebar` 传入 `CapsuleTab[]`（接口见 §4.5）。下表为当前全站配置（随页面增减高频变动，须同步）：
+
+| 路由 | 页面 | Tab 列表 |
+|------|------|---------|
+| `/community/community` | 社区首页 | `[01] 最近 / Latest`, `[02] 发现 / Discover` |
+| `/community/community/[category]` | 版块详情 | `[01] 主题 / Topics`, `[02] 规则 / Rules`, `[03] 下一步 / Next` |
+| `/community/community/[category]/[topicId]` | 主题详情 | `[01] 回复 / Replies`, `[02] 你的回复 / Reply` |
+| `/about` | 关于 / 加入 | `[01] 信念 / Belief`, `[02] 方向 / Directions`, `[03] 期望 / Expectation`, `[04] 流程 / Process`, `[05] 加入 / Join` |
+| `/events` | 活动 | `[01] 时间线 / Timeline`, `[02] 归档 / Archive`, `[03] 下一步 / Next` |
+| `/profile` | 个人主页 | `[01] 资料 / Profile`, `[02] 安全 / Security`, `[03] 活动 / Activity`, `[04] 社区 / Community` |
+| `/admin` | 管理后台 | `[01] 用户 / Users`, `[02] 活动 / Activities`, `[03] 通知 / Notifications`, `[04] 社区 / Community`, `[05] 工具 / Tools` |
+| `/tools` | 工具集 | `[01] 可用`, `[02] 开发中`, `[99] 管理*` |
+| `/tools/resource` | 资源站 | `[00] 全部`, `[01] 文章`, `[02] 视频`, … |
+
+> 新增页面须同步本表，并在 `FloatingCapsuleSidebar` 配置 `CapsuleTab`（编号 `num` + 标签 `label` + 唯一 `key`）。
+
+#### 4.8.1 胶囊设计决策（未采用备选方案）
+
+胶囊导航定型前评估过两种备选方案（最终采用 Floating Capsule Sidebar，见 §4）：
+
+- **Scheme A - 可伸缩抽屉式**：折叠态 56px 仅显示编号，hover 展开至 200px。优点：实现极简、不破坏 12 栏栅格；缺点：仍占用布局空间、hover 展开在移动端无效；适用 Tab 较多（≥5 项）。
+- **Scheme C - 磁吸边缘标签**：标签吸附左边缘仅露半截编号 pill（~28px），hover 向外弹出。优点：极致节省空间；缺点：标签太小（28px）移动端几乎无法触控；适用极简工具型、桌面端。
+
+> 结论：Scheme A/C 均因「占用布局空间」或「移动端不可触控」被否决；Floating Capsule Sidebar 脱离文档流、始终悬浮可达、折叠态仅编号，兼顾极简美学与键盘可达性。
 
 ### 4.9 实现文件清单
 
@@ -368,7 +391,7 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 ### 5.2 按钮
 
-8 类统一按钮，定义在 `src/app/globals.css`（详见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)）：
+8 类统一按钮，定义在 `src/app/globals.css`（变体/选型/禁止见 §16 与下文）：
 
 ```css
 .btn-primary          /* 主按钮 - primary 纯色背景 */
@@ -401,9 +424,30 @@ Hero 展开 -> 胶囊不可见 -> 用户向下滚动 -> Hero 折叠为 sticky �
 
 推荐经 `src/components/primitives/button.tsx` 封装使用（自动附加 `focus-ring` 并处理 loading 态）。
 
-> 落地收紧细则见 [`FrontDoc-UIButton.md`](FrontDoc-UIButton.md)：扩展变体（`outline-danger` / `ghost` / `xs` / `active`）、分页共享件、规范↔代码字体/焦点环漂移修订、39 文件迁移映射与反模式。
+> 按钮统一审计、扩展变体决策与 Batch-1~5b 迁移史已并入根 `CHANGELOG.md`；组件用法统一契约见 §16。
 
 不变的部分：文字按钮（`underline-grow`、`meta-mono` 文字链接）、主题切换、通知铃铛、筛选标签、悬浮胶囊 Tab 保持原有设计；分页按钮允许保留方形描边视觉，但重复出现须抽成共享 `.btn-page`（禁止多处复制手搓）。
+
+**选型矩阵（场景 → 变体）**：
+| 场景 | 变体 |
+|---|---|
+| 主提交/保存（页面主 CTA） | `primary` |
+| 取消/中性次操作 | `outline` |
+| 新建/编辑/发布类主色描边 | `primary-outline` |
+| 删除/驳回/禁言/硬删 | `outline-danger`（危险描边）；破坏性主操作 `danger` |
+| 状态切换键（草稿/下架/待审） | `amber` |
+| 反色保存（表单头部） | `filled` |
+| 行内小操作/文本键 | `ghost` |
+
+**按钮禁止项**：
+- ❌ 手写 `border + text-[var(--muted-foreground)] + hover:destructive/bg-primary/5` 散落描边按钮（一律 `Button` 变体）。
+- ❌ 用 `className` 覆盖 `btn-*` 实现 active/危险态（改用 `active` prop / `outline-danger`）。
+- ❌ `danger` 变体在 sm/xs 下手动补尺寸（已由 `btn-danger-sm` 契约保证）。
+- ❌ 实色变体去掉边框（盒模型会矮 2px；实色变体须 `border: 1px solid transparent`）。
+
+**按钮保留（刻意不并入）**：`underline-grow` 文本/链接按钮、导航类图标按钮（汉堡/铃铛/UserMenu）、`<span>` 徽章形态、`primary/30` 半透明弱化键。
+
+> 按钮/控件统一审计与 Batch 迁移史已并入根 `CHANGELOG.md`；组件用法统一契约见下文 §16。
 
 ### 5.3 输入框
 
@@ -539,7 +583,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 
 ## 10. 代码规范
 
-> 前端编码规范（TS/React/Next.js 约定、React Compiler 红线、文件头 JSDoc、样式实现、客户端/服务端边界、`'use client'` 位置、组件复用契约、widget 注册表、i18n、测试、Git、编码侧禁止项）已整体迁至 [FrontDoc-Conv.md](FrontDoc-Conv.md)，本文档只保留视觉与交互规范。中文排版规则见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §九。
+> 前端编码规范（TS/React/Next.js 约定、React Compiler 红线、文件头 JSDoc、样式实现、客户端/服务端边界、`'use client'` 位置、组件复用契约、widget 注册表、i18n、测试、Git、编码侧禁止项）已整体迁至 [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md)，本文档只保留视觉与交互规范。中文排版规则见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md) §九。
 
 ---
 
@@ -556,7 +600,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 渐变背景（logo 装饰例外） | 违背极简原则 |
 | 自行实现入场动画 | 必须复用 motion-primitives |
 
-> 编码侧禁止项（`console.log` 留生产代码、中文间加空格、不写 JSDoc、CSS `@import` 拉 Google Fonts、`.sh` 脚本、react-dev-inspector、Vite 依赖等）已迁至 [FrontDoc-Conv.md §12](FrontDoc-Conv.md#12-禁止事项汇总)，**本 §11 仅保留 UI 视觉专属禁止**，此处不重复。
+> 编码侧禁止项（`console.log` 留生产代码、中文间加空格、不写 JSDoc、CSS `@import` 拉 Google Fonts、`.sh` 脚本、react-dev-inspector、Vite 依赖等）已迁至 [FrontDoc-03-Conv.md §12](FrontDoc-03-Conv.md#12-禁止事项汇总)，**本 §11 仅保留 UI 视觉专属禁止**，此处不重复。
 
 **圆角例外白名单**（仅限以下语义，新增须评审）：
 
@@ -580,12 +624,12 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - [ ] 所有颜色用 `var(--xxx)`
 - [ ] 所有标题用 `clamp()` 自适应
 - [ ] 所有动效用 `cubic-bezier(0.16, 1, 0.3, 1)`
-- [ ] 文件头 JSDoc 完整，`'use client'` 在 JSDoc 之后（见 [FrontDoc-Conv.md §3.2/§6](FrontDoc-Conv.md#6-文件头注释jsdoc)）
+- [ ] 文件头 JSDoc 完整，`'use client'` 在 JSDoc 之后（见 [FrontDoc-03-Conv.md §3.2/§6](FrontDoc-03-Conv.md#6-文件头注释jsdoc)）
 - [ ] 所有可交互元素挂 `focus-ring`
 - [ ] 圆角/阴影只走 §3.5 / §11 白名单 token
 - [ ] 列表/表单四态显式处理（加载/空/错误/成功，见 §5.6）
 - [ ] 移动端 `<md` 单列堆叠，触控区 ≥44px
-- [ ] `tsc --noEmit` + `eslint` 0 错误（编码侧自查见 [FrontDoc-Conv.md §10/§13](FrontDoc-Conv.md#13-检查清单提交前自查)）
+- [ ] `tsc --noEmit` + `eslint` 0 错误（编码侧自查见 [FrontDoc-03-Conv.md §10/§13](FrontDoc-03-Conv.md#13-检查清单提交前自查)）
 - [ ] 如需 Tab 切换，使用 `FloatingCapsuleSidebar` 组件
 - [ ] 如有 Hero，胶囊与 `useCollapsingHero` 联动
 - [ ] 如是子页面，`[ 00 ]` 下方放 `← 返回` 按键（见 §3.4）
@@ -606,7 +650,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | `src/app/page.tsx` | 首页（Hero 折叠参考实现） |
 | `src/app/about/page.tsx` | 关于页（章节标记参考） |
 | `tools/docs/FrontDoc-UID.md` | 本文档 - 视觉与交互设计规范 |
-| `tools/docs/FrontDoc-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，§10 迁出） |
+| `tools/docs/FrontDoc-03-Conv.md` | 前端编码规范（JSDoc / 样式实现 / 客户端服务端边界 / 组件契约，§10 迁出） |
 
 ---
 
@@ -751,12 +795,81 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 - **新增 CSS 类**：`globals.css` 新增 `.btn-pixel-danger` / `.btn-pixel-danger-sm`（destructive 令牌 + `3px 3px 0` 硬阴影 + `steps(2)`），及 `.dna-card .idx-rail .idx` 作用域覆盖
 - **校验**：`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归；`pnpm next build` 通过
 
+## 16. 组件用法统一契约（SSOT）
+
+> 由原 `FrontDoc-UIStandard.md` 并入（2026-08-20）：本文件为**按钮与 UI 控件的用法唯一权威（SSOT）**；按钮设计见 §5.2，其余控件见本节。实现层以 `src/app/globals.css` 与 `src/components/primitives/*` 为准；审计与迁移史见根 `CHANGELOG.md`。
+
+### 16.1 总则
+
+全站 UI 控件遵循「**共享契约优先，禁止手写漂移**」：
+
+1. 优先使用共享组件（`Button`/`Badge`/`Pagination`/`ModalShell`/`Input`/`FilterBar`/`InlineTabs`）与共享类（`btn-*`/`badge*`/`tab-*`）。
+2. 所有样式令牌引用**共享常量与 CSS 变量**（`INPUT_CLASS`、`Z`、`--z-*`、`--primary` 等），**禁止裸魔法值**（如手写 `border border-[var(--border)]` 完整串、裸 `z-50`）。
+3. 盒模型统一：**实色变体一律 `border: 1px solid transparent`**，与描边变体同高（差异会肉眼可见 ~2px）。
+4. 新增共享 UI 的流程：先立契约（组件/类 + 回归测试）→ 逐文件迁移 → 每批 ESLint + vitest + tsc 验证。
+
+### 16.2 输入框（`INPUT_CLASS` / `<Input>`）
+
+- **`INPUT_CLASS`**（`src/shared/utils/ui-constants.ts`）是输入框基础样式**唯一权威**：`w-full bg-transparent border border-[var(--border)] font-mono placeholder:... focus-ring` 风格。
+- 用法：`className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}`——用额外类覆盖 padding/字号/tracking，不重写基础串。
+- `<Input>` 组件（`primitives/input.tsx`）为带 `label`/`error`/`as=textarea|select` 的封装，内部即 `INPUT_CLASS`；两者分层不冲突。
+- **禁止**：复制粘贴输入框样式字符串；在模块内定义同名 `INPUT_CLASS` 覆盖全局（历史教训：`task-shared.tsx` 曾导出同名常量，已改 `TASK_INPUT_CLASS`）。
+
+### 16.3 徽章（`<Badge>` + `badge*`）
+
+组件：`src/components/primitives/badge.tsx`｜类：`.badge` + `.badge-muted|primary|success|amber|danger`。
+
+- 统一视觉：直角、等宽 10px、uppercase、无圆角；语义色枚举：`success`=绿色（**统一 emerald 系，禁用 `green-*` 直写**）、`amber`=黄色（透明度统一 40%）、`danger`=危险色、`primary`=主色标签（PIN/FEAT）、`muted`=中性。
+- **禁止**：手写 `meta-mono px-2 py-0.5 border ${三元色}` 徽章。
+- 保留：填充圆角徽章（admin-announcements levelBadge，全站唯一风格）、`rounded-full` 胶囊徽章（github-heatmap/dev-center）、`primary/30` 半透明弱化标签。
+
+### 16.4 Tab / 筛选（`tab-*` + `FilterBar`）
+
+类：`.tab-chip`（胶囊描边）/ `.tab-chip-active` / `.tab-chip-danger-active` / `.tab-underline` / `.tab-underline-active`（下划线）。
+
+- 全站 Tab 仅两套形态：**胶囊描边**（`.tab-chip`，主用于筛选/分段）与**下划线**（`.tab-underline`，主用于页头 Tab）。
+- 选中态写法唯一：`${active ? 'tab-chip-active' : ''}`（危险选中用 `tab-chip-danger-active`）。
+- `FilterBar`（`primitives/filter-bar.tsx`）内部已收敛到 `.tab-chip` 同源。
+- **禁止**：手写选中态三元（`bg-primary/8`/`/5`/`/6`、`border-b-2`、实心填充混用）。
+- 保留：component-registry-shell 反色实心筛选（域内自洽）。
+
+### 16.5 分页（`<Pagination>`）
+
+组件：`src/components/primitives/pagination.tsx`。
+
+- Props：`page` / `totalPages` / `onPageChange` / `variant: 'window'|'ellipsis'|'all'` / `activeVariant: 'outline'|'filled'` / `showTopBorder`；`window`（默认）：当前页为中心 ≤5 页；`ellipsis`：首尾+省略号；`all`：全量页码。
+- **禁止**：手写 `← / 页码 / →` 描边按钮组。
+- 页码按钮统一 `.btn-page` + 选中 `.btn-active`。
+
+### 16.6 Modal（`ModalShell`）
+
+组件：`src/components/primitives/modal-shell.tsx`（全局原语；admin 经 `modules/admin/ui/shared.tsx` re-export 兼容）。
+
+- 能力：focus trap、Escape 关闭、点击遮罩关闭、滚动锁定。
+- 视觉：遮罩 `bg-black/70 backdrop-blur-sm`、`z-[var(--z-header)]`、面板 `max-w-lg border bg-background shadow-[var(--shadow-modal)]`、标题栏 `meta-mono primary` + ✕ 关闭。
+- **禁止**：手写 `fixed inset-0` 遮罩骨架；遮罩透明度用 `black/70`（不用 50/40）。
+- 取舍：带入场动画的自定义 modal（如 submit-resource-modal 的 AnimatePresence）可保留动画，但**遮罩与 z 层级必须对齐本规范**。
+
+### 16.7 z-index（`Z` / `--z-*`）
+
+- 两层镜像：JS `Z` 常量（`src/shared/utils/ui-constants.ts`）与 CSS `--z-*` 变量（`globals.css :root`），数值一致：base 10 / sticky 30 / banner 40 / header 50 / toast 60 / transition 70 / overlay 9998。
+- JSX 一律用 CSS 变量引用：`z-[var(--z-header)]`、`z-[var(--z-banner)]`。
+- **禁止**：裸写 `z-50`/`z-40`；新增层级不得随意插值。
+- 例外：navbar 汉堡遮罩 `z-[45]`（有注释的刻意例外：盖 banner 留 header 汉堡可点，体系无 45 档）——新增例外须注释说明。
+
+### 16.8 质量门禁（新增/修改共享 UI 必须）
+
+1. 组件/类变更必须配套**回归测试**（见 `primitives/*.test.tsx`：button 15、pagination 7、badge 3、input 6、filter-bar 6）。
+2. 每批迁移验证：`cd CS-Web-Frontend && pnpm exec eslint <files>`（0 error）、`pnpm exec vitest run <tests>`、`pnpm exec tsc --noEmit`（改动模块零新增错误）。
+3. 迁移纪律：**先立契约（变体/类+测试）→ 逐文件迁移 → 每批独立验证**；迁移前甄别"真控件 vs 语义装饰"（avatar 选择框、消息横幅、对错标记、聊天气泡不是 Tab/徽章）。
+
 ---
 
 ## 变更记录
 
 | 日期 | 变更 |
 |------|------|
+| 2026-08-20 | **合并前端 UI 文档（P1）**：原 `FrontDoc-UIStandard.md` 组件用法（输入框/徽章/Tab/分页/Modal/z-index/质量门禁）并入为 §16 组件用法统一契约（SSOT）；原 `FrontDoc-UIButton.md` 按钮选型矩阵/禁止项/保留并入 §5.2；按钮审计与 Batch-1~5b 迁移史并入根 `CHANGELOG.md`；删除 `FrontDoc-UIStandard.md`、`FrontDoc-UIButton.md`。本文成为 UI 规范唯一权威。 |
 | 2026-08-18 | **标题虚影换行错位二次修复（虚影高度保护 v2）**：① 根因——v1 对首页 Hero 设 `hideOnWrap={false}` 跳过测量，但首页大标题在 `<br/>` 之外窄屏额外自然换行仍触发「虚影单行 / 衬线多行」错位；② 重写 `<GhostTitle>` 测量逻辑为「真实标题 `scrollHeight` vs 虚影 `offsetHeight`」高度比较（覆盖自然换行 + 首页 `<br/>` 之外额外换行），用 `visibility` 切换（保留布局、可随宽度恢复显示）；③ 撤销首页 `page.tsx` 的 `hideOnWrap={false}`，让高度保护覆盖首页（桌面对齐显示、窄屏额外换行隐藏）；④ `<Title>` 透传 `hideOnWrap`。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 安全约束更新为高度比较逻辑） |
 | 2026-08-18 | **统一标题组件 `<Title>`/`<SectionMarker>`/`<ArkDivider>` + 全站主标题/章节标记/分隔统一**：① 新建 `<Title>`（`primitives/title.tsx`，构建于 `<GhostTitle>`，`level` 1–4、`subtitle` 内联英文后缀、`collapsed`+`collapsedSize`/`expandedSize` Hero 折叠动画、`ghost` 默认 `level<=2`、`...rest` 透传 `onClick`；含**尺寸守卫**——调用方 `className` 已含 `text-*` 时不追加预设）并桶导出；② 所有页面 Hero h1（`collapsed` 模式）+ 章节 h2（`level={2}`）迁移到 `<Title>`，内联英文后缀抽为 `subtitle`；③ 页面级 `section-marker` `<div>`→`<SectionMarker>`、`ark-divider`→`<ArkDivider>`（`.ark-divider` 强制 `inline-flex` 故 span↔div 视觉一致；`.section-marker` 未设 `display` 故仅替换 `<div>`，首页行内 `[ 00 ]` span 保持）；④ 排除 46 处零散卡片 `<h3>` 与共享组件内标记。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.11 新增） |
 | 2026-08-18 | **标题虚影全量应用 + 提炼共享组件 `<GhostTitle>`**：① 新建 `<GhostTitle>`（`primitives/ghost-title.tsx`，桶导出 `src/components/index.ts`），支持纯文本自动虚影 / 复杂节点 `echo` / 块级 `wrapContent=false` / `...rest` 透传 `onClick`（折叠 Hero）；② 虚影由 Hero 专用扩展至**全站主标题**——所有页面 Hero 主标题与大号章节标题（`/`、`/about`、`/events`、`/community*`、`/tools*`、`/profile`、`/users/[id]`、`/notifications`、`/login`、`/events/[id]`、`/tools/task` 各 tab 区等）；`globals.css` `.ghost-title` 去掉强制 `inline-block`、新增 `.ghost-title__content`；③ 排除 admin / 卡片·列表项 / 统计数字 / navbar / 弹窗小标题 / markdown 标题。`ts-check` 持基线 10 错、`lint` 持基线 3 错，无新增回归（§15.10 已更新） |
@@ -764,7 +877,7 @@ const { collapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
 | 2026-08-18 | 列表选型落地（§15.9）：`/about` 信念与期望索引列表选 **A 索引铁路**（`.idx-rail`）；`/join`（现已并入 `/about`）的「加入流程」选 **B DNA 行卡**（`.lst-dna`，复用 about 四步流程语义）。标题底部虚影选 **A 像素错位虚影**并落地首页 Hero（`src/app/page.tsx` `.ghost-title` + `.ghost-title__echo`，仅 Hero）。`globals.css` 新增 `.idx-rail` / `.lst-dna` / `.ghost-title` 三套共享类（双主题自适应）。`ts-check` 持基线 10 错，无新增回归 |
 | 2026-08-18 | 新增 §15 像素融合层（Pixel Fusion）：`--font-pixel` 令牌、页面作用域（about/events 像素元数据层）、DNA 卡（`.dna-card`/`.dna-corner`/`.dna-meta`）、像素按钮 variant、首页 `TypewriterTitle`/`StarfieldCanvas`、`/events` 同屏双视图；§11 登记像素融合白名单例外；§15.8 记录 DNA 卡组件化决策（暂不提炼，保持 CSS 类契约，列出提升条件） |
 | 2026-08-18 | 像素融合全站化：① 新建共享组件 `<DnaCard>`（`primitives/dna-card.tsx`），`/about`、`/events` 重构其使用，DNA 卡皮肤改全局生效（§15.3/§15.8 更新）；② 像素元数据层 opt-in 统一为 `.pixel-page`（兼容 about/events），覆盖 join/login/profile/users/[id]/notifications/events/[id]/community*/tools*，`/admin` 排除（§15.2）；③ 上述页面主 CTA 切 `pixel`/`pixel-outline`；④ 盒装卡 `featured-topic-strip`、tools 工具卡转 `dna-card`，Feed/主题列表行保持列表样式 |
-| 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-Conv.md`（前端编码规范，对标后端 BackDoc-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
+| 2026-08-09 | §10 代码规范（JSDoc / 样式实现 / 客户端服务端边界 / 中文文本规则）整体迁出至新建 `FrontDoc-03-Conv.md`（前端编码规范，对标后端 BackDoc-03-Conv.md），UID 收窄为纯视觉与交互规范；§11 编码侧禁止项同步迁出、§12 Checklist / §13 参考文件相应更新 |
 | 2026-08-09 | 文档瘦身重构：① §14 Markdown 编辑器契约下沉至 Arch §2.5.7，UID 仅留结论；② §4.8 各页面 Tab 配置表 + 附录 A 未采用方案迁出至 `capsule-tabs.md`；③ 新增 §5.0 全局组件体系与复用契约（分层 + 单向依赖 + 复用契约）；④ §5.7 精简为复用层级表，与 §13 去重。文档由 815→626 行 |
 | 2026-08-06 | 规范收口迭代：① 圆角/阴影 token 化（`--radius-capsule` / `--radius-capsule-item` / `--shadow-popover` / `--shadow-modal`），浮层阴影与发光全部归一；② 胶囊可发现性增强（focus 展开 + 首次 peek 演示 + §4.7 移动端描述对齐实现）；③ 字体迁移 next/font 自托管（移除 CSS @import Google Fonts）；④ §5 补全四态规范与组件全清单，§3.5 新增 Token 速查表；⑤ `focus-amber` → `focus-ring` 语义化；⑥ 修复文档自身错误（5 种按钮、44px 触控区、`'use client'` 位置约定、本变更记录表） |
 | 2026-07-26 | 新增 §3.4 子页面返回按键规范；为 `/tools/exam`、`/tools/resource` 添加 `← 返回` 按键 |

@@ -1,5 +1,5 @@
 /**
- * @file Pagination — 共享分页控件（FrontDoc-UIButton.md §3.2 / §3.3 / §7 Step4）
+ * @file Pagination — 共享分页控件（FrontDoc-UID.md §16）
  *
  * 统一替代 topics-manager / users-manager / notification-center / resource 中各自手搓的
  * `← / 页码 / →` 描边按钮，视觉收敛到 .btn-page + .btn-active。

@@ -1291,7 +1291,7 @@ body,
 }
 
 /* SM 尺寸：对齐 btn-primary-sm / btn-outline-danger-sm 的 padding/gap/font-size，
- * 修复 danger 变体此前 sm/xs 误用 MD 类（btn-danger）导致尺寸偏大（FrontDoc-UIButton.md §3.2） */
+ * 修复 danger 变体此前 sm/xs 误用 MD 类（btn-danger）导致尺寸偏大（FrontDoc-UID.md §16 §3.2） */
 .btn-danger-sm {
   display: inline-flex;
   align-items: center;
@@ -1619,7 +1619,7 @@ body,
 }
 
 /* 主色描边按钮 — 收口全站散落的 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/5
- * 尺寸/padding/font 对齐 outline，仅颜色换 primary（FrontDoc-UIButton.md §7 Step1） */
+ * 尺寸/padding/font 对齐 outline，仅颜色换 primary（FrontDoc-UID.md §16 §7 Step1） */
 .btn-primary-outline {
   display: inline-flex;
   align-items: center;
@@ -1665,7 +1665,7 @@ body,
 }
 
 /* amber 状态键 — 收口全站散落的 border-amber-500/40 text-amber-500（草稿/待审/警告类操作，
- * 如任务"关闭"）；颜色用 Tailwind amber-500 #f59e0b，盒模型对齐其他实色变体（FrontDoc-UIButton.md §7 Step2） */
+ * 如任务"关闭"）；颜色用 Tailwind amber-500 #f59e0b，盒模型对齐其他实色变体（FrontDoc-UID.md §16 §7 Step2） */
 .btn-amber {
   display: inline-flex;
   align-items: center;
@@ -1757,7 +1757,7 @@ body,
 }
 
 /* 方形图标按钮 — 收口手写 w-8 h-8 border 图标键（如 markdown 编辑器工具栏），
- * 固定 2rem×2rem、居中、描边 + hover 主色（FrontDoc-UIButton.md §7 Step3） */
+ * 固定 2rem×2rem、居中、描边 + hover 主色（FrontDoc-UID.md §16 §7 Step3） */
 .btn-icon {
   display: inline-flex;
   align-items: center;
@@ -1783,7 +1783,7 @@ body,
 }
 
 /* 徽章 — 收口全站手写 meta-mono px-2 py-0.5 border 徽章三元（green/emerald/amber/red 各写各的），
- * 统一直角、等宽 10px、uppercase、无圆角；语义色走 badge-*（FrontDoc-UIButton.md §7 Step-Badge） */
+ * 统一直角、等宽 10px、uppercase、无圆角；语义色走 badge-*（FrontDoc-UID.md §16 §7 Step-Badge） */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1819,7 +1819,7 @@ body,
 
 /* Tab/筛选控件 — 收口手写筛选 Tab 的选中态（8%/5%/6% 飘忽、实心/描边混用），
  * 统一为两套形态：胶囊描边（.tab-chip，主用于 admin/tools 筛选）与下划线（.tab-underline）
- * （FrontDoc-UIButton.md §7 Step-Tab） */
+ * （FrontDoc-UID.md §16 §7 Step-Tab） */
 .tab-chip {
   display: inline-flex;
   align-items: center;
@@ -1875,7 +1875,7 @@ body,
   background: var(--primary);
 }
 
-/* ─── 按钮系统扩展（FrontDoc-UIButton.md §3.2）───
+/* ─── 按钮系统扩展（FrontDoc-UID.md §16 §3.2）───
  * 在原有 primary / outline / danger 三套基础上补齐：
  *   btn-outline-danger — 描边危险（hover 转 destructive，替代手搓 hover:text-[var(--destructive)]）
  *   btn-ghost          — 纯文字按钮（替代 meta-mono 文本操作按钮）

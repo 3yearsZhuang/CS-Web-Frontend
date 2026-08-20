@@ -4,7 +4,7 @@
 > 更新人：3yearsZ
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：**前端 BFF 层**的运维操作、SLO 阈值、回滚流程的唯一权威位置
-> 关联：**全栈部署/编排权威见根 [docs/RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)**（含 §七 跨端 SLO 与可观测性基线）；后端 PG/备份/运维端点见 [CS-Web-Backend/tools/docs/BackDoc-Infra.md](../../../CS-Web-Backend/tools/docs/BackDoc-Infra.md)；架构与 API 见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；安全见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；演进与 ADR 见 [RootDoc-ADR.md](../../../docs/RootDoc-ADR.md)；工程规则见根级 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 关联：全栈部署/编排与跨端 SLO 基础见根 [RootDoc-Deploy.md](../../../docs/RootDoc-Deploy.md)；后端 PG/备份/运维端点见 [BackDoc-Infra.md](../../../CS-Web-Backend/tools/docs/BackDoc-Infra.md)；架构/安全/演进/工程规则分别见 FrontDoc-01-Arch、FrontDoc-02-Sec、RootDoc-ADR、Onboarding 附录 A
 > 变更触发：BFF 部署架构变更 / SLO 阈值调整 / 新增故障场景 / 重大架构变更后 review
 > Stale 信号：脚本路径不存在 / SLO 阈值不一致 / 季度演练未执行 / 仍引用 SQLite/Litestream（应为后端职责）
 
@@ -78,7 +78,7 @@ SENTRY_DSN=                                    # Sentry 错误监控（运行时
 > `SQLITE_DB_PATH`、`AUTH_SESSION_SECRET`、`SMTP_HOST/PORT/USER/PASS/FROM`、`PASSWORD_RESET_DEFAULT`、`GITHUB_CLIENT_ID/SECRET/CALLBACK_URL`。
 > 完整说明见 [`.env.example`](../../.env.example)。
 
-> 后端必填密钥（`DATABASE_PASSWORD` / `SECRET_KEY` / `TOTP_ENCRYPTION_KEY` 等）见根 [`.env.example`](../../../.env.example) 与后端 `CS-Web-Backend/tools/docs/BackDoc-Conv.md`。
+> 后端必填密钥（`DATABASE_PASSWORD` / `SECRET_KEY` / `TOTP_ENCRYPTION_KEY` 等）见根 [`.env.example`](../../../.env.example) 与后端 `CS-Web-Backend/tools/docs/BackDoc-03-Conv.md`。
 
 ---
 

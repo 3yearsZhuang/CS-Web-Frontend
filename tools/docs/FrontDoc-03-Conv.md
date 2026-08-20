@@ -1,8 +1,8 @@
-# 前端编码规范（FrontDoc-Conv）
+# 前端编码规范（FrontDoc-03-Conv）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-09（新建：对标后端 BackDoc-Conv.md，收拢 RootDoc-EngConv.md §十 与 FrontDoc-UID.md §10 的前端编码约定，形成前端专项编码规范）
-> 关联：通用工程规范见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md)；架构与业务模块契约见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；视觉与交互规范见 [FrontDoc-UID.md](FrontDoc-UID.md)；目录设计方法论见根 [RootDoc-FEArch.md](../../../docs/RootDoc-FEArch.md)；面向新人的聚合摘要见根 [docs/Onboarding.md](../../../docs/Onboarding.md#附录-a前端工程规则)
+> 最后更新：2026-08-09（新建：对标后端 BackDoc-03-Conv.md，收拢 RootDoc-EngConv.md §十 与 FrontDoc-UID.md §10 的前端编码约定，形成前端专项编码规范）
+> 关联：通用工程规范见根 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md)；架构与业务模块契约见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；UI 见 FrontDoc-UID、方法论见 RootDoc-FEArch、聚合见 Onboarding 附录 A
 
 本项目的编码规范、目录组织与通用约定。**所有前端贡献者（含 AI Agent）在写代码前必须先读本文档**。
 
@@ -30,7 +30,7 @@ src/
 
 - **数据访问**：组件/模块禁止直接 `fetch` 后端地址，一律经 BFF API 路由（`src/app/api/**/route.ts` → `shared/backend-client.ts` 转发）。
 - **依赖方向（单向）**：`模块组件 → 全局组件`；全局组件**禁止反向 import 任何 `src/modules/*`**（详见 UID §5.0 复用契约）。
-- **跨模块引用**：类型引用必须用 `import type`（编译后无运行时依赖），禁止跨模块 import 运行时实现（详见 [FrontDoc-Conv §12](FrontDoc-Conv.md#12-禁止事项汇总) / Onboarding 附录 A.3 模块协作契约）。
+- **跨模块引用**：类型引用必须用 `import type`（编译后无运行时依赖），禁止跨模块 import 运行时实现（详见 [FrontDoc-03-Conv §12](FrontDoc-03-Conv.md#12-禁止事项汇总) / Onboarding 附录 A.3 模块协作契约）。
 
 ### 文件放置规则
 
@@ -156,7 +156,11 @@ src/
 
 ## 9. i18n 约定
 
-> 完整国际化迁移指南见 [FrontDoc-i18n.md](FrontDoc-i18n.md)。
+> 本文为前端 i18n 权威（原 `FrontDoc-i18n.md` 并入，2026-08-20）；已完成迁移记录见根 `CHANGELOG.md`，剩余待迁移清单见 `docs/项目待办事项-优先级重排.md`。
+
+**技术选型（决策固化）**：采用 **next-intl@4.x「无 i18n 路由」模式**——URL 不带 locale 前缀（`/community` 而非 `/zh-CN/community`），避免改动所有路由/重定向/SEO（自定义 server + CSP nonce 前提下路径前缀风险过高）。locale 解析优先级：cookie `locale` > Accept-Language > 默认 `zh-CN`；语言切换器 `src/components/layout/language-switcher.tsx` 写 cookie 后 reload。
+
+**基础设施**：`src/i18n/request.ts`（语言解析+加载）、`types.ts`（`AppMessages` 类型）、`languages/zh-CN.ts`/`en.ts`（namespace 化语言包）、`app/layout.tsx`（`NextIntlClientProvider`）、`next.config.ts`（`createNextIntlPlugin`）。
 
 - 文案统一走 `useTranslations('<namespace>')`，词条定义在 `src/i18n/messages/*.ts`。
 - 新增 / 修改一条 workbench 文案，必须同步**三处**，否则 `AppMessages` 类型编译失败或运行时缺译：
@@ -164,6 +168,13 @@ src/
   2. **中文（zhCN）**：`src/i18n/messages/` 内 `zhCN` 对象给出中文串；
   3. **英文（en）**：`src/i18n/messages/` 内 `en` 对象给出英文串。
 - 聚合入口 `src/i18n/languages/{zh-CN,en}.ts` 自动展开，无需手动登记。
+- 两个语言包 key 必须与 types 完全一致，否则 next-intl 报 `MISSING_MESSAGE`。
+
+**标准迁移流程**（每迁移一文件）：① `types.ts` 新建/扩展 namespace，定义所有 key；② `zh-CN.ts` 与 `en.ts` 补全中英文 key（与 types 完全一致）；③ 组件内 `useTranslations`/`getTranslations` 逐处替换硬编码中文——模块级常量数组（如 `TOOLS`）改存 key（`titleKey`/`descKey`）、组件内函数改返回 key 后 `t()` 解析；④ 验证 `pnpm ts-check` + `curl` 带 `Cookie: locale=en`/`zh-CN` 确认切换无 `MISSING_MESSAGE`。
+
+**注意事项**：语言包 key 冲突时**合并**而非重复定义（否则 `Duplicate identifier`）；改 `next.config.ts` 后必须重启 dev server（`lsof -ti :2333 | xargs kill` + `nohup pnpm dev`）；新增 key 报 `MISSING_MESSAGE` 需重启清 next-intl 缓存；避免混用 `??`/`||` 不括号（禁用编译导致返回 500 HTML）。
+
+**已知环境问题（非 i18n 本身）**：`layout.tsx` 中 react-dom `preconnect` 在 Next16+自定义 server+next-intl dev 期报 `preload is not defined`（非致命）；`src/shared/utils/mail.ts` 的 `import 'server-only'` 被客户端 `verification-code.ts` 间接导入导致浏览器端报错（既有问题）。
 
 ---
 
@@ -217,7 +228,7 @@ src/
 - [ ] 新增 widget 已在 `widget-registry.ts` 声明（声明 → 配置 → 注册三步）？
 - [ ] 新增 i18n 文案已同步类型 / zhCN / en 三处？
 - [ ] 测试已补（正向 / 反向 / 边界）？`pnpm run ts-check` + `eslint` 通过？
-- [ ] 新增禁止事项已登记 `FrontDoc-Conv §12`（编码侧）/ `FrontDoc-UID §11`（UI 侧）？
+- [ ] 新增禁止事项已登记 `FrontDoc-03-Conv §12`（编码侧）/ `FrontDoc-UID §11`（UI 侧）？
 
 ---
 
@@ -225,11 +236,11 @@ src/
 
 | 端 | 权威文档 |
 |---|---|
-| 编码规范 | 本文档 `FrontDoc-Conv.md`（前端专项：TS/React/Next.js 约定、样式令牌、JSDoc、组件契约） |
+| 编码规范 | 本文档 `FrontDoc-03-Conv.md`（前端专项：TS/React/Next.js 约定、样式令牌、JSDoc、组件契约） |
 | 架构 | `FrontDoc-01-Arch.md`（BFF 架构 + 业务模块契约 Part B + 前后端联动） |
 | 视觉 / 交互 | `FrontDoc-UID.md`（颜色 / 字体 / 布局 / 组件外观 / 动效 / 交互） |
 | 安全 | `FrontDoc-02-Sec.md`（CSP、Origin 校验、安全约束） |
 | 运维 | `FrontDoc-Ops.md`（部署、SLO、回滚 Runbook） |
-| 国际化 | `FrontDoc-i18n.md` |
+| 国际化 | `FrontDoc-03-Conv.md §9 i18n 约定`（权威，含标准迁移流程） |
 | 方法论 | 根 `RootDoc-FEArch.md`（目录设计艺术） |
 | 通用工程 | 根 `RootDoc-EngConv.md`（命名 / DRY / 圈复杂度 / 错误处理 / 安全 / 配置 / 测试 / Git） |
