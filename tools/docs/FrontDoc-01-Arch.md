@@ -1,7 +1,7 @@
 # 前端架构与业务模块（FrontDoc-Arch）
 
 > 更新人：3yearsZ
-> 最后更新：2026-08-09（新增 §2.5.7 社区 Markdown 编辑器 UI 组件契约，下沉自 UID §14；其余同 2026-08-08 重构：业务模块契约统一模板、前后端联动映射、2.5/2.8 标题消歧、api-usage-stats 部分就绪标注）
+> 最后更新：2026-08-09（新增 §2.5.7 社区 Markdown 编辑器 UI 组件契约）
 > 关联：后端架构/RBAC/Alembic/OTel 权威见 [BackDoc-01-Arch.md](../../../CS-Web-Backend/tools/docs/BackDoc-01-Arch.md)；安全与权限设计见 [FrontDoc-02-Sec.md](FrontDoc-02-Sec.md)；运维见 FrontDoc-Ops、演进见 RootDoc-ADR、工程规则见 Onboarding 附录 A、全栈编排见 RootDoc-Deploy
 
 > **文档定位**：前端 BFF 层架构与业务模块契约权威文档（reference）。Source of truth：BFF 层的项目结构、模块化分析、代码质量、BFF API 端点与转发契约、**业务模块契约（Part B：认证 / 个人资料 / 活动 / 社区论坛 / 社区文章 / 通知 / 管理后台 / 工具集 / 成员与入社 / 会话管理 / 工作台 / 学习助手）与前后端联动**、状态码、事件总线、依赖矩阵。

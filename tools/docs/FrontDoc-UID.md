@@ -5,7 +5,7 @@
 > Source of truth：颜色、字体、布局、组件、动效、交互规范的唯一权威位置
 > 关联：组件清单见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；编码规范见 [FrontDoc-03-Conv.md](FrontDoc-03-Conv.md)；新页面接入见 Onboarding 附录 A
 > 2026-08-09 重构：§14 Markdown 编辑器契约下沉至 Arch §2.5.7；§4.8 Tab 配置表与未采用方案迁出至 `capsule-tabs.md`；新增 §5.0 全局组件体系与复用契约；§10 代码规范整体迁出至新文档 `FrontDoc-03-Conv.md`
-> 最后更新：2026-08-20（合并原 `FrontDoc-UIStandard.md` 为 §16 组件用法统一契约 SSOT、原 `FrontDoc-UIButton.md` 按钮选型/禁止并入 §5.2；此前 2026-08-18 新增 §15 像素融合层等）
+> 最后更新：2026-08-20（合并 UIButton/UIStandard 为 §16 组件用法契约与 §5.2 按钮）
 > 更新人：3yearsZ
 > 维护人：@3yearszhuang
 > 变更触发：新增页面 / 组件 / 视觉变更

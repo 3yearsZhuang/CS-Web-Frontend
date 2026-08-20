@@ -1,6 +1,6 @@
 # FZTBUCS-Ops-运维文档
 
-> 最后更新：2026-08-08（BFF 视角重写，去 SQLite/Litestream；补充开发约定：pnpm 强制 / Node>=22 / i18n 新增流程 / 新增 widget 须注册 registry）｜类型：reference + how-to
+> 最后更新：2026-08-08（BFF 视角重写，去 SQLite/Litestream）｜类型：reference + how-to
 > 更新人：3yearsZ
 > 受众：oncall / 站点 owner / 运维 / 发布决策者
 > Source of truth：**前端 BFF 层**的运维操作、SLO 阈值、回滚流程的唯一权威位置

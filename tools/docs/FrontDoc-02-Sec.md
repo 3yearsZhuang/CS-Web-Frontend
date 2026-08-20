@@ -4,7 +4,7 @@
 > 受众：安全审计人员 / 开发工程师 / 运维 / 权限设计者
 > Source of truth：**BFF 层**的安全审计发现、UI 层角色与权限矩阵、安全不变量、加固变更记录
 > 关联：后端鉴权/RBAC/密码/2FA/限流/审计日志权威见 [BackDoc-02-Sec.md](../../../CS-Web-Backend/tools/docs/BackDoc-02-Sec.md)；权限矩阵与部署模型见 [FrontDoc-01-Arch.md](FrontDoc-01-Arch.md)；运维见 FrontDoc-Ops、演进见 RootDoc-ADR
-> 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任）；新增 Part E（BFF 转发同源安全 / proxyBackend / workbench namespace 三处 i18n / 前端不持有密钥）
+> 最后更新：2026-08-05（BFF 视角重写，区分 BFF/后端/遗留三层责任 + 新增 Part E）
 > 更新人：3yearsZ
 > 变更触发：BFF 安全发现 / UI 层角色变更 / 后端鉴权契约变更 / 新漏洞类
 > Stale 信号：发现项状态与代码现状不一致 / 权限矩阵与实际 handler 不符 / 仍把后端职责（JWT 签发/密码哈希/TOTP/RBAC enforce/审计日志）写成前端职责
