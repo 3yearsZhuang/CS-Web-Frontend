@@ -11,7 +11,7 @@
 //   以及 barrel `@/shared/security`。
 //
 // 用法：
-//   node tools/scripts/fe/check/check-bff-boundary.mjs [--src <dir>] [--help]
+//   node tools/scripts/check/check-bff-boundary.mjs [--src <dir>] [--help]
 // 退出码：0 = 通过；1 = 发现越界导入（CI 应失败）。
 // ----------------------------------------------------------------------------
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 /**
- * PR 级 diff 覆盖率门禁（ER-13 / 3c）。
+ * PR 级 diff 覆盖率门禁（ER-45）。
+ *
+ * 与后端 `tools/scripts/check/diff_coverage.py` 为同一门禁的两端实现（本仓 src/**、后端 app/**），
+ * CLI 参数 `--base/--threshold/--src` 保持一致；调整阈值/报告格式时需两端同步。
  *
  * 读取 `coverage/lcov.info`（pnpm test:coverage 产物）+ `git diff` 新增行，
  * 计算新增代码（src/**）的行覆盖率，低于阈值则 exit 1。
  *
  * 用法：
- *   node tools/scripts/fe/check/diff-coverage.mjs --base origin/main --threshold 80 \
+ *   node tools/scripts/check/diff-coverage.mjs --base origin/main --threshold 80 \
  *     --lcov coverage/lcov.info --src src
  *
  * 退出码：0 通过（或无新增行）；1 覆盖率不足 / 运行错误。

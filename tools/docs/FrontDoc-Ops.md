@@ -240,7 +240,7 @@ docker compose up -d
 
 ### BFF route 骨架生成器（C-15 脚手架）
 
-> 位置：`tools/scripts/fe/gen/bff-routes.mjs`（C-15 真正交付物）。用于把 `../openapi.baseline.json` 的 API 路径自动产出使用通用原语（`proxyBackend` / `bodyOrEmpty` / `arrayFrom` / `okJson` / `errJson` / `readJsonBody`，定义见 `src/shared/backend-client.ts`）的 `route.ts` 薄转发骨架，削减 140+ 手写 BFF 路由的重复。
+> 位置：`tools/scripts/gen/bff-routes.mjs`（C-15 真正交付物）。用于把 `../openapi.baseline.json` 的 API 路径自动产出使用通用原语（`proxyBackend` / `bodyOrEmpty` / `arrayFrom` / `okJson` / `errJson` / `readJsonBody`，定义见 `src/shared/backend-client.ts`）的 `route.ts` 薄转发骨架，削减 140+ 手写 BFF 路由的重复。
 
 **前置**：
 
@@ -251,13 +251,13 @@ docker compose up -d
 
 ```bash
 # 1) 默认 dry-run：仅生成草稿 + 对账报告，绝不触碰 src
-node tools/scripts/fe/gen/bff-routes.mjs
+node tools/scripts/gen/bff-routes.mjs
 
 # 2) 指定草稿目录（默认 <frontend>/.bff-scaffold）
-node tools/scripts/fe/gen/bff-routes.mjs --out .bff-scaffold
+node tools/scripts/gen/bff-routes.mjs --out .bff-scaffold
 
 # 3) 真正写入：仅新建 NEW 端点骨架到 src/app/api（绝不覆盖已存在文件）
-node tools/scripts/fe/gen/bff-routes.mjs --write
+node tools/scripts/gen/bff-routes.mjs --write
 
 # 其他开关
 --openapi <path>   # 指定 openapi 文件（默认 ../openapi.baseline.json）

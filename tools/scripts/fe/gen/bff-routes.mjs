@@ -15,9 +15,9 @@
  *   - --write 默认关闭；即便开启也只新建不存在的文件，绝不覆盖。
  *
  * 用法：
- *   node tools/scripts/fe/gen/bff-routes.mjs            # dry-run + 对账报告
- *   node tools/scripts/fe/gen/bff-routes.mjs --out DIR  # 指定草稿目录
- *   node tools/scripts/fe/gen/bff-routes.mjs --write    # 仅新建 NEW 文件到 src（谨慎）
+ *   node tools/scripts/gen/bff-routes.mjs            # dry-run + 对账报告
+ *   node tools/scripts/gen/bff-routes.mjs --out DIR  # 指定草稿目录
+ *   node tools/scripts/gen/bff-routes.mjs --write    # 仅新建 NEW 文件到 src（谨慎）
  */
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FRONTEND_ROOT = resolve(__dirname, '../../../..'); // tools/scripts/fe/gen -> frontend
+const FRONTEND_ROOT = resolve(__dirname, '../../..'); // tools/scripts/gen -> frontend
 const SRC_API = join(FRONTEND_ROOT, 'src', 'app', 'api');
 const DEFAULT_OPENAPI = resolve(FRONTEND_ROOT, '..', 'openapi.baseline.json');
 
