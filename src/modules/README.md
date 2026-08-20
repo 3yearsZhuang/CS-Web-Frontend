@@ -21,9 +21,7 @@
 
 ## 命名规范（对齐 API 契约）
 
-- **模块名 = API 资源名（复数）**：与 `openapi.baseline.json` 中 `/api/v1` 路径第一段一致（`users/announcements/notifications/events/community/join/tools/workbench/profile/auth/admin`），与 BFF 路由、后端契约三方对齐。权威映射见根 `docs/RootDoc-ModuleMap.md`（SSOT）。
-- **门禁**：`make check-module-naming`（根仓）强制三端模块名 ⊆ 契约资源名，已接入根 CI；新增业务模块先入契约 → 三端目录同名 → 门禁通过。
-- **组件归属**：业务组件/hook 一律进本模块 `ui/` + `ui/hooks/`；公共层 `components/` 只留跨 ≥2 域复用件，禁止公共层依赖业务层（数据经业务域容器注入）。
+> 模块命名（= API 资源名复数）、门禁 `make check-module-naming`、组件归属的唯一权威见根 [`docs/RootDoc-ModuleMap.md`](../../../docs/RootDoc-ModuleMap.md)；新增业务模块先入契约 → 三端目录同名 → 门禁通过。此处不重复。
 
 ## 目录即模块约定
 
