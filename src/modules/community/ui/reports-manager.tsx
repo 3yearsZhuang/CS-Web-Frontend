@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
-import { Button } from '@/components';
+import { EmptyState, Button } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { useReportsManager, type ReportRow, type ReportStatusFilter } from './hooks/use-reports-manager';
 
@@ -69,9 +69,9 @@ export function ReportsManager() {
       {loading ? (
         <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">Loading...</div>
       ) : error ? (
-        <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
+        <EmptyState message={error} tone="error" className="py-12" />
       ) : reports.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">[ No Record ]</div>
+        <EmptyState message="[ No Record ]" className="py-12" />
       ) : (
         <ul className="border-t border-[var(--border)]">
           {reports.map((r, idx) => (

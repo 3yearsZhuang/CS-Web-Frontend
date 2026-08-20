@@ -13,7 +13,7 @@ import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useTransientMessage } from '@/shared/hooks/use-transient-message';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
-import { SectionLoading, Button } from '@/components';
+import { EmptyState, SectionLoading, Button } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
@@ -316,9 +316,7 @@ export function AnnouncementsPanel() {
       {annLoading ? (
         <SectionLoading label={t('loading')} />
       ) : announcements.length === 0 ? (
-        <div className="py-12 text-center text-[12px] font-mono text-[var(--muted-foreground)]">
-          {t('empty')}
-        </div>
+        <EmptyState message={t('empty')} className="py-12" />
       ) : (
         <div className="mt-4 border border-[var(--border)]">
           <div className="overflow-x-auto">

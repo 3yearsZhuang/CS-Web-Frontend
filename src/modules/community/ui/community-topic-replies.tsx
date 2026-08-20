@@ -10,7 +10,7 @@ import type {
   NestedCommentsResult,
 } from '@/modules/community/types';
 import { useTranslations } from 'next-intl';
-import { Pagination } from '@/components';
+import { EmptyState, Pagination } from '@/components';
 
 interface TopicRepliesProps {
   replies: CommunityCommentDetail[];
@@ -45,9 +45,7 @@ export function TopicReplies({
   return (
     <div>
       {replies.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)] border-t border-[var(--border)]">
-          {t('noRepliesYet')}
-        </div>
+        <EmptyState message={t('noRepliesYet')} className="py-12 border-t border-[var(--border)]" />
       ) : (
         <div className="border-t border-[var(--border)]">
           {replies.map((reply) => (

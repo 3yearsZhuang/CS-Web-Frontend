@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { CommunityTopicItem } from './community-topic-item';
 import { formatDateTime } from '@/shared/utils/utils';
-import { SectionLoading, Pagination } from '@/components';
+import { EmptyState, SectionLoading, Pagination } from '@/components';
 import { SectionNav } from '@/components/primitives/section-nav';
 import {
   useProfileCommunityTab,
@@ -112,27 +112,22 @@ export function ProfileCommunityTab({ userId }: ProfileCommunityTabProps) {
         {loading ? (
           <SectionLoading label="Loading..." />
         ) : error ? (
-          <div className="py-12 text-center meta-mono text-[var(--destructive)]">
-            {error}
-          </div>
+          <EmptyState message={error} tone="error" className="py-12" />
         ) : activeSubTab === 'replies' ? (
           replies.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="meta-mono text-[var(--muted-foreground)] mb-4">
-                [ No Record ]
-              </div>
-              <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
-                {activeSubTab === 'replies'
-                  ? t('noRepliesDesc')
-                  : t('noContentDesc')}
-              </p>
-              <Link
-                href="/community"
-                className="meta-mono text-[var(--primary)] underline-grow"
-              >
-                {t('browseCommunity')}
-              </Link>
-            </div>
+            <EmptyState
+              label="[ No Record ]"
+              message={activeSubTab === 'replies' ? t('noRepliesDesc') : t('noContentDesc')}
+              className="py-12"
+              action={
+                <Link
+                  href="/community"
+                  className="meta-mono text-[var(--primary)] underline-grow"
+                >
+                  {t('browseCommunity')}
+                </Link>
+              }
+            />
           ) : (
             <ul>
               {replies.map((reply, idx) => {
@@ -191,22 +186,19 @@ export function ProfileCommunityTab({ userId }: ProfileCommunityTabProps) {
             </ul>
           )
         ) : topics.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="meta-mono text-[var(--muted-foreground)] mb-4">
-              [ No Record ]
-            </div>
-            <p className="text-[14px] text-[var(--muted-foreground)] mb-6">
-              {activeSubTab === 'topics'
-                ? t('noTopicsDesc')
-                : t('noFavoritesDesc')}
-            </p>
-            <Link
-              href="/community"
-              className="meta-mono text-[var(--primary)] underline-grow"
-            >
-              {t('browseCommunity')}
-            </Link>
-          </div>
+          <EmptyState
+            label="[ No Record ]"
+            message={activeSubTab === 'topics' ? t('noTopicsDesc') : t('noFavoritesDesc')}
+            className="py-12"
+            action={
+              <Link
+                href="/community"
+                className="meta-mono text-[var(--primary)] underline-grow"
+              >
+                {t('browseCommunity')}
+              </Link>
+            }
+          />
         ) : (
           <div className="border-t border-[var(--border)]">
             {topics.map((topic, idx) => (

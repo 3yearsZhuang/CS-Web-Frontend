@@ -8,7 +8,7 @@
  */
 
 import { useTranslations } from 'next-intl';
-import { SectionLoading, GhostTitle, Title } from '@/components';
+import { EmptyState, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './hooks/use-tasks';
 import { statusBadge } from './task-shared';
 
@@ -23,17 +23,11 @@ export function MyClaimsTab(props: ReturnType<typeof useTasks>) {
       </Title>
 
       {!user ? (
-        <div className="py-12 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('notLoggedIn')} ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">{t('loginToViewClaims')}</p>
-        </div>
+        <EmptyState label={`[ ${t('notLoggedIn')} ]`} message={t('loginToViewClaims')} className="py-12" />
       ) : claimsLoading ? (
         <SectionLoading label="Loading..." />
       ) : myClaims.length === 0 ? (
-        <div className="py-12 text-center border-t border-[var(--border)]">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ No Claim ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">{t('noClaims')}</p>
-        </div>
+        <EmptyState label="[ No Claim ]" message={t('noClaims')} className="py-12 border-t border-[var(--border)]" />
       ) : (
         <div className="border-t border-[var(--border)]">
           {myClaims.map((claim) => {

@@ -5,26 +5,25 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Badge, Button, Pagination, SectionLoading } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { EmptyState, Badge, Button, Pagination, SectionLoading } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
 import { useUsersManager, type AdminUserItem } from './hooks/use-users-manager';
 
-/** 用户管理 — 搜索/禁言/解禁用户 */
+/** 用户管理 — 禁言/解禁用户（搜索已聚合至顶栏，2026-08-20） */
 export function UsersManager() {
   const { users, loading, error, actionError, total, totalPages, busyIds, loadUsers, disableUser, enableUser } =
     useUsersManager();
   const { confirm } = useConfirm();
   const t = useTranslations('userList');
 
-  // 视图态（搜索/分页）
-  const [search, setSearch] = useState('');
+  // 视图态（分页）
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    void loadUsers({ search, page });
-  }, [loadUsers, search, page]);
+    // search 已聚合至顶栏（2026-08-20），固定传空串保持 hook 签名不变
+    void loadUsers({ search: '', page });
+  }, [loadUsers, page]);
 
   const handleDisable = (user: AdminUserItem) => {
     void (async () => {
@@ -51,19 +50,7 @@ export function UsersManager() {
         </div>
       )}
 
-      <div className="border border-[var(--border)] p-4 sm:p-6 space-y-4">
-        <div>
-          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('search')}</label>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder={t('searchPlaceholder')}
-            maxLength={80}
-            className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
-          />
-        </div>
-      </div>
+      {/* 搜索已聚合至顶栏（2026-08-20），此处无筛选条 */}
 
       <div className="meta-mono text-[var(--muted-foreground)]">
         {loading ? t('loading') : error ? <span className="text-[var(--destructive)]">{'// '}{error}</span> : <>{t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{t('countSuffix')}</>}
@@ -72,9 +59,9 @@ export function UsersManager() {
       {loading ? (
         <SectionLoading label="Loading..." />
       ) : error ? (
-        <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
+        <EmptyState message={error} tone="error" className="py-12" />
       ) : users.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// '}{t('noUsers')}</div>
+        <EmptyState label="//" message={t('noUsers')} className="py-12" />
       ) : (
         <div className="border-t border-[var(--border)]">
           <div className="hidden lg:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">

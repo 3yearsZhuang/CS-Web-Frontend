@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading } from '@/components';
+import { EmptyState, Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityCategory } from '@/modules/community/types';
@@ -158,7 +158,7 @@ export function CategoriesManager() {
 
       {/* 版块列表 */}
       {categories.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{t('noCategories')}</div>
+        <EmptyState message={t('noCategories')} className="py-12" />
       ) : (
         <div className="border-t border-[var(--border)]">
           {/* 表头 */}

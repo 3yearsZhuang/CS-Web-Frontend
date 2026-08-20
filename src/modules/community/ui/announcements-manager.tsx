@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Badge, Button, SectionLoading } from '@/components';
+import { EmptyState, Badge, Button, SectionLoading } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
@@ -121,9 +121,9 @@ export function AnnouncementsManager() {
       {loading ? (
         <SectionLoading label={t('loading')} />
       ) : error ? (
-        <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
+        <EmptyState message={error} tone="error" className="py-12" />
       ) : announcements.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{'// '}{t('noAnnouncements')}</div>
+        <EmptyState label="//" message={t('noAnnouncements')} className="py-12" />
       ) : (
         <div className="border-t border-[var(--border)]">
           <div className="hidden lg:grid grid-cols-12 gap-3 py-3 border-b border-[var(--border)] meta-mono text-[10px] text-[var(--muted-foreground)]">

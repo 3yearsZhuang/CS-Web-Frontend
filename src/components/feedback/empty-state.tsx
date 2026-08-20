@@ -22,6 +22,8 @@ export interface EmptyStateProps {
   hint?: string;
   /** 可选操作区（按钮/链接），渲染在提示下方 */
   action?: ReactNode;
+  /** 语义色调：muted = 空态灰，error = 错误态红（重复实现治理波次 C1c #25） */
+  tone?: 'muted' | 'error';
   /** 垂直内边距，默认 py-20 */
   className?: string;
 }
@@ -31,6 +33,7 @@ export function EmptyState({
   message,
   hint,
   action,
+  tone = 'muted',
   className = '',
 }: EmptyStateProps) {
   return (
@@ -40,7 +43,11 @@ export function EmptyState({
           {label}
         </div>
       )}
-      <div className="meta-mono text-[var(--muted-foreground)] text-[12px]">
+      <div
+        className={`meta-mono text-[12px] ${
+          tone === 'error' ? 'text-[var(--destructive)]' : 'text-[var(--muted-foreground)]'
+        }`}
+      >
         {message}
       </div>
       {hint && (

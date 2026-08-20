@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { SectionLoading } from '@/components';
+import { EmptyState, SectionLoading } from '@/components';
 import { useDashboardManager, type DashboardStats } from './hooks/use-dashboard-manager';
 
 /** 数据看板 — 社区运营数据概览 */
@@ -31,7 +31,7 @@ export function DashboardManager() {
   }
 
   if (error) {
-    return <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>;
+    return <EmptyState message={error} tone="error" className="py-12" />;
   }
 
   if (!stats) return null;

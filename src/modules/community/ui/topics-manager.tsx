@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Avatar } from '@/components/avatar';
-import { Badge, Button, Pagination, SectionLoading } from '@/components';
+import { EmptyState, Badge, Button, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { InlineTabs } from '@/components/primitives/inline-tabs';
@@ -161,9 +161,9 @@ export function TopicsManager() {
       {loading ? (
         <SectionLoading label="Loading..." />
       ) : error ? (
-        <div className="py-12 text-center meta-mono text-[var(--destructive)]">{error}</div>
+        <EmptyState message={error} tone="error" className="py-12" />
       ) : topics.length === 0 ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{t('noTopics')}</div>
+        <EmptyState message={t('noTopics')} className="py-12" />
       ) : (
         <div className="border-t border-[var(--border)]">
           {/* 表头 */}

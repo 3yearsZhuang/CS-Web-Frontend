@@ -9,7 +9,7 @@
 
 import { Trophy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { SectionLoading, GhostTitle, Title } from '@/components';
+import { EmptyState, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './hooks/use-tasks';
 
 const LEVEL_THRESHOLDS = [
@@ -33,10 +33,7 @@ export function PointsTab(props: ReturnType<typeof useTasks>) {
       </Title>
 
       {!user ? (
-        <div className="py-12 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('notLoggedIn')} ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">{t('loginToViewPoints')}</p>
-        </div>
+        <EmptyState label={`[ ${t('notLoggedIn')} ]`} message={t('loginToViewPoints')} className="py-12" />
       ) : pointsLoading ? (
         <SectionLoading label="Loading..." />
       ) : (

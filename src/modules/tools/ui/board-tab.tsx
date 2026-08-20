@@ -9,7 +9,7 @@
 
 import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button, SectionLoading, GhostTitle, Title } from '@/components';
+import { EmptyState, Button, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './hooks/use-tasks';
 import { categoryLabel, categoryOptions, TASK_INPUT_CLASS } from './task-shared';
 
@@ -203,12 +203,9 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
       {tasksLoading ? (
         <SectionLoading label="Loading..." />
       ) : tasksError ? (
-        <div className="py-12 text-center meta-mono text-[var(--muted-foreground)]">{tasksError}</div>
+        <EmptyState message={tasksError} tone="error" className="py-12" />
       ) : filteredTasks.length === 0 ? (
-        <div className="py-12 text-center">
-          <div className="meta-mono text-[var(--muted-foreground)] mb-4">[ {t('emptyTasks')} ]</div>
-          <p className="text-[14px] text-[var(--muted-foreground)]">{t('emptyTasksText')}</p>
-        </div>
+        <EmptyState label={`[ ${t('emptyTasks')} ]`} message={t('emptyTasksText')} className="py-12" />
       ) : (
         <div className="space-y-0 border-t border-[var(--border)]">
           {filteredTasks.map((task, idx) => (

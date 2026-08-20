@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Spinner, Button } from '@/components';
+import { EmptyState, Spinner, Button } from '@/components';
 import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
@@ -97,9 +97,7 @@ export function EventModals({
                 <span className="meta-mono text-[var(--muted-foreground)]">{t('loadingRegistrations')}</span>
               </div>
             ) : registrations.length === 0 ? (
-              <div className="py-12 text-center border border-[var(--border)]">
-                <p className="meta-mono text-[var(--muted-foreground)]">{t('noRegistrations')}</p>
-              </div>
+              <EmptyState message={t('noRegistrations')} className="py-12 border border-[var(--border)]" />
             ) : (
               <div className="border border-[var(--border)] overflow-x-auto">
                 <table className="w-full border-collapse">

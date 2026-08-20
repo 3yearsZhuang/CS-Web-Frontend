@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
+import { EmptyState, Button } from '@/components';
 import {
   roleBadgeClass,
   roleBadgeLabel,
@@ -129,9 +129,7 @@ export function RolePermissionMatrix({
 
       {/* 权限矩阵 */}
       {isUserRole ? (
-        <div className="border border-dashed border-[var(--border)] py-12 text-center">
-          <p className="meta-mono text-[12px] text-[var(--muted-foreground)]">{t('userNoPermissions')}</p>
-        </div>
+        <EmptyState message={t('userNoPermissions')} className="py-12 border border-dashed border-[var(--border)]" />
       ) : (
         <div className="space-y-4">
           {modules.map((module) => {
