@@ -10,7 +10,7 @@ import { useTranslations } from 'next-intl';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { RolePermissionMatrix } from './role-permission-matrix';
-import { Button } from '@/components';
+import { Spinner, Button } from '@/components';
 import { RoleModals } from './role-modals';
 import { roleBadgeClass, roleBadgeLabel } from './roles-types';
 import type { PermissionModule, RoleModal, RoleRecord } from './roles-types';
@@ -280,7 +280,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     return (
       <RevealItem>
         <div className="flex items-center gap-3 py-12">
-          <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+          <Spinner />
           <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">
             {t('loadingRoles')}
           </span>

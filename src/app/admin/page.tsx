@@ -12,7 +12,7 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { ToastProvider } from '@/components/feedback/toast';
-import { ArkDivider } from '@/components';
+import { Spinner, ArkDivider } from '@/components';
 import { AdminUsersPanel } from '@/modules/admin/ui/admin-users-panel';
 import { AdminMessagesPanel } from '@/modules/admin/ui/admin-messages-panel';
 import { AdminLogsPanel } from '@/modules/admin/ui/admin-logs-panel';
@@ -122,7 +122,7 @@ export default function AdminPage() {
     return (
       <main className="relative pt-16 min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+          <Spinner />
           <span className="meta-mono text-[var(--muted-foreground)]">{t('verifying')}</span>
         </div>
       </main>

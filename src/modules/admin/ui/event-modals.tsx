@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
+import { Spinner, Button } from '@/components';
 import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
@@ -78,7 +78,7 @@ export function EventModals({
               <div className="meta-mono text-[12px] text-[var(--muted-foreground)]">
                 {registrationsLoading ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+                    <Spinner />
                     Loading...
                   </span>
                 ) : (

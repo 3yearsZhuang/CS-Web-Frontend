@@ -11,7 +11,7 @@
 import { use } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { BackLink, Button } from '@/components';
+import { SkeletonLine, BackLink, Button } from '@/components';
 import { useExam } from './use-exam';
 import { QuestionList } from './question-list';
 import { QuestionPanel } from './question-panel';
@@ -41,10 +41,10 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
     return (
       <main className="relative pt-16 pixel-page">
         <div className="max-w-[1600px] mx-auto px-6 py-24">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-[var(--border)] rounded w-1/3" />
-            <div className="h-4 bg-[var(--border)] rounded w-2/3" />
-            <div className="h-48 bg-[var(--border)] rounded mt-8" />
+          <div className="space-y-4">
+            <SkeletonLine width="w-1/3" className="h-8" />
+            <SkeletonLine width="w-2/3" />
+            <SkeletonLine className="h-48 mt-8" />
           </div>
         </div>
       </main>

@@ -10,6 +10,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { formatDate } from '@/shared/utils';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useTransientMessage } from '@/shared/hooks/use-transient-message';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { SectionLoading, Button } from '@/components';
@@ -51,7 +52,7 @@ export function AnnouncementsPanel() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [annLoading, setAnnLoading] = useState(true);
   const [annError, setAnnError] = useState<string | null>(null);
-  const [annSuccess, setAnnSuccess] = useState<string | null>(null);
+  const [annSuccess, annShowSuccess] = useTransientMessage();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AnnouncementForm>({ ...emptyForm });
@@ -74,11 +75,6 @@ export function AnnouncementsPanel() {
   useEffect(() => {
     fetchAnnouncements();
   }, [fetchAnnouncements]);
-
-  const annShowSuccess = (msg: string) => {
-    setAnnSuccess(msg);
-    setTimeout(() => setAnnSuccess(null), 3000);
-  };
 
   const resetForm = () => {
     setForm({ ...emptyForm });

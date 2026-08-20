@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BackLink } from '@/components';
+import { SkeletonCard, BackLink } from '@/components';
 import { Badge, Title, ArkDivider } from '@/components';
 import { GraduationCap, Clock } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -176,7 +176,7 @@ export default function ExamListPage() {
             {loading && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="card-minimal animate-pulse h-44" />
+                  <SkeletonCard key={i} lines={1} className="h-44" />
                 ))}
               </div>
             )}

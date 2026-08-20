@@ -8,8 +8,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useTransientMessage } from '@/shared/hooks/use-transient-message';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/components';
+import { Spinner, Button } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { INPUT_CLASS, EASE } from '@/shared/utils/ui-constants';
 
@@ -65,15 +66,10 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
   const [settings, setSettings] = useState<EventSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, showSuccess] = useTransientMessage();
 
   const [editValues, setEditValues] = useState<Partial<EventSettings>>({});
   const [saving, setSaving] = useState<string | null>(null);
-
-  const showSuccess = useCallback((msg: string) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(null), 3000);
-  }, []);
 
   const fetchSettings = useCallback(async () => {
     setLoading(true);
@@ -259,7 +255,7 @@ export function AdminEventsSettings({ open, onClose }: AdminEventsSettingsProps)
                 {loading && (
                   <div className="py-12 flex items-center justify-center">
                     <div className="flex items-center gap-3">
-                      <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+                      <Spinner />
                       <span className="meta-mono text-[var(--muted-foreground)]">{t('loadingSettings')}</span>
                     </div>
                   </div>

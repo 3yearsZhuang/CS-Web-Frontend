@@ -25,7 +25,7 @@ import {
   COMPONENT_REGISTRY,
   type ComponentMeta,
 } from '@/shared/feature-visibility/registry';
-import { Button } from '@/components';
+import { Spinner, Button } from '@/components';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 
 type UserField = 'guest' | 'member' | 'admin';
@@ -127,7 +127,7 @@ export function AdminFeatureVisibilityPanel({ onForbidden }: AdminFeatureVisibil
   if (isLoading) {
     return (
       <div className="flex items-center gap-3 py-16 justify-center">
-        <span className="w-3 h-3 border border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        <Spinner />
         <span className="meta-mono text-[12px] text-[var(--muted-foreground)]">{t('loading')}</span>
       </div>
     );

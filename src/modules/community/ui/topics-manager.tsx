@@ -10,6 +10,7 @@ import { Avatar } from '@/components/avatar';
 import { Badge, Button, Pagination, SectionLoading } from '@/components';
 import { formatDateTime } from '@/shared/utils/utils';
 import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { InlineTabs } from '@/components/primitives/inline-tabs';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityPost } from '@/modules/community/types';
 import { useTopicsManager } from './hooks/use-topics-manager';
@@ -43,10 +44,9 @@ export function TopicsManager() {
   } = useTopicsManager();
   const { confirm } = useConfirm();
 
-  // 视图态（筛选/排序/搜索/分页）
+  // 视图态（筛选/排序/分页；搜索已聚合至顶栏，2026-08-20）
   const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortValue>('latest');
   const [page, setPage] = useState(1);
 
@@ -61,9 +61,8 @@ export function TopicsManager() {
       page_size: TOPICS_PAGE_SIZE,
       status: statusFilter,
       category: categoryFilter,
-      search,
     });
-  }, [loadTopics, sort, page, statusFilter, categoryFilter, search]);
+  }, [loadTopics, sort, page, statusFilter, categoryFilter]);
 
   /** 隐藏主题（需填写原因） */
   const handleHide = (topic: CommunityPost) => {
@@ -93,21 +92,6 @@ export function TopicsManager() {
 
       {/* 筛选区 */}
       <div className="border border-[var(--border)] p-4 sm:p-6 space-y-4">
-        {/* 搜索 */}
-        <div>
-          <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('searchLabel')}</label>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder={t('searchPlaceholder')}
-            maxLength={80}
-            className={`${INPUT_CLASS} px-3 py-2 text-[13px]`}
-          />
-        </div>
         <div className="flex flex-col sm:flex-row gap-4">
           {/* 状态筛选 */}
           <div className="flex-shrink-0">
@@ -144,23 +128,18 @@ export function TopicsManager() {
               ))}
             </select>
           </div>
-          {/* 排序 */}
+          {/* 排序（复用 InlineTabs 原语，波次 C1b #28） */}
           <div className="flex-shrink-0 sm:ml-auto">
-            <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortLabel')}</label>
-            <div className="flex gap-0">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => {
-                    setSort(opt.value);
-                    setPage(1);
-                  }}
-                  className={`tab-chip focus-ring whitespace-nowrap ${sort === opt.value ? 'tab-chip-active' : ''}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <InlineTabs
+              options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+              value={sort}
+              onChange={(v) => {
+                setSort(v as SortValue);
+                setPage(1);
+              }}
+              label={t('sortLabel')}
+              uppercase={false}
+            />
           </div>
         </div>
       </div>
