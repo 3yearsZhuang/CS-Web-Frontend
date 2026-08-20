@@ -62,7 +62,9 @@ jobs:
         # PR 级新增代码覆盖率门禁：新增 src/** 代码覆盖率 < 80% 则 CI 失败
         if: github.event_name == 'pull_request'
         run: |
-          git fetch origin ${{ github.base_ref }} --depth=1
+          # 补齐 HEAD 与 base 完整历史，避免「浅克隆 + base 长期落后」导致 no merge base
+          git fetch origin --unshallow || true
+          git fetch origin ${{ github.base_ref }}
           node tools/scripts/check/diff-coverage.mjs --base origin/${{ github.base_ref }} --threshold 80
 
   build:
