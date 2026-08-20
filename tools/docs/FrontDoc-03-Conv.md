@@ -7,7 +7,7 @@
 本项目的编码规范、目录组织与通用约定。**所有前端贡献者（含 AI Agent）在写代码前必须先读本文档**。
 
 > 框架无关的通用工程规范（命名 / DRY / 圈复杂度 / 错误处理 / 安全 / 配置 / 测试 / Git）已提炼到根仓库 [`RootDoc-EngConv.md`](../../../docs/RootDoc-EngConv.md)，本文档侧重 TypeScript / React / Next.js 强相关的前端专项约定。
-> **约定类文档边界**：专项权威与所有权矩阵见 [DocGovernance.md](../../../docs/DocGovernance.md) §2；通用规范见根 `RootDoc-EngConv.md`（细则指回权威文件）。
+> **约定类文档边界**：专项权威与所有权矩阵见 [README.md](../../../docs/README.md) §2；通用规范见根 `RootDoc-EngConv.md`（细则指回权威文件）。
 
 > 文档优先级：场景内具体指令 > 本文档 > `RootDoc-EngConv.md` > 通用工作流。
 
