@@ -251,7 +251,7 @@ export default function TasksAndNotes() {
                 type="button"
                 aria-label="to task"
                 title={t('noteToTask')}
-                className="shrink-0 p-1 rounded hover:bg-[var(--border)] text-[var(--primary)] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                className="shrink-0 p-1 rounded hover:bg-[var(--border)] text-[var(--primary)] opacity-50 hover:opacity-100 focus:opacity-100 transition-opacity"
                 onClick={() => noteToTask(note)}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -260,7 +260,7 @@ export default function TasksAndNotes() {
               <button
                 type="button"
                 aria-label="delete"
-                className="shrink-0 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-[var(--border)] transition-opacity"
+                className="shrink-0 p-1 rounded opacity-50 hover:opacity-100 focus:opacity-100 hover:bg-[var(--border)] transition-opacity"
                 onClick={() => removeNote(note.id)}
               >
                 <Trash2 className="w-3.5 h-3.5" />

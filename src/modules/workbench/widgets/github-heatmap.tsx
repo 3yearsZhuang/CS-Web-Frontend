@@ -212,10 +212,10 @@ export default function GithubHeatmap() {
 
           <div className="overflow-x-auto pb-1 -mx-1 px-1">
             <div
-              className="grid gap-[2px] min-w-[640px]"
+              className="grid gap-[2px] min-w-0"
               style={{
                 gridTemplateColumns: 'repeat(53, 1fr)',
-                gridTemplateRows: 'repeat(7, 10px)',
+                gridTemplateRows: 'repeat(7, 8px)',
                 gridAutoFlow: 'column',
               }}
             >

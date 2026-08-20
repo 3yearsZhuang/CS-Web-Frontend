@@ -138,6 +138,8 @@ export function Workbench() {
     if (!el) return;
     const GAP = 12; // gap-3
     const measure = () => {
+      // 移动端（<lg）为单列流式 flex，无积木网格，无需测量 cell（gridAutoRows 已失效）
+      if (getComputedStyle(el).display !== 'grid') return;
       const w = el.clientWidth;
       const cs = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length || GRID_COLS;
       const side = (w - GAP * (cs - 1)) / cs;
@@ -459,7 +461,7 @@ export function Workbench() {
             <div
               ref={gridRef}
               style={{ gridAutoRows: 'var(--wb-cell)', ['--wb-cell' as string]: `${cell}px` }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 [grid-auto-flow:dense] overflow-hidden"
+              className="flex flex-col gap-3 lg:grid lg:grid-cols-6 lg:[grid-auto-flow:dense] overflow-hidden"
             >
               {orderedWidgets.map((w) => {
                 const { id, component: C } = w;

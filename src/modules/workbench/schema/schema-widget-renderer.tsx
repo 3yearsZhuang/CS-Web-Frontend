@@ -273,7 +273,7 @@ function NoteBody({ config }: { config: SchemaWidgetConfig }) {
               <button
                 type="button"
                 aria-label="delete"
-                className="shrink-0 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-[var(--border)] transition-opacity"
+                className="shrink-0 p-1 rounded opacity-50 hover:opacity-100 focus:opacity-100 hover:bg-[var(--border)] transition-opacity"
                 onClick={() => remove(n.id)}
               >
                 <Trash2 className="w-3.5 h-3.5" />
