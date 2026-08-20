@@ -119,6 +119,7 @@ export interface ToolsMessages {
     tabDocs: string;
     tabRegistry: string;
     rootBadge: string;
+    back: string;
   },
   toolsResource: {
     heroLabel: string;
@@ -612,6 +613,7 @@ export const zhCN: ToolsMessages = {
     tabDocs: '开发文档 / Docs',
     tabRegistry: '组件注册表 / Registry',
     rootBadge: 'ROOT',
+    back: '返回',
   },
   toolsResource: {
     heroLabel: 'RESOURCE',
@@ -1105,6 +1107,7 @@ export const en: ToolsMessages = {
     tabDocs: 'Dev Docs / 文档',
     tabRegistry: 'Component Registry / 注册表',
     rootBadge: 'ROOT',
+    back: 'Back',
   },
   toolsResource: {
     heroLabel: 'RESOURCE',
