@@ -58,4 +58,12 @@ export const ADMIN_AVATARS: AdminAvatar[] = [
     position: '核心会员',
     qq: '1298055690',
   },
+  {
+id:'bq'
+name:'陈白七',
+grade:'2022级',
+  position:'普通会员',
+  qq:'576863281',
+    
+  },
 ];
