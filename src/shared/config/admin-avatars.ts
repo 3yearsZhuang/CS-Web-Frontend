@@ -67,3 +67,4 @@ export const ADMIN_AVATARS: AdminAvatar[] = [
     qq: '3312268214',
   },
 ];
+
