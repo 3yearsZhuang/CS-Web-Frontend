@@ -122,7 +122,7 @@ export function MarkdownEditor({
   return (
     <div className={`border border-[var(--border)] bg-[var(--card)] ${className}`}>
       {/* 工具栏 */}
-      <div className="flex items-center gap-1 px-2 sm:px-4 py-2 overflow-x-auto border-b border-[var(--border)]">
+      <div className="flex flex-wrap items-center gap-1 px-2 sm:px-4 py-2 border-b border-[var(--border)]">
         {TOOLBAR_BUTTONS.map((btn) => (
           <button
             key={btn.titleKey}

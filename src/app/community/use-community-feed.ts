@@ -10,26 +10,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import type {
   FeedItem,
   FeedKind,
   PaginatedFeed,
-  FeedTag,
 } from '@/modules/community/types';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import type { CommunityCategory } from '@/modules/community/types';
 import type { CommunityPost } from '@/modules/community/types';
 import type { MemberItem } from '@/modules/community/types';
 
-interface FeedStats {
-  topicCount: number;
-  postCount: number;
-  memberCount: number;
-}
-
 type TabKey = 'all' | 'following' | FeedKind | 'mine' | 'admin';
+export type CommunitySort = 'latest' | 'hot' | 'top';
 
 const PAGE_SIZE = 20;
 
@@ -50,7 +43,12 @@ export function useCommunityFeed() {
   const searchParams = useSearchParams();
   const t = useTranslations('community');
 
-  const initialTab = (searchParams.get('tab') as TabKey) ?? 'all';
+  const tabParam = searchParams.get('tab');
+  const initialTab: TabKey =
+    tabParam === 'following' || tabParam === 'member' || tabParam === 'mine' || tabParam === 'admin'
+      ? tabParam
+      : 'all';
+  const initialSort = (searchParams.get('sort') as CommunitySort) ?? 'latest';
 
   const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -79,9 +77,10 @@ export function useCommunityFeed() {
 
   const isAdmin = currentUser !== null;
 
-  const { collapsed: heroCollapsed, capsuleVisible, onRevealComplete, onTitleClick } = useCollapsingHero();
-
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+  const [sort, setSort] = useState<CommunitySort>(
+    initialSort === 'hot' || initialSort === 'top' ? initialSort : 'latest',
+  );
 
   const communityTabs = [
     ...TAB_OPTIONS.filter((opt) => !opt.requiresLogin || isLoggedIn).map((opt) => ({
@@ -97,8 +96,10 @@ export function useCommunityFeed() {
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [tags, setTags] = useState<FeedTag[]>([]);
-  const [stats, setStats] = useState<FeedStats | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    searchParams.get('category'),
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,26 +111,24 @@ export function useCommunityFeed() {
 
   /** 同步 URL */
   const syncUrl = useCallback(
-    (tab: TabKey, p: number, tag: string | null) => {
+    (tab: TabKey, p: number, tag: string | null, category: string | null, nextSort: CommunitySort) => {
       const params = new URLSearchParams();
       if (tab !== 'all') params.set('tab', tab);
       if (p > 1) params.set('page', String(p));
       if (tag) params.set('tag', tag);
+      if (category) params.set('category', category);
+      if (nextSort !== 'latest') params.set('sort', nextSort);
       const qs = params.toString();
       router.replace(`/community${qs ? `?${qs}` : ''}`, { scroll: false });
     },
     [router],
   );
 
-  /** 加载聚合标签与统计 */
+  /** 加载聚合标签 */
   useEffect(() => {
     void (async () => {
-      const [tagsResult, statsResult] = await Promise.all([
-        apiRequest<{ tags: FeedTag[] }>('/api/community/tags'),
-        apiRequest<FeedStats>('/api/community/feed?stats=1'),
-      ]);
-      if (tagsResult.ok) setTags(tagsResult.data?.tags ?? []);
-      if (statsResult.ok) setStats(statsResult.data ?? null);
+      const tagsResult = await apiRequest<{ tags: string[] }>('/api/community/tags');
+      if (tagsResult.ok) setTags((tagsResult.data?.tags ?? []).filter((tag) => typeof tag === 'string'));
     })();
   }, []);
 
@@ -138,22 +137,22 @@ export function useCommunityFeed() {
     void (async () => {
       const hotParams = new URLSearchParams();
       hotParams.set('sort', 'hot');
-      hotParams.set('page_size', '8');
+      hotParams.set('pageSize', '8');
       const featParams = new URLSearchParams();
-      featParams.set('page_size', '8');
+      featParams.set('pageSize', '8');
       featParams.set('sort', 'latest');
 
       const [catResult, hotResult, membersResult, featResult] = await Promise.all([
-        apiRequest<{ items: CommunityCategory[] }>('/api/community/categories'),
-        apiRequest<{ items: CommunityPost[] }>(`/api/community/topics?${hotParams.toString()}`),
+        apiRequest<{ categories: CommunityCategory[] }>('/api/community/categories'),
+        apiRequest<{ topics: CommunityPost[] }>(`/api/community/topics?${hotParams.toString()}`),
         apiRequest<{ members: MemberItem[] }>('/api/community/members?sort=active&limit=6'),
-        apiRequest<{ items: CommunityPost[] }>(`/api/community/topics?${featParams.toString()}`),
+        apiRequest<{ topics: CommunityPost[] }>(`/api/community/topics?${featParams.toString()}`),
       ]);
-      if (catResult.ok) setCategories(catResult.data?.items ?? []);
-      if (hotResult.ok) setHotTopics((hotResult.data?.items ?? []).slice(0, 6));
+      if (catResult.ok) setCategories(catResult.data?.categories ?? []);
+      if (hotResult.ok) setHotTopics((hotResult.data?.topics ?? []).slice(0, 6));
       if (membersResult.ok) setActiveMembers(membersResult.data?.members ?? []);
       if (featResult.ok) {
-        const items = featResult.data?.items ?? [];
+        const items = featResult.data?.topics ?? [];
         setFeaturedTopics(items.filter((tt) => tt.isPinned || tt.isFeatured).slice(0, 6));
       }
     })();
@@ -188,6 +187,8 @@ export function useCommunityFeed() {
         if (activeTab === 'all') params.set('exclude', 'member');
       }
       if (selectedTag) params.set('tag', selectedTag);
+      if (selectedCategory) params.set('category', selectedCategory);
+      params.set('sort', sort);
       params.set('page', String(page));
       params.set('pageSize', String(PAGE_SIZE));
 
@@ -215,12 +216,12 @@ export function useCommunityFeed() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, selectedTag, page, isLoggedIn, authChecked]);
+  }, [activeTab, selectedTag, selectedCategory, sort, page, isLoggedIn, authChecked]);
 
   useEffect(() => {
     void loadFeed();
-    syncUrl(activeTab, page, selectedTag);
-  }, [loadFeed, syncUrl, activeTab, page, selectedTag]);
+    syncUrl(activeTab, page, selectedTag, selectedCategory, sort);
+  }, [loadFeed, syncUrl, activeTab, page, selectedTag, selectedCategory, sort]);
 
   /** Tab 切换 */
   const handleTabChange = (key: string) => {
@@ -231,6 +232,16 @@ export function useCommunityFeed() {
   /** 点击标签 */
   const handleTagClick = (tag: string) => {
     setSelectedTag(tag === selectedTag ? null : tag);
+    setPage(1);
+  };
+
+  const handleCategoryClick = (slug: string | null) => {
+    setSelectedCategory(slug === selectedCategory ? null : slug);
+    setPage(1);
+  };
+
+  const handleSortChange = (nextSort: CommunitySort) => {
+    setSort(nextSort);
     setPage(1);
   };
 
@@ -257,10 +268,6 @@ export function useCommunityFeed() {
     isLoggedIn,
     authChecked,
     isAdmin,
-    heroCollapsed,
-    capsuleVisible,
-    onRevealComplete,
-    onTitleClick,
     activeTab,
     communityTabs,
     items,
@@ -269,8 +276,9 @@ export function useCommunityFeed() {
     page,
     setPage,
     selectedTag,
+    selectedCategory,
+    sort,
     tags,
-    stats,
     loading,
     error,
     categories,
@@ -282,6 +290,8 @@ export function useCommunityFeed() {
     isInitialLoading,
     handleTabChange,
     handleTagClick,
+    handleCategoryClick,
+    handleSortChange,
     PAGE_SIZE,
   };
 }
