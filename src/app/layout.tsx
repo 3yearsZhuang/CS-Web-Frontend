@@ -181,9 +181,8 @@ export default async function RootLayout({
         防闪烁：SSR 默认深色，首帧由内联脚本按 next-themes 存储值校正主题类，
         避免浅色用户在 hydrate 前闪现深色。脚本使用服务端 nonce，符合 CSP。
 
-        使用 next/script 的 beforeInteractive 策略：该脚本会被注入到文档 <head>
-        并在 hydrate 前执行，且不会触发 “Encountered a script tag” 渲染告警
-        （裸 <script> 在 React 19 组件树中渲染时会触发该告警）。
+        beforeInteractive 策略由 next/script 自动注入到文档 <head>（App Router 约定），
+        无需（也不应）在 JSX 中手写 <head>——ESLint no-restricted-syntax 禁止该标签。
       */}
       <Script
         id="theme-init"
