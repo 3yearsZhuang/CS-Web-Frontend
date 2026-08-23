@@ -1401,6 +1401,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auxilio/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Conversation */
+        delete: operations["delete_conversation_api_v1_auxilio_conversations__conversation_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Conversation */
+        patch: operations["update_conversation_api_v1_auxilio_conversations__conversation_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/auxilio/conversations/{conversation_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Conversation */
+        post: operations["archive_conversation_api_v1_auxilio_conversations__conversation_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auxilio/conversations/{conversation_id}/events": {
         parameters: {
             query?: never;
@@ -1415,6 +1450,26 @@ export interface paths {
         get: operations["list_events_api_v1_auxilio_conversations__conversation_id__events_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/conversations/{conversation_id}/fork": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fork Conversation
+         * @description 从当前用户会话的某条消息创建独立分支。
+         */
+        post: operations["fork_conversation_api_v1_auxilio_conversations__conversation_id__fork_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1436,6 +1491,150 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/conversations/{conversation_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Runs
+         * @description 返回会话每轮 Agent 执行的状态、成本和消息关联。
+         */
+        get: operations["list_runs_api_v1_auxilio_conversations__conversation_id__runs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Learning Goals */
+        get: operations["list_learning_goals_api_v1_auxilio_goals_get"];
+        put?: never;
+        /** Create Learning Goal */
+        post: operations["create_learning_goal_api_v1_auxilio_goals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Learning Goal */
+        delete: operations["delete_learning_goal_api_v1_auxilio_goals__goal_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Learning Goal */
+        patch: operations["update_learning_goal_api_v1_auxilio_goals__goal_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/auxilio/mistakes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Mistakes
+         * @description 返回当前用户错题快照；过滤在服务边界内完成所有权隔离。
+         */
+        get: operations["list_mistakes_api_v1_auxilio_mistakes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/mistakes/{mistake_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Mistake */
+        patch: operations["update_mistake_api_v1_auxilio_mistakes__mistake_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/auxilio/mistakes/{mistake_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Mistake */
+        post: operations["review_mistake_api_v1_auxilio_mistakes__mistake_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Learning Plan */
+        get: operations["list_learning_plan_api_v1_auxilio_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auxilio/plan/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Learning Plan */
+        patch: operations["update_learning_plan_api_v1_auxilio_plan__item_id__patch"];
         trace?: never;
     };
     "/api/v1/avatars/{filename}": {
@@ -3820,6 +4019,14 @@ export interface components {
              */
             updatedAt: string;
         };
+        /** ArchiveRequest */
+        ArchiveRequest: {
+            /**
+             * Archived
+             * @default true
+             */
+            archived: boolean;
+        };
         /**
          * AuditLogItem
          * @description 单条审计日志出参。
@@ -4414,6 +4621,13 @@ export interface components {
              */
             email: string;
         };
+        /** ForkRequest */
+        ForkRequest: {
+            /** From Message Id */
+            from_message_id?: number | null;
+            /** Title */
+            title?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -4492,6 +4706,50 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** LearningGoalCreateRequest */
+        LearningGoalCreateRequest: {
+            /** Description */
+            description?: string | null;
+            /** Exam Id */
+            exam_id?: number | null;
+            /** Preferred Slots */
+            preferred_slots?: string[];
+            /** Target Date */
+            target_date?: string | null;
+            /** Title */
+            title: string;
+            /**
+             * Weekly Budget Minutes
+             * @default 300
+             */
+            weekly_budget_minutes: number;
+        };
+        /** LearningGoalUpdateRequest */
+        LearningGoalUpdateRequest: {
+            /** Description */
+            description?: string | null;
+            /** Exam Id */
+            exam_id?: number | null;
+            /** Preferred Slots */
+            preferred_slots?: string[] | null;
+            /** Status */
+            status?: string | null;
+            /** Target Date */
+            target_date?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Weekly Budget Minutes */
+            weekly_budget_minutes?: number | null;
+        };
+        /** LearningPlanUpdateRequest */
+        LearningPlanUpdateRequest: {
+            /** Defer To */
+            defer_to?: string | null;
+            /** Locked */
+            locked?: boolean | null;
+            /** Status */
+            status?: string | null;
+        };
         /**
          * LlmConfigIn
          * @description 用户 LLM 配置（api_key 留空表示保留原值）。
@@ -4566,6 +4824,20 @@ export interface components {
              */
             twoFactorEnabled: boolean;
             user: components["schemas"]["UserOut"];
+        };
+        /** MistakeReviewRequest */
+        MistakeReviewRequest: {
+            /** Error Reason */
+            error_reason?: string | null;
+            /** Feedback */
+            feedback: string;
+        };
+        /** MistakeUpdateRequest */
+        MistakeUpdateRequest: {
+            /** Error Reason */
+            error_reason?: string | null;
+            /** Status */
+            status: string;
         };
         /**
          * ModuleVisibility
@@ -4925,6 +5197,11 @@ export interface components {
             required: boolean;
             /** Type */
             type: string;
+        };
+        /** RenameRequest */
+        RenameRequest: {
+            /** Title */
+            title: string;
         };
         /**
          * ResetRequestOut
@@ -8078,12 +8355,116 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
+                include_archived?: boolean;
             };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_conversation_api_v1_auxilio_conversations__conversation_id__delete: {
+        parameters: {
+            query?: {
+                cascade?: boolean;
+            };
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_conversation_api_v1_auxilio_conversations__conversation_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_conversation_api_v1_auxilio_conversations__conversation_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -8136,6 +8517,41 @@ export interface operations {
             };
         };
     };
+    fork_conversation_api_v1_auxilio_conversations__conversation_id__fork_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_messages_api_v1_auxilio_conversations__conversation_id__messages_get: {
         parameters: {
             query?: never;
@@ -8146,6 +8562,338 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_runs_api_v1_auxilio_conversations__conversation_id__runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_learning_goals_api_v1_auxilio_goals_get: {
+        parameters: {
+            query?: {
+                include_completed?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_learning_goal_api_v1_auxilio_goals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LearningGoalCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_learning_goal_api_v1_auxilio_goals__goal_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_learning_goal_api_v1_auxilio_goals__goal_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LearningGoalUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_mistakes_api_v1_auxilio_mistakes_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                tag?: string | null;
+                due_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_mistake_api_v1_auxilio_mistakes__mistake_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mistake_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MistakeUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_mistake_api_v1_auxilio_mistakes__mistake_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mistake_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MistakeReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_learning_plan_api_v1_auxilio_plan_get: {
+        parameters: {
+            query?: {
+                plan_date?: string | null;
+                generate?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_learning_plan_api_v1_auxilio_plan__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LearningPlanUpdateRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
