@@ -382,6 +382,8 @@ export interface ToolsMessages {
     silence: string;
     uploadMusic: string;
     myMusic: string;
+    music: string;
+    playing: string;
     nextPhaseIn: string;
     examCountdown: string;
     daysLater: string;
@@ -876,6 +878,8 @@ export const zhCN: ToolsMessages = {
     silence: '静音',
     uploadMusic: '上传音乐',
     myMusic: '我的音乐',
+    music: '音乐',
+    playing: '正在播放',
     nextPhaseIn: '下一阶段',
     examCountdown: '考试倒计时',
     daysLater: '{n} 天后',
@@ -1370,6 +1374,8 @@ export const en: ToolsMessages = {
     silence: 'Silence',
     uploadMusic: 'Upload music',
     myMusic: 'My music',
+    music: 'Music',
+    playing: 'Now playing',
     nextPhaseIn: 'Next phase',
     examCountdown: 'Exam countdown',
     daysLater: '{n} days',

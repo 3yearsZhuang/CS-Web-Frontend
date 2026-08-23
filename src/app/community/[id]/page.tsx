@@ -15,13 +15,11 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type HeroState } from '@/components/layout/collapsing-hero';
 import { SectionLoading } from '@/components';
 import { TopicHero } from '@/modules/community/ui/community-topic-hero';
 import { TopicContent } from '@/modules/community/ui/community-topic-content';
 import { TopicReplySection } from '@/modules/community/ui/community-topic-reply-section';
 import { type ReplySortMode } from '@/modules/community/ui/community-reply-sort-bar';
-import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTopicDetail } from '@/shared/hooks/use-topic-detail';
 import { useTopicActions } from '@/shared/hooks/use-topic-actions';
 import { useReplyActions } from '@/shared/hooks/use-reply-actions';
@@ -32,16 +30,6 @@ export default function CommunityPostDetailPage() {
   const params = useParams<{ id: string }>();
   const postId = params?.id ?? '';
   const t = useTranslations('communityDetail');
-
-  // Hero 进入 1s 后自动收缩并悬浮于页首（动画期间锁定滚动）
-  const { collapsed: heroCollapsed, onRevealComplete, onTitleClick } = useCollapsingHero();
-
-  const hero: HeroState = {
-    collapsed: heroCollapsed,
-    capsuleVisible: false,
-    onRevealComplete,
-    onTitleClick,
-  };
 
   // 数据加载（hook 聚合 post + replies + currentUser + relatedPosts）
   const {
@@ -102,7 +90,7 @@ export default function CommunityPostDetailPage() {
         sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'oldest':
-        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(a.createdAt).getTime());
+        sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       case 'hottest':
         sorted.sort((a, b) => b.likeCount - a.likeCount);
@@ -145,8 +133,7 @@ export default function CommunityPostDetailPage() {
 
   return (
     <main className="relative pt-16 pixel-page">
-      {/* ============ [ 00 ] Topic Hero — 1s 后自动收缩悬浮（仅标题/元信息） ============ */}
-      <TopicHero topic={topic} categorySlug={categorySlug} replyTotal={replyTotal} hero={hero} currentUserId={currentUser?.id} />
+      <TopicHero topic={topic} categorySlug={categorySlug} replyTotal={replyTotal} currentUserId={currentUser?.id} />
 
       {/* ============ [ 00 ] Topic Content（Hero 延续 — 正文 + 操作栏 + 右侧栏） ============ */}
       <TopicContent

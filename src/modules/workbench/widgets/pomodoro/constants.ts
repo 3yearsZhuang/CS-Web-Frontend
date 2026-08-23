@@ -5,8 +5,7 @@
  */
 'use client';
 
-import type { AmbientKind } from '../../lib/ambient-audio';
-import type { PomodoroPhase, PomodoroSettings, SoundSource } from '../../types';
+import type { PomodoroPhase, PomodoroSettings } from '../../types';
 
 export const DEFAULT_SETTINGS: PomodoroSettings = {
   focusMin: 25,
@@ -33,14 +32,6 @@ export const PHASE_RING_STROKE: Record<PomodoroPhase, string> = {
   shortBreak: '#10b981', // emerald-500
   longBreak: '#3b82f6', // blue-500
 };
-
-export const AMBIENT_KINDS: { value: SoundSource; labelKey: string; kind?: AmbientKind }[] = [
-  { value: 'rain', labelKey: 'soundRain', kind: 'rain' },
-  { value: 'waves', labelKey: 'soundWaves', kind: 'waves' },
-  { value: 'fire', labelKey: 'soundFire', kind: 'fire' },
-  { value: 'white', labelKey: 'soundWhite', kind: 'white' },
-  { value: 'silence', labelKey: 'silence' },
-];
 
 export const DURATION_FIELDS: { key: keyof Pick<PomodoroSettings, 'focusMin' | 'shortBreakMin' | 'longBreakMin' | 'roundsBeforeLong'>; min: number; max: number }[] = [
   { key: 'focusMin', min: 1, max: 120 },

@@ -40,15 +40,15 @@ export function TopicContent({
   onDeleteTopic,
 }: TopicContentProps) {
   return (
-    <section className="px-4 sm:px-6 md:px-8 py-12 sm:py-16 border-b border-[var(--border)]">
-      <div className="max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row gap-0">
-          <div className="w-full md:flex-1 md:pr-8 lg:pr-12">
+    <section className="border-b border-[var(--border)] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto w-full max-w-[1120px]">
+        <div className="flex flex-col gap-10 md:flex-row">
+          <div className="w-full min-w-0 md:flex-1">
             {editingTopic ? (
               <TopicEditForm topic={topic} onCancel={onCancelEdit} onSaved={onSavedEdit} />
             ) : (
               <RevealItem>
-                <MarkdownRenderer content={topic.contentMarkdown} className="mb-8" />
+                <MarkdownRenderer content={topic.contentMarkdown} className="mx-auto mb-10 max-w-[780px]" />
               </RevealItem>
             )}
 
@@ -76,7 +76,7 @@ export function TopicContent({
           </div>
 
           {/* 右侧栏 — 桌面端显示 */}
-          <div className="hidden md:block w-[240px] lg:w-[280px] flex-shrink-0 md:pl-4 md:border-l md:border-[var(--border)]">
+          <div className="hidden w-[260px] flex-shrink-0 border-l border-[var(--border)] pl-6 lg:block">
             <TopicSidebar topic={topic} relatedTopics={relatedTopics} />
           </div>
         </div>

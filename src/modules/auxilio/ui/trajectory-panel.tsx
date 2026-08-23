@@ -4,7 +4,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { ChevronDown, ChevronUp, Play, X } from 'lucide-react';
+import { Activity, ChevronUp, Play, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
@@ -21,6 +21,18 @@ interface TrajectoryPanelProps {
   onClose: () => void;
 }
 
+interface AgentRun {
+  id: number;
+  triggerType?: string | null;
+  presetId?: string | null;
+  status: string;
+  totalTokens?: number | null;
+  latencyMs?: number | null;
+  errorMessage?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}
+
 const EVENT_LABELS = ['delta', 'tool_call', 'tool_result', 'usage', 'done', 'error'] as const;
 
 function eventLabelKey(type: string): string {
@@ -30,6 +42,8 @@ function eventLabelKey(type: string): string {
 export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryPanelProps) {
   const t = useTranslations('workbench');
   const [events, setEvents] = useState<TrajectoryEvent[]>([]);
+  const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [view, setView] = useState<'events' | 'runs'>('events');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -50,6 +64,11 @@ export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryP
         return;
       }
       setEvents(r.data?.events ?? []);
+      const runsResponse = await apiRequest<{ runs?: AgentRun[] }>(
+        `/api/tools/auxilio/conversations/${conversationId}/runs`,
+        { cache: 'no-store' },
+      );
+      if (runsResponse.ok) setRuns(runsResponse.data?.runs ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'unknown');
     } finally {
@@ -107,6 +126,20 @@ export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryP
         <div className="flex-1" />
         <button
           type="button"
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] ${view === 'events' ? 'bg-[var(--border)]/50' : ''}`}
+          onClick={() => setView('events')}
+        >
+          轨迹
+        </button>
+        <button
+          type="button"
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] ${view === 'runs' ? 'bg-[var(--border)]/50' : ''}`}
+          onClick={() => setView('runs')}
+        >
+          <Activity className="w-3 h-3" /> 运行
+        </button>
+        <button
+          type="button"
           className="p-1 rounded hover:bg-[var(--border)]/40"
           onClick={togglePlay}
           disabled={events.length === 0 || conversationId == null}
@@ -120,6 +153,26 @@ export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryP
       </div>
 
       <div className="max-h-[40vh] overflow-y-auto p-3 flex flex-col gap-1.5">
+        {view === 'runs' && runs.map((run) => (
+          <div key={run.id} className="rounded border border-[var(--border)] px-3 py-2 text-[12px]">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Run #{run.id}</span>
+              <span className={run.status === 'completed' ? 'text-emerald-500' : run.status === 'failed' ? 'text-[var(--destructive)]' : 'text-amber-500'}>
+                {run.status}
+              </span>
+              {run.presetId && <span className="text-[var(--muted-foreground)]">· {run.presetId}</span>}
+            </div>
+            <div className="mt-1 text-[var(--muted-foreground)]">
+              {run.totalTokens ?? 0} tokens · {run.latencyMs != null ? `${run.latencyMs} ms` : '—'}
+            </div>
+            {run.errorMessage && <div className="mt-1 break-words text-[var(--destructive)]">{run.errorMessage}</div>}
+          </div>
+        ))}
+        {view === 'runs' && !loading && !error && runs.length === 0 && (
+          <p className="text-[12px] text-[var(--muted-foreground)]">暂无运行记录</p>
+        )}
+        {view === 'events' && (
+          <>
         {loading && <p className="text-[12px] text-[var(--muted-foreground)]">{t('loading')}</p>}
         {!loading && error && (
           <p className="text-[12px] text-[var(--destructive)]">{t('replayFailed', { msg: error })}</p>
@@ -145,6 +198,8 @@ export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryP
             </div>
           );
         })}
+          </>
+        )}
       </div>
     </div>
   );

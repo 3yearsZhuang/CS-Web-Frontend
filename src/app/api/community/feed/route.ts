@@ -15,6 +15,8 @@ export async function GET(req: Request) {
   const kind = url.searchParams.get('kind') || undefined;
   const search = url.searchParams.get('search') || undefined;
   const tag = url.searchParams.get('tag') || undefined;
+  const category = url.searchParams.get('category') || undefined;
+  const sort = url.searchParams.get('sort') || 'latest';
   const following = url.searchParams.get('feed') === 'following';
 
   // 成员：走 /community/members（返回数组，无分页）
@@ -46,11 +48,12 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({
     page: String(page),
     page_size: String(pageSize),
-    sort: 'latest',
+    sort,
   });
   if (kind === 'topic' || kind === 'post') params.set('kind', kind);
   if (search) params.set('search', search);
   if (tag) params.set('tag', tag);
+  if (category) params.set('category', category);
   if (following) params.set('following', 'true');
 
   const proxy = await proxyBackend(req, { path: `/community/posts?${params.toString()}` });

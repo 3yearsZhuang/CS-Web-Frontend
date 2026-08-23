@@ -1,14 +1,13 @@
 /**
- * @file use-pomodoro — 番茄钟计时状态机 + 阶段声音联动（逻辑层，与 UI 解耦）。
+ * @file use-pomodoro — 番茄钟计时状态机 + 阶段环境音联动（逻辑层，与 UI 解耦）。
  * - 计时用「目标时间戳差值」实现，免疫 tab 休眠漂移，刷新页面不丢进度
- * - 阶段自动切音：专注→专注音，短休→休息音，长休→放松音（可配置）
- * - 音源：WebAudio 合成环境音（ambientEngine）或 IndexedDB 上传音乐
+ * - 阶段自动切音：专注→专注音，短休→休息音，长休→放松音（可配置，仅环境音）
+ * - 出声统一走共享 audioBus（互斥抢占；播放音乐会抢占番茄钟音效，反之亦然）
  */
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { ambientEngine, type AmbientKind } from '../../lib/ambient-audio';
-import { useIdbMedia } from '../../hooks/use-idb-media';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { audioBus, isAmbient } from '../../lib/audio-bus';
 import { useLocalStorage } from '../../hooks/use-local-storage';
 import type { PomodoroPhase, PomodoroSettings, PomodoroState, SoundSource } from '../../types';
 import { DEFAULT_SETTINGS } from './constants';
@@ -22,7 +21,7 @@ const DEFAULT_STATE: PomodoroState = {
   finishedAt: null,
 };
 
-export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
+export function usePomodoro() {
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>(
     'wb_pomodoro_settings',
     DEFAULT_SETTINGS,
@@ -30,10 +29,6 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
   const [state, setState] = useLocalStorage<PomodoroState>('wb_pomodoro_state', DEFAULT_STATE);
   // 初始占位 0，挂载后再取真实时间，避免 SSR/CSR 时间戳不一致导致 hydration mismatch
   const [now, setNow] = useState(() => 0);
-  const [currentSound, setCurrentSound] = useState<SoundSource | null>(null);
-
-  const musicUrlRef = useRef<string | null>(null);
-  const { items: musicItems, upload, remove, getObjectUrl } = useIdbMedia();
 
   const phaseDurationMs = useMemo(() => {
     const min =
@@ -45,45 +40,14 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
     return min * 60_000;
   }, [state.phase, settings]);
 
-  const ambientKindOf = useCallback((s: SoundSource): AmbientKind | null => {
-    if (s === 'rain' || s === 'waves' || s === 'fire' || s === 'white') return s;
-    return null;
+  /** 按环境音 source 播放（仅内置环境音/静音；旧持久化的 upload:* 值自动回退静音） */
+  const playSound = useCallback((source: SoundSource) => {
+    if (source === 'silence' || !isAmbient(source)) {
+      audioBus.stop();
+      return;
+    }
+    audioBus.play(source);
   }, []);
-
-  /** 停掉一切声音，再按 source 播放 */
-  const playSound = useCallback(
-    async (source: SoundSource) => {
-      ambientEngine.stop();
-      if (musicUrlRef.current) {
-        URL.revokeObjectURL(musicUrlRef.current);
-        musicUrlRef.current = null;
-      }
-      const audio = audioRef.current;
-      if (audio) {
-        audio.pause();
-        audio.removeAttribute('src');
-      }
-      setCurrentSound(source);
-      if (source === 'silence') return;
-      const kind = ambientKindOf(source);
-      if (kind) {
-        ambientEngine.play(kind);
-        return;
-      }
-      if (source.startsWith('upload:')) {
-        const id = source.slice(7);
-        const rec = await getObjectUrl(id);
-        if (rec && audio) {
-          musicUrlRef.current = rec.url;
-          audio.src = rec.url;
-          audio.loop = true;
-          audio.volume = 0.7;
-          void audio.play().catch(() => {});
-        }
-      }
-    },
-    [ambientKindOf, getObjectUrl, audioRef],
-  );
 
   /** 按阶段应用配置的声音 */
   const applyPhaseSound = useCallback(
@@ -94,14 +58,14 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
           : phase === 'shortBreak'
             ? settings.breakSound
             : settings.longBreakSound;
-      void playSound(source);
+      playSound(source);
     },
     [settings, playSound],
   );
 
   /** 阶段推进（含到期自动流转） */
   const completePhase = useCallback(() => {
-    ambientEngine.beep();
+    audioBus.beep();
     const durMs = (phase: PomodoroPhase) =>
       (phase === 'shortBreak'
         ? settings.shortBreakMin
@@ -174,7 +138,7 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
     phaseDurationMs > 0 ? Math.min(1, Math.max(0, 1 - remaining / phaseDurationMs)) : 0;
 
   const start = useCallback(() => {
-    ambientEngine.ensureCtx();
+    audioBus.ensureCtx();
     setState((prev) => ({
       ...prev,
       phase: prev.phase === 'idle' ? 'focus' : prev.phase,
@@ -194,7 +158,7 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
   }, [phaseDurationMs, setState]);
 
   const resume = useCallback(() => {
-    ambientEngine.ensureCtx();
+    audioBus.ensureCtx();
     setState((prev) => ({
       ...prev,
       running: true,
@@ -204,16 +168,9 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
   }, [phaseDurationMs, setState]);
 
   const reset = useCallback(() => {
-    ambientEngine.stop();
-    if (musicUrlRef.current) {
-      URL.revokeObjectURL(musicUrlRef.current);
-      musicUrlRef.current = null;
-    }
-    const audio = audioRef.current;
-    if (audio) audio.pause();
-    setCurrentSound(null);
+    audioBus.stop();
     setState({ ...DEFAULT_STATE });
-  }, [setState, audioRef]);
+  }, [setState]);
 
   /** 音源下拉选择：更新配置，若当前阶段匹配则立即应用 */
   const changePhaseSound = useCallback(
@@ -224,7 +181,7 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
         (phaseKey === 'breakSound' && state.phase === 'shortBreak') ||
         (phaseKey === 'longBreakSound' && state.phase === 'longBreak')
       ) {
-        void playSound(source);
+        playSound(source);
       }
     },
     [setSettings, state.phase, playSound],
@@ -234,13 +191,8 @@ export function usePomodoro(audioRef: RefObject<HTMLAudioElement | null>) {
     settings,
     setSettings,
     state,
-    currentSound,
     remaining,
     progress,
-    musicItems,
-    upload,
-    remove,
-    playSound,
     changePhaseSound,
     start,
     pause,

@@ -1,140 +1,62 @@
 /**
- * @file 帖子详情 Hero — 标题 + 面包屑 + 徽章 + 元信息（收缩/展开两态，复用 CollapsingHero）
+ * @file Discussion header — compact context, author metadata, and follow action
  */
 'use client';
 
 import Link from 'next/link';
-import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
-import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
-import { Avatar } from '@/components/avatar';
-import { BackLink, Badge } from '@/components';
-import { formatDateTime } from '@/shared/utils/utils';
+import { ArrowLeft, Eye, MessageCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Avatar, Badge } from '@/components';
+import { formatRelativeTime } from '@/shared/utils/utils';
 import { FollowButton } from './follow-button';
 import type { CommunityPostDetail } from '@/modules/community/types';
-import { useTranslations } from 'next-intl';
 
 interface TopicHeroProps {
   topic: CommunityPostDetail;
   categorySlug: string;
   replyTotal: number;
-  hero: HeroState;
-  /** 当前登录用户 id（用于关注按钮） */
   currentUserId?: string;
 }
 
-export function TopicHero({ topic, categorySlug, replyTotal, hero, currentUserId }: TopicHeroProps) {
+export function TopicHero({ topic, categorySlug, replyTotal, currentUserId }: TopicHeroProps) {
   const t = useTranslations('communityCommon');
   return (
-    <CollapsingHero
-      index="00"
-      label="Topic"
-      hero={hero}
-      minHeight="50vh"
-      sidebarBottom={
-        <BackLink href="/community" arrow={false}>
-          {t('backToCommunity')}
-        </BackLink>
-      }
-    >
-      <div
-        className={`overflow-hidden transition-all hero-reveal ${
-          hero.collapsed ? 'max-h-0 opacity-0' : 'max-h-[100px] opacity-100'
-        }`}
-      >
-        <RevealItem>
-          <div className="flex items-center gap-2 mb-6 meta-mono text-[var(--muted-foreground)]">
-            <Link href="/community" className="hover:text-[var(--primary)] transition-colors">
-              {t('community')}
-            </Link>
-            <span>/</span>
-            <Link
-              href="/community"
-              className="hover:text-[var(--primary)] transition-colors"
-            >
-              {topic.category?.name ?? categorySlug}
-            </Link>
-          </div>
-        </RevealItem>
-      </div>
+    <header className="border-b border-[var(--border)] bg-[var(--card)]">
+      <div className="mx-auto max-w-[1120px] px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
+        <Link href="/community" className="mb-7 inline-flex min-h-10 items-center gap-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--primary)] focus-ring">
+          <ArrowLeft className="h-4 w-4" /> {t('backToCommunity')}
+        </Link>
 
-      <div
-        className={`overflow-hidden transition-all hero-reveal ${
-          hero.collapsed ? 'max-h-0 opacity-0' : 'max-h-[100px] opacity-100'
-        }`}
-      >
-        {(topic.isPinned || topic.isFeatured) && (
-          <RevealItem>
-            <div className="flex gap-2 mb-4">
-              {topic.isPinned && (
-                <Badge variant="primary">PIN</Badge>
-              )}
-              {topic.isFeatured && (
-                <Badge variant="primary">FEAT</Badge>
-              )}
-            </div>
-          </RevealItem>
-        )}
-      </div>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Link href={`/community?category=${topic.category?.slug ?? categorySlug}`} className="badge badge-primary normal-case tracking-normal">
+            {topic.category?.name ?? categorySlug}
+          </Link>
+          {topic.isPinned && <Badge variant="primary">PINNED</Badge>}
+          {topic.isFeatured && <Badge variant="amber">FEATURED</Badge>}
+        </div>
 
-      <RevealTitle>
-        <h1
-          className={`display-serif text-[var(--foreground)] transition-all hero-reveal ${
-            hero.collapsed
-              ? 'cursor-pointer text-[clamp(22px,4vw,36px)] leading-[1.2] mb-0'
-              : 'text-[clamp(28px,5vw,56px)] leading-[1.1] mb-6'
-          }`}
-          onClick={hero.collapsed ? hero.onTitleClick : undefined}
-        >
+        <h1 className="mb-6 max-w-4xl display-serif text-[clamp(32px,5vw,58px)] leading-[1.08] text-[var(--foreground)]">
           {topic.title}
-          <span
-            className={`display-serif italic text-[var(--muted-foreground)] transition-all hero-reveal ${
-              hero.collapsed
-                ? 'text-[clamp(12px,1.6vw,18px)] ml-2 align-baseline'
-                : 'text-[clamp(14px,2vw,24px)] ml-3 align-baseline'
-            }`}
-          >
-            / Topic
-          </span>
         </h1>
-      </RevealTitle>
 
-      <div
-        className={`overflow-hidden transition-all hero-reveal ${
-          hero.collapsed ? 'max-h-0 opacity-0' : 'max-h-[200px] opacity-100'
-        }`}
-      >
-        <RevealItem>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--muted-foreground)]">
+          <Link href={`/users/${topic.authorId}`} className="flex items-center gap-2 text-[var(--foreground)] hover:text-[var(--primary)] focus-ring">
             <Avatar
-              email={topic.author?.displayName ?? 'anonymous'}
+              email={topic.author?.email ?? 'anonymous'}
               displayName={topic.author?.displayName}
               avatarUrl={topic.author?.avatarUrl}
               avatarType={topic.author?.avatarType}
-              size={28}
+              size={32}
             />
-            <span className="font-mono text-[13px] text-[var(--foreground)]">
-              {topic.author?.displayName ?? t('anonymous')}
-            </span>
-            <span className="meta-mono">·</span>
-            <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {formatDateTime(topic.createdAt)}
-            </span>
-            <span className="meta-mono">·</span>
-            <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {topic.viewCount} views
-            </span>
-            <span className="meta-mono">·</span>
-            <span className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)]">
-              {replyTotal} replies
-            </span>
-            <FollowButton
-              targetUserId={topic.authorId}
-              currentUserId={currentUserId}
-              compact
-            />
-          </div>
-        </RevealItem>
+            <span className="font-medium">{topic.author?.displayName ?? t('anonymous')}</span>
+          </Link>
+          <span>·</span>
+          <span>{formatRelativeTime(topic.createdAt)}</span>
+          <span className="inline-flex items-center gap-1"><Eye className="h-3.5 w-3.5" /> {topic.viewCount}</span>
+          <span className="inline-flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" /> {replyTotal}</span>
+          <FollowButton targetUserId={topic.authorId} currentUserId={currentUserId} compact />
+        </div>
       </div>
-    </CollapsingHero>
+    </header>
   );
 }

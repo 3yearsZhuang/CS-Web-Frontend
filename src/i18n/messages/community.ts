@@ -43,6 +43,27 @@ export interface CommunityMessages {
     heroTitleEn: string;
     heroDesc1: string;
     heroDesc2: string;
+    sortLatest: string;
+    sortHot: string;
+    sortTop: string;
+    channelAll: string;
+    channelFollowing: string;
+    channelMembers: string;
+    browseLabel: string;
+    spotlightLabel: string;
+    communityIntro: string;
+    categoryLabel: string;
+    tagLabel: string;
+    clearCategory: string;
+    newPost: string;
+    feedCount: string;
+    sidebarCategories: string;
+    sidebarTrending: string;
+    sidebarMembers: string;
+    sidebarStats: string;
+    repliesShort: string;
+    viewsShort: string;
+    likesShort: string;
   },
   communityAdmin: {
     tabCategories: string;
@@ -253,6 +274,27 @@ export const zhCN: CommunityMessages = {
     heroTitleEn: '/ Community',
     heroDesc1: '社区主题、社区文章、社区成员，一站浏览。',
     heroDesc2: '让每个声音被听见，每篇文章被阅读，每位成员被看见',
+    sortLatest: '最新',
+    sortHot: '热议',
+    sortTop: '高赞',
+    channelAll: '全部内容',
+    channelFollowing: '关注流',
+    channelMembers: '成员',
+    browseLabel: '浏览社区',
+    spotlightLabel: '精选讨论',
+    communityIntro: '技术问答、项目分享与成员动态。现在就加入讨论。',
+    categoryLabel: '版块',
+    tagLabel: '标签',
+    clearCategory: '清除版块',
+    newPost: '发布内容',
+    feedCount: '{count} 条内容',
+    sidebarCategories: '浏览版块',
+    sidebarTrending: '正在热议',
+    sidebarMembers: '活跃成员',
+    sidebarStats: '社区状态',
+    repliesShort: '回复',
+    viewsShort: '浏览',
+    likesShort: '赞',
   },
   communityAdmin: {
     tabCategories: '[ 版块管理 / Categories ]',
@@ -463,6 +505,27 @@ export const en: CommunityMessages = {
     heroTitleEn: '/ Community',
     heroDesc1: 'Community topics, community posts, and community members — all in one place.',
     heroDesc2: 'Let every voice be heard, every post be read, every member be seen',
+    sortLatest: 'Latest',
+    sortHot: 'Hot',
+    sortTop: 'Top',
+    channelAll: 'All posts',
+    channelFollowing: 'Following',
+    channelMembers: 'Members',
+    browseLabel: 'Browse community',
+    spotlightLabel: 'Spotlight',
+    communityIntro: 'Technical questions, project notes, and member updates. Join the conversation.',
+    categoryLabel: 'Category',
+    tagLabel: 'Tag',
+    clearCategory: 'Clear category',
+    newPost: 'New post',
+    feedCount: '{count} posts',
+    sidebarCategories: 'Browse categories',
+    sidebarTrending: 'Trending now',
+    sidebarMembers: 'Active members',
+    sidebarStats: 'Community status',
+    repliesShort: 'Replies',
+    viewsShort: 'Views',
+    likesShort: 'Likes',
   },
   communityAdmin: {
     tabCategories: '[ Categories / 版块管理 ]',

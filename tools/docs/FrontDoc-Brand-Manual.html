@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FztbuCS · 品牌视觉识别手册</title>
+<style>
+  /* =========================================================
+     FztbuCS — 品牌视觉识别手册 (单文件 / 无外部依赖)
+     设计语言：编辑式技术极简 (Editorial Tech Minimalism)
+     令牌严格取自项目真实设计系统：
+       浅色  #fdf5f7 / #1e1233 / #1e40af
+       暗色  #000000 / #f5f5f4 / #d4a574
+     字体（系统栈，无外链）：衬线展示 + 等宽元数据 + 无衬线正文
+  ========================================================= */
+
+  :root {
+    /* —— 浅色主题（品牌默认） —— */
+    --bg:        #fdf5f7;   /* 浅粉底 */
+    --bg-2:      #f6eaf0;   /* 次底 */
+    --surface:   #ffffff;   /* 卡面 */
+    --ink:       #1e1233;   /* 深黑紫 */
+    --ink-2:     #4a3a55;   /* 次级文字 */
+    --muted:     #6b5572;   /* 紫灰元数据 */
+    --primary:   #1e40af;   /* 深蓝强调 */
+    --primary-ink:#ffffff;
+    --accent:    #e8ecf5;   /* 淡蓝灰 */
+    --line:      #e4d8e0;   /* 紫调发丝线 */
+    --line-2:    #efe3ea;
+    --amber:     #d4a574;   /* 暗色模式强调（浅色里作点缀） */
+
+    /* —— 字体栈（系统可用，无需外链） —— */
+    --font-serif: "Songti SC","Noto Serif SC","Source Han Serif SC",Georgia,"Times New Roman",serif;
+    --font-sans: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    --font-mono: ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+
+    /* —— 节奏 —— */
+    --maxw: 1180px;
+    --gap: clamp(16px, 3vw, 32px);
+    --ease: cubic-bezier(0.16,1,0.3,1);     /* expo out */
+    --ease-q: cubic-bezier(0.25,1,0.5,1);   /* quart out */
+    --dur: 0.7s;
+    --sidebar-w: 252px;
+
+    /* —— 字号阶梯（modular, perfect fourth 微调） —— */
+    --fs-eyebrow: 0.74rem;
+    --fs-xs: 0.78rem;
+    --fs-sm: 0.875rem;
+    --fs-base: 1rem;
+    --fs-lg: 1.25rem;
+    --fs-h4: 1.15rem;
+    --fs-h3: clamp(1.25rem,2.4vw,1.6rem);
+    --fs-h2: clamp(1.7rem,3.6vw,2.5rem);
+    --fs-h1: clamp(2.2rem,5vw,3.5rem);
+    --fs-display: clamp(3.2rem,9vw,7rem);
+  }
+
+  :root[data-theme="dark"] {
+    --bg:      #000000;
+    --bg-2:    #08060c;
+    --surface: #0a0a0a;
+    --ink:     #f5f5f4;
+    --ink-2:   #c9c4cf;
+    --muted:   #8a8a85;
+    --primary: #d4a574;   /* 琥珀金 */
+    --primary-ink:#0a0a0a;
+    --accent:  #16121a;
+    --line:    rgba(245,245,244,0.14);
+    --line-2:  rgba(245,245,244,0.08);
+    --amber:   #d4a574;
+  }
+
+  * { box-sizing: border-box; margin:0; padding:0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust:100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background .5s var(--ease), color .5s var(--ease);
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--primary); color: var(--primary-ink); }
+
+  /* —————————————————— 侧栏导航 —————————————————— */
+  .sidebar {
+    position: fixed; top:0; left:0; bottom:0;
+    width: var(--sidebar-w);
+    border-right: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    display: flex; flex-direction: column;
+    padding: 28px 22px;
+    z-index: 40;
+  }
+  .side-brand { display:flex; align-items:center; gap:11px; margin-bottom:30px; }
+  .side-brand .mark { width:34px; height:34px; flex:0 0 auto; }
+  .side-brand b { font-family:var(--font-serif); font-weight:600; font-size:1.05rem; letter-spacing:.02em; }
+  .side-brand span { display:block; font-family:var(--font-mono); font-size:.6rem; letter-spacing:.18em; color:var(--muted); text-transform:uppercase; }
+  .side-nav { list-style:none; display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto; }
+  .side-nav a {
+    display:flex; align-items:baseline; gap:12px;
+    padding:9px 10px; border-radius:4px;
+    color:var(--ink-2); text-decoration:none;
+    font-size:.9rem; letter-spacing:.01em;
+    border-left:2px solid transparent;
+    transition: color .25s, background .25s, border-color .25s;
+  }
+  .side-nav a .num { font-family:var(--font-mono); font-size:.7rem; color:var(--muted); min-width:18px; }
+  .side-nav a:hover { background:var(--accent); color:var(--ink); }
+  .side-nav a.active { color:var(--primary); border-left-color:var(--primary); background:color-mix(in srgb,var(--primary) 8%,transparent); }
+  .side-nav a.active .num { color:var(--primary); }
+  .side-foot { font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em; color:var(--muted); text-transform:uppercase; line-height:1.8; }
+
+  /* —————————————————— 浮动控制 —————————————————— */
+  .controls {
+    position: fixed; top:18px; right:18px; z-index:50;
+    display:flex; gap:8px;
+  }
+  .ctl {
+    font-family:var(--font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+    background:var(--surface); color:var(--ink);
+    border:1px solid var(--line); border-radius:999px;
+    padding:9px 14px; cursor:pointer;
+    display:flex; align-items:center; gap:7px;
+    transition: border-color .25s, color .25s, transform .2s var(--ease-q);
+    box-shadow: 0 4px 18px rgba(0,0,0,.05);
+  }
+  .ctl:hover { border-color:var(--primary); color:var(--primary); }
+  .ctl:active { transform: scale(.96); }
+  .ctl .dot { width:8px; height:8px; border-radius:50%; background:var(--primary); }
+
+  /* —————————————————— 主区 —————————————————— */
+  .main { margin-left: var(--sidebar-w); padding: 0 clamp(20px,4vw,72px); }
+  .wrap { max-width: var(--maxw); margin:0 auto; }
+  section { padding: clamp(64px,9vh,120px) 0; border-bottom:1px solid var(--line); scroll-margin-top:24px; }
+  section:last-of-type { border-bottom:none; }
+
+  /* 章节通用头 */
+  .sec-head { display:flex; align-items:baseline; gap:18px; margin-bottom: clamp(30px,5vh,56px); }
+  .sec-no {
+    font-family:var(--font-mono); font-size:clamp(2.4rem,6vw,4.2rem);
+    color:var(--primary); line-height:.9; font-weight:600; letter-spacing:-.02em;
+    opacity:.22; flex:0 0 auto;
+  }
+  .sec-title { font-family:var(--font-serif); font-weight:600; font-size:var(--fs-h2); line-height:1.1; }
+  .sec-eyebrow {
+    font-family:var(--font-mono); font-size:var(--fs-eyebrow); letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:10px; display:block;
+  }
+  .lead { max-width:62ch; color:var(--ink-2); font-size:var(--fs-lg); line-height:1.7; }
+
+  .hairline { height:1px; background:var(--line); border:none; margin:28px 0; }
+
+  /* —————————————————— 01 封面 —————————————————— */
+  #cover { padding-top: clamp(54px,8vh,96px); min-height: 92vh; display:flex; flex-direction:column; justify-content:center; }
+  .cover-grid { display:grid; grid-template-columns: 1.15fr .85fr; gap: clamp(28px,5vw,72px); align-items:center; }
+  .cover-eyebrow { font-family:var(--font-mono); font-size:.72rem; letter-spacing:.34em; text-transform:uppercase; color:var(--muted); }
+  .cover-title {
+    font-family:var(--font-serif); font-weight:600;
+    font-size: var(--fs-display); line-height:.92; letter-spacing:-.02em;
+    margin:18px 0 22px;
+  }
+  .cover-title em { font-style:normal; color:var(--primary); }
+  .cover-sub { font-size:var(--fs-lg); color:var(--ink-2); max-width:34ch; }
+  .cover-meta { margin-top:34px; display:flex; gap:26px; flex-wrap:wrap; font-family:var(--font-mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .cover-meta b { color:var(--ink); display:block; font-size:.92rem; letter-spacing:.04em; text-transform:none; font-family:var(--font-sans); margin-top:4px; }
+  .cover-seal { display:flex; justify-content:center; }
+  .cover-seal svg { width: clamp(160px,26vw,260px); height:auto; }
+
+  /* —————————————————— Logo 标记（SVG symbol 复用） —————————————————— */
+  .logo-mark { --ring:var(--ink); --glyph:var(--primary); --tile:transparent; display:inline-block; }
+  .logo-mark svg { display:block; width:100%; height:100%; }
+  .logo-mark .ring { fill:var(--tile); stroke:var(--ring); }
+  .logo-mark .glyph { stroke:var(--glyph); fill:none; }
+  .logo-full    { --tile:var(--primary); --ring:var(--primary); --glyph:#fff; }
+  .logo-reverse { --ring:#f5f5f4; --glyph:#f5f5f4; --tile:transparent; }
+  .logo-mono    { --ring:var(--ink); --glyph:var(--ink); --tile:transparent; }
+
+  /* —————————————————— 02 理念 —————————————————— */
+  .mission {
+    font-family:var(--font-serif); font-weight:500;
+    font-size: clamp(1.6rem,3.4vw,2.7rem); line-height:1.32;
+    max-width: 22ch; letter-spacing:-.01em;
+  }
+  .mission .hl { color:var(--primary); font-style:italic; }
+  .values { display:grid; grid-template-columns: repeat(3,1fr); gap: clamp(16px,2.4vw,30px); margin-top: clamp(40px,6vh,70px); }
+  .value-card {
+    border:1px solid var(--line); border-radius:6px; padding:26px 24px;
+    background:var(--surface); position:relative; overflow:hidden;
+    transition: border-color .3s, transform .4s var(--ease-q);
+  }
+  .value-card:hover { border-color:var(--primary); transform:translateY(-3px); }
+  .value-card .v-no { font-family:var(--font-mono); font-size:.7rem; letter-spacing:.16em; color:var(--muted); }
+  .value-card h3 { font-family:var(--font-serif); font-size:1.5rem; font-weight:600; margin:12px 0 10px; display:flex; align-items:baseline; gap:10px; }
+  .value-card h3 small { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.14em; color:var(--primary); text-transform:uppercase; }
+  .value-card p { color:var(--ink-2); font-size:.92rem; }
+  .value-card .v-icon { position:absolute; top:22px; right:22px; width:30px; height:30px; color:var(--primary); opacity:.5; }
+
+  /* —————————————————— 03 标识系统 —————————————————— */
+  .logo-row { display:grid; grid-template-columns: repeat(3,1fr); gap: clamp(14px,2vw,24px); }
+  .logo-cell { border:1px solid var(--line); border-radius:6px; padding:30px 20px; text-align:center; }
+  .logo-cell .frame { height:130px; display:flex; align-items:center; justify-content:center; }
+  .logo-cell .frame svg { width:84px; height:84px; }
+  .logo-cell.on-dark { background:#0a0a0a; border-color:rgba(245,245,244,.16); }
+  .logo-cell .cap { font-family:var(--font-mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-top:16px; }
+  .logo-cell .cap b { color:var(--ink); display:block; font-size:.82rem; letter-spacing:.02em; text-transform:none; font-family:var(--font-sans); margin-bottom:2px; }
+
+  .spec-2col { display:grid; grid-template-columns: 1fr 1fr; gap: clamp(18px,3vw,40px); margin-top: clamp(34px,5vh,56px); align-items:start; }
+  .spec-box { border:1px solid var(--line); border-radius:6px; padding:26px; background:var(--surface); }
+  .spec-box h4 { font-family:var(--font-mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-bottom:18px; }
+  /* 安全区 */
+  .safe-wrap { display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+  .safe { position:relative; width:150px; height:150px; border:1px dashed color-mix(in srgb,var(--muted) 60%,transparent); display:flex; align-items:center; justify-content:center; }
+  .safe .clear { position:absolute; inset:22px; border:1px dashed color-mix(in srgb,var(--primary) 55%,transparent); }
+  .safe svg { width:64px; height:64px; }
+  .safe-note { font-size:.86rem; color:var(--ink-2); max-width:24ch; }
+  .safe-note b { color:var(--ink); }
+  /* 最小尺寸 */
+  .minsize { display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap; }
+  .minsize .m { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .minsize svg { width:var(--s); height:var(--s); }
+  .minsize .lbl { font-family:var(--font-mono); font-size:.64rem; letter-spacing:.1em; color:var(--muted); }
+
+  /* 错误用法 */
+  .misuse { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin-top: clamp(30px,4vh,48px); }
+  .misuse .m { border:1px solid var(--line); border-radius:6px; padding:18px; text-align:center; background:var(--surface); }
+  .misuse .m .bad { height:90px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .misuse .m .bad svg { width:60px; height:60px; }
+  .misuse .m .x { position:absolute; font-family:var(--font-mono); color:#d2493e; font-size:1.6rem; }
+  .misuse .m p { font-size:.74rem; color:var(--muted); margin-top:12px; line-height:1.5; }
+
+  /* —————————————————— 04 色彩 —————————————————— */
+  .swatch-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .swatch {
+    border:1px solid var(--line); border-radius:6px; overflow:hidden; cursor:pointer;
+    background:var(--surface); text-align:left; padding:0; color:inherit; font:inherit;
+    transition: transform .25s var(--ease-q), border-color .25s, box-shadow .25s;
+  }
+  .swatch:hover { transform:translateY(-3px); border-color:var(--primary); box-shadow:0 8px 24px rgba(0,0,0,.07); }
+  .swatch:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+  .swatch .chip { height:84px; width:100%; position:relative; }
+  .swatch .chip .copy { position:absolute; right:8px; bottom:8px; font-family:var(--font-mono); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; background:rgba(0,0,0,.42); color:#fff; padding:3px 7px; border-radius:3px; opacity:0; transition:opacity .2s; }
+  .swatch:hover .chip .copy { opacity:1; }
+  .swatch .meta { padding:11px 13px 13px; }
+  .swatch .meta .nm { font-size:.84rem; font-weight:600; }
+  .swatch .meta .hx { font-family:var(--font-mono); font-size:.72rem; color:var(--muted); margin-top:3px; letter-spacing:.04em; }
+  .swatch .meta .role { font-size:.68rem; color:var(--ink-2); margin-top:6px; }
+
+  .sub-h { font-family:var(--font-mono); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin: clamp(34px,5vh,52px) 0 16px; display:flex; align-items:center; gap:12px; }
+  .sub-h::after { content:""; flex:1; height:1px; background:var(--line); }
+
+  .grad-row { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+  .grad-card { border:1px solid var(--line); border-radius:6px; overflow:hidden; cursor:pointer; background:var(--surface); text-align:left; font:inherit; color:inherit; padding:0; transition:transform .25s var(--ease-q),border-color .25s; }
+  .grad-card:hover { transform:translateY(-3px); border-color:var(--primary); }
+  .grad-card .band { height:96px; }
+  .grad-card .gmeta { padding:12px 14px 14px; }
+  .grad-card .gmeta .gn { font-size:.82rem; font-weight:600; }
+  .grad-card .gmeta .gh { font-family:var(--font-mono); font-size:.66rem; color:var(--muted); margin-top:3px; }
+
+  /* 暗色预览切换 */
+  .preview-toggle { display:inline-flex; align-items:center; gap:9px; margin-left:auto; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); cursor:pointer; user-select:none; }
+  .preview-toggle .sw { width:34px; height:18px; border-radius:999px; background:var(--accent); border:1px solid var(--line); position:relative; transition:background .25s; }
+  .preview-toggle .sw::after { content:""; position:absolute; top:1px; left:1px; width:14px; height:14px; border-radius:50%; background:var(--ink); transition:transform .25s var(--ease-q); }
+  .preview-toggle.on .sw { background:var(--primary); }
+  .preview-toggle.on .sw::after { transform:translateX(16px); background:var(--primary-ink); }
+  #colorSurface.darkprev { background:#08060c; border-color:rgba(245,245,244,.16); padding:18px; border-radius:8px; }
+  #colorSurface.darkprev .swatch { background:#0a0a0a; border-color:rgba(245,245,245,.12); }
+
+  /* —————————————————— 05 字体 —————————————————— */
+  .type-spec { border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .type-row { display:grid; grid-template-columns: 130px 1fr; gap:20px; padding:22px 24px; border-bottom:1px solid var(--line); align-items:baseline; }
+  .type-row:last-child { border-bottom:none; }
+  .type-row .tag { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .type-row .tag b { display:block; color:var(--ink); font-size:.8rem; letter-spacing:.02em; text-transform:none; font-family:var(--font-sans); }
+  .type-row .sample { overflow:hidden; }
+  .type-row .sample .cn { color:var(--ink-2); font-size:.8rem; margin-top:6px; }
+  .t-display { font-family:var(--font-serif); font-weight:600; font-size:clamp(2.4rem,5vw,3.6rem); line-height:1; letter-spacing:-.02em; }
+  .t-h1 { font-family:var(--font-serif); font-weight:600; font-size:clamp(1.9rem,4vw,2.6rem); line-height:1.1; }
+  .t-h2 { font-family:var(--font-serif); font-weight:600; font-size:clamp(1.5rem,3vw,2rem); line-height:1.15; }
+  .t-h3 { font-family:var(--font-serif); font-weight:600; font-size:clamp(1.2rem,2.2vw,1.5rem); }
+  .t-h4 { font-family:var(--font-sans); font-weight:700; font-size:1.1rem; letter-spacing:.01em; }
+  .t-body { font-family:var(--font-sans); font-size:1rem; line-height:1.7; }
+  .t-small { font-family:var(--font-mono); font-size:.78rem; letter-spacing:.04em; color:var(--ink-2); }
+  .specimen { margin-top: clamp(30px,4vh,46px); border:1px solid var(--line); border-radius:6px; padding: clamp(24px,4vw,44px); background:var(--surface); }
+  .specimen .big { font-family:var(--font-serif); font-weight:500; font-size:clamp(2rem,6vw,4.2rem); line-height:1.04; letter-spacing:-.02em; }
+  .specimen .big .em { font-style:italic; color:var(--primary); }
+  .specimen .ab { font-family:var(--font-mono); font-size:.82rem; letter-spacing:.3em; color:var(--muted); margin-top:18px; text-transform:uppercase; }
+  .pairing { display:grid; grid-template-columns: repeat(3,1fr); gap:14px; margin-top:18px; }
+  .pairing .p { border:1px solid var(--line); border-radius:6px; padding:16px; background:var(--surface); }
+  .pairing .p .role { font-family:var(--font-mono); font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .pairing .p .fn { font-size:1.05rem; margin-top:8px; }
+  .pairing .p .fn.serif { font-family:var(--font-serif); } .pairing .p .fn.sans { font-family:var(--font-sans); } .pairing .p .fn.mono { font-family:var(--font-mono); }
+
+  /* —————————————————— 06 间距与栅格 —————————————————— */
+  .space-row { display:grid; grid-template-columns: 64px 1fr 70px; gap:18px; align-items:center; padding:7px 0; }
+  .space-row .sn { font-family:var(--font-mono); font-size:.72rem; color:var(--muted); }
+  .space-row .bar { height:14px; background:var(--primary); border-radius:2px; }
+  .space-row .sv { font-family:var(--font-mono); font-size:.72rem; color:var(--ink-2); text-align:right; }
+
+  .grid-demo { margin-top: clamp(34px,5vh,52px); border:1px solid var(--line); border-radius:6px; padding:22px; background:var(--surface); }
+  .grid12 { display:grid; grid-template-columns: repeat(12,1fr); gap: var(--gx,12px); }
+  .grid12 .col { background: color-mix(in srgb,var(--primary) 14%,transparent); border:1px solid color-mix(in srgb,var(--primary) 30%,transparent); border-radius:3px; height:54px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:.66rem; color:var(--primary); transition:gap .3s var(--ease); }
+  .grid12.overlay .col { background: color-mix(in srgb,var(--primary) 8%,transparent); }
+  .grid12.showlines { gap:0; }
+  .grid12.showlines .col { border-radius:0; border-right:1px solid color-mix(in srgb,var(--primary) 26%,transparent); border-left:none; border-top:none; border-bottom:none; }
+  .grid-ctl { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; align-items:center; }
+  .ghost-btn { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:999px; padding:8px 14px; cursor:pointer; transition:border-color .25s,color .25s; }
+  .ghost-btn:hover { border-color:var(--primary); color:var(--primary); }
+  .ghost-btn.on { border-color:var(--primary); color:var(--primary); background:color-mix(in srgb,var(--primary) 8%,transparent); }
+
+  /* —————————————————— 07 图标 —————————————————— */
+  .icon-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; }
+  .icon-cell { border:1px solid var(--line); border-radius:6px; padding:22px 12px; text-align:center; background:var(--surface); transition:border-color .25s; }
+  .icon-cell:hover { border-color:var(--primary); }
+  .icon-cell svg { width:30px; height:30px; color:var(--ink); }
+  .icon-cell .inm { font-family:var(--font-mono); font-size:.64rem; letter-spacing:.08em; color:var(--muted); margin-top:12px; text-transform:uppercase; }
+  .icon-multisize { display:flex; align-items:center; gap: clamp(18px,4vw,52px); margin-top: clamp(28px,4vh,44px); padding: clamp(22px,4vw,40px); border:1px solid var(--line); border-radius:6px; background:var(--surface); flex-wrap:wrap; }
+  .icon-multisize .ms { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .icon-multisize .ms svg { color:var(--primary); }
+  .icon-multisize .ms .sz { font-family:var(--font-mono); font-size:.62rem; color:var(--muted); letter-spacing:.08em; }
+
+  /* —————————————————— 08 应用展示 —————————————————— */
+  .app-grid { display:grid; grid-template-columns: 1fr 1fr; gap: clamp(18px,2.6vw,30px); }
+  .app-frame { border:1px solid var(--line); border-radius:8px; padding:22px; background:var(--surface); }
+  .app-frame .fcap { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:18px; display:flex; justify-content:space-between; }
+  .app-frame .fcap b { color:var(--primary); }
+
+  /* 名片 */
+  .m-card { background:var(--bg-2); border:1px solid var(--line); border-radius:6px; padding:22px; display:flex; gap:18px; align-items:center; position:relative; overflow:hidden; }
+  .m-card::before { content:""; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb,var(--primary) 22%,transparent), transparent 70%); }
+  .m-card .mc-mark { width:52px; height:52px; flex:0 0 auto; position:relative; }
+  .m-card .mc-info b { font-family:var(--font-serif); font-size:1.15rem; font-weight:600; display:block; }
+  .m-card .mc-info .role { font-size:.8rem; color:var(--muted); }
+  .m-card .mc-info .ct { font-family:var(--font-mono); font-size:.68rem; color:var(--ink-2); margin-top:8px; letter-spacing:.02em; }
+
+  /* 顶栏 */
+  .m-topbar { background:var(--surface); border:1px solid var(--line); border-radius:6px; display:flex; align-items:center; gap:14px; padding:10px 14px; }
+  .m-topbar .tb-mark { width:28px; height:28px; flex:0 0 auto; }
+  .m-topbar .tb-name { font-family:var(--font-serif); font-weight:600; font-size:1rem; }
+  .m-topbar .tb-nav { display:flex; gap:16px; margin-left:10px; font-size:.8rem; color:var(--ink-2); }
+  .m-topbar .tb-nav span:first-child { color:var(--primary); }
+  .m-topbar .tb-search { margin-left:auto; font-family:var(--font-mono); font-size:.66rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:5px 12px; }
+
+  /* 邮件签名 */
+  .m-sign { display:flex; gap:14px; align-items:center; border-left:3px solid var(--primary); padding:10px 0 10px 16px; }
+  .m-sign .s-mark { width:40px; height:40px; flex:0 0 auto; }
+  .m-sign b { font-family:var(--font-serif); font-size:.98rem; font-weight:600; }
+  .m-sign .s-role { font-size:.74rem; color:var(--muted); }
+  .m-sign .s-ct { font-family:var(--font-mono); font-size:.64rem; color:var(--ink-2); margin-top:4px; }
+
+  /* 社交头像 */
+  .m-avatar { width:96px; height:96px; border-radius:10px; background:linear-gradient(135deg,#2442ab,#1e40af 55%,#183384); display:flex; align-items:center; justify-content:center; box-shadow:0 6px 20px color-mix(in srgb,var(--primary) 30%,transparent); }
+  .m-avatar svg { width:52px; height:52px; }
+  .m-avatar-row { display:flex; gap:18px; align-items:center; }
+  .m-avatar-row .av-note { font-size:.78rem; color:var(--ink-2); max-width:22ch; }
+
+  /* —————————————————— 09 页脚 —————————————————— */
+  footer#footer { padding: clamp(54px,8vh,90px) 0 60px; }
+  .foot-grid { display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:30px; align-items:start; }
+  .foot-brand { display:flex; align-items:center; gap:12px; }
+  .foot-brand .mark { width:42px; height:42px; }
+  .foot-brand b { font-family:var(--font-serif); font-size:1.2rem; font-weight:600; }
+  .foot-brand span { display:block; font-family:var(--font-mono); font-size:.6rem; letter-spacing:.18em; color:var(--muted); text-transform:uppercase; }
+  .foot-col h5 { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+  .foot-col a, .foot-col p { display:block; color:var(--ink-2); text-decoration:none; font-size:.86rem; margin-bottom:7px; }
+  .foot-col a:hover { color:var(--primary); }
+  .foot-base { margin-top:42px; padding-top:20px; border-top:1px solid var(--line); display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; }
+
+  /* —————————————————— 全局栅格叠层 —————————————————— */
+  .grid-overlay { position:fixed; inset:0 0 0 var(--sidebar-w); z-index:30; pointer-events:none; display:none; padding:0 clamp(20px,4vw,72px); }
+  .grid-overlay.show { display:block; }
+  .grid-overlay .go-inner { max-width:var(--maxw); margin:0 auto; height:100%; display:grid; grid-template-columns:repeat(12,1fr); gap: var(--gap); }
+  .grid-overlay .go-inner span { background: color-mix(in srgb,var(--primary) 7%,transparent); border-left:1px solid color-mix(in srgb,var(--primary) 22%,transparent); }
+
+  /* —————————————————— 复制提示 —————————————————— */
+  .toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--bg); font-family:var(--font-mono); font-size:.74rem; letter-spacing:.06em; padding:11px 20px; border-radius:999px; opacity:0; pointer-events:none; transition:opacity .3s var(--ease), transform .3s var(--ease); z-index:80; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* —————————————————— 滚动渐入 —————————————————— */
+  .reveal { opacity:0; transform:translateY(18px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+  .reveal.in { opacity:1; transform:none; }
+
+  /* —————————————————— 响应式 —————————————————— */
+  @media (max-width: 980px) {
+    :root { --sidebar-w: 0px; }
+    .sidebar {
+      position:fixed; top:0; left:0; right:0; bottom:auto; width:auto; height:auto;
+      flex-direction:row; align-items:center; gap:14px; padding:12px 16px;
+      border-right:none; border-bottom:1px solid var(--line); overflow-x:auto;
+    }
+    .side-brand { margin-bottom:0; flex:0 0 auto; }
+    .side-nav { flex-direction:row; gap:4px; flex:1; overflow-x:auto; }
+    .side-nav a { border-left:none; border-bottom:2px solid transparent; white-space:nowrap; padding:6px 9px; }
+    .side-nav a .num { display:none; }
+    .side-foot { display:none; }
+    .main { margin-left:0; margin-top:64px; padding:0 20px; }
+    .grid-overlay { inset:64px 0 0 0; padding:0 20px; }
+    .cover-grid { grid-template-columns:1fr; }
+    .cover-seal { order:-1; }
+    .values, .logo-row, .grad-row, .pairing { grid-template-columns:1fr; }
+    .spec-2col, .app-grid, .foot-grid { grid-template-columns:1fr; }
+    .misuse { grid-template-columns:repeat(2,1fr); }
+    .icon-grid { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width: 560px) {
+    .misuse, .icon-grid { grid-template-columns:1fr; }
+    .cover-meta { gap:16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration:.001ms !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+    .reveal { opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SVG 图标库（图标用 symbol+use，stroke=currentColor 可继承） ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 7 L4 12 L8 17 M16 7 L20 12 L16 17 M13 5 L11 19"/>
+  </symbol>
+  <symbol id="ic-community" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="8.5" cy="9" r="2.6"/><path d="M3.5 19 a5 5 0 0 1 10 0"/>
+    <circle cx="16.5" cy="10" r="2.1"/><path d="M14 19 a3.4 3.4 0 0 1 6.8 0"/>
+  </symbol>
+  <symbol id="ic-event" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10 H20 M8 3 V7 M16 3 V7"/>
+  </symbol>
+  <symbol id="ic-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 5 H16 V9 a4 4 0 0 1 -8 0 Z M8 6 H5 a2 2 0 0 0 2 4 M16 6 H19 a2 2 0 0 1 -2 4 M12 13 V17 M9 21 H15 M10 17 H14"/>
+  </symbol>
+  <symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 5 a2 2 0 0 1 2 -2 H19 V18 H7 a2 2 0 0 0 -2 2 Z M19 3 V18 M9 4 V18"/>
+  </symbol>
+  <symbol id="ic-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 c3 2 4.5 6 4.5 10 l-2.5 2.5 H10 L7.5 13 C7.5 9 9 5 12 3 Z M9.5 16 L7 21 l4-2 M14.5 16 L17 21 l-4-2 M11 9.5 H13"/>
+  </symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 L19 6 V11 C19 16 16 19 12 21 C8 19 5 16 5 11 V6 Z"/><path d="M9 11.5 L11 13.5 L15 9"/>
+  </symbol>
+  <symbol id="ic-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 3 L7 13 H11 L9 21 L17 10 H12 Z"/>
+  </symbol>
+</svg>
+
+<!-- ============ 侧栏导航 ============ -->
+<aside class="sidebar">
+  <div class="side-brand">
+    <span class="mark logo-mark logo-full"><svg><use href="#mk"/></svg></span>
+    <div>
+      <b>FztbuCS</b>
+      <span>Brand Manual</span>
+    </div>
+  </div>
+  <ul class="side-nav" id="sideNav">
+    <li><a href="#cover" data-sec="cover"><span class="num">01</span>封面</a></li>
+    <li><a href="#philosophy" data-sec="philosophy"><span class="num">02</span>品牌理念</a></li>
+    <li><a href="#logo" data-sec="logo"><span class="num">03</span>标识系统</a></li>
+    <li><a href="#color" data-sec="color"><span class="num">04</span>色彩系统</a></li>
+    <li><a href="#type" data-sec="type"><span class="num">05</span>字体排版</a></li>
+    <li><a href="#grid" data-sec="grid"><span class="num">06</span>间距与栅格</a></li>
+    <li><a href="#icons" data-sec="icons"><span class="num">07</span>图标语言</a></li>
+    <li><a href="#apps" data-sec="apps"><span class="num">08</span>应用展示</a></li>
+    <li><a href="#footer" data-sec="footer"><span class="num">09</span>页脚</a></li>
+  </ul>
+  <div class="side-foot">
+    v1.0 · 2026<br>Editorial<br>Tech Minimalism
+  </div>
+</aside>
+
+<!-- ============ 浮动控制 ============ -->
+<div class="controls">
+  <button class="ctl" id="gridBtn" title="切换全局 12 栏栅格叠层"><span class="dot"></span>栅格</button>
+  <button class="ctl" id="themeBtn" title="浅色 / 暗色预览"><span class="dot"></span>暗色</button>
+</div>
+
+<!-- ============ 主内容 ============ -->
+<main class="main">
+  <div class="wrap">
+
+    <!-- 01 封面 -->
+    <section id="cover">
+      <div class="cover-grid">
+        <div>
+          <div class="cover-eyebrow">Brand Identity Manual · 品牌视觉识别手册</div>
+          <h1 class="cover-title">Fztbu<em>CS</em></h1>
+          <p class="cover-sub">计算机协会 · 一套克制、可信、有温度的视觉语言。</p>
+          <div class="cover-meta">
+            <div>版本<b>1.0</b></div>
+            <div>发布<b>2026</b></div>
+            <div>语言<b>编辑式技术极简</b></div>
+          </div>
+        </div>
+        <div class="cover-seal">
+          <span class="logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 品牌理念 -->
+    <section id="philosophy">
+      <div class="sec-head">
+        <div class="sec-no">02</div>
+        <div>
+          <span class="sec-eyebrow">Philosophy</span>
+          <h2 class="sec-title">品牌理念</h2>
+        </div>
+      </div>
+      <p class="mission reveal">我们相信，技术社区应当是 <span class="hl">智能的引擎</span>、<span class="hl">可信的港湾</span>，也是 <span class="hl">温暖的归属</span>——让每一位计算机爱好者都能在这里找到成长与同伴。</p>
+      <div class="values">
+        <div class="value-card reveal">
+          <span class="v-icon"><svg><use href="#ic-spark"/></svg></span>
+          <div class="v-no">VALUE / 01</div>
+          <h3>智能 <small>Intelligent</small></h3>
+          <p>以工程严谨与工具理性驱动学习。我们推崇可验证、可复用、可持续的技术方案，拒绝花哨与虚饰。</p>
+        </div>
+        <div class="value-card reveal">
+          <span class="v-icon"><svg><use href="#ic-shield"/></svg></span>
+          <div class="v-no">VALUE / 02</div>
+          <h3>可信 <small>Trustworthy</small></h3>
+          <p>安全、透明、权责清晰。从代码到协作，我们以契约与审计守住每一处信任边界。</p>
+        </div>
+        <div class="value-card reveal">
+          <span class="v-icon"><svg><use href="#ic-community"/></svg></span>
+          <div class="v-no">VALUE / 03</div>
+          <h3>温暖 <small>Warm</small></h3>
+          <p>技术之外，是先于人。我们用包容的氛围与真诚的连接，让每个人都被看见、被接纳。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 标识系统 -->
+    <section id="logo">
+      <div class="sec-head">
+        <div class="sec-no">03</div>
+        <div>
+          <span class="sec-eyebrow">Logo System</span>
+          <h2 class="sec-title">标识系统</h2>
+        </div>
+      </div>
+      <p class="lead reveal">标识由「印章式圆环 + Λ 字形」构成——Λ 取自 λ 演算，象征计算与逻辑；圆环则是一枚社区印章。标识须在清晰、完整、不被干扰的环境中呈现。</p>
+
+      <div class="logo-row" style="margin-top:34px">
+        <div class="logo-cell reveal">
+          <div class="frame"><span class="logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div>
+          <div class="cap"><b>全彩</b>Full Color</div>
+        </div>
+        <div class="logo-cell on-dark reveal">
+          <div class="frame"><span class="logo-mark logo-reverse"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div>
+          <div class="cap"><b>反白</b>Reverse · 暗底</div>
+        </div>
+        <div class="logo-cell reveal">
+          <div class="frame"><span class="logo-mark logo-mono"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div>
+          <div class="cap"><b>单色</b>Mono · 墨色</div>
+        </div>
+      </div>
+
+      <div class="spec-2col">
+        <div class="spec-box reveal">
+          <h4>安全区 / Clear Space</h4>
+          <div class="safe-wrap">
+            <div class="safe">
+              <div class="clear"></div>
+              <span class="logo-mark logo-mono" style="width:64px;height:64px"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+            </div>
+            <p class="safe-note">标识四周须保留不小于 <b>标识高度 1/4</b> 的留白（虚线内）。任何元素不得侵入此区域。</p>
+          </div>
+        </div>
+        <div class="spec-box reveal">
+          <h4>最小尺寸 / Minimum Size</h4>
+          <div class="minsize">
+            <div class="m"><span class="logo-mark logo-full" style="--s:24px;width:24px;height:24px"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span><span class="lbl">24px</span></div>
+            <div class="m"><span class="logo-mark logo-full" style="--s:40px;width:40px;height:40px"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span><span class="lbl">40px</span></div>
+            <div class="m"><span class="logo-mark logo-full" style="--s:64px;width:64px;height:64px"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span><span class="lbl">64px</span></div>
+          </div>
+          <p class="safe-note" style="max-width:none;margin-top:16px">数字媒介最小 <b>24px</b>，印刷最小 <b>12mm</b>。低于此值字形将不可辨。</p>
+        </div>
+      </div>
+
+      <h4 class="sub-h">错误用法 / Misuse</h4>
+      <div class="misuse">
+        <div class="m reveal"><div class="bad"><span class="x">✕</span><span class="logo-mark logo-full" style="width:60px;height:60px;transform:rotate(-14deg)"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div><p>倾斜或变形</p></div>
+        <div class="m reveal"><div class="bad"><span class="x">✕</span><span class="logo-mark logo-full" style="width:60px;height:60px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div><p>添加投影 / 发光</p></div>
+        <div class="m reveal"><div class="bad"><span class="x">✕</span><span class="logo-mark logo-full" style="width:60px;height:60px;--glyph:#16a34a"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div><p>随意改色</p></div>
+        <div class="m reveal"><div class="bad"><span class="x">✕</span><span class="logo-mark logo-full" style="width:60px;height:60px;background:#9ca3af"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div><p>低对比底色</p></div>
+      </div>
+    </section>
+
+    <!-- 04 色彩系统 -->
+    <section id="color">
+      <div class="sec-head">
+        <div class="sec-no">04</div>
+        <div>
+          <span class="sec-eyebrow">Color System</span>
+          <h2 class="sec-title">色彩系统</h2>
+        </div>
+      </div>
+      <p class="lead reveal">主色深蓝承载理性与信任，暗色模式下由琥珀金接续温度。点击任意色块即可复制色值。</p>
+
+      <h4 class="sub-h">主色色阶 / Primary Scale
+        <span class="preview-toggle" id="darkPrev"><span class="sw"></span>暗色预览</span>
+      </h4>
+      <div id="colorSurface">
+        <div class="swatch-grid" id="primaryGrid"></div>
+      </div>
+
+      <h4 class="sub-h">语义色 / Semantic</h4>
+      <div class="swatch-grid" id="semanticGrid"></div>
+
+      <h4 class="sub-h">渐变 / Gradients</h4>
+      <div class="grad-row" id="gradRow"></div>
+    </section>
+
+    <!-- 05 字体排版 -->
+    <section id="type">
+      <div class="sec-head">
+        <div class="sec-no">05</div>
+        <div>
+          <span class="sec-eyebrow">Typography</span>
+          <h2 class="sec-title">字体排版</h2>
+        </div>
+      </div>
+      <p class="lead reveal">衬线展示字（Songti / Georgia）确立编辑气质，等宽字（系统 Mono）承载编号与元数据，无衬线（PingFang / 系统）保证正文可读。三者分工，互不越界。</p>
+
+      <div class="type-spec reveal" style="margin-top:30px">
+        <div class="type-row"><div class="tag">Display<b>展示</b></div><div class="sample"><div class="t-display">计算之美</div><div class="cn">Aa Bb Cc · 用于封面与英雄标题</div></div></div>
+        <div class="type-row"><div class="tag">H1<b>一级标题</b></div><div class="sample"><div class="t-h1">社区与工作坊</div><div class="cn">章节主标题 · 32–40px</div></div></div>
+        <div class="type-row"><div class="tag">H2<b>二级标题</b></div><div class="sample"><div class="t-h2">活动报名开启</div><div class="cn">小节标题 · 24–28px</div></div></div>
+        <div class="type-row"><div class="tag">H3<b>三级标题</b></div><div class="sample"><div class="t-h3">前端兴趣小组</div><div class="cn">卡片标题 · 18–22px</div></div></div>
+        <div class="type-row"><div class="tag">H4<b>四级标题</b></div><div class="sample"><div class="t-h4">每周代码速递</div><div class="cn">正文小标题 · 17px 粗体</div></div></div>
+        <div class="type-row"><div class="tag">Body<b>正文</b></div><div class="sample"><div class="t-body">我们用克制而非喧哗表达专业，让信息本身成为主角。</div><div class="cn">16px / 行高 1.7 / 最大 65 字符</div></div></div>
+        <div class="type-row"><div class="tag">Meta<b>元数据</b></div><div class="sample"><div class="t-small">SECTION 05 — TYPOGRAPHY — 2026.08</div><div class="cn">等宽 · 用于编号、标签、脚注</div></div></div>
+      </div>
+
+      <div class="specimen reveal">
+        <div class="big">Where <span class="em">code</span><br>meets community.</div>
+        <div class="ab">A B C D E F G H I J K L M N O P Q R S T U V W X Y Z · 字怀饱满，对比克制</div>
+      </div>
+
+      <div class="pairing">
+        <div class="p reveal"><div class="role">Display</div><div class="fn serif">Songti SC / Georgia</div></div>
+        <div class="p reveal"><div class="role">Body</div><div class="fn sans">PingFang SC / System</div></div>
+        <div class="p reveal"><div class="role">Mono</div><div class="fn mono">ui-monospace</div></div>
+      </div>
+    </section>
+
+    <!-- 06 间距与栅格 -->
+    <section id="grid">
+      <div class="sec-head">
+        <div class="sec-no">06</div>
+        <div>
+          <span class="sec-eyebrow">Space & Grid</span>
+          <h2 class="sec-title">间距与栅格</h2>
+        </div>
+      </div>
+      <p class="lead reveal">以 4px 为基准单位的间距刻度，配合严格的 12 栏栅格，构成全站一致的节奏骨架。</p>
+
+      <h4 class="sub-h">基准间距刻度 / Spacing Scale</h4>
+      <div id="spaceScale" style="margin-top:8px"></div>
+
+      <h4 class="sub-h">12 栏栅格 / 12-Column Grid</h4>
+      <div class="grid-demo reveal">
+        <div class="grid12" id="grid12"></div>
+        <div class="grid-ctl">
+          <button class="ghost-btn" id="gLines">显示栏线</button>
+          <button class="ghost-btn" id="gGap">收紧间距</button>
+          <span style="font-family:var(--font-mono);font-size:.66rem;color:var(--muted);margin-left:auto">总宽 max 1180px · 外边距 clamp(20–72px)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 图标语言 -->
+    <section id="icons">
+      <div class="sec-head">
+        <div class="sec-no">07</div>
+        <div>
+          <span class="sec-eyebrow">Iconography</span>
+          <h2 class="sec-title">图标语言</h2>
+        </div>
+      </div>
+      <p class="lead reveal">线性图标统一 1.8 描边、圆角端点、24×24 格。笔画克制、留白均匀，与印章标识同源。</p>
+
+      <div class="icon-grid" id="iconGrid" style="margin-top:30px"></div>
+
+      <h4 class="sub-h">多尺寸 / Sizes</h4>
+      <div class="icon-multisize reveal" id="iconMulti"></div>
+    </section>
+
+    <!-- 08 应用展示 -->
+    <section id="apps">
+      <div class="sec-head">
+        <div class="sec-no">08</div>
+        <div>
+          <span class="sec-eyebrow">Applications</span>
+          <h2 class="sec-title">应用展示</h2>
+        </div>
+      </div>
+      <p class="lead reveal">标识与色彩在真实触点上的落地——名片、顶栏、邮件签名与社交头像。</p>
+
+      <div class="app-grid" style="margin-top:30px">
+        <div class="app-frame reveal">
+          <div class="fcap"><span>名片 / Business Card</span><b>FRONT</b></div>
+          <div class="m-card">
+            <span class="mc-mark logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+            <div class="mc-info">
+              <b>林知夏</b>
+              <div class="role">技术部部长 · FztbuCS</div>
+              <div class="ct">hi@fztbucs.org · @zhixia</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-frame reveal">
+          <div class="fcap"><span>顶栏 / Top Bar</span><b>WEB</b></div>
+          <div class="m-topbar">
+            <span class="tb-mark logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+            <span class="tb-name">FztbuCS</span>
+            <div class="tb-nav"><span>首页</span><span>活动</span><span>社区</span><span>工具</span></div>
+            <span class="tb-search">搜索 ⌘K</span>
+          </div>
+        </div>
+
+        <div class="app-frame reveal">
+          <div class="fcap"><span>邮件签名 / Signature</span><b>EMAIL</b></div>
+          <div class="m-sign">
+            <span class="s-mark logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+            <div>
+              <b>林知夏</b>
+              <div class="s-role">技术部部长 · 计算机协会 FztbuCS</div>
+              <div class="s-ct">hi@fztbucs.org · fztbucs.org</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-frame reveal">
+          <div class="fcap"><span>社交头像 / Avatar</span><b>SOCIAL</b></div>
+          <div class="m-avatar-row">
+            <div class="m-avatar"><span class="logo-mark logo-reverse"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span></div>
+            <div class="av-note">正方形圆角裁切，标识居中于主色渐变之上，最小留白 18%。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 页脚 -->
+    <footer id="footer">
+      <div class="foot-grid">
+        <div>
+          <div class="foot-brand">
+            <span class="mark logo-mark logo-full"><svg viewBox="0 0 48 48"><use href="#mk"/></svg></span>
+            <div><b>FztbuCS</b><span>计算机协会</span></div>
+          </div>
+          <p style="color:var(--ink-2);font-size:.86rem;margin-top:18px;max-width:34ch">一套克制、可信、有温度的视觉语言，为每一位计算机爱好者而生。</p>
+        </div>
+        <div class="foot-col">
+          <h5>资源</h5>
+          <a href="#logo">标识系统</a>
+          <a href="#color">色彩令牌</a>
+          <a href="#type">字体规范</a>
+          <a href="#icons">图标库</a>
+        </div>
+        <div class="foot-col">
+          <h5>联系</h5>
+          <p>hi@fztbucs.org</p>
+          <p>fztbucs.org</p>
+          <p>福州 · 中国</p>
+        </div>
+      </div>
+      <div class="foot-base">
+        <span>© 2026 FztbuCS · 品牌视觉识别手册 v1.0</span>
+        <span>Editorial Tech Minimalism</span>
+      </div>
+    </footer>
+
+  </div>
+</main>
+
+<!-- 全局栅格叠层 -->
+<div class="grid-overlay" id="gridPlane"><div class="go-inner" id="goInner"></div></div>
+
+<!-- 复制提示 -->
+<div class="toast" id="toast">已复制</div>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+
+  /* ---------- 注入 Logo 标记（避免 <use> 影子树无法被后代选择器着色） ---------- */
+  var LOGO_SVG = '<svg viewBox="0 0 48 48"><circle class="ring" cx="24" cy="24" r="21" stroke-width="2"/>' +
+                 '<path class="glyph" d="M24 13 L14 33 M24 13 L34 33" stroke-width="3.2" stroke-linecap="round"/></svg>';
+  Array.prototype.forEach.call(document.querySelectorAll(".logo-mark"), function (el) {
+    el.innerHTML = LOGO_SVG;
+  });
+
+  /* ---------- 数据 ---------- */
+  var primary = [
+    {n:50,  c:"#eff4fe", role:"极淡底 / hover 背景"},
+    {n:100, c:"#dbe6fc", role:"淡底 / 禁用态"},
+    {n:200, c:"#bccff9", role:"图表 / 辅助"},
+    {n:300, c:"#92b1f2", role:"图表 / 辅助"},
+    {n:400, c:"#6a8ee8", role:"悬停 / 渐变中段"},
+    {n:500, c:"#4870d9", role:"次级按钮"},
+    {n:600, c:"#2f54c4", role:"按下态"},
+    {n:700, c:"#2442ab", role:"深色渐变起"},
+    {n:800, c:"#1e40af", role:"★ 主色 Primary", primary:true},
+    {n:900, c:"#183384", role:"深底文字 / 描边"}
+  ];
+  var semantic = [
+    {nm:"成功 Success", c:"#15a37e", role:"通过、完成、上线"},
+    {nm:"警告 Warning", c:"#d99a18", role:"注意、待审核"},
+    {nm:"危险 Danger",  c:"#d2493e", role:"错误、删除、拦截"},
+    {nm:"信息 Info",    c:"#2f54c4", role:"提示、链接、导航"},
+    {nm:"链接 Link",    c:"#1e40af", role:"行内链接 / 强调"}
+  ];
+  var grads = [
+    {nm:"主色渐变", css:"linear-gradient(135deg,#2442ab,#1e40af 55%,#183384)", h:"#2442ab → #1e40af → #183384"},
+    {nm:"晨曦 Dawn", css:"linear-gradient(120deg,#1e40af,#6a8ee8 55%,#d4a574)", h:"#1e40af → #6a8ee8 → #d4a574"},
+    {nm:"社区 Community", css:"linear-gradient(120deg,#1e40af,#8b5cf6 50%,#ec4899)", h:"#1e40af → #8b5cf6 → #ec4899"}
+  ];
+  var spacing = [4,8,12,16,20,24,32,40,48,64,80,96];
+  var icons = [
+    {id:"ic-code", nm:"Code"},
+    {id:"ic-community", nm:"Community"},
+    {id:"ic-event", nm:"Event"},
+    {id:"ic-trophy", nm:"Award"},
+    {id:"ic-book", nm:"Learn"},
+    {id:"ic-rocket", nm:"Launch"},
+    {id:"ic-shield", nm:"Trust"},
+    {id:"ic-spark", nm:"Idea"}
+  ];
+
+  /* ---------- 渲染：主色 ---------- */
+  var pg = document.getElementById("primaryGrid");
+  primary.forEach(function (s) {
+    var b = document.createElement("button");
+    b.className = "swatch"; b.setAttribute("data-copy", s.c);
+    b.innerHTML = '<div class="chip" style="background:'+s.c+'"><span class="copy">复制</span></div>' +
+      '<div class="meta"><div class="nm">Blue '+s.n+(s.primary?' ★':'')+'</div>' +
+      '<div class="hx">'+s.c.toUpperCase()+'</div><div class="role">'+s.role+'</div></div>';
+    pg.appendChild(b);
+  });
+
+  /* ---------- 渲染：语义色 ---------- */
+  var sg = document.getElementById("semanticGrid");
+  semantic.forEach(function (s) {
+    var b = document.createElement("button");
+    b.className = "swatch"; b.setAttribute("data-copy", s.c);
+    b.innerHTML = '<div class="chip" style="background:'+s.c+'"><span class="copy">复制</span></div>' +
+      '<div class="meta"><div class="nm">'+s.nm+'</div>' +
+      '<div class="hx">'+s.c.toUpperCase()+'</div><div class="role">'+s.role+'</div></div>';
+    sg.appendChild(b);
+  });
+
+  /* ---------- 渲染：渐变 ---------- */
+  var gr = document.getElementById("gradRow");
+  grads.forEach(function (g) {
+    var b = document.createElement("button");
+    b.className = "grad-card"; b.setAttribute("data-copy", g.css);
+    b.innerHTML = '<div class="band" style="background:'+g.css+'"></div>' +
+      '<div class="gmeta"><div class="gn">'+g.nm+'</div><div class="gh">'+g.h+'</div></div>';
+    gr.appendChild(b);
+  });
+
+  /* ---------- 渲染：间距刻度 ---------- */
+  var ss = document.getElementById("spaceScale");
+  spacing.forEach(function (v) {
+    var row = document.createElement("div");
+    row.className = "space-row";
+    row.innerHTML = '<div class="sn">'+v+'</div><div class="bar" style="width:'+v+'px"></div><div class="sv">'+v+'px</div>';
+    ss.appendChild(row);
+  });
+
+  /* ---------- 渲染：12 栏 ---------- */
+  var g12 = document.getElementById("grid12");
+  for (var i=1;i<=12;i++){ var c=document.createElement("div"); c.className="col"; c.textContent=i; g12.appendChild(c); }
+  var goInner = document.getElementById("goInner");
+  for (var j=0;j<12;j++){ goInner.appendChild(document.createElement("span")); }
+
+  /* ---------- 渲染：图标 ---------- */
+  var ig = document.getElementById("iconGrid");
+  icons.forEach(function (it) {
+    var d = document.createElement("div");
+    d.className = "icon-cell";
+    d.innerHTML = '<svg><use href="#'+it.id+'"/></svg><div class="inm">'+it.nm+'</div>';
+    ig.appendChild(d);
+  });
+  var im = document.getElementById("iconMulti");
+  [16,24,32,48].forEach(function (sz) {
+    var m = document.createElement("div"); m.className="ms";
+    m.innerHTML = '<svg style="width:'+sz+'px;height:'+sz+'px"><use href="#ic-community"/></svg><div class="sz">'+sz+'px</div>';
+    im.appendChild(m);
+  });
+
+  /* ---------- 复制 ---------- */
+  var toast = document.getElementById("toast"), toastT;
+  function showToast(msg){ toast.textContent = msg; toast.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){toast.classList.remove("show");},1400); }
+  function copy(text){
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ showToast("已复制  "+text); }, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); showToast("已复制  "+text); }catch(e){ showToast("复制失败"); }
+      document.body.removeChild(ta);
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-copy]");
+    if (el) { copy(el.getAttribute("data-copy")); }
+  });
+
+  /* ---------- 主题切换（暗色预览） ---------- */
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t){ root.setAttribute("data-theme", t); try{localStorage.setItem("fztbucs-theme",t);}catch(e){} }
+  try { var saved=localStorage.getItem("fztbucs-theme"); if(saved) applyTheme(saved); } catch(e){}
+  themeBtn.addEventListener("click", function(){
+    applyTheme(root.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  });
+
+  /* ---------- 全局栅格叠层 ---------- */
+  var gridBtn = document.getElementById("gridBtn");
+  var plane = document.getElementById("gridPlane");
+  gridBtn.addEventListener("click", function(){
+    plane.classList.toggle("show"); gridBtn.classList.toggle("on");
+  });
+
+  /* ---------- 色彩：暗色预览切换 ---------- */
+  var dp = document.getElementById("darkPrev");
+  var cs = document.getElementById("colorSurface");
+  dp.addEventListener("click", function(){ dp.classList.toggle("on"); cs.classList.toggle("darkprev"); });
+
+  /* ---------- 栅格演示控制 ---------- */
+  var gLines = document.getElementById("gLines");
+  var gGap = document.getElementById("gGap");
+  gLines.addEventListener("click", function(){ g12.classList.toggle("showlines"); gLines.classList.toggle("on"); });
+  gGap.addEventListener("click", function(){ g12.classList.toggle("overlay"); gGap.classList.toggle("on"); g12.style.setProperty("--gx", g12.classList.contains("overlay")?"4px":"12px"); });
+
+  /* ---------- 滚动渐入 ---------- */
+  var reveals = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window) {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); ro.unobserve(en.target); } });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    reveals.forEach(function (r) { ro.observe(r); });
+  } else { reveals.forEach(function (r){ r.classList.add("in"); }); }
+
+  /* ---------- 章节导航高亮（scrollspy） ---------- */
+  var navLinks = document.querySelectorAll("#sideNav a");
+  var secs = Array.prototype.map.call(navLinks, function (a){ return document.getElementById(a.getAttribute("data-sec")); });
+  if ("IntersectionObserver" in window) {
+    var so = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          var id = en.target.id;
+          navLinks.forEach(function (a){ a.classList.toggle("active", a.getAttribute("data-sec")===id); });
+        }
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    secs.forEach(function (s){ if(s) so.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>

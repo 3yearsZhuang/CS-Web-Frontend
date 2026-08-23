@@ -62,18 +62,12 @@ export function TopicReplySection({
 }: TopicReplySectionProps) {
   const t = useTranslations('communityCommon');
   return (
-    <section className="px-4 sm:px-6 md:px-8 py-16 sm:py-24 border-b border-[var(--border)]">
-      <div className="max-w-[1600px] mx-auto w-full">
-        <div className="flex flex-col md:flex-row gap-0">
-          <div className="w-full md:flex-1 md:pr-8 lg:pr-12">
+    <section className="border-b border-[var(--border)] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <div className="mx-auto w-full max-w-[1120px]">
+        <div className="w-full max-w-[820px]">
             {/* 回复排序栏 */}
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)]">
-                {t('replyListTitle')} <span className="text-[var(--primary)]">列表</span>
-                <span className="display-serif italic text-[var(--muted-foreground)] text-[clamp(14px,2vw,24px)] ml-3 align-baseline">
-                  / Replies
-                </span>
-              </h2>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+              <h2 className="text-xl font-semibold text-[var(--foreground)]">{t('replyListTitle')}</h2>
               <ReplySortBar sortMode={replySort} onChange={onSortChange} />
             </div>
 
@@ -94,13 +88,8 @@ export function TopicReplySection({
             />
 
             {/* [02] 回复编辑器 */}
-            <div className="mt-20">
-              <h2 className="display-serif text-[clamp(28px,5vw,56px)] text-[var(--foreground)] mb-10 sm:mb-16">
-                {t('yourReplyTitle')}
-                <span className="display-serif italic text-[var(--muted-foreground)] text-[clamp(14px,2vw,24px)] ml-3 align-baseline">
-                  / Reply
-                </span>
-              </h2>
+            <div className="mt-12 border-t border-[var(--border)] pt-8">
+              <h2 className="mb-6 text-xl font-semibold text-[var(--foreground)]">{t('yourReplyTitle')}</h2>
 
               <TopicReplyEditor
                 replyContent={replyContent}
@@ -113,10 +102,6 @@ export function TopicReplySection({
                 onCancel={onCancel}
               />
             </div>
-          </div>
-
-          {/* 右侧栏占位 — 桌面端与正文区右侧栏对齐 */}
-          <div className="hidden md:block w-[240px] lg:w-[280px] flex-shrink-0" aria-hidden />
         </div>
       </div>
     </section>

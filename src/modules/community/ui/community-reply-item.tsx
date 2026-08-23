@@ -78,7 +78,7 @@ export function CommunityReplyItem({
     } finally {
       setNestedLoading(false);
     }
-  }, [nestedRepliesLoader, reply.id]);
+  }, [nestedRepliesLoader, reply.id, t]);
 
   /** 切换折叠 */
   const handleToggleNested = () => {
@@ -136,9 +136,7 @@ export function CommunityReplyItem({
   };
 
   return (
-    <article
-      className={`relative border-l-2 border-[var(--primary)] pl-4 sm:pl-6 py-5 ${className}`}
-    >
+    <article className={`border-b border-[var(--border)] py-6 ${className}`}>
       {/* 头部 — 作者 + 时间 */}
       <header className="flex items-center gap-3 mb-4">
         <Link
@@ -186,7 +184,7 @@ export function CommunityReplyItem({
 
       {/* 楼中楼 */}
       {nestedTotal > 0 && (
-        <div className="mt-5 ml-2 sm:ml-4 border-l border-[var(--border)] pl-4 sm:pl-5">
+        <div className="mt-5 ml-4 border-l border-[var(--border)] pl-4 sm:ml-10 sm:pl-5">
           {/* 折叠/展开按钮 */}
           <button
             type="button"
@@ -222,7 +220,7 @@ export function CommunityReplyItem({
                 return (
                   <div
                     key={nr.id}
-                    className="bg-[var(--accent)]/30 border border-[var(--border)] p-3 sm:p-4"
+                    className="border border-[var(--border)] bg-[var(--accent)]/30 p-3 sm:p-4"
                   >
                     <header className="flex items-center gap-2 mb-3">
                       <Link
