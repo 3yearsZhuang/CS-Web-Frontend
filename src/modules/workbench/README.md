@@ -18,7 +18,8 @@
 | widget | `widgets/llm-widget.tsx` | Auxilio v1 卡片（primary 槽位）：纯轻聊（lite 对话），无用量/设置入口（用量与设置仅在全量页 /tools/auxilio → /tools/auxilio/settings）；取代旧 /tools/auxilio 分析页 |
 | widget | `widgets/llm-usage-stats.tsx` | LLM 用量统计（调用次数/token 消耗/模型分布）+ 模型接入设置（API Key/联网搜索/轨迹记录开关）；独立详情页 /tools/auxilio/settings 使用 |
 | 跨域 | `modules/auxilio/ui/assistant-chat.tsx` | 学习助手对话 UI（SSE 流式 + 工具调用状态；`mode="lite"` 纯轻聊内嵌于 llm-widget，`mode="full"` 全量能力供 /tools/auxilio 页） |
-| 模块 | `widgets/pomodoro/` | 番茄钟×播放器（目录即模块：use-pomodoro 状态机 + settings/music 面板） |
+| 模块 | `widgets/pomodoro/` | 番茄钟（目录即模块：use-pomodoro 状态机 + settings 面板）；阶段音仅内置环境音/静音 |
+| 模块 | `widgets/music/` | 音乐（目录即模块：use-music + music-panel）；环境音 + 上传音乐，经 audioBus 与番茄钟互斥抢占 |
 | schema | `schema/widget-schema.ts` | Schema 配置驱动卡类型 + 校验器（count/list/progress/countdown/note/link；api 白名单防契约漂移） |
 | schema | `schema/use-schema-data.ts` | Schema 卡数据源 hook（local/api/static 三源统一） |
 | schema | `schema/use-schema-widgets.ts` | Schema 卡配置集合（localStorage `wb_schema_widgets`，读写过校验器） |

@@ -12,6 +12,7 @@ import ExamCountdown from './widgets/exam-countdown';
 import GithubHeatmap from './widgets/github-heatmap';
 import GreetingBar from './widgets/greeting-bar';
 import { PomodoroPlayer } from './widgets/pomodoro';
+import { MusicPlayer } from './widgets/music';
 import TasksAndNotes from './widgets/tasks-and-notes';
 import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
@@ -56,6 +57,13 @@ export const WIDGETS: WorkbenchWidget[] = [
     id: 'pomodoro',
     titleKey: 'pomodoro',
     component: PomodoroPlayer,
+    defaultSize: '1x2',
+    sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
+  },
+  {
+    id: 'music',
+    titleKey: 'music',
+    component: MusicPlayer,
     defaultSize: '1x2',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2'],
   },
