@@ -58,4 +58,13 @@ export const ADMIN_AVATARS: AdminAvatar[] = [
     position: '核心会员',
     qq: '1298055690',
   },
+
+  {
+    id: 'xby',
+    name: '许博源',
+    grade: '2026级',
+    position: '核心会员',
+    qq: '3312268214',
+  },
 ];
+
