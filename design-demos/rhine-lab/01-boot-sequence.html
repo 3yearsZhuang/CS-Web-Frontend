@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEMO 01 · 终端开场 BootSequence — Rhine Lab × FZTBU·CS</title>
+<style>
+  /* ============ 设计令牌（以 RhineLabUI 仓库为准） ============ */
+  :root {
+    --paper: #eae5e1;          /* 暖灰白底 */
+    --white: #ffffff;          /* 开场白场 */
+    --ink: #141210;            /* 黑色文字 */
+    --ink-dim: #6f6a64;        /* 次级文字 */
+    --amber: #e07b39;          /* 暖杏金选中信号 */
+    --hairline: rgba(20,18,16,.14);
+    --mono: "MiSans", "PingFang SC", "Microsoft YaHei", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "MiSans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--white);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ 演示外框（非产品 UI，仅 demo 元信息） ============ */
+  #demo-meta {
+    position: fixed; left: 16px; bottom: 14px; z-index: 90;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+    color: var(--ink-dim); text-transform: uppercase;
+  }
+  #demo-meta b { color: var(--amber); font-weight: 600; }
+  #skip-hint {
+    position: fixed; right: 16px; bottom: 14px; z-index: 90;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+    color: var(--ink-dim); text-transform: uppercase;
+  }
+
+  /* ============ 舞台与通用层 ============ */
+  #stage { position: fixed; inset: 0; background: var(--white); transition: background 700ms var(--ease-out); }
+  .layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; }
+  .layer.on { opacity: 1; }
+
+  /* ---- Phase 1: 逐字输入（固定左端） ---- */
+  #typing {
+    position: absolute; left: 8vw; top: 50%; transform: translateY(-50%);
+    font-family: var(--mono); font-weight: 300;
+    font-size: clamp(20px, 3.4vw, 44px); letter-spacing: .18em; white-space: pre;
+  }
+  #typing .cursor { display: inline-block; width: .55em; height: 1.05em; background: var(--ink); vertical-align: -0.15em; margin-left: 2px; animation: blink 0.9s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---- Phase 2: 标志绘制 + 品牌三行 ---- */
+  #brand { flex-direction: column; gap: 28px; }
+  #brand svg { width: clamp(120px, 16vw, 200px); height: auto; display: block; }
+  #brand .ring { fill: none; stroke: var(--ink); stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 100; stroke-dashoffset: 100; }
+  #brand.on .ring.r1 { animation: draw 900ms var(--ease-out) 0ms forwards; }
+  #brand.on .ring.r2 { animation: draw 700ms var(--ease-out) 620ms forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  #brand-lines { text-align: center; }
+  #brand-lines .bl {
+    opacity: 0; transform: translateY(10px);
+    font-family: var(--mono); letter-spacing: .34em; text-transform: uppercase;
+  }
+  #brand-lines .bl.l1 { font-size: clamp(18px, 2.4vw, 30px); font-weight: 600; }
+  #brand-lines .bl.l2 { font-size: clamp(11px, 1.3vw, 15px); font-weight: 400; color: var(--ink-dim); margin-top: 10px; }
+  #brand-lines .bl.l3 { font-size: clamp(10px, 1.1vw, 12px); font-weight: 300; color: var(--ink-dim); margin-top: 6px; letter-spacing: .5em; }
+  #brand.on .bl { animation: rise 620ms var(--ease-out) forwards; }
+  #brand.on .bl.l1 { animation-delay: 1050ms; }
+  #brand.on .bl.l2 { animation-delay: 1250ms; }
+  #brand.on .bl.l3 { animation-delay: 1450ms; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* ---- Phase 3: 身份接入 ---- */
+  #ident { flex-direction: column; align-items: flex-start; gap: 14px; padding-left: 8vw; justify-content: center; display: none; }
+  #ident.on { display: flex; }
+  #ident .row {
+    font-family: var(--mono); font-size: clamp(13px, 1.6vw, 20px);
+    letter-spacing: .22em; opacity: 0; transform: translateX(-6px);
+  }
+  #ident.on .row { animation: rise 380ms var(--ease-out) forwards; }
+  #ident.on .row:nth-child(1) { animation-delay: 0ms; }
+  #ident.on .row:nth-child(2) { animation-delay: 420ms; }
+  #ident.on .row:nth-child(3) { animation-delay: 900ms; color: var(--ink-dim); }
+  #ident .ok { color: var(--amber); font-weight: 600; }
+
+  /* ---- Phase 4: 权限扫描（双环收拢 + 橙色节点） ---- */
+  #scan { display: none; }
+  #scan.on { display: flex; }
+  #scan .field { position: relative; width: clamp(220px, 30vw, 380px); height: clamp(220px, 30vw, 380px); }
+  #scan .sring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--ink); }
+  #scan .sring.outer-w { border-color: transparent; box-shadow: 0 0 0 2px var(--white), 0 0 0 3.5px var(--ink); transform: scale(1.6); }
+  #scan .sring.inner-b { transform: scale(1.9); border-width: 1.5px; }
+  #scan.on .sring.outer-w { animation: converge 780ms var(--ease-out) forwards; }
+  #scan.on .sring.inner-b { animation: converge 780ms var(--ease-out) 120ms forwards; }
+  @keyframes converge { to { transform: scale(1); } }
+  #scan .arc { position: absolute; inset: 12%; border-radius: 50%;
+    border: 2px solid transparent; border-top-color: var(--ink); border-bottom-color: var(--ink);
+    animation: spinrev 1400ms linear infinite; }
+  @keyframes spinrev { to { transform: rotate(-360deg); } }
+  #scan .node { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--amber); opacity: 0; }
+  #scan .node.n1 { left: 50%; top: -5px; margin-left: -5px; }
+  #scan .node.n2 { left: 50%; bottom: -5px; margin-left: -5px; }
+  #scan.on .node { animation: nodepop 260ms steps(2) 700ms forwards; }
+  @keyframes nodepop { to { opacity: 1; } }
+  #scan .core { position: absolute; inset: 38%; background: var(--ink); display: flex; align-items: center; justify-content: center;
+    color: var(--white); font-family: var(--mono); font-size: 10px; letter-spacing: .3em;
+    animation: corejump 900ms steps(4) 350ms both; }
+  @keyframes corejump { 0% { transform: scale(.6); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  #scan .label { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .4em; color: var(--ink-dim); white-space: nowrap; }
+  #scan .label b { color: var(--amber); font-weight: 600; }
+
+  /* ---- Phase 5: 欢迎转场（黑条横扫 + 黑白闪切） ---- */
+  #welcome { display: none; background: var(--white); }
+  #welcome.on { display: flex; }
+  #welcome .bar {
+    position: absolute; left: 0; right: 0; height: clamp(64px, 10vw, 120px);
+    background: var(--ink); display: flex; align-items: center; overflow: hidden;
+    transform: translateX(-100%);
+  }
+  #welcome.on .bar { animation: sweep 700ms var(--ease-out) 120ms forwards; }
+  @keyframes sweep { to { transform: translateX(0); } }
+  #welcome .bar span {
+    font-family: var(--mono); color: var(--white); font-weight: 600;
+    font-size: clamp(20px, 3.2vw, 42px); letter-spacing: .3em; padding-left: 8vw; white-space: nowrap;
+  }
+  #welcome .sub {
+    position: absolute; top: calc(50% + clamp(52px, 8vw, 96px)); left: 8vw;
+    font-family: var(--mono); font-size: clamp(10px, 1.2vw, 13px); letter-spacing: .5em;
+    color: var(--ink-dim); opacity: 0;
+  }
+  #welcome.on .sub { animation: flashin 200ms steps(2) 900ms forwards; }
+  @keyframes flashin { to { opacity: 1; } }
+  #stage.cut { animation: bwcut 320ms steps(2) 1; }
+  @keyframes bwcut { 0% { filter: invert(1); } 100% { filter: invert(0); } }
+
+  /* ---- Phase 6: 白场收拢 → ENTER ---- */
+  #enter { display: none; flex-direction: column; gap: 22px; }
+  #enter.on { display: flex; }
+  #enter .brand-mini { font-family: var(--mono); font-size: 11px; letter-spacing: .5em; color: var(--ink-dim); text-transform: uppercase; text-align: center; }
+  #enter button {
+    font-family: var(--mono); font-size: 14px; letter-spacing: .4em; text-transform: uppercase;
+    background: none; border: 1px solid var(--ink); color: var(--ink);
+    padding: 16px 42px 16px 46px; cursor: pointer; transition: all 240ms var(--ease-out);
+  }
+  #enter button:hover, #enter button:focus-visible { background: var(--ink); color: var(--paper); outline: none; }
+  #enter button:focus-visible { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--amber); }
+
+  /* ---- 终态：demo 说明卡 ---- */
+  #done { display: none; background: var(--paper); }
+  #done.on { display: flex; }
+  #done .card { max-width: 640px; padding: 0 24px; }
+  #done .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .4em; color: var(--amber); text-transform: uppercase; }
+  #done h1 { font-size: clamp(26px, 4vw, 44px); font-weight: 600; letter-spacing: .02em; margin: 14px 0 18px; }
+  #done p { font-size: 14px; line-height: 1.9; color: var(--ink-dim); }
+  #done .map { margin-top: 26px; border-top: 1px solid var(--hairline); }
+  #done .map div { display: flex; justify-content: space-between; gap: 18px; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+  #done .map .k { font-family: var(--mono); letter-spacing: .1em; color: var(--ink); white-space: nowrap; }
+  #done .map .v { color: var(--ink-dim); text-align: right; }
+
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <!-- Phase 1: 逐字输入 -->
+  <div class="layer" id="layer-typing"><div id="typing"><span id="typed"></span><span class="cursor"></span></div></div>
+
+  <!-- Phase 2: 标志绘制 -->
+  <div class="layer" id="brand">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <path class="ring r1" pathLength="100" d="M 84 22 A 40 40 0 1 1 78 16" />
+      <path class="ring r2" pathLength="100" d="M 30 14 A 40 40 0 0 1 88 44" />
+    </svg>
+    <div id="brand-lines">
+      <div class="bl l1">FZTBU·CS</div>
+      <div class="bl l2">ARCHIVE TERMINAL</div>
+      <div class="bl l3">INTERNAL DATABASE</div>
+    </div>
+  </div>
+
+  <!-- Phase 3: 身份接入 -->
+  <div class="layer" id="ident">
+    <div class="row">ID CONFIRMED : <span class="ok">GUEST</span></div>
+    <div class="row">REQUEST RECEIVED</div>
+    <div class="row">START PROCESSING...</div>
+  </div>
+
+  <!-- Phase 4: 权限扫描 -->
+  <div class="layer" id="scan">
+    <div class="field">
+      <div class="sring inner-b"></div>
+      <div class="sring outer-w"></div>
+      <div class="arc"></div>
+      <div class="node n1"></div>
+      <div class="node n2"></div>
+      <div class="core">AUTH</div>
+      <div class="label">PERMISSION <b>GRANTED</b></div>
+    </div>
+  </div>
+
+  <!-- Phase 5: 欢迎转场 -->
+  <div class="layer" id="welcome">
+    <div class="bar"><span>WELCOME TO FZTBU·CS</span></div>
+    <div class="sub">INTERNAL DATABASE // ACCESS LEVEL 01</div>
+  </div>
+
+  <!-- Phase 6: ENTER -->
+  <div class="layer" id="enter">
+    <div class="brand-mini">FZTBU·CS · ARCHIVE TERMINAL</div>
+    <button id="enter-btn" autofocus>ENTER SYSTEM</button>
+  </div>
+
+  <!-- 终态说明 -->
+  <div class="layer" id="done">
+    <div class="card">
+      <div class="kicker">DEMO 01 · BOOT SEQUENCE</div>
+      <h1>终端开场 · 方案 C 模式①</h1>
+      <p>复刻 Rhine Lab 终端的开场时间轴：逐字输入 → 标志绘制 → 身份接入 → 权限扫描 → 欢迎转场 → 白场收拢。纯 DOM / SVG 驱动，无 three.js 依赖，可包装为 React 组件用于首次访问引导或 /lab 入口。</p>
+      <div class="map">
+        <div><span class="k">风格来源</span><span class="v">RhineLabUI boot-motion 逐帧时间轴（品牌已替换）</span></div>
+        <div><span class="k">技术形态</span><span class="v">DOM / SVG 关键帧 · 无依赖 · ~6KB</span></div>
+        <div><span class="k">落地建议</span><span class="v">components/effects/boot-sequence.tsx · 首访 cookie 控制</span></div>
+        <div><span class="k">无障碍</span><span class="v">prefers-reduced-motion 直跳 ENTER · Enter/Esc 可跳过</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="demo-meta"><b>DEMO 01</b> / 03 · BOOT SEQUENCE · RHINE LAB PATTERN → FZTBU·CS</div>
+<div id="skip-hint">ENTER / ESC — 跳过开场</div>
+
+<script>
+(function () {
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage = document.getElementById('stage');
+  var layers = {
+    typing: document.getElementById('layer-typing'),
+    brand: document.getElementById('brand'),
+    ident: document.getElementById('ident'),
+    scan: document.getElementById('scan'),
+    welcome: document.getElementById('welcome'),
+    enter: document.getElementById('enter'),
+    done: document.getElementById('done')
+  };
+  var timers = [];
+  var finished = false;
+
+  function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
+  function show(name) {
+    Object.keys(layers).forEach(function (k) { layers[k].classList.remove('on'); });
+    if (name) layers[name].classList.add('on');
+  }
+  function cut() { stage.classList.remove('cut'); void stage.offsetWidth; stage.classList.add('cut'); }
+
+  /* ---- 时间轴（ms） ---- */
+  var TYPE_TEXT = 'FZTBU-CS ARCHIVE OS';
+  var typedEl = document.getElementById('typed');
+
+  function typeText(i) {
+    if (finished) return;
+    if (i <= TYPE_TEXT.length) {
+      typedEl.textContent = TYPE_TEXT.slice(0, i);
+      after(70, function () { typeText(i + 1); });
+    } else {
+      after(650, phaseBrandIn);
+    }
+  }
+
+  function phaseBrandIn() {
+    if (finished) return;
+    show('brand');
+    after(2400, phaseIdent);
+  }
+  function phaseIdent() {
+    if (finished) return;
+    show('ident');
+    after(1900, function () { cut(); phaseScan(); });
+  }
+  function phaseScan() {
+    if (finished) return;
+    show('scan');
+    after(2400, function () { cut(); phaseWelcome(); });
+  }
+  function phaseWelcome() {
+    if (finished) return;
+    show('welcome');
+    after(1700, phaseEnter);
+  }
+  function phaseEnter() {
+    if (finished) return;
+    stage.style.background = 'var(--paper)';
+    show('enter');
+    var btn = document.getElementById('enter-btn');
+    if (btn) btn.focus();
+  }
+  function finish() {
+    if (finished) return;
+    finished = true;
+    timers.forEach(clearTimeout);
+    stage.style.background = 'var(--paper)';
+    show('done');
+    document.getElementById('skip-hint').classList.add('hidden');
+  }
+
+  function skip() {
+    if (finished) return;
+    timers.forEach(clearTimeout); timers = [];
+    phaseEnter();
+  }
+
+  /* ---- 启动 ---- */
+  if (reduced) {
+    typedEl.textContent = TYPE_TEXT;
+    after(400, phaseEnter);
+  } else {
+    show('typing');
+    after(500, function () { typeText(1); });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      var enterOn = layers.enter.classList.contains('on');
+      if (enterOn || finished) finish(); else skip();
+    }
+  });
+  document.getElementById('enter-btn').addEventListener('click', finish);
+})();
+</script>
+</body>
+</html>
