@@ -18,10 +18,10 @@ const BOOTED_KEY = 'fztbu-lab-booted';
 
 /** 终端落地序列状态行（随 C2/C3/B 推进更新） */
 const ROADMAP = [
-  { no: '01', name: 'BOOT SEQUENCE', desc: '终端开场 · 逐字输入 / 标志绘制 / 权限扫描 / 欢迎转场', status: 'LIVE' },
-  { no: '02', name: 'ARCHIVE INDEX', desc: '档案柜索引 · 分类检索 / 收藏 / 编号滚动 / 标题快切', status: 'C2 · 待落地' },
-  { no: '03', name: 'FEEDBACK PRIMITIVES', desc: '反馈原语 · Rolling Number / 设置面板', status: 'C3 · 待落地' },
-  { no: '04', name: '3D ARCHIVE SCENE', desc: '三维档案阵列 · 透射材质 / 镜头编排 / 抽取归位', status: '方案 B · 待落地' },
+  { no: '01', name: 'BOOT SEQUENCE', desc: '终端开场 · 逐字输入 / 标志绘制 / 权限扫描 / 欢迎转场', status: 'LIVE', href: undefined },
+  { no: '02', name: 'ARCHIVE INDEX', desc: '档案柜索引 · 分类检索 / 收藏 / 编号滚动 / 标题快切', status: 'LIVE', href: '/lab/archive' },
+  { no: '03', name: 'FEEDBACK PRIMITIVES', desc: '反馈原语 · Rolling Number / 设置面板', status: 'C3 · 待落地', href: undefined },
+  { no: '04', name: '3D ARCHIVE SCENE', desc: '三维档案阵列 · 透射材质 / 镜头编排 / 抽取归位', status: '方案 B · 待落地', href: undefined },
 ] as const;
 
 export function LabTerminal() {
@@ -101,7 +101,16 @@ function LabLobby({ onReplay }: { onReplay: () => void }) {
                 [ {row.no} ]
               </span>
               <span>
-                <span className="block text-[14px] font-semibold tracking-[0.06em]">{row.name}</span>
+                {row.href ? (
+                  <Link
+                    href={row.href}
+                    className="block text-[14px] font-semibold tracking-[0.06em] transition-colors hover:text-[var(--rhine-amber)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--rhine-amber)]"
+                  >
+                    {row.name} →
+                  </Link>
+                ) : (
+                  <span className="block text-[14px] font-semibold tracking-[0.06em]">{row.name}</span>
+                )}
                 <span
                   className="mt-1 block text-[12px]"
                   style={{ color: 'var(--rhine-ink-dim)' }}

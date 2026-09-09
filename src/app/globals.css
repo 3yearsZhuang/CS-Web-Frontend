@@ -2277,6 +2277,272 @@ body,
   background: none;
 }
 
+/* —— /lab/archive 档案柜（app/lab/archive） —— */
+.rhine-topbtn {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border: 1px solid var(--rhine-hairline);
+  color: var(--rhine-ink-dim);
+  transition: border-color 200ms var(--ease-ark), color 200ms var(--ease-ark);
+  cursor: pointer;
+}
+.rhine-topbtn:hover,
+.rhine-topbtn:focus-visible { border-color: var(--rhine-ink); color: var(--rhine-ink); outline: none; }
+.rhine-topbtn b { color: var(--rhine-amber); font-weight: 600; }
+
+.rhine-cat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 20px;
+  border-left: 2px solid transparent;
+  transition: background 200ms var(--ease-ark);
+  cursor: pointer;
+}
+.rhine-cat:hover { background: rgba(20, 18, 16, 0.04); }
+.rhine-cat:focus-visible { outline: 1.5px solid var(--rhine-amber); outline-offset: -2px; }
+.rhine-cat.active { border-left-color: var(--rhine-amber); background: var(--rhine-amber-dim); }
+.rhine-cat .no {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  color: var(--rhine-ink-dim);
+  letter-spacing: 0.1em;
+}
+.rhine-cat.active .no { color: var(--rhine-amber); }
+.rhine-cat .name { font-size: 13px; font-weight: 600; }
+.rhine-cat .en {
+  font-family: var(--rhine-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--rhine-ink-dim);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.rhine-arow {
+  display: grid;
+  grid-template-columns: 76px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  padding: 13px 24px;
+  border-bottom: 1px solid var(--rhine-hairline);
+  position: relative;
+  transition: background 160ms var(--ease-ark);
+  cursor: pointer;
+}
+.rhine-arow:hover { background: rgba(20, 18, 16, 0.035); }
+.rhine-arow:focus-visible { outline: 1.5px solid var(--rhine-amber); outline-offset: -2px; }
+.rhine-arow.sel { background: var(--rhine-amber-dim); }
+.rhine-arow.sel::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--rhine-amber);
+}
+.rhine-arow .rid {
+  font-family: var(--rhine-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--rhine-ink-dim);
+}
+.rhine-arow.sel .rid { color: var(--rhine-amber); font-weight: 600; }
+.rhine-arow .rtitle { font-size: 14px; font-weight: 600; }
+.rhine-arow .rmeta {
+  display: block;
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  color: var(--rhine-ink-dim);
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+.rhine-arow .rfav {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  color: var(--rhine-amber);
+  letter-spacing: 0.1em;
+  visibility: hidden;
+}
+.rhine-arow.faved .rfav { visibility: visible; }
+
+/* 标题快切：先 140ms 闪动，随后塌成黑色横条，停止后移除类即恢复 */
+.rhine-flick { animation: rhine-tflick 140ms steps(2) 1, rhine-tbar 0ms 140ms forwards; }
+@keyframes rhine-tflick { 50% { opacity: 0.15; } }
+@keyframes rhine-tbar { to { color: transparent; background: var(--rhine-ink); } }
+
+/* 编号滚动（460ms，对齐 Rolling Number 节奏） */
+.rhine-roll { display: inline-flex; height: 1em; overflow: hidden; }
+.rhine-roll-dig { display: inline-block; height: 1em; overflow: hidden; }
+.rhine-roll-col {
+  display: flex;
+  flex-direction: column;
+  transition: transform 460ms var(--ease-ark);
+}
+.rhine-roll-col span {
+  height: 1em;
+  line-height: 1;
+  width: 0.62em;
+  text-align: center;
+}
+
+/* 覆盖层（详情 / 检索 / 收藏共用骨架） */
+.rhine-ov {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-transition);
+  background: var(--rhine-paper);
+  color: var(--rhine-ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-ark);
+  display: flex;
+  flex-direction: column;
+}
+.rhine-ov.on { opacity: 1; pointer-events: auto; }
+.rhine-ov-head {
+  flex: none;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--rhine-hairline);
+}
+.rhine-back {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--rhine-ink-dim);
+  padding: 7px 12px;
+  border: 1px solid var(--rhine-hairline);
+  cursor: pointer;
+  transition: border-color 200ms var(--ease-ark), color 200ms var(--ease-ark);
+}
+.rhine-back:hover,
+.rhine-back:focus-visible { color: var(--rhine-ink); border-color: var(--rhine-ink); outline: none; }
+
+/* 详情：左侧档案盒视觉（2D 占位，3D 由方案 B 提供） */
+.rhine-abox { position: relative; width: 240px; height: 178px; }
+.rhine-abox .cover {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(20, 18, 16, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.18) 45%, rgba(20, 18, 16, 0.05));
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.22), 8px 10px 24px rgba(20, 18, 16, 0.12);
+}
+.rhine-abox .strip {
+  position: absolute; left: 14px; top: 14px; bottom: 14px;
+  width: 5px;
+  background: var(--rhine-amber);
+}
+.rhine-abox .plate {
+  position: absolute; right: 16px; bottom: 14px;
+  background: var(--rhine-paper);
+  border: 1px solid var(--rhine-hairline);
+  padding: 6px 10px;
+  font-family: var(--rhine-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.rhine-abox .scanln {
+  position: absolute; left: 0; right: 0; top: -30px;
+  height: 22px;
+  background: linear-gradient(to bottom, transparent, rgba(224, 123, 57, 0.28), transparent);
+  animation: rhine-scanmv 2.6s var(--ease-ark) infinite;
+}
+@keyframes rhine-scanmv {
+  0% { top: -30px; }
+  60%, 100% { top: 110%; }
+}
+
+.rhine-dtab {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  color: var(--rhine-ink-dim);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+.rhine-dtab:hover { color: var(--rhine-ink); }
+.rhine-dtab:focus-visible { outline: 1.5px solid var(--rhine-amber); outline-offset: 2px; }
+.rhine-dtab.active { color: var(--rhine-ink); border-bottom-color: var(--rhine-amber); }
+
+.rhine-actbtn {
+  padding: 12px 22px;
+  border: 1px solid var(--rhine-ink);
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  transition: background 200ms var(--ease-ark), color 200ms var(--ease-ark);
+  cursor: pointer;
+}
+.rhine-actbtn:hover,
+.rhine-actbtn:focus-visible { background: var(--rhine-ink); color: var(--rhine-paper); outline: none; }
+.rhine-actbtn.ghost { border-color: var(--rhine-hairline); color: var(--rhine-ink-dim); }
+.rhine-actbtn.ghost:hover,
+.rhine-actbtn.ghost:focus-visible { border-color: var(--rhine-ink); color: var(--rhine-ink); background: none; }
+.rhine-actbtn.saved { border-color: var(--rhine-amber); color: var(--rhine-amber); }
+.rhine-actbtn.saved:hover,
+.rhine-actbtn.saved:focus-visible { background: var(--rhine-amber); color: var(--rhine-paper); }
+
+/* 检索 */
+.rhine-sr {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 11px 6px;
+  border-bottom: 1px solid var(--rhine-hairline);
+  cursor: pointer;
+}
+.rhine-sr:hover,
+.rhine-sr:focus-visible,
+.rhine-sr.sel { background: var(--rhine-amber-dim); outline: none; }
+.rhine-sr .sid { font-family: var(--rhine-mono); font-size: 11px; color: var(--rhine-amber); }
+.rhine-sr .st { font-size: 13px; font-weight: 600; }
+.rhine-sr .sc {
+  font-family: var(--rhine-mono);
+  font-size: 9px;
+  color: var(--rhine-ink-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* 收藏卡 */
+.rhine-favcard {
+  border: 1px solid var(--rhine-hairline);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 200ms var(--ease-ark), transform 200ms var(--ease-ark), box-shadow 200ms var(--ease-ark);
+}
+.rhine-favcard:hover,
+.rhine-favcard:focus-visible {
+  border-color: var(--rhine-ink);
+  transform: translate(-2px, -2px);
+  box-shadow: 3px 3px 0 rgba(20, 18, 16, 0.2);
+  outline: none;
+}
+.rhine-favcard .fid {
+  font-family: var(--rhine-mono);
+  font-size: 10px;
+  color: var(--rhine-amber);
+  letter-spacing: 0.14em;
+}
+.rhine-favcard .ft { font-size: 13px; font-weight: 600; margin-top: 6px; }
+
 /* 减少动态效果：压制作用域内全部动画（BootSequence 另有 JS 侧直跳逻辑） */
 @media (prefers-reduced-motion: reduce) {
   .rhine-scope *,

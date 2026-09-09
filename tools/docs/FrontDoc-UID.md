@@ -754,7 +754,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 | 序号 | 内容 | 组件/位置 | 状态 |
 |------|------|-----------|------|
 | C1 | /lab 路由 + 令牌作用域 + 终端开场 | `components/effects/boot-sequence.tsx`、`src/app/lab/` | 已落地 |
-| C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | 待定 | 待落地 |
+| C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | `src/app/lab/archive/`（挂载点 1 先行；/tools/resource 替换评估为后续变更点） | 已落地（/lab/archive） |
 | C3 | 反馈原语（Rolling Number / 设置面板） | 待定 | 待落地 |
 | B | 3D 档案阵列 ArchiveScene（three.js） | 待定 | 待落地 |
 
