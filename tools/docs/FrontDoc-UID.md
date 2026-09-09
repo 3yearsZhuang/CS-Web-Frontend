@@ -34,6 +34,7 @@
 | **§14 Markdown 编辑器** | 社区模块契约摘要 | 三层组件 + rehype-sanitize | `src/modules/community/ui/` |
 | **§15 像素融合层** | Pixel Fusion | DNA 卡、像素按钮、GhostTitle、Title、工作台像素化 | `src/components/primitives/dna-card.tsx` |
 | **§16 组件用法统一契约** | SSOT | 按钮/输入框/徽章/Tab/分页/Modal/z-index 的用法权威 | `src/components/primitives/` |
+| **§17 Rhine 终端作用域** | /lab 专用视觉域 | 令牌、§11 豁免边界、BootSequence、落地序列 | `src/app/lab/` · `globals.css .rhine-*` |
 
 ---
 
@@ -725,10 +726,47 @@ Markdown 编辑器契约已下沉为社区模块契约。完整组件架构 / Pr
 
 ---
 
+## §17 Rhine 终端作用域（/lab 专用 · 2026-09 引入）
+
+Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 RhineLabUI 仓库为准**（github.com/LBEILC/RhineLabUI），经 2026-09-09 决策豁免 §11 禁止清单，豁免**仅限本作用域**。
+
+### 17.1 设计令牌（`globals.css` `.rhine-scope`）
+
+| 令牌 | 值 | 用途 |
+|------|-----|------|
+| `--rhine-paper` | `#eae5e1` 暖灰 | 纸底 |
+| `--rhine-ink` | `#141210` 近黑 | 正文/主视觉 |
+| `--rhine-ink-dim` | `#6f6a64` | 次级文字/元数据 |
+| `--rhine-amber` | `#e07b39` 杏金 | 选中信号/强调 |
+| `--rhine-hairline` | `rgba(20,18,16,.14)` | 细发丝线 |
+| `--rhine-mono` / `--rhine-sans` | MiSans 后备栈（PingFang SC 等） | 等宽元数据 / 正文 |
+
+### 17.2 边界规则（RFC 2119）
+
+- **MUST** `/lab` 内 Rhine 视觉全部引用 `--rhine-*` 令牌与 `.rhine-*` 类
+- **MUST NOT** 将 `--rhine-*` / `.rhine-*` 用于 `/lab` 之外；**MUST NOT** 反向修改全局双主题令牌
+- **豁免 §11 的范围**：终端动效（标志绘制/权限扫描/黑条横扫/黑白闪切）、后续 3D 透射/折射/景深、摄像机编排 + spring 物理 —— 仅限 `.rhine-scope` 与 `/lab` 路由
+- **美术素材**：经授权可先使用上游 GLB / MiSans 作占位符（IP 风险见 `design-demos/rhine-lab/README.md`，上线前 MUST 替换为原创资产）
+- 动效缓动沿用全局 `var(--ease-ark)`；`prefers-reduced-motion` 在作用域内统一压制（CSS）+ 组件 JS 直跳（BootSequence）
+
+### 17.3 落地序列与组件
+
+| 序号 | 内容 | 组件/位置 | 状态 |
+|------|------|-----------|------|
+| C1 | /lab 路由 + 令牌作用域 + 终端开场 | `components/effects/boot-sequence.tsx`、`src/app/lab/` | 已落地 |
+| C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | 待定 | 待落地 |
+| C3 | 反馈原语（Rolling Number / 设置面板） | 待定 | 待落地 |
+| B | 3D 档案阵列 ArchiveScene（three.js） | 待定 | 待落地 |
+
+> 设计参照：`design-demos/rhine-lab/`（01/02/03 交互 demo，已随 feature/rhine-lab-integration 分支交付）。
+
+---
+
 ## 变更记录
 
 | 日期 | 变更 |
 |------|------|
+| 2026-09-09 | **新增 §17 Rhine 终端作用域**：/lab 独立视觉域、§11 豁免边界、BootSequence（C1）落地 |
 | 2026-08-21 | **P4-3 重写**：补充 6 行元数据、快速索引、RFC 2119 约束、代码位置索引 |
 | 2026-08-20 | **合并前端 UI 文档（P1）**：原 UIStandard 组件用法并入 §16；UIButton 按钮并入 §5.2；本文成为 UI 规范唯一权威 |
 | 2026-08-18 | 像素融合全站化、统一标题组件（Title/SectionMarker/ArkDivider）、GhostTitle 虚影、工作台像素化 |
