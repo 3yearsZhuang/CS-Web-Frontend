@@ -744,7 +744,10 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 ### 17.2 边界规则（RFC 2119）
 
 - **MUST** `/lab` 内 Rhine 视觉全部引用 `--rhine-*` 令牌与 `.rhine-*` 类
-- **MUST NOT** 将 `--rhine-*` / `.rhine-*` 用于 `/lab` 之外；**MUST NOT** 反向修改全局双主题令牌
+- **MUST NOT** 将 `--rhine-*` / `.rhine-*` 用于白名单之外；**MUST NOT** 反向修改全局双主题令牌
+- **作用域白名单**（新增须评审）：`/lab`（含 `/lab/archive`）· `/tools/resource?view=archive`
+  - 共享组件 `components/rhine/archive-index.tsx`（+ `archive-model.ts`）**仅可在白名单路由内引用**
+  - 白名单外使用视为违反本规范（含间接引入：业务组件不得 re-export 给非白名单页面）
 - **豁免 §11 的范围**：终端动效（标志绘制/权限扫描/黑条横扫/黑白闪切）、后续 3D 透射/折射/景深、摄像机编排 + spring 物理 —— 仅限 `.rhine-scope` 与 `/lab` 路由
 - **美术素材**：经授权可先使用上游 GLB / MiSans 作占位符（IP 风险见 `design-demos/rhine-lab/README.md`，上线前 MUST 替换为原创资产）
 - 动效缓动沿用全局 `var(--ease-ark)`；`prefers-reduced-motion` 在作用域内统一压制（CSS）+ 组件 JS 直跳（BootSequence）
@@ -755,6 +758,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 |------|------|-----------|------|
 | C1 | /lab 路由 + 令牌作用域 + 终端开场 | `components/effects/boot-sequence.tsx`、`src/app/lab/` | 已落地 |
 | C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | `src/app/lab/archive/`（挂载点 1 先行；/tools/resource 替换评估为后续变更点） | 已落地（/lab/archive） |
+| C2-2 | 资源站双入口 `?view=archive`（真实资源数据 + 局部降级） | `modules/tools/ui/resource-archive-view.tsx`、`app/tools/resource/page.tsx` 分支 | 已落地（默认仍为卡片视图） |
 | C3 | 反馈原语（Rolling Number / 设置面板） | 待定 | 待落地 |
 | B | 3D 档案阵列 ArchiveScene（three.js） | 待定 | 待落地 |
 
@@ -766,7 +770,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 
 | 日期 | 变更 |
 |------|------|
-| 2026-09-09 | **新增 §17 Rhine 终端作用域**：/lab 独立视觉域、§11 豁免边界、BootSequence（C1）落地 |
+| 2026-09-13 | **C2-2 双入口**：档案柜 UI 抽为共享组件（components/rhine），/tools/resource 新增 `?view=archive`；§17 增补作用域白名单 |
 | 2026-08-21 | **P4-3 重写**：补充 6 行元数据、快速索引、RFC 2119 约束、代码位置索引 |
 | 2026-08-20 | **合并前端 UI 文档（P1）**：原 UIStandard 组件用法并入 §16；UIButton 按钮并入 §5.2；本文成为 UI 规范唯一权威 |
 | 2026-08-18 | 像素融合全站化、统一标题组件（Title/SectionMarker/ArkDivider）、GhostTitle 虚影、工作台像素化 |

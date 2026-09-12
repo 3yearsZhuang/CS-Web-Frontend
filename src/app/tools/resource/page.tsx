@@ -9,6 +9,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Plus } from 'lucide-react';
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
@@ -21,8 +22,31 @@ import { motion } from 'motion/react';
 import { useResources } from '@/modules/tools/ui/hooks/use-resources';
 import { ResourceCard } from '@/modules/tools/ui/resource-card';
 import { SubmitResourceModal } from '@/modules/tools/ui/submit-resource-modal';
+import { ResourceArchiveView } from '@/modules/tools/ui/resource-archive-view';
 
+/**
+ * 视图装配层（C2-2 双入口）
+ *
+ * - 默认：卡片视图（既有实现，零改动）
+ * - `?view=archive`：Rhine 档案柜视图（FrontDoc-UID §17 白名单作用域）
+ *
+ * 两视图分离为独立组件，避免档案柜模式下触发卡片视图的列表请求。
+ */
 export default function ResourcePage() {
+  const view = useSearchParams().get('view');
+
+  if (view === 'archive') {
+    return (
+      <main className="rhine-scope relative flex h-screen flex-col pt-16">
+        <ResourceArchiveView />
+      </main>
+    );
+  }
+  return <ResourceCardView />;
+}
+
+/** 卡片视图（原有实现，未改动） */
+function ResourceCardView() {
   const t = useTranslations('toolsResource');
   const res = useResources();
   const {
@@ -153,6 +177,14 @@ export default function ResourcePage() {
                   {t('submit')}
                 </Button>
               )}
+
+              {/* C2-2 双入口：切换到档案柜视图（Rhine 作用域） */}
+              <Link
+                href="/tools/resource?view=archive"
+                className="meta-mono text-[11px] text-[var(--muted-foreground)] underline-grow focus-ring whitespace-nowrap"
+              >
+                {t('viewArchive')}
+              </Link>
             </div>
 
             {/* 资源列表 */}

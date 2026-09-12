@@ -166,6 +166,12 @@ export interface ToolsMessages {
     submitFailed: string;
     allLabel: string;
     viewsCount: string;
+    archiveCrumb: string;
+    archiveBack: string;
+    archiveLoading: string;
+    archiveError: string;
+    archivePlaceholder: string;
+    viewArchive: string;
   },
   toolsExam: {
     heroTitle: string;
@@ -662,6 +668,12 @@ export const zhCN: ToolsMessages = {
     submitFailed: '提交失败',
     allLabel: '全部',
     viewsCount: '{count} 次浏览',
+    archiveCrumb: 'RESOURCE ARCHIVE // 资源档案',
+    archiveBack: '资源站',
+    archiveLoading: '// 载入中...',
+    archiveError: '// 资源载入失败，请稍后重试',
+    archivePlaceholder: '标题 / 标签 / 作者…',
+    viewArchive: '档案柜视图 →',
   },
   toolsExam: {
     heroTitle: '考试',
@@ -1158,6 +1170,12 @@ export const en: ToolsMessages = {
     submitFailed: 'Submit failed',
     allLabel: 'All',
     viewsCount: '{count} views',
+    archiveCrumb: 'RESOURCE ARCHIVE',
+    archiveBack: 'Resource Hub',
+    archiveLoading: '// Loading...',
+    archiveError: '// Failed to load resources',
+    archivePlaceholder: 'Title / Tag / Author…',
+    viewArchive: 'Archive view →',
   },
   toolsExam: {
     heroTitle: 'Exam',
