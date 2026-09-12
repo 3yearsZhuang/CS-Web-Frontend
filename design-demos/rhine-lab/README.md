@@ -19,3 +19,4 @@
 - 3D 几何为程序化原创（未使用上游 GLB / 莱茵标志），规避 IP 风险；数据为本站资源站映射的演示数据。
 - 三 demo 均遵循 `prefers-reduced-motion` 降级。
 - 选型确认后再进入正式实施：C 模式 → `components/effects` + `/tools/resource` 改造；B → `/lab` 特色页（three.js 进依赖评审）。
+- **上游同步**：最新一次对齐见 [UPSTREAM-SYNC.md](UPSTREAM-SYNC.md)（HEAD `d9ecb6c` / 2026-09-12：主题分层与深色档、画质分级、音效设置、滚动数字复用、HUD 投影、渲染性能等增量，及可复用资产与许可边界）。
