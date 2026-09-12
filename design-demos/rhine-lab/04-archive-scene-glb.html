@@ -136,7 +136,7 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { GLBLoader } from 'three/addons/loaders/GLBLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -203,7 +203,8 @@ async function main() {
   /* ---- 档案盒：优先上游 GLB，失败回退程序化几何 ---- */
   let template = null, usingGlb = false;
   try {
-    const gltf = await new GLBLoader().loadAsync('./assets/archive-cassette.glb');
+    // 占位素材位于前端仓 public/rhine-lab/（见该目录 README）
+    const gltf = await new GLTFLoader().loadAsync('/rhine-lab/archive-cassette.glb');
     template = normalize(gltf.scene);
     usingGlb = true;
   } catch (e) {

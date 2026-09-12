@@ -430,7 +430,7 @@ const INPUT_CLASS =
 | effects | `motion-primitives` · `mobius-ring` · `page-transition` · `scroll-indicator` |
 | layout | `navbar` · `footer` · `collapsing-hero` · `floating-capsule-sidebar` · `use-collapsing-hero` · `language-switcher` · `page-header-background` |
 | primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` · `dna-card` · `ghost-title` · `title` · `badge` · `pagination` · `modal-shell` · `rolling-number` |
-| rhine（§17 作用域内共用） | `archive-index` · `archive-model` · `terminal-settings`（含 `useMotionPreference` / `useTerminalSettings`） |
+| rhine（§17 作用域内共用） | `archive-index` · `archive-model` · `archive-demo-data` · `archive-scene`（three.js 控制器） · `archive-terminal` · `terminal-settings`（含 `useMotionPreference` / `useTerminalSettings`） |
 | feedback | `announcement-banner` · `toast` · `empty-state` · `fallback` |
 
 ---
@@ -746,8 +746,8 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 
 - **MUST** `/lab` 内 Rhine 视觉全部引用 `--rhine-*` 令牌与 `.rhine-*` 类
 - **MUST NOT** 将 `--rhine-*` / `.rhine-*` 用于白名单之外；**MUST NOT** 反向修改全局双主题令牌
-- **作用域白名单**（新增须评审）：`/lab`（含 `/lab/archive`）· `/tools/resource?view=archive`
-  - 共享组件 `components/rhine/archive-index.tsx`（+ `archive-model.ts`）**仅可在白名单路由内引用**
+- **作用域白名单**（新增须评审）：`/lab`（含 `/lab/archive`、`/lab/terminal`）· `/tools/resource?view=archive`
+  - 共享组件 `components/rhine/*`（archive-index / archive-model / archive-scene / archive-terminal / terminal-settings）**仅可在白名单路由内引用**
   - 白名单外使用视为违反本规范（含间接引入：业务组件不得 re-export 给非白名单页面）
 - **豁免 §11 的范围**：终端动效（标志绘制/权限扫描/黑条横扫/黑白闪切）、后续 3D 透射/折射/景深、摄像机编排 + spring 物理 —— 仅限 `.rhine-scope` 与 `/lab` 路由
 - **美术素材**：经授权可先使用上游 GLB / MiSans 作占位符（IP 风险见 `design-demos/rhine-lab/README.md`，上线前 MUST 替换为原创资产）
@@ -761,7 +761,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 | C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | `src/app/lab/archive/`（挂载点 1 先行；/tools/resource 替换评估为后续变更点） | 已落地（/lab/archive） |
 | C2-2 | 资源站双入口 `?view=archive`（真实资源数据 + 局部降级） | `modules/tools/ui/resource-archive-view.tsx`、`app/tools/resource/page.tsx` 分支 | 已落地（默认仍为卡片视图） |
 | C3 | 反馈原语（Rolling Number / 设置面板） | `components/primitives/rolling-number.tsx`、`components/rhine/terminal-settings.tsx` | 已落地 |
-| B | 3D 档案阵列 ArchiveScene（three.js） | 待定 | 待落地 |
+| B | 3D 档案阵列 ArchiveScene（three.js） | `components/rhine/archive-scene.ts`、`archive-terminal.tsx`、`app/lab/terminal/` | 已落地（/lab/terminal） |
 
 > 设计参照：`design-demos/rhine-lab/`（01/02/03 交互 demo，已随 feature/rhine-lab-integration 分支交付）。
 
@@ -771,6 +771,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 
 | 日期 | 变更 |
 |------|------|
+| 2026-09-13 | **B 落地**：`/lab/terminal` 三维档案阵列（three.js + 上游 GLB 占位；透射材质 / 镜头编排 / 抽取归位；画质与动效消费终端设置；WebGL2 降级到 2D 档案柜） |
 | 2026-09-13 | **C3 落地**：RollingNumber 提为共享原语（`animate` 可关闭）；Rhine 终端设置面板（减少动效/音效/画质/全屏/重播）+ `useMotionPreference` 统一动效偏好 |
 | 2026-09-13 | **C2-2 双入口**：档案柜 UI 抽为共享组件（components/rhine），/tools/resource 新增 `?view=archive`；§17 增补作用域白名单 |
 | 2026-08-21 | **P4-3 重写**：补充 6 行元数据、快速索引、RFC 2119 约束、代码位置索引 |
