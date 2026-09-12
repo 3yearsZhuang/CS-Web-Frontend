@@ -23,6 +23,8 @@ export interface BootSequenceProps {
   brandLines?: readonly [string, string, string];
   /** 用户确认进入（ENTER SYSTEM）后触发；父组件负责卸载遮罩 */
   onEnter: () => void;
+  /** 是否减少动态效果（由宿主注入终端设置；缺省时跟随系统偏好） */
+  reduceMotion?: boolean;
 }
 
 /** 开场阶段 */
@@ -39,6 +41,7 @@ const LEAVE_MS = 650;
 export function BootSequence({
   terminalName = 'FZTBU-CS ARCHIVE OS',
   brandLines = ['FZTBU·CS', 'ARCHIVE TERMINAL', 'INTERNAL DATABASE'] as const,
+  reduceMotion,
   onEnter,
 }: BootSequenceProps) {
   const [mounted, setMounted] = useState(false);
@@ -68,10 +71,11 @@ export function BootSequence({
     setMounted(true);
   }, []);
 
-  // 开场时间轴；prefers-reduced-motion 直跳 ENTER
+  // 开场时间轴；reduceMotion 显式传入时以其为准，否则跟随系统偏好
   useEffect(() => {
     if (!mounted) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const skip = reduceMotion ?? window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (skip) {
       setTyped(terminalName);
       setPhase('enter');
       return;

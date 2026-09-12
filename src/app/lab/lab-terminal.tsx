@@ -9,9 +9,10 @@
  *
  * 视觉：全部走 .rhine-scope 令牌（FrontDoc-UID §17），不污染全局双主题。
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BootSequence } from '@/components/effects/boot-sequence';
+import { TerminalSettingsPanel, useMotionPreference } from '@/components/rhine/terminal-settings';
 
 /** 会话级「已进入」标记 — 仅当前浏览器会话有效 */
 const BOOTED_KEY = 'fztbu-lab-booted';
@@ -27,6 +28,9 @@ const ROADMAP = [
 export function LabTerminal() {
   // null = 未判定（SSR 与客户端首帧一致，避免 hydration 闪烁）
   const [booted, setBooted] = useState<boolean | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // 动效偏好（系统 + 终端设置）——注入终端开场
+  const reduceMotion = useMotionPreference();
 
   useEffect(() => {
     let entered = false;
@@ -38,35 +42,53 @@ export function LabTerminal() {
     setBooted(entered);
   }, []);
 
-  const enter = () => {
+  // 设置面板关闭（Esc）
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSettingsOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  const enter = useCallback(() => {
     try {
       sessionStorage.setItem(BOOTED_KEY, '1');
     } catch {
       /* 忽略存储失败，仅内存态 */
     }
     setBooted(true);
-  };
-  const replay = () => {
+  }, []);
+
+  const replay = useCallback(() => {
     try {
       sessionStorage.removeItem(BOOTED_KEY);
     } catch {
       /* 忽略存储失败 */
     }
+    setSettingsOpen(false);
     setBooted(false);
-  };
+  }, []);
 
   // 未判定：渲染与 BootSequence SSR 占位一致的白场遮罩
   if (booted === null) {
     return <div className="fixed inset-0 z-[var(--z-transition)] bg-white" aria-hidden="true" />;
   }
   if (!booted) {
-    return <BootSequence onEnter={enter} />;
+    return <BootSequence onEnter={enter} reduceMotion={reduceMotion} />;
   }
-  return <LabLobby onReplay={replay} />;
+  return (
+    <>
+      <LabLobby onReplay={replay} onOpenSettings={() => setSettingsOpen(true)} />
+      <TerminalSettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onReplay={replay}
+      />
+    </>
+  );
 }
 
 /** 终端大厅 — 落地序列导航与状态 */
-function LabLobby({ onReplay }: { onReplay: () => void }) {
+function LabLobby({ onReplay, onOpenSettings }: { onReplay: () => void; onOpenSettings: () => void }) {
   return (
     <main
       className="rhine-scope relative min-h-screen pt-16"
@@ -135,6 +157,9 @@ function LabLobby({ onReplay }: { onReplay: () => void }) {
         <div className="mt-12 flex flex-wrap gap-4">
           <button type="button" className="rhine-btn" onClick={onReplay}>
             REPLAY BOOT
+          </button>
+          <button type="button" className="rhine-btn" onClick={onOpenSettings}>
+            设置 SETTINGS
           </button>
           <Link href="/" className="rhine-btn ghost">
             ← 返回首页

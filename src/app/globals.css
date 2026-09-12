@@ -2014,6 +2014,23 @@ body,
   transition-timing-function: var(--ease-ark);
 }
 
+/* 数字滚动原语 — components/primitives/rolling-number.tsx（跨作用域共享）
+ *
+ * 每位数字是一条 0-9 竖列，值变化时 translateY 平移；
+ * 时长由组件内联注入（默认 460ms），此处只定义结构与过渡属性。
+ * 字号/字重/颜色由父级决定（本原语不设视觉样式）。 */
+.rolling-number { display: inline-flex; height: 1em; overflow: hidden; }
+.rolling-dig { display: inline-block; height: 1em; overflow: hidden; }
+.rolling-col {
+  display: flex;
+  flex-direction: column;
+  transition-property: transform;
+  transition-timing-function: var(--ease-ark);
+  will-change: transform;
+}
+.rolling-col span { height: 1em; line-height: 1; width: 1ch; text-align: center; }
+.rolling-static { display: inline-block; height: 1em; line-height: 1; }
+
 /* ============ §17 Rhine 终端作用域（/lab 专用 · 2026-09 引入） ============
  *
  * 风格以 RhineLabUI（github.com/LBEILC/RhineLabUI）仓库为准：
@@ -2377,20 +2394,6 @@ body,
 @keyframes rhine-tflick { 50% { opacity: 0.15; } }
 @keyframes rhine-tbar { to { color: transparent; background: var(--rhine-ink); } }
 
-/* 编号滚动（460ms，对齐 Rolling Number 节奏） */
-.rhine-roll { display: inline-flex; height: 1em; overflow: hidden; }
-.rhine-roll-dig { display: inline-block; height: 1em; overflow: hidden; }
-.rhine-roll-col {
-  display: flex;
-  flex-direction: column;
-  transition: transform 460ms var(--ease-ark);
-}
-.rhine-roll-col span {
-  height: 1em;
-  line-height: 1;
-  width: 0.62em;
-  text-align: center;
-}
 
 /* 覆盖层（详情 / 检索 / 收藏共用骨架） */
 .rhine-ov {
@@ -2494,6 +2497,29 @@ body,
 .rhine-actbtn.saved { border-color: var(--rhine-amber); color: var(--rhine-amber); }
 .rhine-actbtn.saved:hover,
 .rhine-actbtn.saved:focus-visible { background: var(--rhine-amber); color: var(--rhine-paper); }
+
+/* 设置面板选项按钮（三选 / 开关复用） */
+.rhine-choice {
+  min-width: 76px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--rhine-hairline);
+  font-family: var(--rhine-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--rhine-ink-dim);
+  cursor: pointer;
+  transition: background 200ms var(--ease-ark), color 200ms var(--ease-ark), border-color 200ms var(--ease-ark);
+}
+.rhine-choice:hover,
+.rhine-choice:focus-visible { border-color: var(--rhine-ink); color: var(--rhine-ink); outline: none; }
+.rhine-choice[aria-pressed="true"],
+.rhine-choice[aria-checked="true"] {
+  background: var(--rhine-ink);
+  color: var(--rhine-paper);
+  border-color: var(--rhine-ink);
+}
+.rhine-choice:focus-visible { box-shadow: 0 0 0 2px var(--rhine-amber); }
 
 /* 检索 */
 .rhine-sr {

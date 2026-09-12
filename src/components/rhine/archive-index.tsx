@@ -16,6 +16,7 @@
  * 作用域约束：本组件仅可在 §17 白名单路由内使用（/lab、/tools/resource?view=archive）。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RollingNumber } from '@/components/primitives/rolling-number';
 import {
   metaOf,
   recordsOf,
@@ -24,6 +25,7 @@ import {
   type ArchiveGroup,
   type ArchiveLabels,
 } from './archive-model';
+import { useMotionPreference } from './terminal-settings';
 
 /** 快切判定阈值（ms） */
 const FLICK_GAP = 240;
@@ -60,7 +62,6 @@ export function ArchiveIndex({
   const [favs, setFavs] = useState<Record<string, true>>({});
   const [overlay, setOverlay] = useState<Overlay>(null);
   const [flick, setFlick] = useState(false);
-  const [reduced, setReduced] = useState(false);
 
   const listRef = useRef<HTMLElement>(null);
   const lastSwitchRef = useRef(0);
@@ -79,21 +80,19 @@ export function ArchiveIndex({
     }
   }, [favsKey]);
 
-  /* 减少动态效果偏好 */
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener?.('change', onChange);
-    return () => mq.removeEventListener?.('change', onChange);
-  }, []);
+  /* 减少动态效果：系统偏好 + 终端设置合并 */
+  const reduced = useMotionPreference();
 
-  /* 数据集变化时重置选择 */
+  /* 数据集变化时重置选择
+   * 依赖「分类键签名」而非数组引用：业务页重新取数或父级重渲染会生成新数组，
+   * 若按引用重置会把用户当前选择打回第一项（C3 回归测试暴露）。 */
+  const groupKeys = visible.map((g) => g.key).join('|');
   useEffect(() => {
     setCat(0);
     setIdx(0);
     setMemory(visible.map(() => 0));
-  }, [visible]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKeys]);
 
   useEffect(() => () => {
     if (quietTimerRef.current) clearTimeout(quietTimerRef.current);
@@ -327,7 +326,7 @@ export function ArchiveIndex({
               {group.key}-
             </span>
             <span className="text-[28px] font-semibold" style={{ fontFamily: 'var(--rhine-mono)' }}>
-              <RollingNumber value={String(idx + 1).padStart(3, '0')} reduced={reduced} />
+              <RollingNumber value={String(idx + 1).padStart(3, '0')} animate={!reduced} />
             </span>
           </div>
           <div className="mb-3.5 mt-2.5 min-h-[2.6em] text-[15px] font-semibold leading-[1.5]">{current.title}</div>
@@ -441,24 +440,6 @@ function SideKv({ k, v }: { k: string; v: string }) {
   );
 }
 
-/** 编号滚动（reduced 退化为静态文本） */
-function RollingNumber({ value, reduced }: { value: string; reduced: boolean }) {
-  if (reduced) return <span>{value}</span>;
-  return (
-    <span className="rhine-roll">
-      <span className="sr-only">{value}</span>
-      {value.split('').map((d, i) => (
-        <span key={i} className="rhine-roll-dig" aria-hidden="true">
-          <span className="rhine-roll-col" style={{ transform: `translateY(-${Number(d)}em)` }}>
-            {Array.from({ length: 10 }, (_, n) => (
-              <span key={n}>{n}</span>
-            ))}
-          </span>
-        </span>
-      ))}
-    </span>
-  );
-}
 
 /** 详情覆盖层 */
 function DetailOverlay({

@@ -429,7 +429,8 @@ const INPUT_CLASS =
 | 根级 root-level | `avatar` · `user-menu` · `notification-bell` · `theme-toggle` · `theme-provider` · `tech-tag-selector` · `swr-provider` |
 | effects | `motion-primitives` · `mobius-ring` · `page-transition` · `scroll-indicator` |
 | layout | `navbar` · `footer` · `collapsing-hero` · `floating-capsule-sidebar` · `use-collapsing-hero` · `language-switcher` · `page-header-background` |
-| primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` · `dna-card` · `ghost-title` · `title` · `badge` · `pagination` · `modal-shell` |
+| primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` · `dna-card` · `ghost-title` · `title` · `badge` · `pagination` · `modal-shell` · `rolling-number` |
+| rhine（§17 作用域内共用） | `archive-index` · `archive-model` · `terminal-settings`（含 `useMotionPreference` / `useTerminalSettings`） |
 | feedback | `announcement-banner` · `toast` · `empty-state` · `fallback` |
 
 ---
@@ -759,7 +760,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 | C1 | /lab 路由 + 令牌作用域 + 终端开场 | `components/effects/boot-sequence.tsx`、`src/app/lab/` | 已落地 |
 | C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | `src/app/lab/archive/`（挂载点 1 先行；/tools/resource 替换评估为后续变更点） | 已落地（/lab/archive） |
 | C2-2 | 资源站双入口 `?view=archive`（真实资源数据 + 局部降级） | `modules/tools/ui/resource-archive-view.tsx`、`app/tools/resource/page.tsx` 分支 | 已落地（默认仍为卡片视图） |
-| C3 | 反馈原语（Rolling Number / 设置面板） | 待定 | 待落地 |
+| C3 | 反馈原语（Rolling Number / 设置面板） | `components/primitives/rolling-number.tsx`、`components/rhine/terminal-settings.tsx` | 已落地 |
 | B | 3D 档案阵列 ArchiveScene（three.js） | 待定 | 待落地 |
 
 > 设计参照：`design-demos/rhine-lab/`（01/02/03 交互 demo，已随 feature/rhine-lab-integration 分支交付）。
@@ -770,6 +771,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 
 | 日期 | 变更 |
 |------|------|
+| 2026-09-13 | **C3 落地**：RollingNumber 提为共享原语（`animate` 可关闭）；Rhine 终端设置面板（减少动效/音效/画质/全屏/重播）+ `useMotionPreference` 统一动效偏好 |
 | 2026-09-13 | **C2-2 双入口**：档案柜 UI 抽为共享组件（components/rhine），/tools/resource 新增 `?view=archive`；§17 增补作用域白名单 |
 | 2026-08-21 | **P4-3 重写**：补充 6 行元数据、快速索引、RFC 2119 约束、代码位置索引 |
 | 2026-08-20 | **合并前端 UI 文档（P1）**：原 UIStandard 组件用法并入 §16；UIButton 按钮并入 §5.2；本文成为 UI 规范唯一权威 |
