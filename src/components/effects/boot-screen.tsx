@@ -165,7 +165,7 @@ export function BootScreen({
           style={{
             width: '40%',
             transform: fading ? 'scaleX(1)' : 'scaleX(0)',
-            transition: `transform ${holdMs / 2}ms ${EASE}`,
+            transition: `transform ${holdMs / 2}ms cubic-bezier(0.16, 1, 0.3, 1)`,
           }}
         />
       </div>

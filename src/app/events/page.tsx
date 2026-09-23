@@ -20,25 +20,9 @@ import { Button, SectionLoading, Title } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { groupEventsByYear, getEventYear } from '@/shared/utils/event-date';
 
 type EventTab = 'timeline' | 'next' | 'admin';
-
-/** 将活动列表按 year 降序分组 */
-function groupByYear(events: EventItem[], uncategorizedLabel: string): YearGroup[] {
-  const map = new Map<string, EventItem[]>();
-  for (const e of events) {
-    const y = e.year || uncategorizedLabel;
-    if (!map.has(y)) map.set(y, []);
-    map.get(y)!.push(e);
-  }
-  // 按年份降序排列
-  const sorted = Array.from(map.entries()).sort(([a], [b]) => {
-    if (a === uncategorizedLabel) return -1;
-    if (b === uncategorizedLabel) return 1;
-    return b.localeCompare(a);
-  });
-  return sorted.map(([year, events]) => ({ year, events }));
-}
 
 export default function EventsPage() {
   const router = useRouter();
@@ -91,6 +75,7 @@ export default function EventsPage() {
   const fetchEvents = useCallback(async () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
+    params.set('pageSize', '100');
 
     const r = await apiRequest<{ events?: EventItem[] }>(`/api/events?${params.toString()}`);
     if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
@@ -108,7 +93,7 @@ export default function EventsPage() {
         if (cancelled) return;
         setEvents(data);
         // 默认展开所有年份
-        const years = new Set<string>(data.map((e: EventItem) => e.year || t('uncategorized')));
+        const years = new Set<string>(data.map((e: EventItem) => getEventYear(e, t('uncategorized'))));
         setExpandedYears(years);
         setLoading(false);
       })
@@ -121,15 +106,13 @@ export default function EventsPage() {
     return () => {
       cancelled = true;
     };
-  }, [fetchEvents]);
+  }, [fetchEvents, t]);
 
-  // 按年份分组，分离未分类活动
-  const { uncategorized, yearGroups } = useMemo(() => {
-    const allGroups = groupByYear(events, t('uncategorized'));
-    const uncategorizedEvents = allGroups.find((g) => g.year === t('uncategorized'))?.events ?? [];
-    const categorizedGroups = allGroups.filter((g) => g.year !== t('uncategorized'));
-    return { uncategorized: uncategorizedEvents, yearGroups: categorizedGroups };
-  }, [events, t]);
+  // 按年份分组并严格降序排序，分离未分类活动
+  const { uncategorized, yearGroups } = useMemo(
+    () => groupEventsByYear(events, t('uncategorized')),
+    [events, t],
+  );
 
   // 切换年份手风琴
   const toggleYear = (year: string) => {
@@ -239,13 +222,13 @@ export default function EventsPage() {
                 />
 
                 {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线）
-                 * 日历列收窄为固定 320px（进一步压缩占比，时间线占剩余空间）；
-                 * 日历层 z-0、时间线层 z-10 显式分层，sticky 日历永不覆盖时间轴卡片的 hover 抬升/硬阴影。 */}
-                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
-                  <div className="relative z-0 lg:sticky lg:top-24">
+                 * 日历列固定 320px/340px，设 lg:border-r 与右侧时间线形成清晰边界；
+                 * sticky 日历使用 lg:top-36（144px）避让顶部 Header 与折叠态 Hero，并限制视口最大高度滚动。 */}
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] xl:grid-cols-[340px_1fr] gap-10 xl:gap-14 items-start">
+                  <div className="relative z-10 lg:sticky lg:top-36 lg:pr-8 xl:pr-10 lg:border-r lg:border-[var(--border)] max-h-[calc(100vh-160px)] overflow-y-auto custom-scrollbar">
                     <MonthCalendar events={events} />
                   </div>
-                  <div className="relative z-10">
+                  <div className="relative z-20 min-w-0">
                     <YearAccordionTimeline
                       uncategorized={uncategorized}
                       yearGroups={yearGroups}

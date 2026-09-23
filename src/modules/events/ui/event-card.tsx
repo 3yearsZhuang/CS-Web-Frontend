@@ -25,18 +25,18 @@ export function EventCard({ event, isLeft, index }: EventCardProps) {
     <div
       className={`relative flex items-start py-6 sm:py-8 group ${
         isLeft ? 'md:flex-row' : 'md:flex-row-reverse'
-      } flex-row`}
+      } flex-row hover:z-30 focus-within:z-30 transition-[z-index]`}
     >
       <div className="absolute left-[12px] md:left-1/2 top-[34px] md:-translate-x-1/2 z-10 w-[15px] h-[15px] rounded-full border-2 bg-[var(--background)] transition-transform duration-300 group-hover:scale-125 motion-reduce:transition-none group-hover:shadow-[0_0_0_4px_var(--primary)]/20 shrink-0 border-[var(--primary)] pointer-events-none" aria-hidden="true" />
-      <div className={`relative z-20 w-full md:w-[calc(50%-32px)] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0`}>
-        <Link href={`/events/${event.id}`} className="block focus-amber group/link relative z-20">
+      <div className={`relative z-20 group-hover:z-30 w-full md:w-[calc(50%-32px)] ${isLeft ? 'md:pr-8 md:text-right' : 'md:pl-8'} pl-12 md:pl-0 min-w-0`}>
+        <Link href={`/events/${event.id}`} className="block focus-amber group/link relative z-20 group-hover:z-30">
           <DnaCard
             corner={index + 1}
             className={`transition-opacity ${
               isArchived ? 'opacity-70 hover:opacity-100' : ''
             }`}
           >
-            <div className={`dna-meta ${isLeft ? 'md:justify-end' : ''}`}>
+            <div className={`dna-meta pr-8 ${isLeft ? 'md:justify-end' : ''}`}>
               <span className="dna-dim">
                 {'//'} {event.date || event.month || event.year || '—'}
               </span>

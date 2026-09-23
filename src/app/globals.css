@@ -1582,22 +1582,25 @@ body,
   box-shadow: 3px 3px 0 color-mix(in srgb, var(--destructive) 60%, #000);
 }
 
-/* ─── 打字机逐字入场（像素融合 M4） ───
+/* ─── 打字机逐字入场（高刷丝滑硬件加速） ───
  *
- * 配合 TypewriterTitle 组件使用：字符级 steps(6) 像素擦除入场。
+ * 配合 TypewriterTitle 组件使用：字符级硬件加速升起入场。
  * - 字符 span 默认 opacity:0，动画延迟由组件内联 style 注入
+ * - 采用 var(--ease-ark) 曲线 + will-change: transform, opacity，
+ *   在 120Hz/144Hz/240Hz 高刷屏上丝滑升起，彻底消除 steps(6) 造成的 12fps 顿挫假象。
  * - prefers-reduced-motion：跳过动画直接显示（避免无障碍用户等待/卡死）
  * - 光标 .typewriter-cursor 为 tagline 等处的闪烁编辑符 ▌ */
 .typewriter-ch {
   display: inline-block;
   opacity: 0;
-  transform: translateY(14px);
-  animation: typewriterIn 0.5s steps(6) forwards;
+  transform: translateY(18px);
+  animation: typewriterIn 0.55s var(--ease-ark) forwards;
+  will-change: transform, opacity;
 }
 @keyframes typewriterIn {
   to {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 .typewriter-cursor {
@@ -1615,6 +1618,7 @@ body,
     animation: none;
     opacity: 1;
     transform: none;
+    will-change: auto;
   }
 }
 

@@ -188,8 +188,9 @@ export function MobiusRing({
     };
 
     let lastTime = performance.now();
-    let idleFrames = 0;
-    const IDLE_THRESHOLD = 60;
+    let idleDurationMs = 0;
+    /** 空闲稳定后持续 1000ms（时间基准，自适应 60Hz/120Hz/144Hz/240Hz）再挂起 RAF */
+    const IDLE_TIMEOUT_MS = 1000;
     let isRafRunning = true;
 
     const isSettled = () => {
@@ -206,7 +207,8 @@ export function MobiusRing({
     };
 
     const render = (time: number) => {
-      const dt = Math.min((time - lastTime) / 16.67, 2);
+      const deltaMs = Math.max(0, Math.min(time - lastTime, 100));
+      const dt = deltaMs / 16.67;
       lastTime = time;
 
       ctx.clearRect(0, 0, widthPx, heightPx);
@@ -214,10 +216,12 @@ export function MobiusRing({
       updateTargetOffsets();
 
       const lerpFactor = prefersReducedMotion ? 0.2 : 0.12;
+      // 帧率解耦指数衰减阻尼：高刷屏（120Hz/144Hz/240Hz）与 60Hz 走完全一致的物理衰减积分曲线
+      const decayFactor = 1 - Math.pow(1 - lerpFactor, dt);
       for (const p of particles) {
-        p.offsetX += (p.targetOffsetX - p.offsetX) * lerpFactor * dt;
-        p.offsetY += (p.targetOffsetY - p.offsetY) * lerpFactor * dt;
-        p.offsetZ += (p.targetOffsetZ - p.offsetZ) * lerpFactor * dt;
+        p.offsetX += (p.targetOffsetX - p.offsetX) * decayFactor;
+        p.offsetY += (p.targetOffsetY - p.offsetY) * decayFactor;
+        p.offsetZ += (p.targetOffsetZ - p.offsetZ) * decayFactor;
       }
 
       const projected: Array<{
@@ -266,13 +270,13 @@ export function MobiusRing({
       }
 
       if (!mouseRef.current.active && isSettled()) {
-        idleFrames++;
-        if (idleFrames >= IDLE_THRESHOLD) {
+        idleDurationMs += deltaMs;
+        if (idleDurationMs >= IDLE_TIMEOUT_MS) {
           isRafRunning = false;
           return;
         }
       } else {
-        idleFrames = 0;
+        idleDurationMs = 0;
       }
 
       animationRef.current = requestAnimationFrame(render);
@@ -283,7 +287,7 @@ export function MobiusRing({
     const resumeRaf = () => {
       if (isRafRunning) return;
       isRafRunning = true;
-      idleFrames = 0;
+      idleDurationMs = 0;
       lastTime = performance.now();
       animationRef.current = requestAnimationFrame(render);
     };

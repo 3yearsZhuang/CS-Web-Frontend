@@ -591,14 +591,26 @@ export type EventOutLike = Api['EventOut'];
 /** 后端 EventOut → 前端 EventItem */
 export function toEventItem(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   const status = typeof r.status === 'string' ? r.status : '';
+  const dateStr = typeof r.date === 'string' ? r.date : null;
+  const rawYear = r.year != null && String(r.year).trim() ? String(r.year).trim() : null;
+  let year = rawYear;
+  if (!year && dateStr) {
+    const match = dateStr.trim().match(/^(\d{4})/);
+    if (match) year = match[1];
+  }
+  if (!year && typeof r.month === 'string') {
+    const match = r.month.trim().match(/^(\d{4})/);
+    if (match) year = match[1];
+  }
+
   return {
     id: String(r.id),
     month: r.month ?? null,
-    date: r.date ?? null,
+    date: dateStr,
     title: r.title,
     description: r.description ?? null,
     status: ['upcoming', 'ongoing', 'ended'].includes(status) ? status : null,
-    year: r.year ?? null,
+    year,
     topics: Array.isArray(r.topics) ? r.topics : [],
     tags: Array.isArray(r.tags) ? r.tags : [],
     isPinned: r.is_pinned === true,

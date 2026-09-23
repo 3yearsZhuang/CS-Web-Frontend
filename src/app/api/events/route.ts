@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   const month = url.searchParams.get('month') || undefined;
   const status = url.searchParams.get('status') || undefined;
   const page = Number(url.searchParams.get('page')) || 1;
-  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 50);
+  const pageSize = Math.min(Number(url.searchParams.get('pageSize')) || 20, 100);
 
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (month) params.set('month', month);

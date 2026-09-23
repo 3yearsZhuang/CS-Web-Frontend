@@ -385,18 +385,19 @@ export default function Home() {
               top: avatarPos.y,
               transform: 'translate(-50%, -50%)',
               background: 'color-mix(in srgb, var(--background) 10%, transparent)',
+              willChange: 'transform, opacity',
             }}
-            initial={{ opacity: 0, y: 24, scale: 1.02, filter: 'blur(14px)' }}
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={
               isHiding
-                ? { opacity: 0, y: -12, scale: 0.95, filter: 'blur(8px)' }
-                : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+                ? { opacity: 0, y: -12, scale: 0.95 }
+                : { opacity: 1, y: 0, scale: 1 }
             }
-            exit={{ opacity: 0, scale: 0.95, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={
               isHiding
-                ? { duration: 0.5, ease: EASE }
-                : { duration: 1.0, ease: EASE }
+                ? { duration: 0.35, ease: EASE }
+                : { duration: 0.6, ease: EASE }
             }
           >
             <div className="ark-corner-bracket">

@@ -221,8 +221,7 @@ export function PageTransition({ children }: PageTransitionProps) {
             className="fixed inset-0 z-[70] flex flex-col items-center justify-center pointer-events-none"
             style={{ backgroundColor: 'var(--background)' }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, scale: 1.01 }}
             transition={{ duration: 0.15, ease: EASE }}
           >
             <div className="relative flex flex-col items-center">

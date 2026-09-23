@@ -29,17 +29,15 @@ const listVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: -6, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: -6 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: { duration: 0.2, ease: EASE },
   },
   exit: {
     opacity: 0,
     y: -3,
-    filter: 'blur(2px)',
     transition: { duration: 0.12 },
   },
 };

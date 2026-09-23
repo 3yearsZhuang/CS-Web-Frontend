@@ -36,7 +36,7 @@ export function YearAccordionTimeline({
 }: YearAccordionTimelineProps) {
   const t = useTranslations('eventsAdmin');
   return (
-    <div className="relative">
+    <div className="relative px-2 sm:px-3 py-1">
       {/* 垂直铁路线 — 桌面端居中，移动端左侧 */}
       <div className="absolute left-[19px] md:left-1/2 top-0 bottom-0 w-px bg-[var(--border)] md:-translate-x-px" aria-hidden="true" />
 
@@ -72,22 +72,22 @@ export function YearAccordionTimeline({
             const activeCount = group.events.length - pastCount;
 
             return (
-              <div key={group.year}>
+              <div key={group.year} className="first:mt-0 mt-8 sm:mt-12 pt-4 sm:pt-6 border-t border-[var(--border)]/30 first:border-t-0">
                 {/* 年份分割线 — 点击展开/折叠 */}
                 <button
                   type="button"
                   onClick={() => onToggleYear(group.year)}
-                  className="relative z-10 w-full flex items-center gap-4 py-6 group cursor-pointer focus-amber"
+                  className="relative z-10 w-full flex items-center gap-4 py-4 sm:py-6 group cursor-pointer focus-amber"
                 >
                   {/* 铁路线上的菱形节点 */}
-                  <div className={`absolute left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 motion-reduce:transition-none ${
+                  <div className={`absolute top-1/2 -translate-y-1/2 left-[13px] md:left-1/2 md:-translate-x-1/2 w-[14px] h-[14px] border-2 rotate-45 transition-all duration-300 motion-reduce:transition-none ${
                     isExpanded
                       ? 'bg-[var(--primary)] border-[var(--primary)] shadow-[0_0_0_3px_var(--primary)]/15'
                       : 'bg-[var(--background)] border-[var(--border)] group-hover:border-[var(--primary)]/50'
                   }`} aria-hidden="true" />
 
                   {/* 年份标题 */}
-                  <div className="w-full md:w-[calc(50%-32px)] md:text-right md:pr-8 pl-12 md:pl-0">
+                  <div className="w-auto md:w-[calc(50%-32px)] md:text-right md:pr-8 pl-12 md:pl-0 shrink-0">
                     <span className={`display-serif text-[clamp(24px,4vw,40px)] transition-colors duration-300 ${
                       isExpanded ? 'text-[var(--primary)]' : 'text-[var(--foreground)] group-hover:text-[var(--primary)]/70'
                     }`}>
@@ -95,7 +95,7 @@ export function YearAccordionTimeline({
                     </span>
                   </div>
                   {/* 统计信息 — 桌面端右侧 */}
-                  <div className="hidden md:flex md:w-[calc(50%-32px)] md:pl-8 items-center gap-4">
+                  <div className="hidden md:flex md:w-[calc(50%-32px)] md:pl-8 items-center gap-4 flex-wrap">
                     <span className="meta-mono text-[11px] text-[var(--muted-foreground)]">
                       {group.events.length} 个活动
                     </span>
@@ -118,7 +118,7 @@ export function YearAccordionTimeline({
                     </span>
                   </div>
                   {/* 移动端统计 */}
-                  <div className="md:hidden flex items-center gap-2 pl-12">
+                  <div className="md:hidden flex items-center gap-2 pl-4">
                     <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
                       {t('eventsCountMobile', { count: group.events.length })}
                     </span>
@@ -135,10 +135,14 @@ export function YearAccordionTimeline({
                   {isExpanded && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
+                      animate={{
+                        height: 'auto',
+                        opacity: 1,
+                        transitionEnd: { overflow: 'visible' },
+                      }}
+                      exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
                       transition={{ duration: 0.35, ease: EASE }}
-                      className="overflow-hidden"
+                      style={{ overflow: 'visible' }}
                     >
                       {group.events.map((event, idx) => (
                         <EventCard key={event.id} event={event} isLeft={idx % 2 === 0} index={idx} />
