@@ -20,25 +20,9 @@ import { Button, SectionLoading, Title } from '@/components';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { groupEventsByYear, getEventYear } from '@/shared/utils/event-date';
 
 type EventTab = 'timeline' | 'next' | 'admin';
-
-/** 将活动列表按 year 降序分组 */
-function groupByYear(events: EventItem[], uncategorizedLabel: string): YearGroup[] {
-  const map = new Map<string, EventItem[]>();
-  for (const e of events) {
-    const y = e.year || uncategorizedLabel;
-    if (!map.has(y)) map.set(y, []);
-    map.get(y)!.push(e);
-  }
-  // 按年份降序排列
-  const sorted = Array.from(map.entries()).sort(([a], [b]) => {
-    if (a === uncategorizedLabel) return -1;
-    if (b === uncategorizedLabel) return 1;
-    return b.localeCompare(a);
-  });
-  return sorted.map(([year, events]) => ({ year, events }));
-}
 
 export default function EventsPage() {
   const router = useRouter();
@@ -91,6 +75,7 @@ export default function EventsPage() {
   const fetchEvents = useCallback(async () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
+    params.set('pageSize', '100');
 
     const r = await apiRequest<{ events?: EventItem[] }>(`/api/events?${params.toString()}`);
     if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
@@ -108,7 +93,7 @@ export default function EventsPage() {
         if (cancelled) return;
         setEvents(data);
         // 默认展开所有年份
-        const years = new Set<string>(data.map((e: EventItem) => e.year || t('uncategorized')));
+        const years = new Set<string>(data.map((e: EventItem) => getEventYear(e, t('uncategorized'))));
         setExpandedYears(years);
         setLoading(false);
       })
@@ -121,15 +106,13 @@ export default function EventsPage() {
     return () => {
       cancelled = true;
     };
-  }, [fetchEvents]);
+  }, [fetchEvents, t]);
 
-  // 按年份分组，分离未分类活动
-  const { uncategorized, yearGroups } = useMemo(() => {
-    const allGroups = groupByYear(events, t('uncategorized'));
-    const uncategorizedEvents = allGroups.find((g) => g.year === t('uncategorized'))?.events ?? [];
-    const categorizedGroups = allGroups.filter((g) => g.year !== t('uncategorized'));
-    return { uncategorized: uncategorizedEvents, yearGroups: categorizedGroups };
-  }, [events, t]);
+  // 按年份分组并严格降序排序，分离未分类活动
+  const { uncategorized, yearGroups } = useMemo(
+    () => groupEventsByYear(events, t('uncategorized')),
+    [events, t],
+  );
 
   // 切换年份手风琴
   const toggleYear = (year: string) => {

@@ -11,6 +11,7 @@ import { EASE } from '@/shared/utils/ui-constants';
 import { formatDateKey, parseEventDate } from '@/shared/utils/event-date';
 import type { EventItem } from '@/modules/events/types';
 import { EventStatusBadge, EventStatusDot } from './event-status-badge';
+import { apiRequest } from '@/shared/hooks/use-api-request';
 
 interface MonthCalendarProps {
   events: EventItem[];
@@ -72,7 +73,43 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
   const [yearOpen, setYearOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
 
-  const selectableYears = useMemo(() => getSelectableYears(events), [events]);
+  const [extraEvents, setExtraEvents] = useState<EventItem[]>([]);
+
+  // 当用户在日历上切换年/月时，若当前列表未覆盖该月，异步按月拉取并合并
+  useEffect(() => {
+    let cancelled = false;
+    const monthStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`;
+
+    const hasMonthInProp = events.some((e) => {
+      const p = parseEventDate(e.date);
+      return p && p.year === viewYear && p.month === viewMonth;
+    });
+
+    if (!hasMonthInProp) {
+      apiRequest<{ events?: EventItem[] }>(`/api/events?month=${monthStr}&pageSize=50`)
+        .then((res) => {
+          if (cancelled) return;
+          if (res.ok && res.data?.events) {
+            setExtraEvents((prev) => {
+              const existingIds = new Set([...events.map((e) => e.id), ...prev.map((e) => e.id)]);
+              const newItems = res.data!.events!.filter((e) => !existingIds.has(e.id));
+              return newItems.length > 0 ? [...prev, ...newItems] : prev;
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewYear, viewMonth, events]);
+
+  const allCalendarEvents = useMemo(() => {
+    return [...events, ...extraEvents];
+  }, [events, extraEvents]);
+
+  const selectableYears = useMemo(() => getSelectableYears(allCalendarEvents), [allCalendarEvents]);
 
   // 点击页面其他区域时关闭下拉选择器
   useEffect(() => {
@@ -92,7 +129,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
   const { eventsByDate, unscheduled } = useMemo(() => {
     const map = new Map<string, EventItem[]>();
     const unscheduled: EventItem[] = [];
-    for (const e of events) {
+    for (const e of allCalendarEvents) {
       const parsed = parseEventDate(e.date);
       if (!parsed) {
         unscheduled.push(e);
@@ -103,17 +140,17 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
       map.get(key)!.push(e);
     }
     return { eventsByDate: map, unscheduled };
-  }, [events]);
+  }, [allCalendarEvents]);
 
   const matrix = useMemo(() => buildMonthMatrix(viewYear, viewMonth), [viewYear, viewMonth]);
 
   const monthEvents = useMemo(() => {
-    const count = events.filter((e) => {
+    const count = allCalendarEvents.filter((e) => {
       const p = parseEventDate(e.date);
       return p && p.year === viewYear && p.month === viewMonth;
     }).length;
     return count;
-  }, [events, viewYear, viewMonth]);
+  }, [allCalendarEvents, viewYear, viewMonth]);
 
   const selectedKey = selectedDate ? formatDateKey(selectedDate) : null;
   const selectedEvents = selectedKey ? (eventsByDate.get(selectedKey) ?? []) : [];

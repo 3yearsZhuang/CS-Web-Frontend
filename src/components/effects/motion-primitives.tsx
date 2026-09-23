@@ -146,19 +146,17 @@ export function RevealItem({
     hidden: {
       opacity: 0,
       y,
-      filter: 'blur(6px)',
     },
     visible: {
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       transition: { duration, ease: EASE },
     },
   };
   return (
     <motion.div
       className={className}
-      style={style}
+      style={{ willChange: 'transform, opacity', ...style }}
       variants={variants}
       onAnimationComplete={() => ctx?.notifyComplete()}
     >
@@ -175,12 +173,12 @@ interface RevealTitleProps {
   duration?: number;
 }
 
-/** 大标题专用 — 影院级焦点拉近（更大 scale + blur）；挂载注册、卸载撤消、完成上报 StaggerContainer */
+/** 大标题专用 — 影院级焦点拉近；挂载注册、卸载撤消、完成上报 StaggerContainer */
 export function RevealTitle({
   children,
   className,
   style,
-  duration = 1.1,
+  duration = 0.9,
 }: RevealTitleProps) {
   const ctx = useContext(StaggerCompleteContext);
   useEffect(() => {
@@ -192,21 +190,19 @@ export function RevealTitle({
     hidden: {
       opacity: 0,
       y: 20,
-      scale: 1.015,
-      filter: 'blur(12px)',
+      scale: 0.98,
     },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
-      filter: 'blur(0px)',
       transition: { duration, ease: EASE },
     },
   };
   return (
     <motion.div
       className={className}
-      style={style}
+      style={{ willChange: 'transform, opacity', ...style }}
       variants={variants}
       onAnimationComplete={() => ctx?.notifyComplete()}
     >
@@ -219,14 +215,14 @@ interface TypewriterTitleProps {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
-  /** 单字符入场时长（秒，默认 0.5，CSS steps(6) 擦除） */
+  /** 单字符入场时长（秒，默认 0.55，CSS var(--ease-ark) 曲线） */
   charDuration?: number;
-  /** 字符间延迟（秒，默认 0.09） */
+  /** 字符间延迟（秒，默认 0.06） */
   charDelay?: number;
 }
 
 /**
- * 打字机大标题 — 字符级 steps(6) 逐字入场（像素融合 M4）
+ * 打字机大标题 — 字符级逐字入场（高刷丝滑硬件加速）
  *
  * 与 RevealTitle 同级原语，遵守同一 StaggerContainer 协议：
  * - 挂载 register / 卸载 unregister
@@ -239,8 +235,8 @@ export function TypewriterTitle({
   children,
   className,
   style,
-  charDuration = 0.5,
-  charDelay = 0.09,
+  charDuration = 0.55,
+  charDelay = 0.06,
 }: TypewriterTitleProps) {
   const ctx = useContext(StaggerCompleteContext);
   const [split, setSplit] = useState(false);
