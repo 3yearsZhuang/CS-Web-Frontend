@@ -194,111 +194,116 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
   return (
     <div>
       {/* ============ 月份导航 ============ */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10 border-b border-[var(--border)] pb-4">
-        <div>
-          <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-1">
-            {'// '}{viewYear} · {monthEvents > 0 ? `${monthEvents} event${monthEvents > 1 ? 's' : ''}` : 'no events'}
-          </div>
-          <h3 className="display-serif text-[clamp(28px,5vw,48px)] leading-[1] text-[var(--foreground)] flex items-baseline flex-wrap gap-x-1">
-            {/* 月份快速选择器 */}
-            <div className="relative" data-month-select>
-              <button
-                type="button"
-                onClick={() => { setMonthOpen((o) => !o); setYearOpen(false); }}
-                className="inline-flex items-baseline hover:text-[var(--primary)] transition-colors focus-amber"
-                aria-haspopup="listbox"
-                aria-expanded={monthOpen}
-              >
-                {MONTH_LABELS[viewMonth]}
-                <span className="meta-mono text-[10px] ml-1 text-[var(--muted-foreground)]">▾</span>
-              </button>
-              {monthOpen && (
-                <div
-                  role="listbox"
-                  className="absolute z-20 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[260px]"
-                >
-                  {monthLabelsCn.map((label, m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      role="option"
-                      aria-selected={m === viewMonth}
-                      onClick={() => { setViewMonth(m); setMonthOpen(false); setSelectedDate(null); }}
-                      className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
-                        m === viewMonth
-                          ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
-                          : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <span className="text-[var(--primary)]">.</span>
-            {/* 年份快速选择器 */}
-            <div className="relative" data-year-select>
-              <button
-                type="button"
-                onClick={() => { setYearOpen((o) => !o); setMonthOpen(false); }}
-                className="inline-flex items-baseline meta-mono text-[clamp(14px,2vw,20px)] ml-1 text-[var(--muted-foreground)] align-baseline hover:text-[var(--foreground)] transition-colors focus-amber"
-                aria-haspopup="listbox"
-                aria-expanded={yearOpen}
-              >
-                {viewYear}
-                <span className="text-[10px] ml-1">▾</span>
-              </button>
-              {yearOpen && (
-                <div
-                  role="listbox"
-                  className="absolute z-20 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[200px]"
-                >
-                  {selectableYears.map((y) => (
-                    <button
-                      key={y}
-                      type="button"
-                      role="option"
-                      aria-selected={y === viewYear}
-                      onClick={() => { setViewYear(y); setYearOpen(false); setSelectedDate(null); }}
-                      className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
-                        y === viewYear
-                          ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
-                          : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
-                      }`}
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </h3>
+      <div className="mb-6 sm:mb-8 border-b border-[var(--border)] pb-4">
+        {/* 元数据行 */}
+        <div className="meta-mono text-[11px] text-[var(--muted-foreground)] mb-1">
+          {'// '}{viewYear} · {monthEvents > 0 ? `${monthEvents} event${monthEvents > 1 ? 's' : ''}` : 'no events'}
         </div>
-        <div className="flex items-center gap-1.5">
+
+        {/* 月份标题 — 独占一行，字号适配侧边栏，支持下拉选择 */}
+        <div className="relative" data-month-select>
           <button
             type="button"
-            onClick={goToday}
-            className="meta-mono text-[10px] uppercase tracking-wider px-3 py-2 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
+            onClick={() => { setMonthOpen((o) => !o); setYearOpen(false); }}
+            className="group inline-flex items-baseline gap-1 display-serif text-[clamp(28px,3vw,38px)] leading-[1.15] text-[var(--foreground)] hover:text-[var(--primary)] transition-colors focus-amber"
+            aria-haspopup="listbox"
+            aria-expanded={monthOpen}
           >
-            Today
+            <span>{MONTH_LABELS[viewMonth]}</span>
+            <span className="text-[var(--primary)]">.</span>
+            <span className="meta-mono text-[10px] text-[var(--muted-foreground)] group-hover:text-[var(--primary)] transition-colors ml-0.5">▾</span>
           </button>
-          <button
-            type="button"
-            onClick={goPrevMonth}
-            aria-label="上一月"
-            className="meta-mono text-[14px] px-3 py-2 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            onClick={goNextMonth}
-            aria-label="下一月"
-            className="meta-mono text-[14px] px-3 py-2 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
-          >
-            →
-          </button>
+          {monthOpen && (
+            <div
+              role="listbox"
+              className="absolute z-30 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[260px]"
+            >
+              {monthLabelsCn.map((label, m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="option"
+                  aria-selected={m === viewMonth}
+                  onClick={() => { setViewMonth(m); setMonthOpen(false); setSelectedDate(null); }}
+                  className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
+                    m === viewMonth
+                      ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                      : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 控制条 — 始终固定在一行：左侧年份快速选择器，右侧 Today / ← / → 按钮（固定位置，永不漂移或被挤压） */}
+        <div className="flex items-center justify-between gap-2 mt-3 pt-2">
+          {/* 年份快速选择器 */}
+          <div className="relative" data-year-select>
+            <button
+              type="button"
+              onClick={() => { setYearOpen((o) => !o); setMonthOpen(false); }}
+              className="inline-flex items-center gap-1.5 meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors focus-amber py-1 px-1.5 -ml-1.5 rounded cursor-pointer"
+              aria-haspopup="listbox"
+              aria-expanded={yearOpen}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0" aria-hidden="true" />
+              <span>{viewYear}</span>
+              <span className="text-[10px] text-[var(--muted-foreground)]">▾</span>
+            </button>
+            {yearOpen && (
+              <div
+                role="listbox"
+                className="absolute z-30 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[200px]"
+              >
+                {selectableYears.map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    role="option"
+                    aria-selected={y === viewYear}
+                    onClick={() => { setViewYear(y); setYearOpen(false); setSelectedDate(null); }}
+                    className={`meta-mono text-[11px] px-2 py-1.5 text-left transition-colors focus-amber ${
+                      y === viewYear
+                        ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                        : 'text-[var(--foreground)] hover:bg-[var(--primary)]/5'
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 切换按钮组 — 固定宽度、固定位置，永不漂移或裁切 */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={goToday}
+              className="meta-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={goPrevMonth}
+              aria-label="上一月"
+              className="meta-mono text-[13px] w-7 h-7 flex items-center justify-center border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={goNextMonth}
+              aria-label="下一月"
+              className="meta-mono text-[13px] w-7 h-7 flex items-center justify-center border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber"
+            >
+              →
+            </button>
+          </div>
         </div>
       </div>
 
@@ -427,7 +432,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                       href={`/events/${e.id}`}
                       className="block card-minimal focus-amber group"
                     >
-                      <article className="border border-[var(--border)] p-4 sm:p-5 hover:border-[var(--primary)] transition-colors flex items-start gap-4">
+                      <article className="border border-[var(--border)] p-3 sm:p-4 hover:border-[var(--primary)] transition-colors flex items-start gap-3">
                         {/* 状态徽章 */}
                         <EventStatusBadge status={e.status} className="shrink-0" />
                         {/* 标题 + 描述 */}
@@ -479,7 +484,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
                 href={`/events/${e.id}`}
                 className="block card-minimal focus-amber group"
               >
-                <article className="border border-[var(--border)] p-4 sm:p-5 hover:border-[var(--primary)] transition-colors flex items-center gap-4">
+                <article className="border border-[var(--border)] p-3 sm:p-4 hover:border-[var(--primary)] transition-colors flex items-center gap-3">
                   <EventStatusBadge status={e.status} className="shrink-0 self-center" />
                   <span className="meta-mono text-[11px] text-[var(--muted-foreground)] shrink-0">
                     {e.date || e.month || e.year || '—'}

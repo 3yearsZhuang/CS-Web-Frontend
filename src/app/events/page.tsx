@@ -222,13 +222,13 @@ export default function EventsPage() {
                 />
 
                 {/* 同屏双视图：移动端单列（日历在上、时间线在下）；lg+ 双列左右布局（左日历 / 右时间线）
-                 * 日历列收窄为固定 320px（进一步压缩占比，时间线占剩余空间）；
-                 * 日历层 z-0、时间线层 z-10 显式分层，sticky 日历永不覆盖时间轴卡片的 hover 抬升/硬阴影。 */}
-                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-12 lg:gap-12 items-start">
-                  <div className="relative z-0 lg:sticky lg:top-24">
+                 * 日历列固定 320px/340px，设 lg:border-r 与右侧时间线形成清晰边界；
+                 * sticky 日历使用 lg:top-36（144px）避让顶部 Header 与折叠态 Hero，并限制视口最大高度滚动。 */}
+                <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] xl:grid-cols-[340px_1fr] gap-10 xl:gap-14 items-start">
+                  <div className="relative z-10 lg:sticky lg:top-36 lg:pr-8 xl:pr-10 lg:border-r lg:border-[var(--border)] max-h-[calc(100vh-160px)] overflow-y-auto custom-scrollbar">
                     <MonthCalendar events={events} />
                   </div>
-                  <div className="relative z-10">
+                  <div className="relative z-20 min-w-0">
                     <YearAccordionTimeline
                       uncategorized={uncategorized}
                       yearGroups={yearGroups}
