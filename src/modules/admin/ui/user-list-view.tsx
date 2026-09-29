@@ -7,6 +7,7 @@
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
 import { SectionLoading, Pagination } from '@/components';
+import { useBreakpoint } from '@/shared/hooks';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
 import { formatDate } from '@/shared/utils/utils';
@@ -60,6 +61,10 @@ export function UserListView({
   onDisable,
 }: UserListViewProps) {
   const t = useTranslations('userList');
+  // 按断点渲染单份列表（桌面表格 / 移动卡片）——避免双份 DOM 同时挂载。
+  // 列表数据在客户端拉取（渲染发生在挂载之后），断点已在首次渲染前校正。
+  const bp = useBreakpoint();
+  const isMobileLayout = bp === 'mobile' || bp === 'tablet';
   return (
     <>
       {/* 工具栏 */}
@@ -142,8 +147,8 @@ export function UserListView({
           </div>
         )}
 
-        {/* 桌面表格（md+） */}
-        {!listError && users.length > 0 && (
+        {/* 桌面表格（md+）— 仅桌面断点挂载 */}
+        {!listError && users.length > 0 && !isMobileLayout && (
           <div className="hidden md:block">
             <table className="w-full border-collapse">
               <thead>
@@ -223,8 +228,8 @@ export function UserListView({
           </div>
         )}
 
-        {/* 移动端卡片列表（< md） */}
-        {!listError && users.length > 0 && (
+        {/* 移动端卡片列表（< md）— 仅移动断点挂载 */}
+        {!listError && users.length > 0 && isMobileLayout && (
           <div className="md:hidden divide-y divide-[var(--border)] border-t border-[var(--border)]">
             {users.map((u) => {
               const self = isSelf(u);

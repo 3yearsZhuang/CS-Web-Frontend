@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useBreakpoint } from '@/shared/hooks';
 import { Button, SectionLoading } from '@/components';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
@@ -30,6 +31,9 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
   const router = useRouter();
   const t = useTranslations('adminLogs');
   const { pushToast } = useToast();
+  // 按断点渲染单份列表（桌面表格 / 移动卡片）——避免双份 DOM 同时挂载
+  const bp = useBreakpoint();
+  const isMobileLayout = bp === 'mobile' || bp === 'tablet';
 
   // 列表
   const [logs, setLogs] = useState<AdminAction[]>([]);
@@ -222,8 +226,8 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
           </div>
         )}
 
-        {/* 桌面表格（md+） */}
-        {!logsError && logs.length > 0 && (
+        {/* 桌面表格（md+）— 仅桌面断点挂载 */}
+        {!logsError && logs.length > 0 && !isMobileLayout && (
           <div className="hidden md:block">
             <table className="w-full border-collapse">
               <thead>
@@ -278,8 +282,8 @@ export function AdminLogsPanel({ onForbidden }: AdminLogsPanelProps) {
           </div>
         )}
 
-        {/* 移动端卡片列表（< md） */}
-        {!logsError && logs.length > 0 && (
+        {/* 移动端卡片列表（< md）— 仅移动断点挂载 */}
+        {!logsError && logs.length > 0 && isMobileLayout && (
           <div className="md:hidden divide-y divide-[var(--border)] border-t border-[var(--border)]">
             {logs.map((log) => (
               <div key={log.id} className="p-4 card-minimal">

@@ -10,19 +10,21 @@
  * 主题色：浅色模式深蓝 #1e40af / 深色模式琥珀金 #d4a574
  */
 
-/* 字体加载（CodeGov-F1）— 拉丁字族本地托管 + CJK 经 @import
+/* 字体加载（CodeGov-F1）— 全字族本地自托管
  *
  * 字体策略（编辑式技术极简）：
  * - Fraunces (variable serif) — 英文展示衬线（next/font/local 本地托管，CSS 变量 --font-fraunces）
- * - Noto Serif SC — 中文展示衬线（与 Fraunces 配对；体积大，经 @import 从 Google CDN 拉取）
+ * - Noto Serif SC Variable — 中文展示衬线（与 Fraunces 配对；@fontsource-variable 自托管）
  * - Manrope — 英文正文（next/font/local 本地托管，CSS 变量 --font-manrope）
- * - Noto Sans SC — 中文正文（思源黑体；体积大，经 @import 从 Google CDN 拉取）
+ * - Noto Sans SC Variable — 中文正文（思源黑体；@fontsource-variable 自托管）
  * - JetBrains Mono — 等宽元数据（next/font/local 本地托管，CSS 变量 --font-jetbrains）
  *
- * 拉丁字族已自托管（消除外链依赖）；仅 CJK 两个字族保留 @import（本地全量托管体积过大不现实）。
- * display=swap 保证字体加载期间不阻塞首屏渲染（使用 fallback 字体过渡）。
+ * CJK 两个字族已改为本地自托管（@fontsource-variable，layout.tsx 引入）：
+ * - 消除 render-blocking 的跨域 @import 链（此前浏览器须先解析主 CSS 才发现外链，
+ *   且 fonts.googleapis.com 在部分网络环境下不可达时首屏会阻塞至超时）
+ * - 每个字族按 unicode-range 拆分为 101 个分片，浏览器仅下载页面实际用到的字符范围
+ * - @font-face 自带 font-display: swap，字体加载期间使用系统 fallback 过渡，不阻塞渲染
  */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300..700&family=Noto+Serif+SC:wght@300..600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -82,7 +84,7 @@
   --duration-epic: var(--duration-epic);
   --ease-ark: var(--ease-ark);
   --font-sans:
-    var(--font-manrope), 'Noto Sans SC', 'PingFang SC',
+    var(--font-manrope), 'Noto Sans SC Variable', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
@@ -90,7 +92,7 @@
     var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
   --font-serif:
-    var(--font-fraunces), 'Noto Serif SC', 'Songti SC', ui-serif,
+    var(--font-fraunces), 'Noto Serif SC Variable', 'Songti SC', ui-serif,
     Georgia, Cambria, 'Times New Roman', Times, serif;
   /* 像素字族（缝合像素 12px 等宽 zh_hans）— 仅用于元数据层：标签/编号/按钮文案/装饰 */
   --font-pixel:
@@ -103,7 +105,7 @@
  * 故此处显式定义一份，保证 var(--font-sans/mono/serif) 必然可解析） */
 :root {
   --font-sans:
-    var(--font-manrope), 'Noto Sans SC', 'PingFang SC',
+    var(--font-manrope), 'Noto Sans SC Variable', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif, system-ui,
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
     Arial, sans-serif;
@@ -111,7 +113,7 @@
     var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
   --font-serif:
-    var(--font-fraunces), 'Noto Serif SC', 'Songti SC', ui-serif,
+    var(--font-fraunces), 'Noto Serif SC Variable', 'Songti SC', ui-serif,
     Georgia, Cambria, 'Times New Roman', Times, serif;
   /* 像素字族（缝合像素 12px 等宽 zh_hans）— 仅用于元数据层：标签/编号/按钮文案/装饰 */
   --font-pixel:

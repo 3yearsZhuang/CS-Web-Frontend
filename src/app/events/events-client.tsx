@@ -10,42 +10,39 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { EventFilterBar, type StatusFilter } from '@/modules/events/ui/event-filter-bar';
 import { YearAccordionTimeline, type YearGroup } from '@/modules/events/ui/year-accordion-timeline';
 import { MonthCalendar } from '@/modules/events/ui/month-calendar';
-import { AdminEventsPanel } from '@/modules/admin/ui/admin-events-panel';
+import dynamic from 'next/dynamic';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import type { EventItem } from '@/modules/events/types';
-import type { SafeUser } from '@/modules/admin/ui/types';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button, SectionLoading, Title } from '@/components';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useAuth } from '@/shared/hooks/use-auth';
 import { groupEventsByYear, getEventYear } from '@/shared/utils/event-date';
+
+/** 活动管理面板（仅管理员可见的 Tab 99）— 懒加载，普通访客不加载该面板代码 */
+const AdminEventsPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-events-panel').then((m) => m.AdminEventsPanel),
+);
 
 type EventTab = 'timeline' | 'next' | 'admin';
 
-export default function EventsPage() {
+/** 活动页客户端组件 — 服务端预取的默认视图数据经 initialEvents 注入（首屏直出） */
+export default function EventsClient({ initialEvents }: { initialEvents: EventItem[] }) {
   const router = useRouter();
   const t = useTranslations('events');
   const [activeTab, setActiveTab] = useState<EventTab>('timeline');
 
-  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const r = await apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' });
-      if (cancelled) return;
-      if (r.status === 401 || !r.ok || !r.data) return;
-      const user = r.data.user;
-      if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-        setCurrentUser(user);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const isAdmin = currentUser !== null;
+  // 管理员判定：复用全局 SWR 化的 /api/auth/me（根布局已 SSR 注水），
+  // 不再单独发起一次 /api/auth/me 请求（消除与其它组件的重复拉取）。
+  const { user, loading: authLoading } = useAuth();
+  const isAdmin =
+    !authLoading &&
+    !!user &&
+    (user.role === 'admin' || user.role === 'root') &&
+    (user as { isActive?: boolean }).isActive !== false;
 
   // 悬浮胶囊侧边栏 Tab 配置（管理员可见 [99]）
   const eventsTabs: CapsuleTab[] = [
@@ -63,9 +60,12 @@ export default function EventsPage() {
     onRevealComplete,
     onTitleClick,
   };
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<EventItem[]>(initialEvents);
+  // 服务端已预取默认视图 → 首帧不显示骨架屏
+  const [loading, setLoading] = useState(initialEvents.length === 0);
   const [error, setError] = useState<string | null>(null);
+  // 是否已跳过「服务端预取对应的那次重复拉取」（仅首次生效，切筛选后不再跳过）
+  const initialFetchSkippedRef = useRef(false);
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
 
@@ -84,6 +84,13 @@ export default function EventsPage() {
   }, [statusFilter, t]);
 
   useEffect(() => {
+    // 首屏已由服务端预取（默认视图）：跳过这次重复请求；
+    // 之后切换筛选、或 SPA 再次进入该路由（RSC 会重新预取）时按需请求。
+    if (!initialFetchSkippedRef.current && initialEvents.length > 0 && !statusFilter) {
+      initialFetchSkippedRef.current = true;
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -266,7 +273,7 @@ export default function EventsPage() {
             )}
 
             {/* Tab 99 — 活动管理（仅管理员） */}
-            {activeTab === 'admin' && currentUser && (
+            {activeTab === 'admin' && isAdmin && (
               <div>
                 <AdminEventsPanel
                   onForbidden={() => router.push('/')}

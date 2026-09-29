@@ -71,11 +71,13 @@ export function Avatar({
         role={clickable ? 'button' : undefined}
         aria-label={clickable ? tu('menuAria') : undefined}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- 头像 URL 为用户上传，next/image 需配置 remotePatterns */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- 头像 URL 为用户上传/外部图源，next/image 需配置 remotePatterns */}
         <img
           src={avatarUrl}
           alt={t('avatarAlt')}
           className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
           onError={() => setImgError(true)}
         />
       </div>

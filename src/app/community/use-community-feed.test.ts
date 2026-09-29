@@ -39,6 +39,12 @@ const mockFeed = {
 describe('useCommunityFeed', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    // jsdom 默认无 origin（about:blank）→ window.localStorage 不可用；
+    // hook 现复用 useAuth（SWR 化 /api/auth/me）需要读取会话标记，这里补最小实现。
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+    });
   });
 
   it('挂载：auth=未登录时，all tab 仍加载 feed', async () => {

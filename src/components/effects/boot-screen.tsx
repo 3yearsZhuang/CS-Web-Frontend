@@ -41,9 +41,9 @@ const BOOT_LINES = [
 
 export function BootScreen({
   onRevealComplete,
-  lineInterval = 380,
-  holdMs = 480,
-  fadeMs = 850,
+  lineInterval = 200,
+  holdMs = 300,
+  fadeMs = 420,
 }: BootScreenProps) {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
@@ -63,8 +63,11 @@ export function BootScreen({
   }, []);
 
   // 启动序列时序：逐行打印 → 停留 → 淡出 → 通知 Hero 入场
+  // 注：不做「会话内只播一次」「慢加载跳过」等跳过处理 —— 开场动画为设计的一部分，
+  // 且遮罩同时承担「开场期间吞掉页面点击」的职责（跳过会让彩蛋在开场期间被误触发）。
   useEffect(() => {
     if (!mounted) return;
+
     // 减少动态偏好：直接跳过动画
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setVisibleLines(BOOT_LINES.length + 2); // 命令行 + 全部信息行 + 进入行
