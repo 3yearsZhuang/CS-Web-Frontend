@@ -10,8 +10,9 @@ import type { ReactNode } from 'react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { LOGO_PALETTE_MINI } from '@/shared/constants/logo-colors';
 
-/** 首次加载动画时长（秒）— 收敛为 0.4s：整页加载遮罩是纯等待成本，压缩至视觉可辨识下限 */
-const FIRST_LOAD_DURATION = 0.4;
+/** 首次加载动画时长（秒）— 0.7s：足以让用户看清进度环与进度条（0.4s 会更像一次闪烁而非过场），
+ *  又明显快于日常路由切换的等待感；路由切换仍固定 0.2s（ROUTE_CHANGE_DURATION）不受影响。 */
+const FIRST_LOAD_DURATION = 0.7;
 /** 路由切换动画时长（秒） */
 const ROUTE_CHANGE_DURATION = 0.2;
 

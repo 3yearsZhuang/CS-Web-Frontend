@@ -41,9 +41,14 @@ const BOOT_LINES = [
 
 export function BootScreen({
   onRevealComplete,
-  lineInterval = 200,
-  holdMs = 300,
-  fadeMs = 420,
+  // 节奏参数（可读性优先）：
+  //   lineInterval 320ms/行 —— 短句中文的舒适阅览节奏（低于 ~250ms 只会看到"闪过"，读不到内容）
+  //   holdMs 420ms —— 打印完成后留出"完成态"停留，让用户看清最后一行
+  //   fadeMs 520ms —— 淡出足够柔和但不拖沓
+  // 合计：首行 150ms 起 → 末行 ~1110ms → 停留后淡出 → Hero 入场 ≈ 2.05s
+  lineInterval = 320,
+  holdMs = 420,
+  fadeMs = 520,
 }: BootScreenProps) {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
