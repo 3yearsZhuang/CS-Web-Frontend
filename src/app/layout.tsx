@@ -194,7 +194,8 @@ export default async function RootLayout({
         strategy="beforeInteractive"
         nonce={nonce}
         dangerouslySetInnerHTML={{
-          __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
+          __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);
+try{if(sessionStorage.getItem('fztbu_boot_seen')==='1')h.classList.add('boot-seen');}catch(e){}}catch(e){}}())`,
         }}
       />
       <body

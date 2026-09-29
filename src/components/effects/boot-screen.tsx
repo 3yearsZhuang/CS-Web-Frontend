@@ -39,6 +39,9 @@ const BOOT_LINES = [
   { key: 'bootRing' },
 ] as const;
 
+/** 会话内已播放标记 — 开机序列只在会话内首次进入首页播放（sessionStorage：刷新/SPA 切换保留，关闭标签页后重置） */
+const BOOT_SEEN_KEY = 'fztbu_boot_seen';
+
 export function BootScreen({
   onRevealComplete,
   // 节奏参数（可读性优先）：
@@ -52,6 +55,7 @@ export function BootScreen({
 }: BootScreenProps) {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
+  const [skipped, setSkipped] = useState(false);
   const [visibleLines, setVisibleLines] = useState(0);
   const [fading, setFading] = useState(false);
   const firedRef = useRef(false);
@@ -68,10 +72,26 @@ export function BootScreen({
   }, []);
 
   // 启动序列时序：逐行打印 → 停留 → 淡出 → 通知 Hero 入场
-  // 注：不做「会话内只播一次」「慢加载跳过」等跳过处理 —— 开场动画为设计的一部分，
-  // 且遮罩同时承担「开场期间吞掉页面点击」的职责（跳过会让彩蛋在开场期间被误触发）。
+  // 仅会话首次播放：同会话内再次进入首页（硬刷新 / SPA 切回）直接跳过，Hero 立即可见。
   useEffect(() => {
     if (!mounted) return;
+
+    let seen = false;
+    try {
+      seen = window.sessionStorage.getItem(BOOT_SEEN_KEY) === '1';
+    } catch {
+      // sessionStorage 不可用（隐私模式等）时按未播放处理
+    }
+    if (seen) {
+      setSkipped(true);
+      fireComplete();
+      return;
+    }
+    try {
+      window.sessionStorage.setItem(BOOT_SEEN_KEY, '1');
+    } catch {
+      // 忽略存储失败
+    }
 
     // 减少动态偏好：直接跳过动画
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -100,18 +120,21 @@ export function BootScreen({
   }, [mounted]);
 
   // SSR / Client 首次 render：渲染稳定的占位 div（避免 hydration mismatch）
-  // 挂载后再渲染动画版本
+  // 挂载后再渲染动画版本；会话内已播放过时由 css(.boot-seen) 直接隐藏该占位，避免闪一下
   if (!mounted) {
     return (
       <div
         role="status"
         aria-label={t('bootTitle')}
         aria-hidden="true"
-        className="fixed inset-0 z-[var(--z-transition)]"
+        className="boot-placeholder fixed inset-0 z-[var(--z-transition)]"
         style={{ background: 'var(--background)' }}
       />
     );
   }
+
+  // 会话内已播放过 → 不渲染遮罩（Hero 已由 fireComplete 放行）
+  if (skipped) return null;
 
   return (
     <motion.div
