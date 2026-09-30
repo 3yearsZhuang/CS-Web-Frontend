@@ -73,7 +73,7 @@
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5",
-    "vitest": "^4.1.10",
+    "vitest": "^5.0.2",
     "yaml": "^2.4.2"
   },
   "packageManager": "pnpm@9.0.0",
