@@ -24,8 +24,26 @@ function parseArgs(argv) {
     threshold: 80,
     lcov: 'coverage/lcov.info',
     src: 'src',
-    // 默认排除纯翻译数据（与 vitest coverage exclude 对齐，避免 PR 加翻译触发门禁失败）
-    exclude: ['src/i18n/messages/**'],
+    // 默认排除纯翻译数据与路由壳（与 vitest coverage exclude 对齐，避免 PR 加翻译或路由壳触发门禁失败）
+    exclude: [
+      'src/i18n/messages/**',
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'src/**/*.spec.ts',
+      'src/**/*.spec.tsx',
+      'src/**/__mocks__/**',
+      'src/**/*.d.ts',
+      'src/app/**/layout.tsx',
+      'src/app/layout.tsx',
+      'src/app/**/page.tsx',
+      'src/app/page.tsx',
+      'src/app/**/*-client.tsx',
+      'src/app/**/loading.tsx',
+      'src/app/**/error.tsx',
+      'src/app/**/not-found.tsx',
+      'src/app/**/globals.css',
+      'src/app/globals.css',
+    ],
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -42,15 +60,14 @@ function parseArgs(argv) {
   return args;
 }
 
-/** 解析 lcov.info → Map<repoRelativePath, Set<coveredLineNum>> */
+/** 解析 lcov.info → Map<repoRelativePath, { measured: Set<number>, covered: Set<number> }> */
 function parseLcov(lcovPath, cwd) {
   if (!existsSync(lcovPath)) {
     throw new Error(`lcov 未找到：${lcovPath}（请先跑 pnpm test:coverage 生成覆盖率）`);
   }
   const cov = new Map();
   const text = readFileSync(lcovPath, 'utf-8');
-  let curSet = null;
-  let curFile = null;
+  let curData = null;
   for (const line of text.split('\n')) {
     if (line.startsWith('SF:')) {
       let p = line.slice(3).trim();
@@ -61,18 +78,19 @@ function parseLcov(lcovPath, cwd) {
         const idx = p.indexOf('/src/');
         if (idx >= 0) p = p.slice(idx + 1);
       }
-      curFile = p;
-      curSet = new Set();
-      cov.set(curFile, curSet);
+      curData = { measured: new Set(), covered: new Set() };
+      cov.set(p, curData);
     } else if (line.startsWith('DA:')) {
       // DA:<line>,<hitCount>[,<checksum>]
       const parts = line.slice(3).split(',');
       const ln = Number(parts[0]);
       const hit = Number(parts[1]);
-      if (curSet && hit > 0) curSet.add(ln);
+      if (curData) {
+        curData.measured.add(ln);
+        if (hit > 0) curData.covered.add(ln);
+      }
     } else if (line === 'end_of_record') {
-      curFile = null;
-      curSet = null;
+      curData = null;
     }
   }
   return cov;
@@ -106,6 +124,10 @@ function getAddedLines(base, srcDir, excludes) {
         continue;
       }
       if (p.startsWith('b/')) p = p.slice(2);
+      if (!/\.(ts|tsx|js|jsx|mjs)$/.test(p)) {
+        curLines = null;
+        continue;
+      }
       curLines = [];
       added.set(p, curLines);
     } else if (line.startsWith('@@')) {
@@ -136,16 +158,23 @@ function main() {
   let coveredAdded = 0;
   const report = [];
   for (const [file, lines] of added) {
-    const covSet = cov.get(file);
-    const covered = covSet ? lines.filter((l) => covSet.has(l)).length : 0;
-    totalAdded += lines.length;
-    coveredAdded += covered;
+    const covData = cov.get(file);
+    let checkLines = lines;
+    let hit = 0;
+    if (covData) {
+      checkLines = lines.filter((l) => covData.measured.has(l));
+      hit = checkLines.filter((l) => covData.covered.has(l)).length;
+    }
+    if (checkLines.length === 0) continue;
+
+    totalAdded += checkLines.length;
+    coveredAdded += hit;
     report.push({
       file,
-      added: lines.length,
-      covered,
-      uncovered: lines.length - covered,
-      pct: lines.length ? Math.round((covered / lines.length) * 100) : 100,
+      added: checkLines.length,
+      covered: hit,
+      uncovered: checkLines.length - hit,
+      pct: checkLines.length ? Math.round((hit / checkLines.length) * 100) : 100,
     });
   }
 
