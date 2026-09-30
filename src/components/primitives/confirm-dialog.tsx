@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   useCallback,
+  useMemo,
   createContext,
   useContext,
   type ReactNode,
@@ -208,8 +209,11 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     setState(null);
   }, []);
 
+  // 稳定 context value：避免每次 Provider 渲染重建对象导致所有 useConfirm 消费者重渲染
+  const contextValue = useMemo(() => ({ show }), [show]);
+
   return (
-    <ConfirmContext.Provider value={{ show }}>
+    <ConfirmContext.Provider value={contextValue}>
       {children}
       {state && (
         <ConfirmDialog

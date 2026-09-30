@@ -22,8 +22,7 @@
  *   - img-src 允许 'self' / data: / blob: / QQ 头像 CDN (q*.qlogo.cn)
  *     — 项目图片为同源（logo、预设头像），用户上传头像为同源，
  *       QQ 头像彩蛋需要加载 qlogo.cn 外部图源
- *   - style-src 允许 fonts.googleapis.com 用于 Google Fonts CSS @import
- *   - font-src 允许 fonts.gstatic.com 用于 Google Fonts 字体文件
+ *   - style-src / font-src 仅 'self'（字体已全量自托管，无第三方字体 CDN 依赖）
  *   - script-src 仅 'self' 'unsafe-eval'
  *     — 静态资源（_next/static）为外部 JS 文件，'self' 即可加载
  *     — 'unsafe-eval' 供开发热重载；生产可移除
@@ -125,8 +124,8 @@ const nextConfig: NextConfig = {
           "default-src 'self'",
           // 'unsafe-eval' is required for Turbopack HMR in dev (see dev CSP note above)
           "script-src 'self' 'unsafe-eval'",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-          "font-src 'self' https://fonts.gstatic.com",
+          "style-src 'self' 'unsafe-inline'",
+          "font-src 'self'",
           "img-src 'self' data: blob: https://q1.qlogo.cn https://q2.qlogo.cn https://q.qlogo.cn",
           "connect-src 'self'",
           "frame-ancestors 'none'",

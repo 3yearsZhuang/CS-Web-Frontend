@@ -30,6 +30,7 @@ export default defineConfig({
         // Next.js 路由壳：由 E2E 覆盖，不计入单测覆盖率
         'src/app/**/layout.tsx',
         'src/app/**/page.tsx',
+        'src/app/**/*-client.tsx',
         'src/app/**/loading.tsx',
         'src/app/**/error.tsx',
         'src/app/**/not-found.tsx',

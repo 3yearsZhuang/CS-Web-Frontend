@@ -20,5 +20,12 @@ export async function GET(
   }
   const contentType = upstream.headers.get('content-type') || 'image/png';
   const bytes = Buffer.from(await upstream.arrayBuffer());
-  return new NextResponse(bytes, { headers: { 'Content-Type': contentType } });
+  // 头像文件名含毫秒时间戳、一经写入不再复用 → 可安全 immutable：
+  // 消除全站高频头像（列表/评论/导航）在每次浏览中的重复下载。
+  return new NextResponse(bytes, {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
 }

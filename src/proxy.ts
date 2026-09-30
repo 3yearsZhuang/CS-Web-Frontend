@@ -101,8 +101,8 @@ function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
     scriptSrc,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
     "img-src 'self' data: blob: https://q1.qlogo.cn https://q2.qlogo.cn https://q.qlogo.cn",
     "connect-src 'self'",
     "frame-ancestors 'none'",

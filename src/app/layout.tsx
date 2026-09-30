@@ -20,13 +20,13 @@ import { AnnouncementBannerClient } from '@/modules/announcements/ui/announcemen
 import { ConfirmProvider } from '@/components/primitives/confirm-dialog';
 import { DemoModeInit } from '@/components/demo/demo-mode-init';
 import { DemoBanner } from '@/components/demo/demo-banner';
+import { CjkFontLoader } from '@/components/cjk-font-loader';
 import './globals.css';
 
 /**
- * 字体自托管（CodeGov-F1）— 拉丁字族用 next/font/local 本地托管，
- * 消除对外链 Google Fonts 的运行时依赖（隐私/性能/离线）。
- * CJK（Noto Sans/Serif SC）体积过大不做本地托管，仍经 globals.css 的
- * @import 加载（仅保留 CJK 两个字族）。
+ * 字体自托管（CodeGov-F1）— 全部字族均本地托管，无第三方字体 CDN 依赖。
+ * 拉丁字族与像素字族用 next/font/local；CJK 两族（Noto Sans/Serif SC Variable）
+ * 由 @fontsource-variable 提供，经 CjkFontLoader 在空闲时加载（不占用首屏关键带宽）。
  *
  * 各字体暴露 CSS 变量，供 globals.css 的 --font-sans/mono/serif 引用。
  */
@@ -54,6 +54,9 @@ const fusionPixel = localFont({
   src: './fonts/fusion-pixel-zh_hans.woff2',
   variable: '--font-fusion-pixel',
   display: 'swap',
+  // 656KB 全字符像素字族：不参与 preload，避免与首屏关键资源争抢带宽；
+  // 由 swap 在首次使用时异步加载（元数据层文字先以 fallback 等宽字体渲染）。
+  preload: false,
 });
 
 /** 全局 SEO 元数据 */
@@ -79,11 +82,13 @@ export async function generateMetadata(): Promise<Metadata> {
     '技术交流',
   ],
   authors: [{ name: t('author') }],
-  // 浏览器标签页图标 — 使用 logo.png（用户要求）
+  // 浏览器标签页图标 — 使用按尺寸预生成的专用图标。
+  // 原始 logo.png 为 1254²/574KB，直接作为 favicon/apple-icon 会让浏览器首屏拉取大图
+  // （实测被请求 3 次，占首屏传输量的大头）；OG/Twitter 仍指向原始大图（仅爬虫抓取）。
   icons: {
-    icon: [{ url: '/logo.png', type: 'image/png', sizes: 'any' }],
-    apple: [{ url: '/logo.png', sizes: '180x180' }],
-    shortcut: ['/logo.png'],
+    icon: [{ url: '/favicon.png', type: 'image/png', sizes: '64x64' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    shortcut: ['/favicon.png'],
   },
   openGraph: {
     title: t('ogTitle'),
@@ -189,7 +194,8 @@ export default async function RootLayout({
         strategy="beforeInteractive"
         nonce={nonce}
         dangerouslySetInnerHTML={{
-          __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);}catch(e){}}())`,
+          __html: `(function(){try{var s=localStorage.getItem('theme');var d=s==='dark'||(!s&&true);var h=document.documentElement;h.classList.toggle('dark',d);
+try{if(sessionStorage.getItem('fztbu_boot_seen')==='1')h.classList.add('boot-seen');}catch(e){}}catch(e){}}())`,
         }}
       />
       <body
@@ -213,6 +219,8 @@ export default async function RootLayout({
             <ConfirmProvider>
               {/* 演示模式：URL 参数开关（?demo=1/0）+ 全局演示横幅（手动/自动降级标识） */}
               <DemoModeInit />
+              {/* CJK 字族空闲时加载：@font-face 规则不进入首屏关键路径（详见组件内注释） */}
+              <CjkFontLoader />
               <DemoBanner />
               <VisibilityGate componentKey="chrome-navbar">
                 <Navbar />
