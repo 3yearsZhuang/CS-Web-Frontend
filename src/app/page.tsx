@@ -5,11 +5,10 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { MobiusRing } from '@/components/effects/mobius-ring';
-import { StarfieldCanvas } from '@/components/effects/starfield-canvas';
 import { Avatar } from '@/components/avatar';
 import { ADMIN_AVATARS, getAdminAvatarUrl, type AdminAvatar } from '@/shared/config';
 import { EASE } from '@/shared/utils/ui-constants';
@@ -21,6 +20,16 @@ import { useBreakpoint, type Breakpoint } from '@/shared/hooks';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { MemberItem } from '@/modules/community/types';
+
+/** Canvas 特效按需加载 — 装饰层不进入首屏 bundle，且在客户端挂载后才拉取代码 */
+const StarfieldCanvas = dynamic(
+  () => import('@/components/effects/starfield-canvas').then((m) => m.StarfieldCanvas),
+  { ssr: false },
+);
+const MobiusRing = dynamic(
+  () => import('@/components/effects/mobius-ring').then((m) => m.MobiusRing),
+  { ssr: false },
+);
 
 /** 莫比乌斯环响应式配置 — 按断点分级
  *
@@ -101,13 +110,31 @@ export default function Home() {
   const [avatarPos, setAvatarPos] = useState({ x: 0, y: 0 });
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [allMembers, setAllMembers] = useState<MemberItem[]>([]);
+  const membersLoadingRef = useRef(false);
+  const membersLoadedRef = useRef(false);
 
-  // 挂载时获取所有注册用户
-  useEffect(() => {
+  /** 彩蛋数据源按需加载 — 该列表仅供点击彩蛋使用，不再在挂载时预拉（避免首屏网络竞争） */
+  const ensureMembersLoaded = useCallback(() => {
+    if (membersLoadedRef.current || membersLoadingRef.current) return;
+    membersLoadingRef.current = true;
     apiRequest<{ members: MemberItem[] }>('/api/community/members').then((r) => {
-      if (r.ok && r.data?.members) setAllMembers(r.data.members as MemberItem[]);
+      membersLoadingRef.current = false;
+      if (r.ok && r.data?.members) {
+        membersLoadedRef.current = true;
+        setAllMembers(r.data.members as MemberItem[]);
+      }
     });
   }, []);
+
+  // 首屏渲染完成后空闲预热彩蛋数据源（不影响关键路径；失败留待首次点击重试）
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(() => ensureMembersLoaded(), { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(ensureMembersLoaded, 2500);
+    return () => clearTimeout(timer);
+  }, [ensureMembersLoaded]);
 
   /** 判断是否为 AdminAvatar */
   const isAdminAvatar = (p: AdminAvatar | MemberItem): p is AdminAvatar =>
@@ -136,6 +163,9 @@ export default function Home() {
   /** 在指定坐标弹出随机头像，2 秒后自动淡出（坐标钳制在视口内避免移动端溢出） */
   const triggerEggAt = useCallback(
     (x: number, y: number) => {
+      // 首次触发时补齐数据源（不阻塞当前弹出：本次先用已完成加载的数据）
+      ensureMembersLoaded();
+
       // 钳制到视口内，确保浮层不溢出边缘（fixed 定位 + translate(-50%,-50%) 时尤其需要）
       const pad = 80;
       const cx = Math.min(Math.max(x, pad), Math.max(window.innerWidth - pad, pad));
@@ -155,14 +185,20 @@ export default function Home() {
         }, 500);
       }, 2000);
     },
-    [clearAutoHideTimer, pickRandomPerson],
+    [clearAutoHideTimer, pickRandomPerson, ensureMembersLoaded],
   );
 
-  /** 全页点击 — 在点击位置弹出随机头像（跳过链接/按钮自身） */
+  /** 点击圆环 — 在点击位置弹出随机头像（彩蛋仅由圆环本体触发，页面其他位置不响应） */
   const handlePageClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.closest('a, button')) return;
+      // 圆环外层是正方形定位盒，四角为透明区：按圆环外径做命中判定，
+      // 只接受落在环体范围内的点击（外径 ≈ 0.55 × 盒宽）。
+      const rect = e.currentTarget.getBoundingClientRect();
+      const dx = e.clientX - (rect.left + rect.width / 2);
+      const dy = e.clientY - (rect.top + rect.height / 2);
+      if (Math.hypot(dx, dy) > rect.width * 0.55) return;
       triggerEggAt(e.clientX, e.clientY);
     },
     [triggerEggAt],
@@ -179,7 +215,7 @@ export default function Home() {
 
   return (
     <VisibilityGate componentKey="home">
-      <main className="relative" onClick={handlePageClick}>
+      <main className="relative">
       {/* 开机遮罩 — 全屏启动序列（双主题 CSS 变量适配），完成后触发 Hero 入场 */}
       {!bootDone && <BootScreen onRevealComplete={() => setBootDone(true)} />}
       {/* 键盘可达的彩蛋入口 — 视觉隐藏，仅供屏幕阅读器与 Tab 键盘用户发现 */}
@@ -217,22 +253,32 @@ export default function Home() {
 
         {/* 粒子莫比乌斯环 — 单实例响应式（之前 4 个同时挂载导致 4 个 RAF + 12 监听器）
          *
-         * 堆叠策略：父容器 pointer-events-none 不拦截点击，点击穿透到 <section> 后
-         * 冒泡到 <main> 的 onClick 彩蛋处理器。CTA 按钮通过 pointer-events-auto
-         * 恢复可点击，彩蛋 handler 中通过 closest('a, button') 跳过这些点击。 */}
+         * 堆叠策略：父容器 pointer-events-none 不拦截点击；CTA 按钮与圆环各自
+         * pointer-events-auto 恢复可点击（圆环 = 彩蛋触发区，其余位置点击不响应）。 */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          {/* 像素星空底层 — 叠于莫比乌斯环之下，营造暗夜氛围（像素融合 M3） */}
-          <StarfieldCanvas className="absolute inset-0" />
-          <div className={mobius.positionClass} style={mobius.sizeStyle}>
-            <MobiusRing
-              className={`w-full h-full ${mobius.opacity}`}
-              particleCount={mobius.particleCount}
-              radius={mobius.radius}
-              width={mobius.width}
-              repelRadius={mobius.repelRadius}
-              repelStrength={mobius.repelStrength}
-            />
-          </div>
+          {/* Canvas 特效在开机遮罩结束后才挂载：避免在不透明遮罩下空跑 RAF；
+           * 动态 chunk 与启动序列并行加载，揭示时已就绪（像素星空 + 莫比乌斯环） */}
+          {bootDone && (
+            <>
+              <StarfieldCanvas className="absolute inset-0" />
+              {/* 圆环 = 彩蛋唯一触发区：容器 pointer-events-none 让点击穿透，
+                  仅圆环自身恢复 pointer-events-auto，点击即在该点弹出随机成员头像。 */}
+              <div
+                className={`${mobius.positionClass} pointer-events-auto cursor-pointer`}
+                style={mobius.sizeStyle}
+                onClick={handlePageClick}
+              >
+                <MobiusRing
+                  className={`w-full h-full ${mobius.opacity}`}
+                  particleCount={mobius.particleCount}
+                  radius={mobius.radius}
+                  width={mobius.width}
+                  repelRadius={mobius.repelRadius}
+                  repelStrength={mobius.repelStrength}
+                />
+              </div>
+            </>
+          )}
 
           {/* 渐变遮罩 — 让环与背景融合
            * 桌面端：从左到右淡出（与文字区融合）
@@ -385,18 +431,19 @@ export default function Home() {
               top: avatarPos.y,
               transform: 'translate(-50%, -50%)',
               background: 'color-mix(in srgb, var(--background) 10%, transparent)',
+              willChange: 'transform, opacity',
             }}
-            initial={{ opacity: 0, y: 24, scale: 1.02, filter: 'blur(14px)' }}
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={
               isHiding
-                ? { opacity: 0, y: -12, scale: 0.95, filter: 'blur(8px)' }
-                : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+                ? { opacity: 0, y: -12, scale: 0.95 }
+                : { opacity: 1, y: 0, scale: 1 }
             }
-            exit={{ opacity: 0, scale: 0.95, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={
               isHiding
-                ? { duration: 0.5, ease: EASE }
-                : { duration: 1.0, ease: EASE }
+                ? { duration: 0.35, ease: EASE }
+                : { duration: 0.6, ease: EASE }
             }
           >
             <div className="ark-corner-bracket">

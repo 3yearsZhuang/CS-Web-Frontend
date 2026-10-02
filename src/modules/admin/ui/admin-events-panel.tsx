@@ -11,6 +11,7 @@ import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Button, SectionLoading } from '@/components';
 import { useToast } from '@/components/feedback/toast';
+import { groupEventsByYear } from '@/shared/utils/event-date';
 import {
   type EventItem,
   type EventForm,
@@ -117,20 +118,10 @@ export function AdminEventsPanel({ onForbidden }: AdminEventsPanelProps) {
   /* ============= 派生数据 ============= */
 
   const { uncategorizedEvents, yearGroups } = useMemo(() => {
-    const map = new Map<string, EventItem[]>();
-    for (const e of events) {
-      const y = e.year || '未分类';
-      if (!map.has(y)) map.set(y, []);
-      map.get(y)!.push(e);
-    }
-    const uncategorized = map.get('未分类') ?? [];
-    map.delete('未分类');
-    const sorted = Array.from(map.entries()).sort(([a], [b]) => {
-      return b.localeCompare(a);
-    });
+    const { uncategorized, yearGroups } = groupEventsByYear(events, '未分类');
     return {
       uncategorizedEvents: uncategorized,
-      yearGroups: sorted.map(([year, events]) => ({ year, events })),
+      yearGroups,
     };
   }, [events]);
 

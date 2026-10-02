@@ -11,6 +11,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { useAuth } from '@/shared/hooks/use-auth';
 import type {
   FeedItem,
   FeedKind,
@@ -50,30 +51,19 @@ export function useCommunityFeed() {
       : 'all';
   const initialSort = (searchParams.get('sort') as CommunitySort) ?? 'latest';
 
-  const [currentUser, setCurrentUser] = useState<SafeUser | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const meResult = await apiRequest<{ user: SafeUser }>('/api/auth/me', { cache: 'no-store' });
-      if (cancelled) return;
-      if (meResult.ok && meResult.data) {
-        setIsLoggedIn(true);
-        const user = meResult.data.user;
-        setCurrentUserId(user.id);
-        if ((user.role === 'admin' || user.role === 'root') && user.isActive) {
-          setCurrentUser(user);
-        }
-      }
-      setAuthChecked(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // 复用全局 SWR 化的 /api/auth/me（根布局已 SSR 注水）——不再单独发起一次请求
+  const { user: authUser, loading: authLoading } = useAuth();
+  const authRecord = authUser as (SafeUser & { isActive?: boolean }) | null;
+  const isLoggedIn = !!authUser;
+  const currentUserId = authUser?.id ?? null;
+  // 仅管理员/root 且启用中的账号视为管理视图可用（与既有判定一致）
+  const currentUser =
+    authRecord &&
+    (authRecord.role === 'admin' || authRecord.role === 'root') &&
+    authRecord.isActive
+      ? authRecord
+      : null;
+  const authChecked = !authLoading;
 
   const isAdmin = currentUser !== null;
 

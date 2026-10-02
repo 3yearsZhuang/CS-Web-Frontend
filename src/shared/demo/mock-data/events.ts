@@ -10,6 +10,7 @@
  * 字段为后端 EventOut snake_case 形状（toEventItem 翻译）。
  */
 import { registerDemoMock } from '../demo-mode';
+import { compareEvents } from '../../utils/event-date';
 
 const DEMO_EVENTS: Array<Record<string, unknown>> = [
   {
@@ -101,9 +102,10 @@ registerDemoMock({
     const status = searchParams.get('status');
     const month = searchParams.get('month');
 
-    let items = DEMO_EVENTS;
+    let items = [...DEMO_EVENTS];
     if (status) items = items.filter((e) => e.status === status);
     if (month) items = items.filter((e) => e.month === month);
+    items.sort(compareEvents);
 
     const start = (page - 1) * pageSize;
     const paged = items.slice(start, start + pageSize);

@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -13,17 +14,34 @@ import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-h
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { ToastProvider } from '@/components/feedback/toast';
 import { Spinner, ArkDivider } from '@/components';
-import { AdminUsersPanel } from '@/modules/admin/ui/admin-users-panel';
-import { AdminMessagesPanel } from '@/modules/admin/ui/admin-messages-panel';
-import { AdminLogsPanel } from '@/modules/admin/ui/admin-logs-panel';
-import { AdminRolesPanel } from '@/modules/admin/ui/admin-roles-panel';
-import { AdminJoinPanel } from '@/modules/admin/ui/admin-join-panel';
-import { AdminFeatureVisibilityPanel } from '@/modules/admin/ui/admin-feature-visibility-panel';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import { SectionNav } from '@/components/primitives/section-nav';
 import { type AdminTab, type SafeUser } from '@/modules/admin/ui/types';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
+
+// 管理面板按 Tab 懒加载 — 6 个面板各自独立 chunk，仅打开对应 Tab 时才拉取并执行；
+// 避免进入 /admin 即加载全部面板（用户管理/消息/入社/日志/角色权限/可见性）代码。
+const AdminUsersPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-users-panel').then((m) => m.AdminUsersPanel),
+);
+const AdminMessagesPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-messages-panel').then((m) => m.AdminMessagesPanel),
+);
+const AdminLogsPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-logs-panel').then((m) => m.AdminLogsPanel),
+);
+const AdminRolesPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-roles-panel').then((m) => m.AdminRolesPanel),
+);
+const AdminJoinPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-join-panel').then((m) => m.AdminJoinPanel),
+);
+const AdminFeatureVisibilityPanel = dynamic(() =>
+  import('@/modules/admin/ui/admin-feature-visibility-panel').then(
+    (m) => m.AdminFeatureVisibilityPanel,
+  ),
+);
 
 /* ============= 工具函数 ============= */
 

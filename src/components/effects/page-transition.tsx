@@ -10,8 +10,9 @@ import type { ReactNode } from 'react';
 import { EASE } from '@/shared/utils/ui-constants';
 import { LOGO_PALETTE_MINI } from '@/shared/constants/logo-colors';
 
-/** 首次加载动画时长（秒） */
-const FIRST_LOAD_DURATION = 1.0;
+/** 首次加载动画时长（秒）— 0.7s：足以让用户看清进度环与进度条（0.4s 会更像一次闪烁而非过场），
+ *  又明显快于日常路由切换的等待感；路由切换仍固定 0.2s（ROUTE_CHANGE_DURATION）不受影响。 */
+const FIRST_LOAD_DURATION = 0.7;
 /** 路由切换动画时长（秒） */
 const ROUTE_CHANGE_DURATION = 0.2;
 
@@ -160,9 +161,12 @@ export function PageTransition({ children }: PageTransitionProps) {
   // 主 effect：根据 pathname 变化启动动画
   useEffect(() => {
     // 首次挂载（整页加载）— 播放完整动画
+    // 注：不做「会话内只播一次」「慢加载跳过」等跳过处理 —— 该遮罩同时承担
+    // 「开场期间吞掉页面点击」的职责，跳过会让首页彩蛋在开场期间被误触发。
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false;
       prevPathRef.current = pathname;
+
       maxDurationRef.current = FIRST_LOAD_DURATION + 0.5;
       progress.set(0);
       setIsTransitioning(true);
@@ -221,8 +225,7 @@ export function PageTransition({ children }: PageTransitionProps) {
             className="fixed inset-0 z-[70] flex flex-col items-center justify-center pointer-events-none"
             style={{ backgroundColor: 'var(--background)' }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+            exit={{ opacity: 0, scale: 1.01 }}
             transition={{ duration: 0.15, ease: EASE }}
           >
             <div className="relative flex flex-col items-center">
@@ -273,18 +276,12 @@ export function PageTransition({ children }: PageTransitionProps) {
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={pathname}
-          className="relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.12, ease: EASE }}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      {/* 内容区 — 按 pathname 重挂载（保留「路由切换即重置页内状态」的既有语义）。
+       * 不设出场动画：新页面在遮罩下立即挂载，数据请求即刻发起；
+       * 移除 AnimatePresence mode="wait" 的 0.12s 串行出场等待与新页面入场延迟。 */}
+      <div key={pathname} className="relative">
+        {children}
+      </div>
     </>
   );
 }

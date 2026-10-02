@@ -17,6 +17,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { EventStatusBadge } from '@/modules/events/ui/event-status-badge';
 import { apiRequest } from '@/shared/hooks/use-api-request';
+import { downloadIcsFile } from '@/shared/utils/ics-generator';
 
 /** 容量为 0 表示不限名额（数据库无 NULL 容量，以 0 代表不限制） */
 const UNLIMITED_CAPACITY = 0;
@@ -273,7 +274,23 @@ export default function EventDetailPage() {
             <RevealItem>
               <section className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 sm:mb-16 border border-[var(--border)]">
                 <div className="p-6 sm:p-8 border-b md:border-b-0 md:border-r border-[var(--border)]">
-                  <div className="meta-mono mb-3">Date</div>
+                  <div className="meta-mono mb-3 flex items-center justify-between">
+                    <span>Date</span>
+                    <button
+                      type="button"
+                      onClick={() => downloadIcsFile({ id: event.id, title: event.title, date: event.date, description: event.description })}
+                      className="text-[11px] meta-mono text-[var(--primary)] hover:underline cursor-pointer focus-amber inline-flex items-center gap-1"
+                      title="添加到日历 (.ics)"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                        <line x1="16" x2="16" y1="2" y2="6"/>
+                        <line x1="8" x2="8" y1="2" y2="6"/>
+                        <line x1="3" x2="21" y1="10" y2="10"/>
+                      </svg>
+                      <span>+ 日历</span>
+                    </button>
+                  </div>
                   <div className="display-serif text-xl text-[var(--foreground)]">
                     {event.date || event.month || event.year || '—'}
                   </div>
@@ -438,6 +455,13 @@ export default function EventDetailPage() {
                         <Button variant="outline" disabled className="opacity-30 cursor-not-allowed pointer-events-none">
                           <span>{t('registered')}</span>
                           <span>✓</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => downloadIcsFile({ id: event.id, title: event.title, date: event.date, description: event.description })}
+                          className="hover:text-[var(--primary)] hover:border-[var(--primary)]"
+                        >
+                          <span>添加到日历 (.ics)</span>
                         </Button>
                         <Button
                           variant="outline"

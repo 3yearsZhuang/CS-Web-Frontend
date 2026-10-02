@@ -48,3 +48,98 @@ export function isPastDate(dateStr: string | null): boolean {
   today.setHours(0, 0, 0, 0);
   return d < today;
 }
+
+/** 获取活动日期的毫秒时间戳，解析失败返回 Number.NEGATIVE_INFINITY */
+export function getEventTimestamp(dateStr: string | null): number {
+  const parsed = parseEventDate(dateStr);
+  if (!parsed) return Number.NEGATIVE_INFINITY;
+  return new Date(parsed.year, parsed.month, parsed.day).getTime();
+}
+
+export interface SortableEvent {
+  id?: string | number;
+  date?: string | null;
+  month?: string | null;
+  year?: string | number | null;
+  isPinned?: boolean;
+  is_pinned?: boolean;
+  createdAt?: string;
+  created_at?: string;
+}
+
+/** 比较两个活动的展示顺序：置顶优先 -> 日期降序 -> ID 降序 */
+export function compareEvents(a: SortableEvent, b: SortableEvent): number {
+  const pinnedA = Boolean(a.isPinned ?? a.is_pinned);
+  const pinnedB = Boolean(b.isPinned ?? b.is_pinned);
+  if (pinnedA !== pinnedB) {
+    return pinnedB ? 1 : -1;
+  }
+
+  const timeA = getEventTimestamp(a.date ?? null);
+  const timeB = getEventTimestamp(b.date ?? null);
+  if (timeA !== timeB) {
+    return timeB - timeA;
+  }
+
+  const idA = Number(a.id);
+  const idB = Number(b.id);
+  if (!Number.isNaN(idA) && !Number.isNaN(idB) && idA !== idB) {
+    return idB - idA;
+  }
+
+  return 0;
+}
+
+/** 智能推导活动年份：优先显式 year -> 从 date 推导 -> 从 month 推导 -> fallbackLabel */
+export function getEventYear(event: SortableEvent, fallbackLabel = '未分类'): string {
+  if (event.year != null && String(event.year).trim()) {
+    return String(event.year).trim();
+  }
+  const parsed = parseEventDate(event.date ?? null);
+  if (parsed) {
+    return String(parsed.year);
+  }
+  if (event.month && typeof event.month === 'string') {
+    const match = event.month.trim().match(/^(\d{4})/);
+    if (match) return match[1];
+  }
+  return fallbackLabel;
+}
+
+/** 年份分组结构 */
+export interface EventYearGroup<T> {
+  year: string;
+  events: T[];
+}
+
+/** 将活动按年份分组，每组内及未分类均按 compareEvents 严格降序排序，年份亦按降序排列 */
+export function groupEventsByYear<T extends SortableEvent>(
+  events: T[],
+  uncategorizedLabel = '未分类',
+): {
+  uncategorized: T[];
+  yearGroups: EventYearGroup<T>[];
+} {
+  const map = new Map<string, T[]>();
+
+  for (const e of events) {
+    const y = getEventYear(e, uncategorizedLabel);
+    if (!map.has(y)) map.set(y, []);
+    map.get(y)!.push(e);
+  }
+
+  // 组内严格按置顶和时间降序排序
+  for (const [y, groupEvents] of map.entries()) {
+    map.set(y, [...groupEvents].sort(compareEvents));
+  }
+
+  const uncategorized = map.get(uncategorizedLabel) ?? [];
+  map.delete(uncategorizedLabel);
+
+  // 年份按数字/字符串降序排序
+  const sortedYears = Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
+  const yearGroups = sortedYears.map(([year, groupEvents]) => ({ year, events: groupEvents }));
+
+  return { uncategorized, yearGroups };
+}
+
