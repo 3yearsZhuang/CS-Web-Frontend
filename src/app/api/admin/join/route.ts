@@ -23,14 +23,18 @@ export async function GET(req: Request) {
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const body = (proxy.body ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  // P1-8 修复：后端 /join/admin 返回裸数组（list[JoinApplicationOut]，camelCase），
+  // 此前按分页对象 {items,total,total_pages} 解构导致 applications 恒空。
+  const raw = proxy.body as unknown;
+  const items = (
+    Array.isArray(raw) ? raw : ((raw as Record<string, unknown> | null)?.items ?? [])
+  ) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
     applications: items.map(toJoinApplication),
-    total: Number(body.total ?? 0),
+    total: items.length,
     page,
     pageSize,
-    totalPages: Number(body.total_pages ?? 1),
+    totalPages: 1,
   });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

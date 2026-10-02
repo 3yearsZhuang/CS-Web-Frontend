@@ -18,7 +18,8 @@ export async function POST(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/task/claims/${encodeURIComponent(id)}/submit`,
+    // TOOLS-GOV Slice B：后端真实路由 /tools/tasks/...（复数），且已由 GET 改 POST
+    path: `/tools/tasks/claims/${encodeURIComponent(id)}/submit`,
     method: 'POST',
     jsonBody: {
       submission_url: body.submissionUrl,

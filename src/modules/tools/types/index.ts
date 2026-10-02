@@ -159,8 +159,8 @@ export interface AttemptRow {
 export type TaskStatus = 'draft' | 'published' | 'closed';
 /** 任务分类 */
 export type TaskCategory = 'general' | 'documentation' | 'event' | 'maintenance' | 'mentoring' | 'other';
-/** 认领状态 */
-export type ClaimStatus = 'claimed' | 'completed' | 'cancelled';
+/** 认领状态（对齐后端 TaskClaim.status：claimed/submitted/approved/rejected；取消即删行） */
+export type ClaimStatus = 'claimed' | 'submitted' | 'approved' | 'rejected';
 
 /** 创建/更新任务的输入参数 */
 export interface TaskInput {
@@ -319,8 +319,8 @@ export const LEVEL_THRESHOLDS: Array<{ level: number; title: string; minPoints: 
 
 // ============= 组件注册表（组件可视化管理平台） =============
 
-/** 迁移状态 */
-export type MigrationStatus = 'legacy' | 'migrating' | 'done';
+/** 迁移状态（对齐后端 COMPONENT_MIGRATION_STATUSES 四值；Slice E 值域统一） */
+export type MigrationStatus = 'legacy' | 'in-progress' | 'migrated' | 'deprecated';
 /** 变体尺寸 */
 export type VariantSize = 'sm' | 'md' | 'lg';
 /** 变体颜色 */
@@ -431,8 +431,9 @@ export const VARIANT_PRESETS: { key: VariantPresetKey; label: string; hint: stri
 /** 迁移状态展示配置 */
 export const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string }> = {
   legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20' },
-  migrating: { label: 'Migrating', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  done: { label: 'Done', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  'in-progress': { label: 'In Progress', color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  migrated: { label: 'Migrated', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  deprecated: { label: 'Deprecated', color: 'text-red-500', bg: 'bg-red-500/10' },
 };
 
 /** 兜底：后端若返回未定义的迁移状态，使用中性样式，避免读取 undefined.bg 崩溃。 */
@@ -451,7 +452,7 @@ export function getStatusConfig(
 }
 
 /** 迁移状态排序（用于列表排序） */
-export const STATUS_ORDER: MigrationStatus[] = ['legacy', 'migrating', 'done'];
+export const STATUS_ORDER: MigrationStatus[] = ['legacy', 'in-progress', 'migrated', 'deprecated'];
 
 /** 分类展示配置 */
 export const CATEGORY_CONFIG: Record<string, { label: string; en: string; order: number }> = {

@@ -2,8 +2,8 @@
  * @file 演示模式 mock — join / notifications / public-profile
  *
  * 覆盖：
- *   - GET  /join/mine                → JoinApplicationOut[]（snake_case，toJoinApplication 翻译）
- *   - POST /join                     → JoinApplicationOut（201，合并请求体后返回）
+ *   - GET  /join/mine                → JoinApplicationOut[]（camelCase，toJoinApplication 翻译；P1-8）
+ *   - POST /join                     → JoinApplicationOut（201，合并请求体后返回；请求体保持后端 snake_case 入参契约）
  *   - GET  /notifications/unread-count → { unread_count }
  *   - GET  /users/:id/public-profile → { user: PublicUserOut(camelCase), stats }（前端直透）
  */
@@ -11,19 +11,19 @@ import { registerDemoMock } from '../demo-mode';
 
 const DEMO_APPLICATION: Record<string, unknown> = {
   id: 7,
-  applicant_name: '演示同学',
-  student_id: '20260001',
+  applicantName: '演示同学',
+  studentId: '20260001',
   major: '计算机科学与技术',
-  tech_tags: ['Web', 'AI'],
+  techTags: ['Web', 'AI'],
   reason: '对 Web 与 AI 方向感兴趣，希望加入社团一起学习交流。',
-  contact_qq: '123456789',
-  contact_phone: null,
-  user_id: 1,
+  contactQq: '123456789',
+  contactPhone: null,
+  userId: 1,
   status: 'pending',
-  reviewed_by: null,
-  review_note: null,
-  created_at: '2026-08-18T10:00:00Z',
-  updated_at: '2026-08-18T10:00:00Z',
+  reviewedBy: null,
+  reviewNote: null,
+  createdAt: '2026-08-18T10:00:00Z',
+  updatedAt: '2026-08-18T10:00:00Z',
 };
 
 registerDemoMock({
@@ -47,19 +47,19 @@ registerDemoMock({
       status: 201,
       body: {
         id: 99,
-        applicant_name: b.applicant_name ?? '演示同学',
-        student_id: b.student_id ?? '20260001',
+        applicantName: b.applicant_name ?? '演示同学',
+        studentId: b.student_id ?? '20260001',
         major: b.major ?? '计算机科学与技术',
-        tech_tags: Array.isArray(b.tech_tags) ? b.tech_tags : ['Web'],
+        techTags: Array.isArray(b.tech_tags) ? b.tech_tags : ['Web'],
         reason: b.reason ?? '希望加入社团一起学习',
-        contact_qq: b.contact_qq ?? null,
-        contact_phone: b.contact_phone ?? null,
-        user_id: 1,
+        contactQq: b.contact_qq ?? null,
+        contactPhone: b.contact_phone ?? null,
+        userId: 1,
         status: 'pending',
-        reviewed_by: null,
-        review_note: null,
-        created_at: '2026-08-19T00:00:00Z',
-        updated_at: '2026-08-19T00:00:00Z',
+        reviewedBy: null,
+        reviewNote: null,
+        createdAt: '2026-08-19T00:00:00Z',
+        updatedAt: '2026-08-19T00:00:00Z',
       },
     };
   },

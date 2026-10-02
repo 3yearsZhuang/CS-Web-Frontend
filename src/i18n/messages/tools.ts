@@ -102,8 +102,9 @@ export interface ToolsMessages {
     catMentoring: string;
     catOther: string;
     statusClaimed: string;
-    statusCompleted: string;
-    statusCancelled: string;
+    statusSubmitted: string;
+    statusApproved: string;
+    statusRejected: string;
     taskHash: string;
     reviewNote: string;
     cancel: string;
@@ -604,8 +605,9 @@ export const zhCN: ToolsMessages = {
     catMentoring: '带新',
     catOther: '其他',
     statusClaimed: '已认领',
-    statusCompleted: '已完成',
-    statusCancelled: '已取消',
+    statusSubmitted: '已提交待审核',
+    statusApproved: '已通过',
+    statusRejected: '未通过',
     taskHash: '任务 #',
     reviewNote: '审核备注:',
     cancel: '取消',
@@ -818,7 +820,7 @@ export const zhCN: ToolsMessages = {
     categoryOverlays: '弹窗组件',
     categoryLayout: '布局组件',
     registryName: '组件注册表',
-    registryHeroStats: '{total} 个组件 · {done} 已完成 · {progress}%',
+    registryHeroStats: '{total} 个组件 · {migrated} 已完成 · {progress}%',
     registryHeroTagline: '。盘点、预览、追踪重构进度',
     loadingComponents: '加载组件数据...',
     categoryLabel: '分类',
@@ -1106,8 +1108,9 @@ export const en: ToolsMessages = {
     catMentoring: 'Mentoring',
     catOther: 'Other',
     statusClaimed: 'Claimed',
-    statusCompleted: 'Completed',
-    statusCancelled: 'Cancelled',
+    statusSubmitted: 'Submitted',
+    statusApproved: 'Approved',
+    statusRejected: 'Rejected',
     taskHash: 'Task #',
     reviewNote: 'Review note:',
     cancel: 'Cancel',
@@ -1320,7 +1323,7 @@ export const en: ToolsMessages = {
     categoryOverlays: 'Overlays',
     categoryLayout: 'Layout',
     registryName: 'Component Registry',
-    registryHeroStats: '{total} components · {done} done · {progress}%',
+    registryHeroStats: '{total} components · {migrated} done · {progress}%',
     registryHeroTagline: '· inventory, preview, track refactor progress',
     loadingComponents: 'Loading components...',
     categoryLabel: 'Category',

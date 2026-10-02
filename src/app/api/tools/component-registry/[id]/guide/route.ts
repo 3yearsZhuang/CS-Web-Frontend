@@ -1,5 +1,7 @@
 /**
  * @file 组件指南 API — PUT /api/tools/component-registry/[id]/guide（BFF 薄转发）
+ *
+ * TOOLS-GOV Slice D：后端真实路径 /tools/components/.../guide，指南为 upsert（POST）。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -21,8 +23,8 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}/guide`,
-    method: 'PUT',
+    path: `/tools/components/${encodeURIComponent(id)}/guide`,
+    method: 'POST',
     jsonBody: { use_cases: body.useCases ?? [], anti_patterns: body.antiPatterns ?? [] },
   });
 

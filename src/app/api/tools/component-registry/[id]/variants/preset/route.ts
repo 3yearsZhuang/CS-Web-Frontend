@@ -1,7 +1,7 @@
 /**
  * @file 组件变体矩阵预设 API — POST /api/tools/component-registry/[id]/variants/preset（BFF 薄转发）
  *
- * 与后端 POST /tools/component-registry/{item_id}/variants/preset 对齐：
+ * 与后端 POST /tools/components/{item_id}/variants/preset 对齐（TOOLS-GOV Slice D）：
  * 应用一个预设批量翻转变体 is_enabled，成功后返回该 item 的最新变体列表。
  */
 import { NextResponse } from 'next/server';
@@ -24,7 +24,7 @@ export async function POST(
   }
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}/variants/preset`,
+    path: `/tools/components/${encodeURIComponent(id)}/variants/preset`,
     method: 'POST',
     jsonBody: { preset: body.preset },
   });

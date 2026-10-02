@@ -97,17 +97,19 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
   // 统计
   const stats = useMemo(() => {
     let legacy = 0;
-    let migrating = 0;
-    let done = 0;
+    let inProgress = 0;
+    let migrated = 0;
+    let deprecated = 0;
     for (const c of state.components) {
       if (c.migrationStatus === 'legacy') legacy++;
-      else if (c.migrationStatus === 'migrating') migrating++;
-      else done++;
+      else if (c.migrationStatus === 'in-progress') inProgress++;
+      else if (c.migrationStatus === 'migrated') migrated++;
+      else deprecated++;
     }
-    return { total: state.components.length, legacy, migrating, done };
+    return { total: state.components.length, legacy, inProgress, migrated, deprecated };
   }, [state.components]);
 
-  const progress = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+  const progress = stats.total > 0 ? Math.round((stats.migrated / stats.total) * 100) : 0;
 
   return (
     <>
@@ -155,7 +157,7 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                   heroState.collapsed ? 'text-[9px]' : 'text-[15px] sm:text-[16px]'
                 }`}
               >
-                {t('registryHeroStats', { total: stats.total, done: stats.done, progress })}
+                {t('registryHeroStats', { total: stats.total, migrated: stats.migrated, progress })}
                 <span className="serif-italic text-[var(--foreground)]">
                   {t('registryHeroTagline')}
                 </span>

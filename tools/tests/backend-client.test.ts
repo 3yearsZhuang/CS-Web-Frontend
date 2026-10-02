@@ -171,7 +171,7 @@ describe('角色解析', () => {
 });
 
 describe('翻译助手', () => {
-  it('toEventItem snake_case → camelCase', () => {
+  it('toEventItem camelCase 出参直读（P1-8：后端 TZModel 出参为 camel）', () => {
     const item = toEventItem({
       id: 9,
       month: '2026-08',
@@ -179,13 +179,14 @@ describe('翻译助手', () => {
       title: '分享会',
       status: 'upcoming',
       topics: ['a'],
-      is_pinned: true,
+      isPinned: true,
       capacity: 50,
-      created_at: '2026-01-01T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z',
     });
     expect(item.id).toBe('9');
     expect(item.isPinned).toBe(true);
     expect(item.capacity).toBe(50);
+    expect(item.createdAt).toBe('2026-01-01T00:00:00Z');
   });
 
   it('toCommunityPost kind/status 映射', () => {
@@ -214,12 +215,13 @@ describe('翻译助手', () => {
     const role = toAdminRole(
       {
         name: 'moderator',
-        display_name: '版主',
+        displayName: '版主',
         permissions: ['community_topic:hide', 'some_future:thing'],
       },
       known,
     );
     expect(role.key).toBe('moderator');
+    expect(role.displayName).toBe('版主');
     expect(role.permissions).toEqual(['community.topic.hide']);
   });
 });

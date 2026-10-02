@@ -1,5 +1,7 @@
 /**
  * @file 任务列表 API — GET /api/tools/task（BFF 薄转发）
+ *
+ * TOOLS-GOV Slice B：后端真实路由是 /tools/tasks（复数，原路径 404）。
  */
 import { NextResponse } from 'next/server';
 import { proxyBackend, setAuthCookies } from '@/shared/backend-client';
@@ -15,7 +17,7 @@ export async function GET(req: Request) {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (category) params.set('category', category);
 
-  const proxy = await proxyBackend(req, { path: `/tools/task?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/tools/tasks?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
@@ -28,6 +30,7 @@ export async function GET(req: Request) {
       tags: Array.isArray(t.tags) ? t.tags : [],
       points: t.points ?? 0,
       maxClaimants: t.max_claimants ?? 1,
+      // TaskOut 暂无 claimant_count/my_claim 聚合字段（余量见 待办v2 TOOLS-GOV）
       claimantCount: t.claimant_count ?? 0,
       status: t.status,
       createdBy: t.created_by != null ? String(t.created_by) : null,

@@ -24,22 +24,25 @@ export async function GET(
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const body = (proxy.body ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
+  // P1-8 修复：后端返回裸数组（list[EventRegistrationOut]，camelCase），此前按分页对象解构恒空。
+  const raw = proxy.body as unknown;
+  const items = (
+    Array.isArray(raw) ? raw : ((raw as Record<string, unknown> | null)?.items ?? [])
+  ) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
     registrations: items.map((r) => ({
       id: String(r.id),
-      userId: r.user_id != null ? String(r.user_id) : null,
-      displayName: r.display_name ?? null,
+      userId: r.userId != null ? String(r.userId) : null,
+      displayName: r.display_name ?? r.displayName ?? null,
       email: r.email ?? null,
       status: r.status,
-      formData: r.form_data ?? null,
-      registeredAt: r.registered_at ?? '',
+      formData: r.formData ?? null,
+      registeredAt: r.registeredAt ?? '',
     })),
-    total: Number(body.total ?? 0),
+    total: items.length,
     page,
     pageSize,
-    totalPages: Number(body.total_pages ?? 1),
+    totalPages: 1,
   });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

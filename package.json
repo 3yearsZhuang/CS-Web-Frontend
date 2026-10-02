@@ -24,6 +24,7 @@
     "e2e": "playwright test",
     "test:e2e": "playwright test",
     "check:bff-boundary": "node ./tools/scripts/check/check-bff-boundary.mjs",
+    "check:bff-copy": "node ./tools/scripts/check/check-bff-copy.mjs",
     "deploy:build": "docker compose -f tools/deploy/docker-compose.yml build",
     "deploy:up": "docker compose -f tools/deploy/docker-compose.yml up -d",
     "deploy:down": "docker compose -f tools/deploy/docker-compose.yml down",

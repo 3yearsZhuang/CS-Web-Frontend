@@ -434,6 +434,8 @@ export async function readJsonBody(req: Request): Promise<Record<string, unknown
 }
 
 // ---------------------------------------------------------------- 翻译助手
+// 注意：后端 TZModel 出参为 camelCase（alias_generator=to_camel），以下函数
+// 直接按 camelCase 读取（P1-8 修复：此前按旧 snake_case 契约读取导致字段恒空）。
 
 export function toAnnouncement(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
@@ -441,14 +443,14 @@ export function toAnnouncement(b: unknown): Record<string, unknown> { const r = 
     title: r.title,
     content: r.content ?? null,
     level: r.level ?? 'info',
-    isActive: r.is_active !== false,
-    isDismissible: r.is_dismissible !== false,
+    isActive: r.isActive !== false,
+    isDismissible: r.isDismissible !== false,
     priority: r.priority ?? 0,
-    expiresAt: r.expires_at ?? null,
-    targetRoles: r.target_roles ?? null,
-    createdBy: r.created_by != null ? String(r.created_by) : '',
-    createdAt: r.created_at ?? '',
-    updatedAt: r.updated_at ?? '',
+    expiresAt: r.expiresAt ?? null,
+    targetRoles: r.targetRoles ?? null,
+    createdBy: r.createdBy != null ? String(r.createdBy) : '',
+    createdAt: r.createdAt ?? '',
+    updatedAt: r.updatedAt ?? '',
   };
 }
 
@@ -458,13 +460,13 @@ export type AnnouncementOutLike = Api['AnnouncementOut'];
 export function toNotification(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
     id: String(r.id),
-    userId: String(r.user_id),
+    userId: String(r.userId),
     type: r.type,
     title: r.title,
     content: r.content ?? null,
-    isRead: r.is_read === true,
-    senderId: r.sender_id != null ? String(r.sender_id) : null,
-    createdAt: r.created_at ?? '',
+    isRead: r.isRead === true,
+    senderId: r.senderId != null ? String(r.senderId) : null,
+    createdAt: r.createdAt ?? '',
   };
 }
 
@@ -474,19 +476,19 @@ export type NotificationOutLike = Api['NotificationOut'];
 export function toJoinApplication(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
   return {
     id: String(r.id),
-    applicantName: r.applicant_name,
-    studentId: r.student_id,
+    applicantName: r.applicantName,
+    studentId: r.studentId,
     major: r.major,
-    techTags: Array.isArray(r.tech_tags) ? r.tech_tags : [],
+    techTags: Array.isArray(r.techTags) ? r.techTags : [],
     reason: r.reason,
-    contactQq: r.contact_qq ?? null,
-    contactPhone: r.contact_phone ?? null,
-    userId: r.user_id != null ? String(r.user_id) : null,
+    contactQq: r.contactQq ?? null,
+    contactPhone: r.contactPhone ?? null,
+    userId: r.userId != null ? String(r.userId) : null,
     status: r.status ?? 'pending',
-    reviewedBy: r.reviewed_by != null ? String(r.reviewed_by) : null,
-    reviewNote: r.review_note ?? null,
-    createdAt: r.created_at ?? '',
-    updatedAt: r.updated_at ?? '',
+    reviewedBy: r.reviewedBy != null ? String(r.reviewedBy) : null,
+    reviewNote: r.reviewNote ?? null,
+    createdAt: r.createdAt ?? '',
+    updatedAt: r.updatedAt ?? '',
   };
 }
 
@@ -535,15 +537,15 @@ export function toAdminRole(b: unknown, knownKeys: Set<string> = new Set()): Rec
     .filter((k: string) => knownKeys.has(k));
   return {
     key: r.name,
-    displayName: r.display_name || r.name,
+    displayName: r.displayName || r.name,
     description: r.description ?? '',
-    isSystem: r.is_system === true,
-    isProtected: r.is_protected === true || r.is_system === true,
-    sortOrder: r.sort_order ?? 0,
+    isSystem: r.isSystem === true,
+    isProtected: r.isProtected === true || r.isSystem === true,
+    sortOrder: r.sortOrder ?? 0,
     permissions,
-    userCount: r.user_count ?? 0,
-    createdAt: r.created_at ?? '',
-    updatedAt: r.updated_at ?? '',
+    userCount: r.userCount ?? 0,
+    createdAt: r.createdAt ?? '',
+    updatedAt: r.updatedAt ?? '',
   };
 }
 
@@ -613,45 +615,14 @@ export function toEventItem(b: unknown): Record<string, unknown> { const r = b a
     year,
     topics: Array.isArray(r.topics) ? r.topics : [],
     tags: Array.isArray(r.tags) ? r.tags : [],
-    isPinned: r.is_pinned === true,
+    isPinned: r.isPinned === true,
     capacity: r.capacity ?? 0,
-    contentMarkdown: r.content_markdown ?? null,
-    registrationFields: Array.isArray(r.registration_fields) ? r.registration_fields : [],
-    createdBy: r.created_by != null ? String(r.created_by) : null,
-    createdAt: r.created_at ?? '',
-    updatedAt: r.updated_at ?? '',
-    ...(r.registered_count != null ? { registeredCount: r.registered_count } : {}),
-  };
-}
-
-/** 后端 EventRegistrationOut（对齐 OpenAPI） */
-export type EventRegistrationOutLike = Api['EventRegistrationOut'];
-
-/** 后端 EventRegistrationOut → 前端 EventRegistration */
-export function toEventRegistration(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
-  const status = typeof r.status === 'string' ? r.status : '';
-  return {
-    id: String(r.id),
-    userId: String(r.user_id),
-    eventId: String(r.event_id),
-    status: ['registered', 'cancelled', 'waitlisted'].includes(status) ? status : 'registered',
-    formData: r.form_data ?? null,
-    registeredAt: r.registered_at ?? '',
-    cancelledAt: r.cancelled_at ?? null,
-  };
-}
-
-/** 后端 EventCheckinOut → 前端 EventCheckin */
-export function toEventCheckin(b: unknown): Record<string, unknown> { const r = b as Record<string, unknown>;
-  return {
-    id: String(r.id),
-    eventId: String(r.event_id),
-    registrationId: r.registration_id != null ? String(r.registration_id) : null,
-    userId: r.user_id != null ? String(r.user_id) : null,
-    checkinCode: r.checkin_code,
-    checkedInAt: r.checked_in_at ?? null,
-    checkedInBy: r.checked_in_by != null ? String(r.checked_in_by) : null,
-    createdAt: r.created_at ?? '',
+    contentMarkdown: r.contentMarkdown ?? null,
+    registrationFields: Array.isArray(r.registrationFields) ? r.registrationFields : [],
+    createdBy: r.createdBy != null ? String(r.createdBy) : null,
+    createdAt: r.createdAt ?? '',
+    updatedAt: r.updatedAt ?? '',
+    ...(r.registeredCount != null ? { registeredCount: r.registeredCount } : {}),
   };
 }
 
