@@ -38,4 +38,8 @@ jobs:
       - name: pnpm audit
         # 显式指定官方 registry：.npmrc 的 npmmirror 无审计端点，否则 job 会以
         # ERR_PNPM_AUDIT_ENDPOINT_NOT_EXISTS 失败（而非真实漏洞检出）。
-        run: pnpm audit --audit-level=high --registry https://registry.npmjs.org/
+        # CI 锁定 pnpm@9.0.0 不读取 auditConfig，故 --json 落盘后由 audit-gate.mjs
+        # 裁决（豁免登记于 package.json pnpm.auditConfig.ignoreGhsas）。
+        run: |
+          pnpm audit --audit-level=high --json --registry https://registry.npmjs.org/ > /tmp/audit.json || true
+          node tools/scripts/check/audit-gate.mjs /tmp/audit.json

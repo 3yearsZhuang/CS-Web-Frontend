@@ -1,0 +1,440 @@
+{
+  "src/app/api/admin/actions/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/actions/route.ts": [
+    "return NextResponse.json({ error: '缺少日期参数', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/announcements/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/announcements/route.ts": [],
+  "src/app/api/admin/community/categories/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/community/categories/route.ts": [
+    "const err = normalizeError(proxy.body, '创建失败');"
+  ],
+  "src/app/api/admin/community/replies/[id]/hide/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/replies/[id]/restore/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/replies/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/community/reports/[id]/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/reports/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/series/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/topics/[id]/feature/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/topics/[id]/hide/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/topics/[id]/pin/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/topics/[id]/restore/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/community/topics/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/community/topics/route.ts": [],
+  "src/app/api/admin/events/[id]/checkin/route.ts": [
+    "return NextResponse.json({ error: '缺少核销码或用户', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '核销失败');"
+  ],
+  "src/app/api/admin/events/[id]/registrations/manage/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/events/[id]/registrations/route.ts": [],
+  "src/app/api/admin/events/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/events/batch/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/events/route.ts": [
+    "const err = normalizeError(proxy.body, '创建失败');"
+  ],
+  "src/app/api/admin/events/settings/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');"
+  ],
+  "src/app/api/admin/events/stats/route.ts": [],
+  "src/app/api/admin/feature-visibility/[moduleKey]/route.ts": [
+    "return jsonError('操作过于频繁，请稍后再试', 429);",
+    "return jsonError('请求参数不合法', 400);",
+    "const err = normalizeError(proxy.body, '更新失败');"
+  ],
+  "src/app/api/admin/join/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '处理失败');"
+  ],
+  "src/app/api/admin/notifications/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '发送失败');"
+  ],
+  "src/app/api/admin/password-resets/[id]/approve/route.ts": [
+    "const err = normalizeError(proxy.body, '审批失败');"
+  ],
+  "src/app/api/admin/password-resets/[id]/reject/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/password-resets/route.ts": [
+    "const res = NextResponse.json({ error: '未授权', code: 'UNAUTHORIZED' }, { status: proxy.status });",
+    "return NextResponse.json({ error: '缺少邮箱', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '提交失败');"
+  ],
+  "src/app/api/admin/permissions/route.ts": [],
+  "src/app/api/admin/roles/[key]/permissions/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');"
+  ],
+  "src/app/api/admin/roles/[key]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/roles/route.ts": [
+    "return NextResponse.json({ error: '缺少角色标识', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '创建失败');"
+  ],
+  "src/app/api/admin/tools/exam/[id]/end/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/tools/exam/[id]/publish/route.ts": [
+    "const err = normalizeError(proxy.body, '发布失败');"
+  ],
+  "src/app/api/admin/tools/exam/[id]/questions/[qid]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/tools/exam/[id]/questions/route.ts": [
+    "const err = normalizeError(proxy.body, '创建失败');"
+  ],
+  "src/app/api/admin/tools/exam/[id]/ranking/route.ts": [],
+  "src/app/api/admin/tools/exam/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/tools/exam/route.ts": [
+    "const err = normalizeError(proxy.body, '创建失败');"
+  ],
+  "src/app/api/admin/tools/resource/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "return NextResponse.json({ error: '未知操作', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');",
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "return NextResponse.json({ error: '未知操作', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/tools/task/route.ts": [
+    "const err = normalizeError(proxy.body, '加载任务失败');",
+    "return NextResponse.json({ error: '缺少 id', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '删除失败');",
+    "return NextResponse.json({ error: '缺少 claimId', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '审核操作失败');",
+    "return NextResponse.json({ error: '缺少任务数据', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '创建失败');",
+    "return NextResponse.json({ error: '缺少 taskId', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "return NextResponse.json({ error: '未知操作', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/users/[id]/disable/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/users/[id]/enable/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/admin/users/[id]/reset-password-default/route.ts": [
+    "const err = normalizeError(proxy.body, '重置失败');"
+  ],
+  "src/app/api/admin/users/[id]/reset-password/route.ts": [
+    "const err = normalizeError(proxy.body, '重置失败');"
+  ],
+  "src/app/api/admin/users/[id]/route.ts": [
+    "const res = NextResponse.json({ error: '用户不存在' }, { status: proxy.status });",
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/admin/users/route.ts": [],
+  "src/app/api/announcements/route.ts": [
+    "const err = normalizeError(proxy.body, '发布失败');"
+  ],
+  "src/app/api/auth/2fa/backup-codes/route.ts": [
+    "return NextResponse.json({ error: '请输入验证码', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '验证码错误');"
+  ],
+  "src/app/api/auth/2fa/disable/route.ts": [
+    "return NextResponse.json({ error: '请输入验证码', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '验证码错误');"
+  ],
+  "src/app/api/auth/2fa/route.ts": [
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });"
+  ],
+  "src/app/api/auth/2fa/setup/route.ts": [
+    "return NextResponse.json(normalizeError(proxy.body, '初始化失败'), { status: proxy.status });"
+  ],
+  "src/app/api/auth/2fa/verify/route.ts": [
+    "return NextResponse.json({ error: '请输入验证码', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '2FA 验证失败');",
+    "return NextResponse.json({ error: '缺少认证 token', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '认证 token 无效或已过期，请重新登录');"
+  ],
+  "src/app/api/auth/forgot-password/route.ts": [
+    "return NextResponse.json({ error: '邮箱格式不正确', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "message: '如该邮箱已注册，您的申请已提交，请等待管理员处理',"
+  ],
+  "src/app/api/auth/login/route.ts": [
+    "return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });",
+    "return NextResponse.json({ error: '邮箱或密码错误', code: 'AUTH_FAILED' }, { status: 401 });"
+  ],
+  "src/app/api/auth/logout/route.ts": [
+    "const res = NextResponse.json({ message: '已登出' });"
+  ],
+  "src/app/api/auth/me/route.ts": [
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });",
+    "return NextResponse.json({ error: '服务暂不可用', code: 'SERVER_ERROR' }, { status: 401 });",
+    "return NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });"
+  ],
+  "src/app/api/auth/oauth/github/callback/route.ts": [],
+  "src/app/api/auth/oauth/github/route.ts": [
+    "return NextResponse.json({ error: 'GitHub 登录未启用', code: 'NOT_FOUND' }, { status: 404 });"
+  ],
+  "src/app/api/auth/register/route.ts": [
+    "{ error: result.error.issues[0]?.message || '请求格式不正确' },",
+    "const err = normalizeError(proxy.body, '注册失败');",
+    "return NextResponse.json({ error: '该邮箱已被注册，请直接登录', code: 'EMAIL_EXISTS' }, { status: 409 });"
+  ],
+  "src/app/api/auth/send-code/route.ts": [
+    "return NextResponse.json({ error: '邮箱格式不正确', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "{ error: '该邮箱已注册，请直接登录或使用忘记密码功能', code: 'EMAIL_EXISTS' },",
+    "const err = normalizeError(proxy.body, '验证码发送失败，请稍后再试');",
+    "message: '验证码已发送',",
+    "...(isDev ? { devHint: '请查看后端控制台获取验证码' } : {}),"
+  ],
+  "src/app/api/avatars/[filename]/route.ts": [
+    "return NextResponse.json({ error: '头像不存在' }, { status: 404 });"
+  ],
+  "src/app/api/community/categories/route.ts": [],
+  "src/app/api/community/drafts/route.ts": [],
+  "src/app/api/community/favorite/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/community/favorites/route.ts": [],
+  "src/app/api/community/feed/route.ts": [],
+  "src/app/api/community/follows/route.ts": [],
+  "src/app/api/community/images/[filename]/route.ts": [
+    "return NextResponse.json({ error: '图片不存在' }, { status: 404 });"
+  ],
+  "src/app/api/community/like/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/community/members/route.ts": [],
+  "src/app/api/community/posts/[id]/comments/route.ts": [
+    "return NextResponse.json({ error: '内容不能为空', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '评论失败');"
+  ],
+  "src/app/api/community/posts/[id]/edit/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');"
+  ],
+  "src/app/api/community/posts/[id]/route.ts": [],
+  "src/app/api/community/posts/route.ts": [
+    "const err = normalizeError(proxy.body, '发布失败');"
+  ],
+  "src/app/api/community/replies/[id]/nested/route.ts": [],
+  "src/app/api/community/replies/[id]/route.ts": [
+    "return NextResponse.json({ error: '内容不能为空', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '保存失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/community/reports/route.ts": [
+    "return NextResponse.json({ error: '参数不合法', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '举报失败');"
+  ],
+  "src/app/api/community/tags/route.ts": [],
+  "src/app/api/community/topics/[id]/replies/route.ts": [],
+  "src/app/api/community/topics/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '保存失败');",
+    "const err = normalizeError(proxy.body, '删除失败');"
+  ],
+  "src/app/api/community/topics/route.ts": [
+    "const err = normalizeError(proxy.body, '发布失败');"
+  ],
+  "src/app/api/community/upload/route.ts": [
+    "return NextResponse.json({ error: '请求格式不正确', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '上传失败');"
+  ],
+  "src/app/api/community/users/[id]/follow/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/community/users/[id]/replies/route.ts": [],
+  "src/app/api/community/users/[id]/topics/route.ts": [],
+  "src/app/api/demo/status/route.ts": [],
+  "src/app/api/dev-docs/[slug]/route.ts": [
+    "return jsonError('无效的文档标识', 400);",
+    "return jsonError('文档不存在', 404);",
+    "return jsonError('读取文档失败', 500);",
+    "return jsonError('操作过于频繁，请稍后再试', 429);",
+    "return jsonError('无效的文档标识', 400);",
+    "return jsonError('内容不能为空', 400);",
+    "return jsonError('文档内容过大（限制 1MB）', 413);",
+    "return jsonError('写入文档失败', 500);",
+    "return jsonError('无效的文档标识', 400);",
+    "return jsonError('文档不存在', 404);",
+    "return jsonError('删除文档失败', 500);"
+  ],
+  "src/app/api/dev-docs/route.ts": [
+    "return jsonError('操作过于频繁，请稍后再试', 429);",
+    "return jsonError('读取文档列表失败', 500);"
+  ],
+  "src/app/api/events/[id]/register/route.ts": [
+    "const err = normalizeError(proxy.body, '报名失败');",
+    "const err = normalizeError(proxy.body, '取消报名失败');"
+  ],
+  "src/app/api/events/[id]/registration/route.ts": [],
+  "src/app/api/events/[id]/route.ts": [],
+  "src/app/api/events/me/registered/route.ts": [],
+  "src/app/api/events/route.ts": [],
+  "src/app/api/feature-visibility/route.ts": [
+    "normalizeError(proxy.body, '加载可见性配置失败'),"
+  ],
+  "src/app/api/health/route.ts": [],
+  "src/app/api/join/mine/route.ts": [],
+  "src/app/api/join/route.ts": [
+    "applicantName: z.string().min(1, '姓名不能为空').max(20),",
+    "studentId: z.string().min(1, '学号不能为空').max(20),",
+    "major: z.string().min(1, '专业不能为空').max(40),",
+    "reason: z.string().min(1, '申请理由不能为空').max(500),",
+    "{ error: result.error.issues[0]?.message || '请求格式不正确' },",
+    "const err = normalizeError(proxy.body, '提交失败');"
+  ],
+  "src/app/api/notifications/[id]/read/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/notifications/read-all/route.ts": [
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/notifications/route.ts": [
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });"
+  ],
+  "src/app/api/notifications/unread-count/route.ts": [],
+  "src/app/api/profile/avatar/preset/route.ts": [
+    "return NextResponse.json({ error: '请选择头像类型', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '设置失败');"
+  ],
+  "src/app/api/profile/avatar/upload/route.ts": [
+    "return NextResponse.json({ error: '请求格式不正确', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '上传失败');"
+  ],
+  "src/app/api/profile/password/route.ts": [
+    "{ error: result.error.issues[0]?.message || '请求格式不正确' },",
+    "const err = normalizeError(proxy.body, '修改失败');",
+    "const res = NextResponse.json({ message: '密码已修改' });"
+  ],
+  "src/app/api/profile/route.ts": [
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });",
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });",
+    "const err = normalizeError(proxy.body, '保存失败');"
+  ],
+  "src/app/api/search/route.ts": [],
+  "src/app/api/sessions/route.ts": [
+    "const res = NextResponse.json({ error: '未登录', code: 'UNAUTHORIZED' }, { status: 401 });",
+    "const err = normalizeError(proxy.body, '操作失败');",
+    "return NextResponse.json({ error: '缺少会话 ID', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/tools/auxilio/chat/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/archive/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/events/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/fork/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/messages/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/[id]/runs/route.ts": [],
+  "src/app/api/tools/auxilio/conversations/route.ts": [],
+  "src/app/api/tools/auxilio/goals/[id]/route.ts": [],
+  "src/app/api/tools/auxilio/goals/route.ts": [],
+  "src/app/api/tools/auxilio/mistakes/[id]/review/route.ts": [],
+  "src/app/api/tools/auxilio/mistakes/[id]/route.ts": [],
+  "src/app/api/tools/auxilio/mistakes/route.ts": [],
+  "src/app/api/tools/auxilio/plan/[id]/route.ts": [],
+  "src/app/api/tools/auxilio/plan/route.ts": [],
+  "src/app/api/tools/component-registry/[id]/guide/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');"
+  ],
+  "src/app/api/tools/component-registry/[id]/route.ts": [
+    "const err = normalizeError(proxy.body, '更新失败');",
+    "const err = normalizeError(proxy.body, '删除失败');",
+    "const err = normalizeError(proxy.body, '更新迁移状态失败');"
+  ],
+  "src/app/api/tools/component-registry/[id]/variants/preset/route.ts": [
+    "return NextResponse.json({ error: '缺少预设', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '应用预设失败');"
+  ],
+  "src/app/api/tools/component-registry/[id]/variants/route.ts": [
+    "return NextResponse.json({ error: '缺少变体 ID', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '操作失败');"
+  ],
+  "src/app/api/tools/component-registry/route.ts": [
+    "return errJson(proxy, '创建失败');"
+  ],
+  "src/app/api/tools/exam/[id]/my-results/route.ts": [],
+  "src/app/api/tools/exam/[id]/route.ts": [],
+  "src/app/api/tools/exam/[id]/submit/route.ts": [
+    "return NextResponse.json({ error: '缺少答案', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '提交失败');"
+  ],
+  "src/app/api/tools/exam/route.ts": [],
+  "src/app/api/tools/points/leaderboard/route.ts": [
+    "levelTitle: e.level_title ?? '新手学徒',"
+  ],
+  "src/app/api/tools/points/route.ts": [
+    "const err = normalizeError(proxy.body, '获取积分失败');",
+    "levelTitle: body.level_title ?? '新手学徒',"
+  ],
+  "src/app/api/tools/resource/route.ts": [
+    "const err = normalizeError(proxy.body, '提交失败');"
+  ],
+  "src/app/api/tools/resource/upload/route.ts": [
+    "return NextResponse.json({ error: '请求格式不正确', code: 'VALIDATION_FAILED' }, { status: 400 });",
+    "const err = normalizeError(proxy.body, '上传失败');"
+  ],
+  "src/app/api/tools/task/[id]/claim/route.ts": [
+    "const err = normalizeError(proxy.body, '认领失败');",
+    "const err = normalizeError(proxy.body, '取消认领失败');"
+  ],
+  "src/app/api/tools/task/[id]/claims/route.ts": [],
+  "src/app/api/tools/task/[id]/route.ts": [],
+  "src/app/api/tools/task/claims/[id]/submit/route.ts": [
+    "const err = normalizeError(proxy.body, '提交失败');"
+  ],
+  "src/app/api/tools/task/claims/route.ts": [],
+  "src/app/api/tools/task/route.ts": [],
+  "src/app/api/users/[id]/route.ts": [],
+  "src/app/api/workbench/contributions/github/route.ts": [],
+  "src/app/api/workbench/focus-sessions/route.ts": [],
+  "src/app/api/workbench/llm-config/route.ts": [],
+  "src/app/api/workbench/stats/api-usage/route.ts": [],
+  "src/app/api/workbench/stats/llm-usage/route.ts": [],
+  "src/app/api/workbench/stats/pomodoro/route.ts": []
+}

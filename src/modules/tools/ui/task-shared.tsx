@@ -84,13 +84,16 @@ export function categoryOptions(t: TFn): Array<{ value: string; label: string }>
 export const TASK_INPUT_CLASS = `${INPUT_CLASS} px-4 py-2.5 text-[13px]`;
 
 export function statusBadge(status: string, t: TFn): { label: string; icon: React.ReactNode; cls: string } {
+  // Slice E 值域统一：对齐后端 claimed/submitted/approved/rejected（取消即删行，无 cancelled）
   switch (status) {
     case 'claimed':
       return { label: t('statusClaimed'), icon: <Clock className="w-3 h-3" />, cls: 'border-[var(--primary)]/30 text-[var(--primary)]' };
-    case 'completed':
-      return { label: t('statusCompleted'), icon: <CheckCircle className="w-3 h-3" />, cls: 'border-green-500/30 text-green-600 dark:text-green-400' };
-    case 'cancelled':
-      return { label: t('statusCancelled'), icon: <XCircle className="w-3 h-3" />, cls: 'border-[var(--border)] text-[var(--muted-foreground)]' };
+    case 'submitted':
+      return { label: t('statusSubmitted'), icon: <Clock className="w-3 h-3" />, cls: 'border-amber-500/30 text-amber-600 dark:text-amber-400' };
+    case 'approved':
+      return { label: t('statusApproved'), icon: <CheckCircle className="w-3 h-3" />, cls: 'border-green-500/30 text-green-600 dark:text-green-400' };
+    case 'rejected':
+      return { label: t('statusRejected'), icon: <XCircle className="w-3 h-3" />, cls: 'border-[var(--destructive)]/30 text-[var(--destructive)]' };
     default:
       return { label: status, icon: null, cls: 'border-[var(--border)] text-[var(--muted-foreground)]' };
   }

@@ -3027,7 +3027,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve Claim */
+        /**
+         * Approve Claim
+         * @description 通过认领（触发积分联动，见 service.review_claim）。
+         */
         post: operations["approve_claim_api_v1_tools_admin_tasks_claims__claim_id__approve_post"];
         delete?: never;
         options?: never;
@@ -3065,6 +3068,40 @@ export interface paths {
         post?: never;
         /** Delete Task */
         delete: operations["delete_task_api_v1_tools_admin_tasks__task_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tools/admin/tasks/{task_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Task */
+        post: operations["close_task_api_v1_tools_admin_tasks__task_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tools/admin/tasks/{task_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Task */
+        post: operations["publish_task_api_v1_tools_admin_tasks__task_id__publish_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3134,8 +3171,11 @@ export interface paths {
         /** Get Guide */
         get: operations["get_guide_api_v1_tools_components__component_id__guide_get"];
         put?: never;
-        /** Create Guide */
-        post: operations["create_guide_api_v1_tools_components__component_id__guide_post"];
+        /**
+         * Update Guide
+         * @description 指南 upsert（service 仅有 update_guide；不存在则创建）。
+         */
+        post: operations["update_guide_api_v1_tools_components__component_id__guide_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3149,9 +3189,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Migration Status */
+        /**
+         * Get Migration Status
+         * @description 派生自 ComponentItemOut（service 无独立读取入口；old == current）。
+         */
         get: operations["get_migration_status_api_v1_tools_components__component_id__migration_status_get"];
-        /** Set Migration Status */
+        /**
+         * Set Migration Status
+         * @description 更新迁移状态；达到 migrated 时联动开放对应可见性模块（service 内闭环）。
+         */
         put: operations["set_migration_status_api_v1_tools_components__component_id__migration_status_put"];
         post?: never;
         delete?: never;
@@ -3170,12 +3216,12 @@ export interface paths {
         /** List Variants */
         get: operations["list_variants_api_v1_tools_components__component_id__variants_get"];
         put?: never;
-        /** Create Variant */
-        post: operations["create_variant_api_v1_tools_components__component_id__variants_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Toggle Variant */
+        patch: operations["toggle_variant_api_v1_tools_components__component_id__variants_patch"];
         trace?: never;
     };
     "/api/v1/tools/components/{component_id}/variants/preset": {
@@ -3187,42 +3233,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Apply Preset */
-        post: operations["apply_preset_api_v1_tools_components__component_id__variants_preset_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/components/{component_id}/variants/toggle": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Toggle Variant */
-        post: operations["toggle_variant_api_v1_tools_components__component_id__variants_toggle_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/components/{component_id}/variants/{variant_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Variant */
-        put: operations["update_variant_api_v1_tools_components__component_id__variants__variant_id__put"];
-        post?: never;
+        /** Apply Variant Preset */
+        post: operations["apply_variant_preset_api_v1_tools_components__component_id__variants_preset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3321,7 +3333,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Leaderboard */
+        /**
+         * Leaderboard
+         * @description 积分排行榜（按余额倒序，limit 控制返回条数）。
+         */
         get: operations["leaderboard_api_v1_tools_points_leaderboard_get"];
         put?: never;
         post?: never;
@@ -3338,7 +3353,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My Points */
+        /**
+         * My Points
+         * @description 我的积分档案（余额/等级 + 最近流水）。
+         */
         get: operations["my_points_api_v1_tools_points_me_get"];
         put?: never;
         post?: never;
@@ -3355,7 +3373,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My History */
+        /**
+         * My History
+         * @description 积分流水分页（时间倒序）。
+         */
         get: operations["my_history_api_v1_tools_points_me_history_get"];
         put?: never;
         post?: never;
@@ -3375,7 +3396,11 @@ export interface paths {
         /** List Resources */
         get: operations["list_resources_api_v1_tools_resources_get"];
         put?: never;
-        post?: never;
+        /**
+         * Submit Resource
+         * @description 普通用户提交资源（入待审核池，由管理员审核）。
+         */
+        post: operations["submit_resource_api_v1_tools_resources_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3391,7 +3416,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload Resource */
+        /**
+         * Upload Resource
+         * @description 上传文件并创建待审核资源（标题取文件名，file_url 指向存储路径）。
+         */
         post: operations["upload_resource_api_v1_tools_resources_upload_post"];
         delete?: never;
         options?: never;
@@ -3423,27 +3451,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download Resource */
+        /**
+         * Download Resource
+         * @description 返回资源文件地址（仅审核通过且带文件的资源对外开放）。
+         */
         get: operations["download_resource_api_v1_tools_resources__resource_id__download_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/resources/{resource_id}/rate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Rate Resource */
-        post: operations["rate_resource_api_v1_tools_resources__resource_id__rate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3491,7 +3505,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** My Claims Alias */
+        /**
+         * My Claims Alias
+         * @description ``/tasks/claimed/me`` 的等价别名（前端 BFF 使用本路径）。
+         */
         get: operations["my_claims_alias_api_v1_tools_tasks_claims_me_get"];
         put?: never;
         post?: never;
@@ -3508,10 +3525,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Submit Proof */
-        get: operations["submit_proof_api_v1_tools_tasks_claims__claim_id__submit_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /**
+         * Submit Proof
+         * @description 用户提交完成（认领 → submitted），可选携带证明材料链接（Slice E 落库）。
+         *
+         *     注：BFF 还会发送 note 字段，暂无落点（claim_note 语义属认领备注），保持忽略。
+         */
+        post: operations["submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3546,7 +3568,11 @@ export interface paths {
         put?: never;
         /** Claim Task */
         post: operations["claim_task_api_v1_tools_tasks__task_id__claim_post"];
-        delete?: never;
+        /**
+         * Cancel Claim
+         * @description 按任务维度取消本人认领（BFF 以 taskId 发起）。
+         */
+        delete: operations["cancel_claim_api_v1_tools_tasks__task_id__claim_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4166,6 +4192,21 @@ export interface components {
              */
             useCases: string[];
         };
+        /** ComponentGuideOut */
+        ComponentGuideOut: {
+            /**
+             * Antipatterns
+             * @default []
+             */
+            antiPatterns: string[];
+            /** Id */
+            id: number;
+            /**
+             * Usecases
+             * @default []
+             */
+            useCases: string[];
+        };
         /** ComponentItemInput */
         ComponentItemInput: {
             /**
@@ -4190,6 +4231,41 @@ export interface components {
              */
             sortOrder: number;
         };
+        /** ComponentItemOut */
+        ComponentItemOut: {
+            /** Category */
+            category: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Description */
+            description?: string | null;
+            guide?: components["schemas"]["ComponentGuideOut"] | null;
+            /** Id */
+            id: number;
+            /** Migrationstatus */
+            migrationStatus: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Sortorder */
+            sortOrder: number;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Variants
+             * @default []
+             */
+            variants: components["schemas"]["ComponentVariantOut"][];
+            /** Visibilityopen */
+            visibilityOpen?: boolean | null;
+        };
         /**
          * ComponentMigrationStatusInput
          * @description 迁移状态更新输入：PATCH 单个 item 的 migrationStatus。
@@ -4198,14 +4274,35 @@ export interface components {
             /** Migrationstatus */
             migrationStatus: string;
         };
-        /** ComponentVariantInput */
-        ComponentVariantInput: {
+        /**
+         * ComponentMigrationStatusOutput
+         * @description 迁移状态更新结果：携带旧状态与可见性联动结果，供治理事件审计。
+         */
+        ComponentMigrationStatusOutput: {
+            /** Migrationstatus */
+            migrationStatus: string;
+            /** Name */
+            name: string;
+            /** Oldmigrationstatus */
+            oldMigrationStatus: string;
+            /**
+             * Visibilitykey
+             * @default
+             */
+            visibilityKey: string;
+            /**
+             * Visibilityopened
+             * @default false
+             */
+            visibilityOpened: boolean;
+        };
+        /** ComponentVariantOut */
+        ComponentVariantOut: {
             /** Color */
             color: string;
-            /**
-             * Isenabled
-             * @default true
-             */
+            /** Id */
+            id: number;
+            /** Isenabled */
             isEnabled: boolean;
             /** Size */
             size: string;
@@ -4598,17 +4695,20 @@ export interface components {
         /**
          * FocusSessionIn
          * @description 前端完成一轮专注后的上报。
+         *
+         *     camel_config()：JSON 入参走 camelCase（durationSeconds），与全站 camelCase 传输契约一致；
+         *     populate_by_name=True 同时保留 snake_case 兼容（迁移期旧调用方/测试不破）。
          */
         FocusSessionIn: {
             /** Duration Seconds */
-            duration_seconds: number;
+            durationSeconds: number;
             /**
              * Phase
              * @default focus
              */
             phase: string;
             /** Sound Source */
-            sound_source?: string | null;
+            soundSource?: string | null;
         };
         /**
          * ForgotPasswordRequest
@@ -4705,6 +4805,19 @@ export interface components {
             review_note?: string | null;
             /** Status */
             status: string;
+        };
+        /** LeaderboardEntry */
+        LeaderboardEntry: {
+            /** Balance */
+            balance: number;
+            /** Display Name */
+            display_name?: string | null;
+            /** Level */
+            level: number;
+            /** Level Title */
+            level_title: string;
+            /** User Id */
+            user_id: number;
         };
         /** LearningGoalCreateRequest */
         LearningGoalCreateRequest: {
@@ -5049,6 +5162,42 @@ export interface components {
             name?: string | null;
             /** Resource */
             resource?: string | null;
+        };
+        /** PointsProfileOut */
+        PointsProfileOut: {
+            /** Balance */
+            balance: number;
+            /** Level */
+            level: number;
+            /** Level Title */
+            level_title: string;
+            /**
+             * Transactions
+             * @default []
+             */
+            transactions: components["schemas"]["PointsTransactionOut"][];
+        };
+        /** PointsTransactionOut */
+        PointsTransactionOut: {
+            /** Amount */
+            amount: number;
+            /** Balance After */
+            balance_after: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Reason */
+            reason: string;
+            /** Source Id */
+            source_id?: number | null;
+            /** Source Type */
+            source_type: string;
+            /** User Id */
+            user_id: number;
         };
         /**
          * ProfileResponse
@@ -5421,6 +5570,42 @@ export interface components {
             ipAddress?: string | null;
             /** Useragent */
             userAgent?: string | null;
+        };
+        /**
+         * SubmitProofIn
+         * @description 完成提交的可选证明材料链接（TOOLS-GOV Slice E 落库）。
+         */
+        SubmitProofIn: {
+            /** Submission Url */
+            submission_url?: string | null;
+        };
+        /** TaskClaimOut */
+        TaskClaimOut: {
+            /** Claim Note */
+            claim_note?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Id */
+            id: number;
+            /** Review Note */
+            review_note?: string | null;
+            /** Reviewed By */
+            reviewed_by?: number | null;
+            /** Status */
+            status: string;
+            /** Submission Url */
+            submission_url?: string | null;
+            /** Task Id */
+            task_id: number;
+            /** User Id */
+            user_id: number;
         };
         /** TaskInput */
         TaskInput: {
@@ -12025,10 +12210,7 @@ export interface operations {
     };
     pending_claims_api_v1_tools_admin_tasks_claims_pending_get: {
         parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -12042,15 +12224,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -12072,7 +12245,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskClaimOut"];
                 };
             };
             /** @description Validation Error */
@@ -12105,7 +12278,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskClaimOut"];
                 };
             };
             /** @description Validation Error */
@@ -12187,6 +12360,72 @@ export interface operations {
             };
         };
     };
+    close_task_api_v1_tools_admin_tasks__task_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_task_api_v1_tools_admin_tasks__task_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     auxilio_analysis_api_v1_tools_auxilio_get: {
         parameters: {
             query?: never;
@@ -12209,9 +12448,7 @@ export interface operations {
     };
     list_components_api_v1_tools_components_get: {
         parameters: {
-            query?: {
-                q?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -12224,16 +12461,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ComponentItemOut"][];
                 };
             };
         };
@@ -12252,12 +12480,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentItemOut"];
                 };
             };
             /** @description Validation Error */
@@ -12276,7 +12504,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12288,7 +12516,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentItemOut"];
                 };
             };
             /** @description Validation Error */
@@ -12307,7 +12535,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12323,7 +12551,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentItemOut"];
                 };
             };
             /** @description Validation Error */
@@ -12342,7 +12570,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12373,7 +12601,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12399,12 +12627,12 @@ export interface operations {
             };
         };
     };
-    create_guide_api_v1_tools_components__component_id__guide_post: {
+    update_guide_api_v1_tools_components__component_id__guide_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12420,7 +12648,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentItemOut"];
                 };
             };
             /** @description Validation Error */
@@ -12439,7 +12667,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12451,7 +12679,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentMigrationStatusOutput"];
                 };
             };
             /** @description Validation Error */
@@ -12470,7 +12698,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12486,7 +12714,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentMigrationStatusOutput"];
                 };
             };
             /** @description Validation Error */
@@ -12505,7 +12733,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12517,7 +12745,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentVariantOut"][];
                 };
             };
             /** @description Validation Error */
@@ -12531,82 +12759,12 @@ export interface operations {
             };
         };
     };
-    create_variant_api_v1_tools_components__component_id__variants_post: {
+    toggle_variant_api_v1_tools_components__component_id__variants_patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ComponentVariantInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    apply_preset_api_v1_tools_components__component_id__variants_preset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                component_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ComponentVariantPresetInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    toggle_variant_api_v1_tools_components__component_id__variants_toggle_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                component_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
@@ -12622,7 +12780,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentVariantOut"][];
                 };
             };
             /** @description Validation Error */
@@ -12636,19 +12794,18 @@ export interface operations {
             };
         };
     };
-    update_variant_api_v1_tools_components__component_id__variants__variant_id__put: {
+    apply_variant_preset_api_v1_tools_components__component_id__variants_preset_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: string;
-                variant_id: string;
+                component_id: number;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ComponentVariantInput"];
+                "application/json": components["schemas"]["ComponentVariantPresetInput"];
             };
         };
         responses: {
@@ -12658,7 +12815,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["ComponentVariantOut"][];
                 };
             };
             /** @description Validation Error */
@@ -12858,7 +13015,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["LeaderboardEntry"][];
                 };
             };
             /** @description Validation Error */
@@ -12887,7 +13044,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["PointsProfileOut"];
                 };
             };
         };
@@ -12950,6 +13107,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_resource_api_v1_tools_resources_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -13060,39 +13252,6 @@ export interface operations {
             };
         };
     };
-    rate_resource_api_v1_tools_resources__resource_id__rate_post: {
-        parameters: {
-            query: {
-                score: number;
-            };
-            header?: never;
-            path: {
-                resource_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_tasks_api_v1_tools_tasks_get: {
         parameters: {
             query?: {
@@ -13172,18 +13331,20 @@ export interface operations {
             };
         };
     };
-    submit_proof_api_v1_tools_tasks_claims__claim_id__submit_get: {
+    submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post: {
         parameters: {
-            query: {
-                proof: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 claim_id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SubmitProofIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -13191,7 +13352,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskClaimOut"];
                 };
             };
             /** @description Validation Error */
@@ -13253,8 +13414,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["TaskClaimOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_claim_api_v1_tools_tasks__task_id__claim_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

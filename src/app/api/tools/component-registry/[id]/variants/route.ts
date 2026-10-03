@@ -1,7 +1,7 @@
 /**
  * @file 组件变体开关 API — PATCH /api/tools/component-registry/[id]/variants（BFF 薄转发）
  *
- * 与后端 PATCH /tools/component-registry/{item_id}/variants 对齐：
+ * 与后端 PATCH /tools/components/{item_id}/variants 对齐（TOOLS-GOV Slice D）：
  * 复用 Pydantic 校验（variantId/enabled），成功后返回该 item 的最新变体列表。
  */
 import { NextResponse } from 'next/server';
@@ -24,7 +24,7 @@ export async function PATCH(
   }
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}/variants`,
+    path: `/tools/components/${encodeURIComponent(id)}/variants`,
     method: 'PATCH',
     jsonBody: { variantId: body.variantId, enabled: body.enabled ?? true },
   });

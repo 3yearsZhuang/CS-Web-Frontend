@@ -20,13 +20,13 @@ import {
 } from '../types';
 
 const NEXT_STATUS: Partial<Record<MigrationStatus, MigrationStatus>> = {
-  legacy: 'migrating',
-  migrating: 'done',
+  legacy: 'in-progress',
+  'in-progress': 'migrated',
 };
 
 const PREV_STATUS: Partial<Record<MigrationStatus, MigrationStatus>> = {
-  migrating: 'legacy',
-  done: 'migrating',
+  'in-progress': 'legacy',
+  migrated: 'in-progress',
 };
 
 /** 详情面板 Props */
@@ -59,8 +59,8 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
   }
 
   const status = getStatusConfig(item.migrationStatus);
-  const canAdvance = item.migrationStatus !== 'done';
-  const canRetreat = item.migrationStatus !== 'legacy';
+  const canAdvance = NEXT_STATUS[item.migrationStatus] !== undefined;
+  const canRetreat = PREV_STATUS[item.migrationStatus] !== undefined;
 
   // 简化变体预览：3 size × 3 color, default 态
   const state = 'default' as const;
@@ -131,7 +131,7 @@ export function ComponentDetailPanel({ item, onOpenDrawer }: ComponentDetailPane
           </div>
         </div>
         {/* 迁移完成 → 自动开放可见性的联动提示 */}
-        {item.migrationStatus === 'done' && item.visibilityOpen && (
+        {item.migrationStatus === 'migrated' && item.visibilityOpen && (
           <p className="meta-mono text-[10px] text-[var(--primary)]/80 mt-3">
             ✓ {t('statusDoneAutoOpen')}
           </p>

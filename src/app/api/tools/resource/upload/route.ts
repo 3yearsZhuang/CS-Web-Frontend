@@ -1,5 +1,7 @@
 /**
  * @file 资源上传 API — POST /api/tools/resource/upload（BFF 薄转发）
+ *
+ * TOOLS-GOV Slice C：后端真实路由是 /tools/resources/upload（复数，原 404）。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
   }
 
   const proxy = await proxyBackend(req, {
-    path: '/tools/resource/upload',
+    path: '/tools/resources/upload',
     method: 'POST',
     formData,
   });

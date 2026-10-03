@@ -18,9 +18,10 @@ export async function POST(req: Request) {
     method: 'POST',
     jsonBody: body,
   });
-  const status = proxy.status === 200 ? 200 : 401;
-  const res = NextResponse.json(proxy.body ?? {}, { status });
-  if (proxy.clearAuth && status === 401) clearAuthCookies(res);
+  // P1-8 修复：此前任何非 200 一律映射 401，把 422 校验错误伪装成未登录，掩盖了
+  // 入参 casing 错配。透传后端真实状态码，仅在 clearAuth（真 401）时清 cookie。
+  const res = NextResponse.json(proxy.body ?? {}, { status: proxy.status });
+  if (proxy.clearAuth) clearAuthCookies(res);
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

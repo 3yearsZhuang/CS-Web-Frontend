@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    path: `/tools/components/${encodeURIComponent(id)}`,
   });
 
   if (proxy.status !== 200) {
@@ -35,7 +35,7 @@ export async function PUT(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    path: `/tools/components/${encodeURIComponent(id)}`,
     method: 'PUT',
     jsonBody: {
       name: body.name,
@@ -67,7 +67,7 @@ export async function DELETE(
 
   const { id } = await params;
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}`,
+    path: `/tools/components/${encodeURIComponent(id)}`,
     method: 'DELETE',
   });
 
@@ -93,10 +93,11 @@ export async function PATCH(
   const { id } = await params;
 
   const proxy = await proxyBackend(req, {
-    path: `/tools/component-registry/${encodeURIComponent(id)}`,
-    method: 'PATCH',
+    // TOOLS-GOV Slice D：后端真实路径 /tools/components（原 404）
+    path: `/tools/components/${encodeURIComponent(id)}/migration-status`,
+    method: 'PUT',
     jsonBody: {
-      migration_status: body.migrationStatus,
+      migrationStatus: body.migrationStatus,
     },
   });
 
@@ -106,7 +107,9 @@ export async function PATCH(
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const res = NextResponse.json({ component: proxy.body });
+  // 消费方 store 读取 { visibilityOpened: boolean }（后端 ComponentMigrationStatusOutput camel）
+  const result = (proxy.body ?? {}) as Record<string, unknown>;
+  const res = NextResponse.json({ visibilityOpened: result.visibilityOpened === true });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

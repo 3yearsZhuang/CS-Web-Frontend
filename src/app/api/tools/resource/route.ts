@@ -1,5 +1,8 @@
 /**
  * @file 资源列表/提交 API — GET/POST /api/tools/resource（BFF 薄转发）
+ *
+ * TOOLS-GOV Slice C：后端真实路由是 /tools/resources（复数，原路径 404）；
+ * POST 落到新增的普通用户提交端点（入待审核池）。
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
@@ -18,7 +21,7 @@ export async function GET(req: Request) {
   if (category) params.set('category', category);
   if (tag) params.set('tag', tag);
 
-  const proxy = await proxyBackend(req, { path: `/tools/resource?${params.toString()}` });
+  const proxy = await proxyBackend(req, { path: `/tools/resources?${params.toString()}` });
   const body = (proxy.body ?? {}) as Record<string, unknown>;
   const items = (Array.isArray(body.items) ? body.items : []) as Array<Record<string, unknown>>;
   const res = NextResponse.json({
@@ -50,7 +53,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
   const proxy = await proxyBackend(req, {
-    path: '/tools/resource',
+    path: '/tools/resources',
     method: 'POST',
     jsonBody: {
       title: body.title,
@@ -58,6 +61,7 @@ export async function POST(req: Request) {
       url: body.url,
       resource_type: body.resourceType,
       tech_tags: Array.isArray(body.techTags) ? body.techTags : [],
+      file_url: (body.fileUrl as string | undefined) ?? null,
     },
   });
 

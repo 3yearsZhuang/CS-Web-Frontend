@@ -328,14 +328,14 @@ flowchart LR
 |------|------|---------|
 | BFF 速率限制为进程内存，多实例会导致限流阈值 × N 倍 | 前端限流形同虚设 | 后端 Redis 限流为真正权威；前端仅兜底防滥用；横向扩容前 MUST 确认后端限流已覆盖 |
 | `api-usage-stats` 工作台 widget 在 `WIDGETS` 未注册（后端就绪，前端缺组件） | 用户看不到 API 调用趋势 | `docs/项目待办v2.md` W-3 跟踪；新增组件后三步登记 |
-| `/events/[id]` 活动详情页仍裸 `ReactMarkdown`，**未走** `rehype-sanitize` 过滤 | XSS 潜在攻击面 | 待办跟踪，下次迭代替换为统一 MarkdownRenderer |
+| ~~`/events/[id]` 活动详情页仍裸 `ReactMarkdown`，**未走** `rehype-sanitize` 过滤~~ | XSS 潜在攻击面 | ✅ 已修复（2026-10-03 核实）：随 PR #71 落地的统一 `MarkdownRenderer`（`community-markdown-content.tsx` 带 `rehype-sanitize` 自定义白名单 schema），并有 XSS 行为测试覆盖 |
 
 ### 7.2 技术债务（计划偿还）
 | 债务 | 位置 | 严重度 | 计划偿还 |
 |------|------|--------|---------|
 | 通知模块前端专属测试 **MISSING**（通知列表/未读/已读） | `tools/tests/e2e/` 缺口 | P1 W-6 | 2026-09 前补齐 Playwright E2E |
 | `dev-docs` 路径穿越防护仅 BFF 本地实现，未对齐 `RootDoc-Sec.md` 基线 | `src/app/api/dev-docs/**/route.ts` | P2 | 下次重构时加入白名单 slug 正则 + 路径归一化再判断 |
-| `shared/events/event-bus.ts`（进程内事件总线遗留）运行时 0 引用 | 死代码 | P3 | 下个迭代删除（已无业务写入通知） |
+| ~~`shared/events/event-bus.ts`（进程内事件总线遗留）运行时 0 引用~~ | 死代码 | P3 | ✅ 已删除（2026-10-03，随 wave1 清理；`src/shared/db`、`utils/mail.ts` 前期已清） |
 
 ---
 

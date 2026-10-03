@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEMO 03 · 3D 档案阵列 ArchiveScene — Rhine Lab × FZTBU·CS</title>
+<style>
+  :root {
+    --paper: #eae5e1;
+    --ink: #141210;
+    --ink-dim: #6f6a64;
+    --amber: #e07b39;
+    --hairline: rgba(20,18,16,.14);
+    --mono: "MiSans", "PingFang SC", "Microsoft YaHei", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "MiSans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+  #gl { position: fixed; inset: 0; display: block; }
+
+  /* 细颗粒晕影，模拟终端质感 */
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 2;
+    background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(20,18,16,.10) 100%); }
+
+  .hud { position: fixed; z-index: 10; font-family: var(--mono); }
+  #hud-top { top: 0; left: 0; right: 0; height: 52px; display: flex; align-items: center; gap: 18px;
+    padding: 0 20px; border-bottom: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--paper) 72%, transparent); backdrop-filter: blur(10px); }
+  #hud-top .brand { font-size: 12px; font-weight: 600; letter-spacing: .28em; }
+  #hud-top .brand em { font-style: normal; color: var(--amber); }
+  #hud-top .pos { font-size: 10px; letter-spacing: .2em; color: var(--ink-dim); }
+  #hud-top .pos b { color: var(--amber); font-weight: 600; }
+  #hud-top .spacer { flex: 1; }
+  #hud-top .cat { font-size: 10px; letter-spacing: .24em; color: var(--ink-dim); text-transform: uppercase; }
+
+  #hud-bottom { bottom: 0; left: 0; right: 0; height: 42px; display: flex; align-items: center; gap: 20px;
+    padding: 0 20px; border-top: 1px solid var(--hairline); overflow-x: auto;
+    background: color-mix(in srgb, var(--paper) 72%, transparent); backdrop-filter: blur(10px); }
+  #hud-bottom span { font-size: 9px; letter-spacing: .16em; color: var(--ink-dim); text-transform: uppercase; white-space: nowrap; }
+  #hud-bottom b { color: var(--ink); }
+
+  /* 选中标题（快切闪动） */
+  #hud-sel { left: 20px; top: 72px; }
+  #hud-sel .no { font-size: 12px; letter-spacing: .2em; color: var(--amber); font-weight: 600; }
+  #hud-sel .t { font-family: var(--sans); font-size: 22px; font-weight: 600; margin-top: 6px; transition: opacity 140ms; }
+  #hud-sel .t.flick { opacity: .1; }
+  #hud-sel .en { font-size: 9px; letter-spacing: .24em; color: var(--ink-dim); margin-top: 4px; text-transform: uppercase; }
+
+  /* 详情面板 */
+  #detail { position: fixed; z-index: 10; top: 52px; right: 0; bottom: 42px; width: min(380px, 88vw);
+    border-left: 1px solid var(--hairline); padding: 28px 26px;
+    background: color-mix(in srgb, var(--paper) 82%, transparent); backdrop-filter: blur(12px);
+    transform: translateX(102%); transition: transform 480ms var(--ease-out); overflow-y: auto; }
+  #detail.on { transform: none; }
+  #detail .lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .3em; color: var(--ink-dim); text-transform: uppercase; }
+  #detail .did { font-family: var(--mono); font-size: 13px; letter-spacing: .18em; color: var(--amber); font-weight: 600; margin-top: 14px; }
+  #detail h1 { font-size: 24px; font-weight: 600; margin: 8px 0 4px; }
+  #detail .den { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--ink-dim); text-transform: uppercase; }
+  #detail .kv { display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 12px; margin-top: 16px; }
+  #detail .kv .k { font-family: var(--mono); font-size: 9px; letter-spacing: .2em; color: var(--ink-dim); text-transform: uppercase; padding-top: 2px; }
+  #detail .body { font-size: 13px; line-height: 2.0; color: #33302c; margin-top: 16px; }
+  #detail .tip { font-family: var(--mono); font-size: 9px; letter-spacing: .2em; color: var(--ink-dim); margin-top: 22px; text-transform: uppercase; }
+
+  /* 载入 / 错误 */
+  #boot { position: fixed; inset: 0; z-index: 50; background: var(--paper); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; transition: opacity 500ms var(--ease-out); }
+  #boot.off { opacity: 0; pointer-events: none; }
+  #boot .t { font-family: var(--mono); font-size: 11px; letter-spacing: .4em; color: var(--ink-dim); text-transform: uppercase; }
+  #boot .bar { width: 180px; height: 1px; background: var(--hairline); position: relative; overflow: hidden; }
+  #boot .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 30%; background: var(--amber); animation: load 1.2s var(--ease-out) infinite; }
+  @keyframes load { 0% { left: -30%; } 100% { left: 100%; } }
+  #boot .err { color: var(--amber); font-size: 13px; max-width: 420px; text-align: center; line-height: 1.8; display: none; }
+
+  #demo-meta { position: fixed; left: 16px; bottom: 52px; z-index: 5; font-family: var(--mono); font-size: 9px;
+    letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; opacity: .8; pointer-events: none; }
+  #demo-meta b { color: var(--amber); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<div class="hud" id="hud-top">
+  <div class="brand">FZTBU·CS <em>ARCHIVE</em></div>
+  <div class="pos">POS <b id="hud-pos">A-001</b></div>
+  <div class="spacer"></div>
+  <div class="cat" id="hud-cat">[ 01 ] ARTICLES</div>
+</div>
+
+<div class="hud" id="hud-sel">
+  <div class="no" id="sel-no">A-001</div>
+  <div class="t" id="sel-title">线段树从入门到进阶</div>
+  <div class="en" id="sel-en">SEGMENT TREE ADVANCED</div>
+</div>
+
+<div class="hud" id="hud-bottom">
+  <span><b>←→</b> 切列</span><span><b>↑↓</b> 翻阅</span><span><b>ENTER</b> 读取档案</span>
+  <span><b>拖动</b> 详情内旋转</span><span><b>ESC</b> 归位</span>
+</div>
+<div id="demo-meta"><b>DEMO 03</b> / 03 · 3D ARCHIVE SCENE · 方案B可行性预览（原创几何）</div>
+
+<aside id="detail">
+  <div class="lbl">ARCHIVE DETAIL</div>
+  <div class="did" id="d-id"></div>
+  <h1 id="d-title"></h1>
+  <div class="den" id="d-en"></div>
+  <div class="kv"><span class="k">OWNER</span><span id="d-owner"></span></div>
+  <div class="kv"><span class="k">CATEGORY</span><span id="d-cat"></span></div>
+  <div class="kv"><span class="k">STATUS</span><span>可访问 / OPEN</span></div>
+  <div class="body" id="d-body"></div>
+  <div class="tip">拖动模型旋转 ±0.8 RAD · ESC 归位</div>
+</aside>
+
+<div id="boot">
+  <div class="t">LOADING ARCHIVE SCENE</div>
+  <div class="bar"><i></i></div>
+  <div class="err" id="boot-err"></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bootEl = document.getElementById('boot');
+const errEl = document.getElementById('boot-err');
+
+/* ============ 数据（与 DEMO 02 同源节选） ============ */
+const CATS = [
+  ['文章', 'ARTICLES', 'A', ['线段树从入门到进阶', 'React 19 服务端组件实战', '如何读一份开源代码', '动态规划的状态设计', 'TypeScript 类型体操入门', '从 CORS 到 BFF 网关', '操作系统内存管理笔记', '写给新人的 Git 工作流']],
+  ['视频', 'VIDEOS', 'V', ['2026 暑期算法营·第 1 讲', 'CSS 布局大师课', '一次讲透 HTTPS 握手', '递归思维训练（上）', '递归思维训练（下）', '数据库索引为什么快', 'Linux 命令行 survival', '期中复习串讲·数学']],
+  ['工具', 'TOOLS', 'T', ['在线判题 Sandbox', '代码对比 Diff 器', '正则表达式试验场', 'Cron 表达式生成器', 'Markdown 速查表', 'JSON 结构化检视器', '调色板对比度检查', '算法复杂度速查']],
+  ['活动', 'EVENTS', 'E', ['九月新生破冰赛', '周五夜读·SICP', '秋季项目路演', '国庆集训营报名', '开源之夏宣讲会', '月度 Code Review 会', '黑客松·48 小时', '毕业学长分享夜']],
+  ['特别策划', 'SPECIAL', 'S', ['CS 学习路线图 2026', '档案柜：本站资源总索引', '暑期成果展·作品集', '内部知识库建设日志', '新手三十天打卡计划', '术语表：从 API 到 WASM', '年度技术雷达', '社区共建白皮书']]
+];
+const EN = ['SEGMENT TREE', 'RSC PRACTICE', 'OPEN SOURCE', 'DP STATES', 'TS TYPES', 'BFF GATEWAY', 'OS MEMORY', 'GIT 101'];
+const item = (c, i) => ({
+  id: CATS[c][2] + '-' + String(i + 1).padStart(3, '0'),
+  title: CATS[c][3][i], en: EN[i], cat: c, idx: i
+});
+
+/* ============ 场景常量（参考 DESIGN.md 几何/镜头约束，原创实现） ============ */
+const COLS = 5, ROWS = 8;
+const CARD_W = 5, CARD_H = 3.7, CARD_D = 0.5;
+const COL_GAP = 5.4, ROW_GAP = 4.6;
+const LIFT_PREVIEW = 0.9, LIFT_DETAIL = 4.05;
+const PAPER = 0xeae5e1, AMBER = 0xe07b39;
+
+try { main(); } catch (e) { fail(e); }
+
+function fail(e) {
+  bootEl.querySelector('.t').textContent = 'SCENE UNAVAILABLE';
+  bootEl.querySelector('.bar').style.display = 'none';
+  errEl.style.display = 'block';
+  errEl.textContent = '无法初始化 WebGL2 场景（' + (e && e.message ? e.message : e) + '）。请使用支持 WebGL2 的桌面浏览器访问。';
+  bootEl.classList.remove('off');
+}
+
+function main() {
+  const canvas = document.getElementById('gl');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 not supported');
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.Fog(PAPER, 30, 95);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+  /* 灯光：暖白主光 + 半球补光（参考 archive-lighting 比例） */
+  const key = new THREE.DirectionalLight(0xfff4e6, 1.7); key.position.set(-8, 14, 4); scene.add(key);
+  scene.add(new THREE.HemisphereLight(0xfff8ef, 0xd8cfc4, 0.5));
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(10, 6, -8); scene.add(fill);
+
+  /* ============ 档案盒（原创几何：磨砂透射盖板 + 杏金光导条 + 标签） ============ */
+  const coverMat = new THREE.MeshPhysicalMaterial({
+    color: 0xf5f1ea, roughness: 0.34, transmission: 0.92, thickness: 0.6,
+    ior: 1.45, attenuationColor: new THREE.Color(0xe8ddc9), attenuationDistance: 6,
+    clearcoat: 0.4, clearcoatRoughness: 0.5
+  });
+  const substrateMat = new THREE.MeshStandardMaterial({ color: 0xefe9e0, roughness: 0.8 });
+  const stripMat = new THREE.MeshStandardMaterial({ color: AMBER, emissive: AMBER, emissiveIntensity: 0.35, roughness: 0.5 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xd9d2c6, roughness: 0.6, metalness: 0.1 });
+
+  const coverGeo = new THREE.BoxGeometry(CARD_W, CARD_H, 0.1);
+  const substrateGeo = new THREE.BoxGeometry(CARD_W - 0.24, CARD_H - 0.24, CARD_D - 0.16);
+  const stripGeo = new THREE.BoxGeometry(0.1, CARD_H - 0.5, 0.06);
+  const frameGeo = new THREE.BoxGeometry(CARD_W, CARD_H, 0.06);
+
+  function labelTexture(it) {
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 384;
+    const g = cv.getContext('2d');
+    g.fillStyle = '#f3eee6'; g.fillRect(0, 0, 512, 384);
+    g.strokeStyle = 'rgba(20,18,16,.35)'; g.lineWidth = 3; g.strokeRect(14, 14, 484, 356);
+    g.fillStyle = '#141210'; g.font = '600 64px "PingFang SC", sans-serif';
+    g.fillText(it.id, 44, 110);
+    g.fillStyle = '#e07b39'; g.fillRect(44, 140, 120, 8);
+    g.fillStyle = '#6f6a64'; g.font = '28px "PingFang SC", sans-serif';
+    g.fillText(CATS[it.cat][1], 44, 210);
+    g.font = '24px "PingFang SC", sans-serif';
+    g.fillText('FZTBU·CS ARCHIVE', 44, 330);
+    const tx = new THREE.CanvasTexture(cv);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    tx.anisotropy = 4;
+    return tx;
+  }
+
+  const cards = [];   // {group, lift, liftV, yaw, yawV, col, row, it, phase}
+  const root = new THREE.Group(); scene.add(root);
+
+  for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      const it = item(c, r);
+      const grp = new THREE.Group();
+      const x = (c - (COLS - 1) / 2) * COL_GAP;
+      const z = (r - (ROWS - 1) / 2) * ROW_GAP;
+      grp.position.set(x, 0, z);
+
+      const frame = new THREE.Mesh(frameGeo, frameMat); frame.position.z = -CARD_D / 2 + 0.03;
+      const substrate = new THREE.Mesh(substrateGeo, substrateMat); substrate.position.z = -0.04;
+      const strip = new THREE.Mesh(stripGeo, stripMat); strip.position.set(-CARD_W / 2 + 0.32, 0, CARD_D / 2 + 0.03);
+      const cover = new THREE.Mesh(coverGeo, coverMat); cover.position.z = CARD_D / 2 - 0.02;
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.95),
+        new THREE.MeshBasicMaterial({ map: labelTexture(it), transparent: true, opacity: 0.96 }));
+      label.position.set(0.6, -0.3, CARD_D / 2 + 0.06);
+
+      grp.add(frame, substrate, strip, cover, label);
+      root.add(grp);
+      cards.push({ grp, lift: 0, liftV: 0, yaw: 0, yawV: 0, col: c, row: r, it, phase: Math.random() * Math.PI * 2 });
+    }
+  }
+
+  /* ============ 相机（远距窄视场；交互态 59°/19°，详情态 18°/13.8°） ============ */
+  const camera = new THREE.PerspectiveCamera(24, innerWidth / innerHeight, 0.3, 220);
+  const cam = { az: 59, el: 19, r: 34, tx: 0, ty: 0.6, tz: -2 };
+  const camFrom = { ...cam }, camTo = { ...cam };
+  let camT = 1;
+
+  function placeCamera() {
+    const az = THREE.MathUtils.degToRad(cam.az), el = THREE.MathUtils.degToRad(cam.el);
+    camera.position.set(
+      cam.tx + cam.r * Math.cos(el) * Math.sin(az),
+      cam.ty + cam.r * Math.sin(el),
+      cam.tz + cam.r * Math.cos(el) * Math.cos(az)
+    );
+    camera.lookAt(cam.tx, cam.ty, cam.tz);
+  }
+
+  function tweenCamera(to, instant) {
+    Object.assign(camFrom, cam); Object.assign(camTo, to);
+    camT = instant || reduced ? 1 : 0;
+    if (camT === 1) { Object.assign(cam, camTo); placeCamera(); }
+  }
+  const easeOut = t => 1 - Math.pow(1 - t, 4);
+
+  /* ============ 选择与交互状态 ============ */
+  const sel = { col: 0, row: 0, memory: [0, 0, 0, 0, 0] };
+  let mode = 'browse';            // browse | detail-in | detail | detail-out
+  let wave = { t0: -10, col: 0, row: 0 };
+  let lastAction = performance.now() / 1000;
+  let clock = { t: performance.now() / 1000 };
+
+  const selCard = () => cards[sel.col * ROWS + sel.row];
+  const gridDist = (cd, c, r) => Math.abs(cd.col - c) + Math.abs(cd.row - r);
+
+  function hud() {
+    const it = selCard().it;
+    document.getElementById('hud-pos').textContent = it.id;
+    document.getElementById('hud-cat').textContent = '[ 0' + (it.cat + 1) + ' ] ' + CATS[it.cat][1];
+    document.getElementById('sel-no').textContent = it.id;
+    const t = document.getElementById('sel-title');
+    t.textContent = it.title;
+    document.getElementById('sel-en').textContent = it.en;
+    if (!reduced) { t.classList.remove('flick'); void t.offsetWidth; t.classList.add('flick'); setTimeout(() => t.classList.remove('flick'), 180); }
+  }
+
+  function switchCol(d) {
+    if (mode !== 'browse') return;
+    sel.col = (sel.col + d + COLS) % COLS;
+    sel.row = sel.memory[sel.col];
+    fireWave();
+  }
+  function switchRow(d) {
+    if (mode !== 'browse') return;
+    sel.row = (sel.row + d + ROWS) % ROWS;
+    sel.memory[sel.col] = sel.row;
+    fireWave();
+  }
+  function fireWave() {
+    wave = { t0: clock.t, col: sel.col, row: sel.row };
+    lastAction = clock.t;
+    hud();
+  }
+
+  function openDetail() {
+    if (mode !== 'browse') return;
+    mode = 'detail-in';
+    const cd = selCard();
+    tweenCamera({ az: 18, el: 13.8, r: 13, tx: cd.grp.position.x + 3.4, ty: cd.grp.position.y + LIFT_DETAIL + 0.4, tz: cd.grp.position.z });
+    const it = cd.it;
+    document.getElementById('d-id').textContent = 'ARCHIVE ' + it.id;
+    document.getElementById('d-title').textContent = it.title;
+    document.getElementById('d-en').textContent = it.en;
+    document.getElementById('d-owner').textContent = '教研组 / ' + CATS[it.cat][0] + '类目';
+    document.getElementById('d-cat').textContent = '[ 0' + (it.cat + 1) + ' ] ' + CATS[it.cat][0] + ' / ' + CATS[it.cat][1];
+    document.getElementById('d-body').textContent =
+      '档案「' + it.title + '」由透明档案盒封存，当前为抽取净空状态。本面板对应方案 B 的详情视角：镜头切换至 18°/13.8° 特写机位，档案升至净空高度，可拖动检查角度；ESC 先转正再归位。';
+    document.getElementById('detail').classList.add('on');
+  }
+
+  function closeDetail() {
+    if (mode === 'detail' || mode === 'detail-in') {
+      mode = 'detail-out';
+      document.getElementById('detail').classList.remove('on');
+    }
+  }
+
+  /* 拖拽旋转（详情净空后 ±0.8 rad） */
+  let drag = null;
+  canvas.addEventListener('pointerdown', e => {
+    if (mode === 'detail') drag = { x: e.clientX, yaw: selCard().yaw };
+  });
+  addEventListener('pointermove', e => {
+    if (drag) {
+      const cd = selCard();
+      cd.yaw = THREE.MathUtils.clamp(drag.yaw + (e.clientX - drag.x) * 0.006, -0.8, 0.8);
+    }
+  });
+  addEventListener('pointerup', () => { drag = null; });
+
+  addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') switchCol(-1);
+    else if (e.key === 'ArrowRight') switchCol(1);
+    else if (e.key === 'ArrowUp') { e.preventDefault(); switchRow(-1); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); switchRow(1); }
+    else if (e.key === 'Enter') openDetail();
+    else if (e.key === 'Escape') closeDetail();
+  });
+
+  /* ============ 临界阻尼弹簧 ============ */
+  function spring(cur, vel, target, dt, k, d) {
+    vel += (target - cur) * k * dt;
+    vel *= Math.exp(-d * dt);
+    cur += vel * dt;
+    return [cur, vel];
+  }
+
+  /* ============ 主循环 ============ */
+  let prev = performance.now() / 1000;
+  function frame() {
+    requestAnimationFrame(frame);
+    const now = performance.now() / 1000;
+    const dt = Math.min(now - prev, 0.05); prev = now; clock.t = now;
+
+    /* 相机补间 */
+    if (camT < 1) {
+      camT = Math.min(1, camT + dt / 1.15);
+      const e = easeOut(camT);
+      for (const k of ['az', 'el', 'r', 'tx', 'ty', 'tz']) cam[k] = camFrom[k] + (camTo[k] - camFrom[k]) * e;
+      placeCamera();
+    }
+
+    const idle = now - lastAction;
+    const breathing = !reduced && mode === 'browse' && idle > 2.5 ? Math.min(1, (idle - 2.5) / 1.2) : 0;
+
+    for (const cd of cards) {
+      /* 目标高度 */
+      let target = 0;
+      const isSel = cd === selCard();
+      if (mode === 'browse') {
+        if (isSel) target = LIFT_PREVIEW;
+        /* 选中波浪：正半波，距离延迟衰减 */
+        const lt = now - (wave.t0 + gridDist(cd, wave.col, wave.row) * 0.06);
+        if (lt > 0 && lt < 1.4) {
+          const amp = 0.7 * Math.max(0, 1 - gridDist(cd, wave.col, wave.row) * 0.1);
+          target += amp * Math.max(0, Math.cos(lt * 8.5)) * Math.exp(-lt * 2.4);
+        }
+        /* 呼吸起伏 */
+        if (breathing > 0) {
+          target += breathing * 0.102 * (0.6 * Math.sin(now * (Math.PI * 2 / 8) + cd.phase) + 0.4 * Math.sin(now * (Math.PI * 2 / 13) + cd.phase * 1.7));
+        }
+      } else if (isSel) {
+        target = (mode === 'detail-out') ? LIFT_PREVIEW : LIFT_DETAIL;
+      }
+
+      if (reduced) { cd.lift = target; cd.liftV = 0; }
+      else [cd.lift, cd.liftV] = spring(cd.lift, cd.liftV, target, dt, 90, 11);
+      cd.grp.position.y = cd.lift;
+
+      /* 归位时先转正 */
+      if (mode === 'detail-out') {
+        cd.yaw += (0 - cd.yaw) * Math.min(1, dt * 8);
+        if (Math.abs(cd.yaw) < 0.01 && cd.lift < LIFT_PREVIEW + 0.06) {
+          mode = 'browse';
+          tweenCamera({ az: 59, el: 19, r: 34, tx: 0, ty: 0.6, tz: -2 });
+          lastAction = now;
+        }
+      }
+      if (mode === 'detail-in' && camT >= 1 && Math.abs(cd.lift - LIFT_DETAIL) < 0.05) mode = 'detail';
+      cd.grp.rotation.y = cd.yaw;
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+
+  /* 启动 */
+  resize();
+  placeCamera();
+  hud();
+  wave.t0 = clock.t + 0.4; wave.col = 0; wave.row = 0;   // 开场一次涟漪
+  frame();
+  setTimeout(() => bootEl.classList.add('off'), 350);
+}
+</script>
+</body>
+</html>

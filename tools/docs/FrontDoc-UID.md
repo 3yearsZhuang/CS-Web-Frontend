@@ -34,6 +34,7 @@
 | **§14 Markdown 编辑器** | 社区模块契约摘要 | 三层组件 + rehype-sanitize | `src/modules/community/ui/` |
 | **§15 像素融合层** | Pixel Fusion | DNA 卡、像素按钮、GhostTitle、Title、工作台像素化 | `src/components/primitives/dna-card.tsx` |
 | **§16 组件用法统一契约** | SSOT | 按钮/输入框/徽章/Tab/分页/Modal/z-index 的用法权威 | `src/components/primitives/` |
+| **§17 Rhine 终端作用域** | /lab 专用视觉域 | 令牌、§11 豁免边界、BootSequence、落地序列 | `src/app/lab/` · `globals.css .rhine-*` |
 
 ---
 
@@ -428,7 +429,8 @@ const INPUT_CLASS =
 | 根级 root-level | `avatar` · `user-menu` · `notification-bell` · `theme-toggle` · `theme-provider` · `tech-tag-selector` · `swr-provider` |
 | effects | `motion-primitives` · `mobius-ring` · `page-transition` · `scroll-indicator` |
 | layout | `navbar` · `footer` · `collapsing-hero` · `floating-capsule-sidebar` · `use-collapsing-hero` · `language-switcher` · `page-header-background` |
-| primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` · `dna-card` · `ghost-title` · `title` · `badge` · `pagination` · `modal-shell` |
+| primitives | `button` · `input` · `spinner` · `loading` · `section-nav` · `inline-tabs` · `filter-bar` · `confirm-dialog` · `dna-card` · `ghost-title` · `title` · `badge` · `pagination` · `modal-shell` · `rolling-number` |
+| rhine（§17 作用域内共用） | `archive-index` · `archive-model` · `archive-demo-data` · `archive-scene`（three.js 控制器） · `archive-terminal` · `terminal-settings`（含 `useMotionPreference` / `useTerminalSettings`） |
 | feedback | `announcement-banner` · `toast` · `empty-state` · `fallback` |
 
 ---
@@ -725,10 +727,53 @@ Markdown 编辑器契约已下沉为社区模块契约。完整组件架构 / Pr
 
 ---
 
+## §17 Rhine 终端作用域（/lab 专用 · 2026-09 引入）
+
+Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 RhineLabUI 仓库为准**（github.com/LBEILC/RhineLabUI），经 2026-09-09 决策豁免 §11 禁止清单，豁免**仅限本作用域**。
+
+### 17.1 设计令牌（`globals.css` `.rhine-scope`）
+
+| 令牌 | 值 | 用途 |
+|------|-----|------|
+| `--rhine-paper` | `#eae5e1` 暖灰 | 纸底 |
+| `--rhine-ink` | `#141210` 近黑 | 正文/主视觉 |
+| `--rhine-ink-dim` | `#6f6a64` | 次级文字/元数据 |
+| `--rhine-amber` | `#e07b39` 杏金 | 选中信号/强调 |
+| `--rhine-hairline` | `rgba(20,18,16,.14)` | 细发丝线 |
+| `--rhine-mono` / `--rhine-sans` | MiSans 后备栈（PingFang SC 等） | 等宽元数据 / 正文 |
+
+### 17.2 边界规则（RFC 2119）
+
+- **MUST** `/lab` 内 Rhine 视觉全部引用 `--rhine-*` 令牌与 `.rhine-*` 类
+- **MUST NOT** 将 `--rhine-*` / `.rhine-*` 用于白名单之外；**MUST NOT** 反向修改全局双主题令牌
+- **作用域白名单**（新增须评审）：`/lab`（含 `/lab/archive`、`/lab/terminal`）· `/tools/resource?view=archive`
+  - 共享组件 `components/rhine/*`（archive-index / archive-model / archive-scene / archive-terminal / terminal-settings）**仅可在白名单路由内引用**
+  - 白名单外使用视为违反本规范（含间接引入：业务组件不得 re-export 给非白名单页面）
+- **豁免 §11 的范围**：终端动效（标志绘制/权限扫描/黑条横扫/黑白闪切）、后续 3D 透射/折射/景深、摄像机编排 + spring 物理 —— 仅限 `.rhine-scope` 与 `/lab` 路由
+- **美术素材**：经授权可先使用上游 GLB / MiSans 作占位符（IP 风险见 `design-demos/rhine-lab/README.md`，上线前 MUST 替换为原创资产）
+- 动效缓动沿用全局 `var(--ease-ark)`；`prefers-reduced-motion` 在作用域内统一压制（CSS）+ 组件 JS 直跳（BootSequence）
+
+### 17.3 落地序列与组件
+
+| 序号 | 内容 | 组件/位置 | 状态 |
+|------|------|-----------|------|
+| C1 | /lab 路由 + 令牌作用域 + 终端开场 | `components/effects/boot-sequence.tsx`、`src/app/lab/` | 已落地 |
+| C2 | 档案柜索引 ArchiveIndex（检索/收藏/编号滚动/标题快切） | `src/app/lab/archive/`（挂载点 1 先行；/tools/resource 替换评估为后续变更点） | 已落地（/lab/archive） |
+| C2-2 | 资源站双入口 `?view=archive`（真实资源数据 + 局部降级） | `modules/tools/ui/resource-archive-view.tsx`、`app/tools/resource/page.tsx` 分支 | 已落地（默认仍为卡片视图） |
+| C3 | 反馈原语（Rolling Number / 设置面板） | `components/primitives/rolling-number.tsx`、`components/rhine/terminal-settings.tsx` | 已落地 |
+| B | 3D 档案阵列 ArchiveScene（three.js） | `components/rhine/archive-scene.ts`、`archive-terminal.tsx`、`app/lab/terminal/` | 已落地（/lab/terminal） |
+
+> 设计参照：`design-demos/rhine-lab/`（01/02/03 交互 demo，已随 feature/rhine-lab-integration 分支交付）。
+
+---
+
 ## 变更记录
 
 | 日期 | 变更 |
 |------|------|
+| 2026-09-13 | **B 落地**：`/lab/terminal` 三维档案阵列（three.js + 上游 GLB 占位；透射材质 / 镜头编排 / 抽取归位；画质与动效消费终端设置；WebGL2 降级到 2D 档案柜） |
+| 2026-09-13 | **C3 落地**：RollingNumber 提为共享原语（`animate` 可关闭）；Rhine 终端设置面板（减少动效/音效/画质/全屏/重播）+ `useMotionPreference` 统一动效偏好 |
+| 2026-09-13 | **C2-2 双入口**：档案柜 UI 抽为共享组件（components/rhine），/tools/resource 新增 `?view=archive`；§17 增补作用域白名单 |
 | 2026-08-21 | **P4-3 重写**：补充 6 行元数据、快速索引、RFC 2119 约束、代码位置索引 |
 | 2026-08-20 | **合并前端 UI 文档（P1）**：原 UIStandard 组件用法并入 §16；UIButton 按钮并入 §5.2；本文成为 UI 规范唯一权威 |
 | 2026-08-18 | 像素融合全站化、统一标题组件（Title/SectionMarker/ArkDivider）、GhostTitle 虚影、工作台像素化 |

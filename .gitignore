@@ -85,3 +85,4 @@ test-results/
 playwright-report/
 blob-report/
 tools/tests/e2e/.storage-state.json
+.next/

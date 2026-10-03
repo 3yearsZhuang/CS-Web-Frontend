@@ -17,6 +17,8 @@ export default defineConfig({
     passWithNoTests: false,
     // 组件测试（.tsx）在文件顶部用 `// @vitest-environment jsdom` 指定 DOM 环境
     setupFiles: ['./tools/tests/setup-dom.ts'],
+    // 2026-09-14：整机高负载下 jsdom 组件渲染偶发超过默认 5s → 假失败（隔离重跑即绿），上调
+    testTimeout: 20000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
@@ -38,14 +40,14 @@ export default defineConfig({
         // 纯翻译数据（非可测代码），计入会拖低覆盖率与 diff 门禁公平性
         'src/i18n/messages/**',
       ],
-      // 3b：基线地板（防下滑起步）。实测基线（vitest 文本报表列序 Stmts|Branch|Funcs|Lines）：
-      // statements 10.4 / branches 7.34 / functions 8.2 / lines 11.19，向下取整设阈值。
-      // 后续随测试补全渐进上调至 50%（见 ER-13）。
+      // 3b：基线地板（防下滑起步）。2026-09-14 实测重校（P1-8/TOOLS-GOV 测试补齐后，
+      // vitest 文本报表列序 Stmts|Branch|Funcs|Lines）：13.76 / 10.7 / 12.75 / 14.5，
+      // 向下取整设阈值；后续随测试补全渐进上调至 50%（见 ER-13）。
       thresholds: {
-        lines: 11,
-        functions: 8,
-        branches: 7,
-        statements: 10,
+        lines: 14,
+        functions: 12,
+        branches: 10,
+        statements: 13,
       },
     },
   },
