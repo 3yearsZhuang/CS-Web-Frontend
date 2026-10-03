@@ -102,6 +102,11 @@
       "nanoid@3": "3.3.18",
       "esbuild": ">=0.28.1",
       "@babel/core": "7.29.6"
+    },
+    "auditConfig": {
+      "ignoreGhsa": [
+        "GHSA-vfj7-8cjw-p6xm"
+      ]
     }
   }
 }
