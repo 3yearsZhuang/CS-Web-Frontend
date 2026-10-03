@@ -104,7 +104,7 @@
       "@babel/core": "7.29.6"
     },
     "auditConfig": {
-      "ignoreGhsa": [
+      "ignoreGhsas": [
         "GHSA-vfj7-8cjw-p6xm"
       ]
     }
