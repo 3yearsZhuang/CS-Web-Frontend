@@ -15,6 +15,7 @@ import { PomodoroPlayer } from './widgets/pomodoro';
 import { MusicPlayer } from './widgets/music';
 import TasksAndNotes from './widgets/tasks-and-notes';
 import AgentInboxWidget from './widgets/agent-inbox-widget';
+import AgentBriefingWidget from './widgets/agent-briefing-widget';
 import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
@@ -45,6 +46,13 @@ export const WIDGETS: WorkbenchWidget[] = [
     titleKey: 'agentInboxTitle',
     component: AgentInboxWidget,
     defaultSize: '2x1',
+    sizeOptions: ['1x1', '1x2', '2x1'],
+  },
+  {
+    id: 'agent-briefing',
+    titleKey: 'agentBriefingTitle',
+    component: AgentBriefingWidget,
+    defaultSize: '1x2',
     sizeOptions: ['1x1', '1x2', '2x1'],
   },
   {

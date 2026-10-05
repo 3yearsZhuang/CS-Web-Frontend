@@ -444,6 +444,16 @@ export interface ToolsMessages {
     agentRulesCooldown: string;
     agentRulesMaxPerHour: string;
     agentInboxManageRules: string;
+    agentBriefingTitle: string;
+    agentBriefingReviews: string;
+    agentBriefingFocus: string;
+    agentBriefingTasks: string;
+    agentBriefingCommunity: string;
+    agentBriefingInbox: string;
+    agentBriefingLoadFailed: string;
+    agentBriefingDegraded: string;
+    agentBriefingEmpty: string;
+    agentBriefingEmptyHint: string;
     heatmapNoData: string;
     heatmapBind: string;
     heatmapUnreachable: string;
@@ -985,6 +995,16 @@ export const zhCN: ToolsMessages = {
     agentRulesCooldown: '冷却(分)',
     agentRulesMaxPerHour: '每小时上限',
     agentInboxManageRules: '管理规则',
+    agentBriefingTitle: '今日简报',
+    agentBriefingReviews: '到期复习',
+    agentBriefingFocus: '专注(分)',
+    agentBriefingTasks: '进行中任务',
+    agentBriefingCommunity: '社区新帖',
+    agentBriefingInbox: '待处理建议',
+    agentBriefingLoadFailed: '简报加载失败',
+    agentBriefingDegraded: '今日素材部分采集失败，稍后自动重试',
+    agentBriefingEmpty: '今天还没有数据',
+    agentBriefingEmptyHint: '开始复习、专注或逛逛社区，明天的简报会更热闹',
     heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
     heatmapUnreachable: '无法连接 GitHub，请检查网络后重试',
@@ -1526,6 +1546,16 @@ export const en: ToolsMessages = {
     agentRulesCooldown: 'Cooldown (min)',
     agentRulesMaxPerHour: 'Hourly cap',
     agentInboxManageRules: 'Manage rules',
+    agentBriefingTitle: 'Daily briefing',
+    agentBriefingReviews: 'Reviews due',
+    agentBriefingFocus: 'Focus (min)',
+    agentBriefingTasks: 'Active tasks',
+    agentBriefingCommunity: 'New posts',
+    agentBriefingInbox: 'Pending suggestions',
+    agentBriefingLoadFailed: 'Failed to load briefing',
+    agentBriefingDegraded: 'Some data failed to collect; will retry',
+    agentBriefingEmpty: 'No data today yet',
+    agentBriefingEmptyHint: 'Review, focus or browse the community — tomorrow reads livelier',
     heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
     heatmapUnreachable: 'Cannot reach GitHub — check your network and retry',
