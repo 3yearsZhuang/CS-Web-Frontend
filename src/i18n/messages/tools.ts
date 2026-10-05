@@ -454,6 +454,16 @@ export interface ToolsMessages {
     agentBriefingDegraded: string;
     agentBriefingEmpty: string;
     agentBriefingEmptyHint: string;
+    agentWeeklyTitle: string;
+    agentWeeklyFocus: string;
+    agentWeeklyWrong: string;
+    agentWeeklyTasks: string;
+    agentWeeklyCommunity: string;
+    agentWeeklyPlan: string;
+    agentWeeklyLoadFailed: string;
+    agentWeeklyDegraded: string;
+    agentWeeklyEmpty: string;
+    agentWeeklyEmptyHint: string;
     heatmapNoData: string;
     heatmapBind: string;
     heatmapUnreachable: string;
@@ -1005,6 +1015,16 @@ export const zhCN: ToolsMessages = {
     agentBriefingDegraded: '今日素材部分采集失败，稍后自动重试',
     agentBriefingEmpty: '今天还没有数据',
     agentBriefingEmptyHint: '开始复习、专注或逛逛社区，明天的简报会更热闹',
+    agentWeeklyTitle: '每周复盘',
+    agentWeeklyFocus: '专注(分)',
+    agentWeeklyWrong: '新增错题',
+    agentWeeklyTasks: '完成任务',
+    agentWeeklyCommunity: '社区新帖',
+    agentWeeklyPlan: '计划达成',
+    agentWeeklyLoadFailed: '周复盘加载失败',
+    agentWeeklyDegraded: '本周部分素材采集失败，稍后自动重试',
+    agentWeeklyEmpty: '本周还没有数据',
+    agentWeeklyEmptyHint: '学习数据会在这里汇总成你的每周复盘',
     heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
     heatmapUnreachable: '无法连接 GitHub，请检查网络后重试',
@@ -1556,6 +1576,16 @@ export const en: ToolsMessages = {
     agentBriefingDegraded: 'Some data failed to collect; will retry',
     agentBriefingEmpty: 'No data today yet',
     agentBriefingEmptyHint: 'Review, focus or browse the community — tomorrow reads livelier',
+    agentWeeklyTitle: 'Weekly review',
+    agentWeeklyFocus: 'Focus (min)',
+    agentWeeklyWrong: 'New wrong answers',
+    agentWeeklyTasks: 'Tasks done',
+    agentWeeklyCommunity: 'New posts',
+    agentWeeklyPlan: 'Plan completion',
+    agentWeeklyLoadFailed: 'Failed to load weekly review',
+    agentWeeklyDegraded: 'Some data failed to collect; will retry',
+    agentWeeklyEmpty: 'No data this week yet',
+    agentWeeklyEmptyHint: 'Your learning data rolls up here into a weekly review',
     heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
     heatmapUnreachable: 'Cannot reach GitHub — check your network and retry',
