@@ -406,6 +406,22 @@ export interface ToolsMessages {
     toolsHint: string;
     heatmapTitle: string;
     githubHeatmap: string;
+    agentInboxTitle: string;
+    agentInboxEmpty: string;
+    agentInboxEmptyHint: string;
+    agentInboxAccept: string;
+    agentInboxDismiss: string;
+    agentInboxSnooze: string;
+    agentInboxMinutesUnit: string;
+    agentInboxLoadFailed: string;
+    agentInboxActionDone: string;
+    agentInboxRetry: string;
+    agentInboxFooterHint: string;
+    inboxTypeReviewDue: string;
+    inboxTypeResourceRecommend: string;
+    inboxTypeGoalNudge: string;
+    inboxTypeCommunityDigest: string;
+    inboxTypeSystemHint: string;
     heatmapNoData: string;
     heatmapBind: string;
     heatmapUnreachable: string;
@@ -909,6 +925,22 @@ export const zhCN: ToolsMessages = {
     toolsHint: '原有工具入口，收编于此',
     heatmapTitle: 'GitHub · {year}',
     githubHeatmap: 'GitHub 热力图',
+    agentInboxTitle: 'Agent 收件箱',
+    agentInboxEmpty: '暂无新建议',
+    agentInboxEmptyHint: 'Agent 会在复习到期、目标进度或社区有新内容时给你建议',
+    agentInboxAccept: '接受',
+    agentInboxDismiss: '忽略',
+    agentInboxSnooze: '稍后 30 分钟',
+    agentInboxMinutesUnit: '分钟',
+    agentInboxLoadFailed: '收件箱加载失败',
+    agentInboxActionDone: '操作失败',
+    agentInboxRetry: '重试',
+    agentInboxFooterHint: '处理后可在通知中追溯；「稍后」到期会重新出现',
+    inboxTypeReviewDue: '复习到期',
+    inboxTypeResourceRecommend: '资源推荐',
+    inboxTypeGoalNudge: '目标提醒',
+    inboxTypeCommunityDigest: '社区动态',
+    inboxTypeSystemHint: '系统提示',
     heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
     heatmapUnreachable: '无法连接 GitHub，请检查网络后重试',
@@ -1412,6 +1444,22 @@ export const en: ToolsMessages = {
     toolsHint: 'Legacy tool entries, kept here',
     heatmapTitle: 'GitHub · {year}',
     githubHeatmap: 'GitHub heatmap',
+    agentInboxTitle: 'Agent Inbox',
+    agentInboxEmpty: 'No new suggestions',
+    agentInboxEmptyHint: 'Your Agent will suggest when reviews are due, goals drift, or community content arrives',
+    agentInboxAccept: 'Accept',
+    agentInboxDismiss: 'Dismiss',
+    agentInboxSnooze: 'Later 30 min',
+    agentInboxMinutesUnit: 'min',
+    agentInboxLoadFailed: 'Failed to load inbox',
+    agentInboxActionDone: 'Action failed',
+    agentInboxRetry: 'Retry',
+    agentInboxFooterHint: 'Actions are traceable in notifications; snoozed items return when due',
+    inboxTypeReviewDue: 'Review due',
+    inboxTypeResourceRecommend: 'Resource pick',
+    inboxTypeGoalNudge: 'Goal nudge',
+    inboxTypeCommunityDigest: 'Community digest',
+    inboxTypeSystemHint: 'System hint',
     heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
     heatmapUnreachable: 'Cannot reach GitHub — check your network and retry',
