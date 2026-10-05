@@ -422,6 +422,28 @@ export interface ToolsMessages {
     inboxTypeGoalNudge: string;
     inboxTypeCommunityDigest: string;
     inboxTypeSystemHint: string;
+    agentRulesEntry: string;
+    agentRulesBack: string;
+    agentRulesHint: string;
+    agentRulesEmpty: string;
+    agentRulesEmptyHint: string;
+    agentRulesLoadFailed: string;
+    agentRulesSaveFailed: string;
+    agentRulesCreate: string;
+    agentRulesSave: string;
+    agentRulesCancel: string;
+    agentRulesEdit: string;
+    agentRulesDelete: string;
+    agentRulesEnable: string;
+    agentRulesDisable: string;
+    agentRulesNamePlaceholder: string;
+    agentRulesTrigger: string;
+    agentRulesQuiet: string;
+    agentRulesQuietFrom: string;
+    agentRulesQuietTo: string;
+    agentRulesCooldown: string;
+    agentRulesMaxPerHour: string;
+    agentInboxManageRules: string;
     heatmapNoData: string;
     heatmapBind: string;
     heatmapUnreachable: string;
@@ -941,6 +963,28 @@ export const zhCN: ToolsMessages = {
     inboxTypeGoalNudge: '目标提醒',
     inboxTypeCommunityDigest: '社区动态',
     inboxTypeSystemHint: '系统提示',
+    agentRulesEntry: 'Agent 规则',
+    agentRulesBack: '返回工具区',
+    agentRulesHint: '规则由触发器驱动并经防打扰裁决器（静音时段 / 冷却 / 频次水位）放行，生成建议进入收件箱',
+    agentRulesEmpty: '还没有自动化规则',
+    agentRulesEmptyHint: '新建规则后，Agent 会在条件命中时经裁决器生成建议',
+    agentRulesLoadFailed: '规则加载失败',
+    agentRulesSaveFailed: '规则保存失败',
+    agentRulesCreate: '新建规则',
+    agentRulesSave: '保存',
+    agentRulesCancel: '取消',
+    agentRulesEdit: '编辑',
+    agentRulesDelete: '删除规则',
+    agentRulesEnable: '启用',
+    agentRulesDisable: '停用',
+    agentRulesNamePlaceholder: '规则名称',
+    agentRulesTrigger: '触发类型',
+    agentRulesQuiet: '静音',
+    agentRulesQuietFrom: '静音自 HH:MM',
+    agentRulesQuietTo: '静音至 HH:MM',
+    agentRulesCooldown: '冷却(分)',
+    agentRulesMaxPerHour: '每小时上限',
+    agentInboxManageRules: '管理规则',
     heatmapNoData: '暂无数据，先绑定 GitHub 用户名试试',
     heatmapBind: '绑定',
     heatmapUnreachable: '无法连接 GitHub，请检查网络后重试',
@@ -1460,6 +1504,28 @@ export const en: ToolsMessages = {
     inboxTypeGoalNudge: 'Goal nudge',
     inboxTypeCommunityDigest: 'Community digest',
     inboxTypeSystemHint: 'System hint',
+    agentRulesEntry: 'Agent Rules',
+    agentRulesBack: 'Back to tools',
+    agentRulesHint: 'Rules are fired by triggers and gated by the arbitrator (quiet hours / cooldown / hourly cap) before entering the inbox',
+    agentRulesEmpty: 'No automation rules yet',
+    agentRulesEmptyHint: 'Create a rule and the Agent will suggest when conditions hit, gated by the arbitrator',
+    agentRulesLoadFailed: 'Failed to load rules',
+    agentRulesSaveFailed: 'Failed to save rule',
+    agentRulesCreate: 'New rule',
+    agentRulesSave: 'Save',
+    agentRulesCancel: 'Cancel',
+    agentRulesEdit: 'Edit',
+    agentRulesDelete: 'Delete rule',
+    agentRulesEnable: 'Enable',
+    agentRulesDisable: 'Disable',
+    agentRulesNamePlaceholder: 'Rule name',
+    agentRulesTrigger: 'Trigger type',
+    agentRulesQuiet: 'Quiet',
+    agentRulesQuietFrom: 'Quiet from HH:MM',
+    agentRulesQuietTo: 'Quiet to HH:MM',
+    agentRulesCooldown: 'Cooldown (min)',
+    agentRulesMaxPerHour: 'Hourly cap',
+    agentInboxManageRules: 'Manage rules',
     heatmapNoData: 'No data yet — bind a GitHub username first',
     heatmapBind: 'Bind',
     heatmapUnreachable: 'Cannot reach GitHub — check your network and retry',
