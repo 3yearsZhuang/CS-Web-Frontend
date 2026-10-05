@@ -110,6 +110,18 @@ describe('AgentRulesPanel', () => {
     );
   });
 
+  it('创建失败展示错误与重试', async () => {
+    routes.set('POST /api/agent-rules', () => ({ ok: false, error: 'agentRulesSaveFailed' }));
+    render(<AgentRulesPanel />);
+    await screen.findByText('复习提醒');
+    fireEvent.click(screen.getByText('agentRulesCreate'));
+    const nameInput = screen.getByLabelText('agentRulesNamePlaceholder');
+    fireEvent.change(nameInput, { target: { value: '坏规则' } });
+    fireEvent.click(screen.getByText('agentRulesCreate'));
+    await screen.findByRole('alert');
+    expect(screen.getByText('agentRulesSaveFailed')).toBeTruthy();
+  });
+
   it('删除规则后本地移除', async () => {
     routes.set('DELETE /api/agent-rules/3', () => ({ ok: true, data: { ok: true } }));
     render(<AgentRulesPanel />);
