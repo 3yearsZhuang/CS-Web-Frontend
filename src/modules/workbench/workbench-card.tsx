@@ -12,7 +12,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { DnaCard } from '@/components';
+import { DnaCard } from '@/components/primitives/dna-card';
 
 export interface WorkbenchCardProps {
   /** 右上像素角标（HI/TSK/GIT/AUX/NOTE/FCS/EXM…），number 自动补零 */

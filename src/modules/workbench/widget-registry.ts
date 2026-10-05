@@ -14,6 +14,7 @@ import GreetingBar from './widgets/greeting-bar';
 import { PomodoroPlayer } from './widgets/pomodoro';
 import { MusicPlayer } from './widgets/music';
 import TasksAndNotes from './widgets/tasks-and-notes';
+import AgentInboxWidget from './widgets/agent-inbox-widget';
 import { SchemaWidgetRenderer } from './schema/schema-widget-renderer';
 
 export interface WorkbenchWidget {
@@ -38,6 +39,13 @@ export const WIDGETS: WorkbenchWidget[] = [
     component: TasksAndNotes,
     defaultSize: '2x2',
     sizeOptions: ['1x1', '1x2', '2x1', '2x2', '2x3'],
+  },
+  {
+    id: 'agent-inbox',
+    titleKey: 'agentInboxTitle',
+    component: AgentInboxWidget,
+    defaultSize: '2x1',
+    sizeOptions: ['1x1', '1x2', '2x1'],
   },
   {
     id: 'github-heatmap',
