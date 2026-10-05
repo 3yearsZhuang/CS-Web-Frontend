@@ -1,7 +1,7 @@
 {
   "name": "cs-web-frontend",
-  "version": "1.0.1",
-  "codename": "七夕",
+  "version": "1.0.2",
+  "codename": "",
   "private": true,
   "scripts": {
     "build": "node ./tools/scripts/build/build-app.mjs",
