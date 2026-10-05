@@ -5,6 +5,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { Inbox } from 'lucide-react';
 import { Button } from '@/components/primitives/button';
 // 深路径导入：绕开 @/components barrel（其 feedback/fallback → server-only monitoring 链）
@@ -105,6 +106,9 @@ export default function AgentInboxWidget() {
             <p className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)]">
               <Inbox className="h-3.5 w-3.5" aria-hidden="true" />
               {t('agentInboxFooterHint')}
+              <Link href="/tools/agent-rules" className="underline hover:text-[var(--primary)]">
+                {t('agentInboxManageRules')}
+              </Link>
             </p>
           </>
         )}
