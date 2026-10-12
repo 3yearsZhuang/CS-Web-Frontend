@@ -1,7 +1,7 @@
 /**
  * @file 番茄钟常量与设计令牌映射。
- * 阶段色统一用 Tailwind 语义色板（与项目 tools 页 emerald/amber 用法一致），
- * 避免散落硬编码色值；自动兼容浅色 / 深色主题。
+ * 阶段色统一引用 globals.css 的 --phase-* token（U-1 颜色收口），
+ * 禁止硬编码色值；自动兼容浅色 / 深色主题。
  */
 'use client';
 
@@ -17,20 +17,20 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakSound: 'fire',
 };
 
-/** 阶段 → Tailwind 语义色类（用于圆环描边 / 状态徽章） */
+/** 阶段 → 阶段色 token 类（用于圆环描边 / 状态徽章；令牌定义见 globals.css --phase-*） */
 export const PHASE_COLOR_CLASS: Record<PomodoroPhase, string> = {
   idle: 'text-[var(--muted-foreground)] border-[var(--border)]',
-  focus: 'text-orange-500 border-orange-500/50',
-  shortBreak: 'text-emerald-500 border-emerald-500/50',
-  longBreak: 'text-blue-500 border-blue-500/50',
+  focus: 'text-[var(--phase-focus)] border-[color-mix(in_srgb,var(--phase-focus)_50%,transparent)]',
+  shortBreak: 'text-[var(--phase-break)] border-[color-mix(in_srgb,var(--phase-break)_50%,transparent)]',
+  longBreak: 'text-[var(--phase-rest)] border-[color-mix(in_srgb,var(--phase-rest)_50%,transparent)]',
 };
 
-/** 阶段 → 圆环 SVG stroke 色（Tailwind 色板十六进制，跟随主题静态色） */
+/** 阶段 → 圆环 SVG stroke 色（引用 --phase-* token，双主题自适应） */
 export const PHASE_RING_STROKE: Record<PomodoroPhase, string> = {
   idle: 'var(--muted-foreground)',
-  focus: '#f97316', // orange-500
-  shortBreak: '#10b981', // emerald-500
-  longBreak: '#3b82f6', // blue-500
+  focus: 'var(--phase-focus)',
+  shortBreak: 'var(--phase-break)',
+  longBreak: 'var(--phase-rest)',
 };
 
 export const DURATION_FIELDS: { key: keyof Pick<PomodoroSettings, 'focusMin' | 'shortBreakMin' | 'longBreakMin' | 'roundsBeforeLong'>; min: number; max: number }[] = [

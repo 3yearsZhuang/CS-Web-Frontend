@@ -133,7 +133,7 @@ function ProgressBody({ config }: { config: SchemaWidgetConfig }) {
   const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
   const R = 52;
   const CIRC = 2 * Math.PI * R;
-  const accent = config.options?.accent === 'destructive' ? 'var(--destructive)' : config.options?.accent === 'emerald' ? 'var(--chart-3, #1d9e75)' : 'var(--primary)';
+  const accent = config.options?.accent === 'destructive' ? 'var(--destructive)' : config.options?.accent === 'emerald' ? 'var(--chart-3)' : 'var(--primary)';
   return (
     <WorkbenchCard
       corner={cornerFor(config.type, config.corner)}

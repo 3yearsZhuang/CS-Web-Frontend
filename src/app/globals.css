@@ -178,6 +178,10 @@
   --hover-overlay: rgba(0, 0, 0, 0.015);
   /* 装饰网格线 — 白色半透明发丝网格（叠加在深色背景装饰区），GENERAL 2.5 精确值令牌化 */
   --grid-line: rgba(255, 255, 255, 0.03);
+  /* 番茄钟阶段色 token（U-1 颜色收口）— SVG stroke 无法引用 Tailwind 色板类，统一令牌化 */
+  --phase-focus: #f97316; /* 专注（orange-500 同色相） */
+  --phase-break: #10b981; /* 短休息（emerald-500 同色相） */
+  --phase-rest: #3b82f6; /* 长休息（blue-500 同色相） */
 }
 
 /* 深色主题（通过 .dark 类激活） */
@@ -208,6 +212,10 @@
   --chart-5: #8b9dc3;
 
   --hover-overlay: rgba(255, 255, 255, 0.02);
+  /* 番茄钟阶段色（深色档：提高明度保证纯黑底可读） */
+  --phase-focus: #fb923c; /* orange-400 */
+  --phase-break: #34d399; /* emerald-400 */
+  --phase-rest: #60a5fa; /* blue-400 */
   /* 装饰网格线 — 深色主题略亮以保证可见度 */
   --grid-line: rgba(255, 255, 255, 0.06);
 }
