@@ -41,6 +41,11 @@ jobs:
       - name: Lint
         run: pnpm run lint:build
 
+      - name: Design token drift gate (U-5)
+        # 设计规范禁止清单门禁（FrontDoc-UID §11/§16）：hex 硬编码 / 白名单外圆角 /
+        # 违规阴影 / hover 浮起 / 全局 z-index 裸写 → CI 红。豁免域：rhine/lab/design-demo。
+        run: pnpm run check:design
+
       - name: BFF security boundary (AL-1)
         # 边界硬约束：'use client' 文件禁止从 @/shared/security（非 schemas 子树）导入
         # 密码哈希/权限判定/JWT 签发等权威安全逻辑（后端为认证/授权唯一权威）。
