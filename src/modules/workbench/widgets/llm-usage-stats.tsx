@@ -217,9 +217,9 @@ export default function LlmUsageStats({ embedded = false }: LlmUsageStatsProps) 
               <span className="text-[11px] text-[var(--muted-foreground)] truncate flex-1 min-w-0">
                 {m.model}
               </span>
-              <div className="flex-1 h-[6px] rounded-full bg-[var(--border)]/40 overflow-hidden">
+              <div className="flex-1 h-[6px] bg-[var(--border)]/40 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--chart-1)]"
+                  className="h-full bg-[var(--chart-1)]"
                   style={{ width: `${(m.count / modelMax) * 100}%` }}
                 />
               </div>

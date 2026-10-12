@@ -155,7 +155,7 @@ export default function TasksAndNotes() {
         <h4 className="meta-mono text-[11px] uppercase tracking-wider text-[var(--muted-foreground)] flex items-center gap-2">
           {t('todayTasks')}
           {overdueCount > 0 && (
-            <span className="normal-case text-[var(--destructive)] border border-red-500/40 rounded-full px-2 py-0.5">
+            <span className="badge badge-danger normal-case">
               {overdueCount} {t('overdue')}
             </span>
           )}

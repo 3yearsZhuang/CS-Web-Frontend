@@ -13,7 +13,7 @@ import { Button } from '@/components/primitives/button';
 import { WorkbenchCard } from '../../workbench-card';
 import { SettingsPanel } from './settings-panel';
 import { usePomodoro } from './use-pomodoro';
-import { fmt, PHASE_COLOR_CLASS, PHASE_RING_STROKE } from './constants';
+import { fmt, PHASE_RING_STROKE } from './constants';
 
 const RING_R = 52;
 const RING_CIRC = 2 * Math.PI * RING_R;
@@ -33,7 +33,6 @@ export function PomodoroPlayer() {
           : t('pomodoro');
 
   const ringColor = PHASE_RING_STROKE[pomo.state.phase];
-  const phaseClass = PHASE_COLOR_CLASS[pomo.state.phase];
 
   return (
     <WorkbenchCard

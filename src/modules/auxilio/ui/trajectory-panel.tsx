@@ -117,7 +117,7 @@ export default function TrajectoryPanel({ conversationId, onClose }: TrajectoryP
   };
 
   return (
-    <div className="flex flex-col border border-[var(--border)] rounded-lg bg-[var(--background)]/40">
+    <div className="flex flex-col border border-[var(--border)] bg-[var(--background)]/40">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)]">
         <span className="text-[13px] font-medium">{t('replay')}</span>
         <span className="text-[12px] text-[var(--muted-foreground)]">

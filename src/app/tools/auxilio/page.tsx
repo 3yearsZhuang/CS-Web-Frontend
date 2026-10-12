@@ -196,7 +196,7 @@ export default function AuxilioPage() {
               <select
                 value={presetId ?? ''}
                 onChange={(e) => setPresetId(e.target.value || null)}
-                className="bg-[var(--background)] border border-[var(--border)] rounded-md px-2 py-1.5 text-[13px]"
+                className="bg-[var(--background)] border border-[var(--border)] rounded-[var(--radius)] px-2 py-1.5 text-[13px]"
               >
                 <option value="">{t('presetAuto')}</option>
                 {PRESET_OPTIONS.map((p) => (
@@ -243,7 +243,7 @@ export default function AuxilioPage() {
 
             <Link
               href="/tools/auxilio/settings"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border)] text-[12px] font-medium hover:bg-[var(--border)]/40"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] text-[12px] font-medium hover:bg-[var(--border)]/40"
             >
               <BarChart3 className="w-4 h-4" />
               {t('llmUsageEntry')}
@@ -251,7 +251,7 @@ export default function AuxilioPage() {
           </div>
 
           {showPlan && (
-            <div className="mb-6 rounded-lg border border-[var(--border)] bg-[var(--background)]/40 p-4">
+            <div className="mb-6 border border-[var(--border)] bg-[var(--background)]/40 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-[15px] font-medium">今日学习计划</h3>
@@ -288,7 +288,7 @@ export default function AuxilioPage() {
           )}
 
           {showGoals && (
-            <div className="mb-6 rounded-lg border border-[var(--border)] bg-[var(--background)]/40 p-4">
+            <div className="mb-6 border border-[var(--border)] bg-[var(--background)]/40 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-[15px] font-medium">学习目标</h3>
@@ -374,7 +374,7 @@ export default function AuxilioPage() {
           />
 
           {showMistakes && (
-            <div className="mt-6 rounded-lg border border-[var(--border)] bg-[var(--background)]/40 p-4">
+            <div className="mt-6 border border-[var(--border)] bg-[var(--background)]/40 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-[15px] font-medium">待复习错题</h3>

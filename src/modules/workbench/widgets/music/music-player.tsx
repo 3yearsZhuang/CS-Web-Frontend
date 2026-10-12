@@ -34,7 +34,7 @@ export function MusicPlayer() {
           type="button"
           aria-label="stop sound"
           title={t('silence')}
-          className="p-2 rounded hover:bg-[var(--border)] text-[var(--muted-foreground)]"
+          className="p-2 hover:bg-[var(--border)] text-[var(--muted-foreground)]"
           onClick={music.stop}
         >
           <Square className="w-4 h-4" />
@@ -58,7 +58,7 @@ export function MusicPlayer() {
                 key={k.value}
                 type="button"
                 onClick={() => music.playAmbient(k.value)}
-                className={`px-2.5 py-1 rounded-md border text-[12px] transition-colors ${
+                className={`px-2.5 py-1 border text-[12px] transition-colors ${
                   active
                     ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                     : 'hover:bg-[var(--border)]/40 border-[var(--border)] text-[var(--muted-foreground)]'

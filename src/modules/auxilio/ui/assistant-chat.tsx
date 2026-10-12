@@ -346,7 +346,7 @@ export default function AssistantChat({
             <div key={c.id} className="flex items-stretch gap-1">
               <button
                 type="button"
-                className={`min-w-0 flex-1 flex items-center gap-1.5 text-left px-3 py-2 rounded text-[13px] border border-[var(--border)] hover:bg-[var(--border)]/40 ${
+                className={`min-w-0 flex-1 flex items-center gap-1.5 text-left px-3 py-2 text-[13px] border border-[var(--border)] hover:bg-[var(--border)]/40 ${
                   conversationId === c.id ? 'bg-[var(--border)]/50' : ''
                 }`}
                 title={c.parentConversationId ? `分支会话 · 来源 #${c.parentConversationId}` : undefined}
@@ -358,17 +358,17 @@ export default function AssistantChat({
               </button>
               <details className="relative">
                 <summary
-                  className="h-full min-w-9 list-none cursor-pointer inline-flex items-center justify-center rounded border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)]"
+                  className="h-full min-w-9 list-none cursor-pointer inline-flex items-center justify-center border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--primary)]"
                   title="会话操作"
                   aria-label="会话操作"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </summary>
-                <div className="absolute right-0 z-20 mt-1 w-36 rounded border border-[var(--border)] bg-[var(--background)] p-1 shadow-lg">
+                <div className="absolute right-0 z-[var(--z-header)] mt-1 w-36 border border-[var(--border)] bg-[var(--background)] p-1 shadow-[var(--shadow-popover)]">
                   {c.parentConversationId && (
                     <button
                       type="button"
-                      className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
+                      className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
                       onClick={() => void openConversation(c.parentConversationId!)}
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" /> 来源会话
@@ -376,21 +376,21 @@ export default function AssistantChat({
                   )}
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
                     onClick={() => void renameConversation(c)}
                   >
                     <Pencil className="w-3.5 h-3.5" /> 重命名
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px] hover:bg-[var(--border)]/40"
                     onClick={() => void archiveConversation(c)}
                   >
                     <Archive className="w-3.5 h-3.5" /> {c.archivedAt ? '取消归档' : '归档'}
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12px] text-[var(--destructive)] hover:bg-[var(--border)]/40"
+                    className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px] text-[var(--destructive)] hover:bg-[var(--border)]/40"
                     onClick={() => void deleteConversation(c)}
                   >
                     <Trash2 className="w-3.5 h-3.5" /> 删除
@@ -432,7 +432,7 @@ export default function AssistantChat({
               className={`flex flex-col gap-1.5 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[85%] sm:max-w-[75%] px-4 py-2.5 rounded-lg text-[14px] leading-[1.7] ${
+                className={`max-w-[85%] sm:max-w-[75%] px-4 py-2.5 text-[14px] leading-[1.7] ${
                   msg.role === 'user'
                     ? 'bg-[var(--foreground)] text-[var(--background)]'
                     : 'bg-[var(--border)]/30 text-[var(--foreground)]'
@@ -451,7 +451,7 @@ export default function AssistantChat({
                   {msg.toolCalls.map((tc, j) => (
                     <div
                       key={`${tc.name}-${j}`}
-                      className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)] px-2 py-1 rounded border border-[var(--border)]"
+                      className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)] px-2 py-1 border border-[var(--border)]"
                     >
                       <Wrench className="w-3 h-3" />
                       <span className="truncate max-w-[200px]">{tc.name}</span>
@@ -492,7 +492,7 @@ export default function AssistantChat({
             rows={1}
             value={input}
             placeholder={activeConversationArchived ? '已归档会话为只读' : t('chatPlaceholder')}
-            className={`${INPUT_CLASS} flex-1 min-w-0 resize-none rounded-lg`}
+            className={`${INPUT_CLASS} flex-1 min-w-0 resize-none`}
             disabled={streaming || activeConversationArchived}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

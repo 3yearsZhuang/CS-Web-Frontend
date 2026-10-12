@@ -81,7 +81,7 @@ export default function AgentWeeklyWidget() {
               {rows.map(([label, value]) => (
                 <li
                   key={label}
-                  className="rounded-lg border border-[var(--border)] px-3 py-2"
+                  className="border border-[var(--border)] px-3 py-2"
                   data-testid={`weekly-${label}`}
                 >
                   <div className="meta-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
@@ -94,7 +94,7 @@ export default function AgentWeeklyWidget() {
               ))}
               {plan && (
                 <li
-                  className="rounded-lg border border-[var(--border)] px-3 py-2"
+                  className="border border-[var(--border)] px-3 py-2"
                   data-testid="weekly-plan"
                 >
                   <div className="meta-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted-foreground)]">

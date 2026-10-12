@@ -248,7 +248,7 @@ export function Workbench() {
           )}
 
           {/* RGL 网格引擎 */}
-          <div ref={containerRef} className={`transition-all duration-300 ${isEditMode ? 'p-4 bg-[var(--foreground)]/5 rounded-lg border-2 border-dashed border-[var(--primary)]/30' : ''}`}>
+          <div ref={containerRef} className={`transition-all duration-300 ${isEditMode ? 'p-4 bg-[var(--foreground)]/5 border-2 border-dashed border-[var(--primary)]/30' : ''}`}>
                {mounted && (
                <Responsive width={width}
                  className="layout"
@@ -266,7 +266,7 @@ export function Workbench() {
                    return (
                      <div 
                        key={id} 
-                       className={`relative group bg-[var(--background)] ${isEditMode ? 'ring-2 ring-[var(--primary)] shadow-2xl cursor-grab active:cursor-grabbing animate-wiggle' : ''}`}
+                       className={`relative group bg-[var(--background)] ${isEditMode ? 'ring-2 ring-[var(--primary)] cursor-grab active:cursor-grabbing' : ''}`}
                      >
                        {/* 拖拽手柄层：仅在编辑模式展示 */}
                        {isEditMode && (
@@ -277,7 +277,7 @@ export function Workbench() {
                        {isEditMode && (
                          <button 
                            onClick={() => removeWidget(id)}
-                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-30 shadow-lg hover:scale-110 transition-transform"
+                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-30 transition-colors hover:opacity-85"
                          >
                            <X className="w-3.5 h-3.5" />
                          </button>
@@ -303,7 +303,7 @@ export function Workbench() {
 
       {/* Widget Dock 底部资源库 */}
       {mounted && (
-        <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-[90%] max-w-3xl bg-[var(--background)] border border-[var(--primary)] border-b-0 rounded-t-xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] z-[100] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex gap-4 overflow-x-auto ${isEditMode ? 'translate-y-0' : 'translate-y-[120%]'}`}>
+        <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-[90%] max-w-3xl bg-[var(--background)] border border-[var(--primary)] border-b-0 p-6 shadow-[var(--shadow-modal)] z-[var(--z-header)] transition-transform duration-500 ease-[var(--ease-ark)] flex gap-4 overflow-x-auto ${isEditMode ? 'translate-y-0' : 'translate-y-[120%]'}`}>
           <div className="absolute -top-[14px] left-6 font-pixel text-[10px] text-[var(--primary)] bg-[var(--background)] px-2 py-0.5 border border-[var(--primary)] uppercase">
             Widget Gallery · 点击添加到桌面
           </div>
@@ -327,21 +327,11 @@ export function Workbench() {
       )}
 
       <style jsx global>{`
-        @keyframes wiggle {
-          0% { transform: rotate(0deg); }
-          25% { transform: rotate(-0.5deg); }
-          50% { transform: rotate(0deg); }
-          75% { transform: rotate(0.5deg); }
-          100% { transform: rotate(0deg); }
-        }
-        .animate-wiggle {
-          animation: wiggle 2s infinite ease-in-out;
-        }
         /* RGL overrides for cleaner look in bionic mode */
         .react-grid-item.react-grid-placeholder {
           background: var(--primary) !important;
           opacity: 0.1 !important;
-          border-radius: 4px;
+          border-radius: var(--radius);
         }
         .react-resizable-handle {
           z-index: 50 !important;

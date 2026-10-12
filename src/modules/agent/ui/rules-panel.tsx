@@ -50,7 +50,7 @@ function RuleFormRow({
     setForm((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="mb-4 rounded-lg border border-[var(--border)] p-4">
+    <div className="mb-4 border border-[var(--border)] p-4">
       <Input
         className="mb-2"
         placeholder={t('agentRulesNamePlaceholder')}
@@ -60,7 +60,7 @@ function RuleFormRow({
       />
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <select
-          className="meta-mono rounded-md border border-[var(--border)] bg-[var(--muted)] px-2 py-1.5 text-[12px]"
+          className="meta-mono rounded-[var(--radius)] border border-[var(--border)] bg-[var(--muted)] px-2 py-1.5 text-[12px]"
           value={form.triggerType}
           onChange={(e) => set('triggerType', e.target.value)}
           aria-label={t('agentRulesTrigger')}
