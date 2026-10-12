@@ -55,7 +55,11 @@ export default function AgentBriefingWidget() {
   ];
 
   return (
-    <WorkbenchCard corner="BRF" title={t('agentBriefingTitle')}>
+    <WorkbenchCard 
+      corner="BRF" 
+      title={t('agentBriefingTitle')}
+      metaTags={[{ label: 'BRIEFING', dim: 'DAILY REPORT' }]}
+    >
       <div aria-busy={!briefing && !error}>
         {error && (
           <p className="py-2 text-[12px] text-[var(--muted-foreground)]" role="alert">

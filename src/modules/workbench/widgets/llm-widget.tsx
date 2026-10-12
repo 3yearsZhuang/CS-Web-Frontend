@@ -13,12 +13,8 @@ export default function LlmWidget() {
   return (
     <WorkbenchCard
       corner="AUX"
-      title={
-        <>
-          <Bot className="w-3.5 h-3.5" />
-          Auxilio v1
-        </>
-      }
+      title="学习助手"
+      metaTags={[{ label: 'AUXILIO v1', dim: 'LLM ASSISTANT' }]}
     >
       <div className="flex-1 min-h-0 overflow-y-auto">
         <AssistantChat embedded mode="lite" />

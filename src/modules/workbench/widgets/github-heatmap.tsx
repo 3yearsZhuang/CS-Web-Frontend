@@ -138,13 +138,9 @@ export default function GithubHeatmap() {
     <WorkbenchCard
       corner="GIT"
       title={t('heatmapTitle', { year })}
+      metaTags={data?.stale ? [{ label: 'STALE', dim: 'LOCAL CACHE' }] : []}
       actions={
         <>
-          {data?.stale && (
-            <span className="text-[11px] text-amber-600 border border-amber-500/40 rounded-full px-2 py-0.5">
-              stale
-            </span>
-          )}
           {data?.fetched_at && (
             <span className="text-[11px] text-[var(--muted-foreground)]">
               {new Date(data.fetched_at).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}

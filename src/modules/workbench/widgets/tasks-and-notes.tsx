@@ -127,6 +127,10 @@ export default function TasksAndNotes() {
     <WorkbenchCard
       corner="TSK"
       title={t('tasksAndNotes')}
+      metaTags={[
+        { label: 'TODAY', dim: `${tasks.filter((t) => !t.done).length} PENDING` },
+        ...(overdueCount > 0 ? [{ label: 'OVERDUE', dim: String(overdueCount) }] : [])
+      ]}
       actions={
         <>
           <button

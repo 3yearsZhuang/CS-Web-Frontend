@@ -39,12 +39,9 @@ export function PomodoroPlayer() {
     <WorkbenchCard
       corner="FCS"
       title={t('pomodoro')}
+      metaTags={[{ label: phaseLabel, dim: pomo.state.round > 0 ? `R${pomo.state.round}` : undefined }]}
       actions={
         <>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full border ${phaseClass}`}>
-            {phaseLabel}
-            {pomo.state.round > 0 && ` · ${t('roundN', { n: pomo.state.round })}`}
-          </span>
           <button
             type="button"
             aria-label="settings"

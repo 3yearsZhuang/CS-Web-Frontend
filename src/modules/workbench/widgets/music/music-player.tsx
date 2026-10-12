@@ -27,12 +27,8 @@ export function MusicPlayer() {
   return (
     <WorkbenchCard
       corner="MUS"
-      title={
-        <>
-          <Music2 className="w-3.5 h-3.5" />
-          {t('music')}
-        </>
-      }
+      title={t('music')}
+      metaTags={[{ label: 'AUDIO', dim: music.current && music.current !== 'silence' ? 'PLAYING' : 'IDLE' }]}
       actions={
         <button
           type="button"

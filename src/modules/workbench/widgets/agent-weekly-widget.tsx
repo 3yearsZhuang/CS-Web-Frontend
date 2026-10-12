@@ -56,7 +56,11 @@ export default function AgentWeeklyWidget() {
   ];
 
   return (
-    <WorkbenchCard corner="REV" title={t('agentWeeklyTitle')}>
+    <WorkbenchCard 
+      corner="REV" 
+      title={t('agentWeeklyTitle')}
+      metaTags={[{ label: 'REVIEW', dim: 'WEEKLY' }]}
+    >
       <div aria-busy={!review && !error}>
         {error && (
           <p className="py-2 text-[12px] text-[var(--muted-foreground)]" role="alert">

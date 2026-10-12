@@ -79,7 +79,11 @@ export default function AgentInboxWidget() {
   const { items, loading, error, actingId, act, reload } = useAgentInbox();
 
   return (
-    <WorkbenchCard corner="AGT" title={t('agentInboxTitle')}>
+    <WorkbenchCard 
+      corner="AGT" 
+      title={t('agentInboxTitle')}
+      metaTags={[{ label: 'INBOX', dim: items.length > 0 ? `${items.length} PENDING` : 'ALL CLEARED' }]}
+    >
       <div aria-busy={loading}>
         {error && (
           <p className="py-2 text-[12px] text-[var(--muted-foreground)]" role="alert">

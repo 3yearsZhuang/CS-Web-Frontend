@@ -70,12 +70,8 @@ export default function ExamCountdown() {
   return (
     <WorkbenchCard
       corner="EXM"
-      title={
-        <>
-          <AlarmClock className="w-4 h-4" />
-          {t('examCountdown')}
-        </>
-      }
+      title={t('examCountdown')}
+      metaTags={[{ label: 'EXAM', dim: 'UPCOMING' }]}
       loading={!loaded}
       error={
         notLoggedIn ? (
