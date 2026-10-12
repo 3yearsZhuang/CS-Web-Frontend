@@ -277,7 +277,7 @@ export function Workbench() {
                        {isEditMode && (
                          <button 
                            onClick={() => removeWidget(id)}
-                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-30 transition-colors hover:opacity-85"
+                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-[var(--z-sticky)] transition-colors hover:opacity-85"
                          >
                            <X className="w-3.5 h-3.5" />
                          </button>

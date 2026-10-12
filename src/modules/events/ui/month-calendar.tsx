@@ -216,7 +216,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
           {monthOpen && (
             <div
               role="listbox"
-              className="absolute z-30 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[260px]"
+              className="absolute z-[var(--z-sticky)] top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[260px]"
             >
               {monthLabelsCn.map((label, m) => (
                 <button
@@ -256,7 +256,7 @@ export function MonthCalendar({ events }: MonthCalendarProps) {
             {yearOpen && (
               <div
                 role="listbox"
-                className="absolute z-30 top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[200px]"
+                className="absolute z-[var(--z-sticky)] top-full left-0 mt-2 grid grid-cols-3 gap-1 p-2 bg-[var(--background)] border border-[var(--border)] shadow-[var(--shadow-popover)] max-h-64 overflow-y-auto w-[200px]"
               >
                 {selectableYears.map((y) => (
                   <button
