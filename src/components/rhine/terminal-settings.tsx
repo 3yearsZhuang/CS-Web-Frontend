@@ -9,7 +9,8 @@
  *
  * 音效与画质当前由方案 B（3D 终端）消费；面板先落地并持久化，避免后续再改数据结构。
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useOverlayFocusTrap } from './use-overlay-focus-trap';
 
 /** 设置键（localStorage） */
 export const SETTINGS_KEY = 'fztbu-rhine-terminal-settings';
@@ -120,6 +121,8 @@ const QUALITY_LABEL: Record<QualityLevel, string> = { high: 'HIGH', medium: 'MED
 /** 终端设置面板（Rhine 作用域样式） */
 export function TerminalSettingsPanel({ open, onClose, onReplay }: TerminalSettingsPanelProps) {
   const { settings, update } = useTerminalSettings();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useOverlayFocusTrap(panelRef, open);
 
   const toggleFullscreen = useCallback(() => {
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -128,6 +131,7 @@ export function TerminalSettingsPanel({ open, onClose, onReplay }: TerminalSetti
 
   return (
     <div
+      ref={panelRef}
       className={`rhine-ov${open ? ' on' : ''}`}
       role="dialog"
       aria-modal="true"
@@ -135,7 +139,7 @@ export function TerminalSettingsPanel({ open, onClose, onReplay }: TerminalSetti
       aria-hidden={!open}
     >
       <div className="rhine-ov-head">
-        <button type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1}>
+        <button type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1} data-autofocus>
           ← BACK / ESC
         </button>
         <span className="text-[10px] tracking-[0.18em]" style={{ fontFamily: 'var(--rhine-mono)', color: 'var(--rhine-ink-dim)' }}>

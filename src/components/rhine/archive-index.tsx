@@ -26,6 +26,7 @@ import {
   type ArchiveLabels,
 } from './archive-model';
 import { useMotionPreference } from './terminal-settings';
+import { useOverlayFocusTrap } from './use-overlay-focus-trap';
 
 /** 快切判定阈值（ms） */
 const FLICK_GAP = 240;
@@ -173,12 +174,7 @@ export function ArchiveIndex({
   }, [query, visible]);
   useEffect(() => setSearchSel(0), [results.length]);
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const detailBackRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (overlay === 'search') searchInputRef.current?.focus();
-    if (overlay === 'detail') detailBackRef.current?.focus();
-  }, [overlay]);
+  /* 覆盖层焦点由各覆盖层自管（useOverlayFocusTrap：Tab 循环含链接） */
 
   const exportTxt = useCallback(() => {
     if (!current) return;
@@ -361,7 +357,6 @@ export function ArchiveIndex({
         open={overlay === 'detail'}
         faved={!!favs[current.id]}
         labels={labels}
-        backRef={detailBackRef}
         onClose={() => setOverlay(null)}
         onToggleFav={toggleFav}
         onExport={exportTxt}
@@ -372,7 +367,6 @@ export function ArchiveIndex({
         results={results}
         sel={searchSel}
         labels={labels}
-        inputRef={searchInputRef}
         onQuery={setQuery}
         onSel={setSearchSel}
         onPick={gotoItem}
@@ -447,7 +441,6 @@ function DetailOverlay({
   open,
   faved,
   labels,
-  backRef,
   onClose,
   onToggleFav,
   onExport,
@@ -456,16 +449,17 @@ function DetailOverlay({
   open: boolean;
   faved: boolean;
   labels: ArchiveLabels;
-  backRef: React.RefObject<HTMLButtonElement | null>;
   onClose: () => void;
   onToggleFav: () => void;
   onExport: () => void;
 }) {
   const [tab, setTab] = useState<'p1' | 'p2' | 'p3'>('p1');
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useOverlayFocusTrap(overlayRef, open);
   return (
-    <div className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={`档案详情 ${item.id}`} aria-hidden={!open}>
+    <div ref={overlayRef} className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={`档案详情 ${item.id}`} aria-hidden={!open}>
       <div className="rhine-ov-head">
-        <button ref={backRef} type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1}>
+        <button type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1} data-autofocus>
           {labels.actionBack}
         </button>
         <span className="text-[10px] tracking-[0.18em]" style={{ fontFamily: 'var(--rhine-mono)', color: 'var(--rhine-ink-dim)' }}>
@@ -568,7 +562,6 @@ function SearchOverlay({
   results,
   sel,
   labels,
-  inputRef,
   onQuery,
   onSel,
   onPick,
@@ -579,24 +572,25 @@ function SearchOverlay({
   results: ArchiveEntry[];
   sel: number;
   labels: ArchiveLabels;
-  inputRef: React.RefObject<HTMLInputElement | null>;
   onQuery: (q: string) => void;
   onSel: (i: number) => void;
   onPick: (it: ArchiveEntry) => void;
   onClose: () => void;
 }) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useOverlayFocusTrap(overlayRef, open);
   return (
-    <div className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={labels.searchDialogLabel} aria-hidden={!open}>
+    <div ref={overlayRef} className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={labels.searchDialogLabel} aria-hidden={!open}>
       <div className="mx-auto mt-[12vh] w-[min(680px,92vw)]">
         <div className="flex items-center gap-3 border-b-[1.5px] pb-2.5" style={{ borderColor: 'var(--rhine-ink)' }}>
           <span className="text-[18px]" style={{ fontFamily: 'var(--rhine-mono)', color: 'var(--rhine-amber)' }}>/</span>
           <input
-            ref={inputRef}
             value={query}
             onChange={(e) => onQuery(e.target.value)}
             placeholder={labels.placeholder}
             aria-label={labels.searchInputLabel}
             tabIndex={open ? 0 : -1}
+            data-autofocus
             className="flex-1 bg-transparent text-[18px] tracking-[0.06em] outline-none placeholder:text-[var(--rhine-ink-dim)]"
             style={{ fontFamily: 'var(--rhine-mono)' }}
           />
@@ -650,10 +644,12 @@ function FavsOverlay({
   onClose: () => void;
 }) {
   const picked = items.filter((it) => favs[it.id]);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useOverlayFocusTrap(overlayRef, open);
   return (
-    <div className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={labels.saved} aria-hidden={!open}>
+    <div ref={overlayRef} className={`rhine-ov${open ? ' on' : ''}`} role="dialog" aria-modal="true" aria-label={labels.saved} aria-hidden={!open}>
       <div className="rhine-ov-head">
-        <button type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1}>{labels.actionBack}</button>
+        <button type="button" className="rhine-back" onClick={onClose} tabIndex={open ? 0 : -1} data-autofocus>{labels.actionBack}</button>
         <span className="text-[10px] tracking-[0.18em]" style={{ fontFamily: 'var(--rhine-mono)', color: 'var(--rhine-ink-dim)' }}>
           {labels.saved}
         </span>
