@@ -14,7 +14,8 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
 import { Button } from '@/components/primitives/button';
-import { SectionMarker, Title } from '@/components';
+import { Badge, SectionMarker, Title } from '@/components';
+import { RollingNumber } from '@/components/primitives/rolling-number';
 import { useLocalStorage } from './hooks/use-local-storage';
 import { WIDGETS, type WorkbenchWidget } from './widget-registry';
 import { WIDGET_SIZE_SPECS, GRID_COLS, type WidgetSizeKey } from './types';
@@ -203,44 +204,72 @@ export function Workbench() {
     <section data-section-nav="01|工作台" className="px-4 sm:px-6 md:px-8 py-10 sm:py-14 border-t border-[var(--border)] pixel-page relative min-h-[80vh]">
       <div className="max-w-[1600px] mx-auto w-full md:pl-[72px] lg:pl-[88px] relative z-10">
         <div className="flex flex-col gap-4">
-          <SectionMarker>[ 01 ] 工作台 / WORKBENCH</SectionMarker>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-            <div>
-              <Title level={2} className="display-serif text-[clamp(24px,4vw,44px)]">
+          {/* Hero — 设计统一 demo 同款版式（/design-demo 视图 01） */}
+          <div className="grid grid-cols-12 gap-y-8 border-b border-[var(--border)] pb-8 md:gap-x-8">
+            <div className="col-span-12 md:col-span-8 xl:col-span-9">
+              <div className="mb-5 flex flex-wrap items-center gap-3">
+                <SectionMarker>[ 01 ] — Workbench</SectionMarker>
+                <Badge variant="primary">{activeWidgets.length} Widgets</Badge>
+              </div>
+              <Title level={2} className="display-serif text-[clamp(28px,5vw,56px)] leading-[1.05]">
                 {t('wbTitle')}
               </Title>
-              <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[12px] mt-1">
+              <p className="meta-mono normal-case tracking-normal text-[var(--muted-foreground)] text-[12px] mt-2">
                 {t('wbSubtitle')}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button 
-                type="button" 
-                className={isEditMode ? "btn-pixel-primary-sm" : "btn-pixel-outline-sm"} 
+
+            <div className="col-span-12 flex flex-col justify-end border-t border-[var(--border)] pt-5 md:col-span-4 md:border-l md:border-t-0 md:pl-8 md:pt-0 xl:col-span-3">
+              <div className="meta-mono mb-3 text-[var(--primary)]">{'// Desk status'}</div>
+              <p className="mb-6 text-sm leading-7 text-[var(--muted-foreground)]">
+                {isEditMode ? t('wbNextHintEdit') : t('wbNextHintIdle')}
+              </p>
+              <Button
+                variant="pixel"
+                size="md"
+                className="w-full justify-between"
                 onClick={() => setIsEditMode(v => !v)}
               >
-                {isEditMode ? '完成配置' : '配置桌面空间'}
-              </button>
-              <button type="button" className="btn-pixel-outline-sm" onClick={exportBackup}>
-                导出备份
-              </button>
-              <button type="button" className="btn-pixel-outline-sm" onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'application/json,.json';
-                input.onchange = (e) => onImportFile((e.target as HTMLInputElement).files?.[0] ?? null);
-                input.click();
-              }}>
-                导入恢复
-              </button>
-              <button type="button" className="btn-pixel-danger-sm" onClick={clearAllData}>
-                清空
-              </button>
+                {isEditMode ? t('wbConfigureDone') : t('wbConfigure')}
+              </Button>
             </div>
           </div>
 
+          {/* 指标条 — demo 同款发丝线格 + RollingNumber */}
+          <div className="grid grid-cols-1 border-l border-t border-[var(--border)] sm:grid-cols-3">
+            {([
+              { label: t('wbMetricTasks'), value: Array.isArray(tasksCount) ? tasksCount.length : 0 },
+              { label: t('wbMetricNotes'), value: Array.isArray(notesCount) ? notesCount.length : 0 },
+              { label: t('wbMetricWidgets'), value: activeWidgets.length },
+            ] as const).map((m) => (
+              <div key={m.label} className="border-b border-r border-[var(--border)] p-4 sm:p-6">
+                <div className="meta-mono mb-3 sm:mb-5">{m.label}</div>
+                <RollingNumber value={m.value} className="display-serif text-3xl text-[var(--foreground)] sm:text-5xl" />
+              </div>
+            ))}
+          </div>
+
+          {/* 次级操作行 */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="pixel-outline" size="sm" onClick={exportBackup}>
+              {t('wbExport')}
+            </Button>
+            <Button variant="pixel-outline" size="sm" onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'application/json,.json';
+              input.onchange = (e) => onImportFile((e.target as HTMLInputElement).files?.[0] ?? null);
+              input.click();
+            }}>
+              {t('wbImport')}
+            </Button>
+            <Button variant="pixel-danger" size="sm" onClick={clearAllData}>
+              {t('clearAll')}
+            </Button>
+          </div>
+
           {notice && (
-            <p className="text-[12px] text-[var(--muted-foreground)] bg-[var(--border)]/30 rounded px-3 py-2">
+            <p className="text-[12px] text-[var(--muted-foreground)] bg-[var(--border)]/30 px-3 py-2">
               {notice === 'backup-hint'
                 ? `数据已积累 ${totalRecords} 条，建议定期导出备份`
                 : '备份文件格式无效，无法恢复'}

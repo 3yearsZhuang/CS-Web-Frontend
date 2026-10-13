@@ -359,6 +359,15 @@ export interface ToolsMessages {
   workbench: {
     wbTitle: string;
     wbSubtitle: string;
+    wbConfigure: string;
+    wbConfigureDone: string;
+    wbExport: string;
+    wbImport: string;
+    wbMetricTasks: string;
+    wbMetricNotes: string;
+    wbMetricWidgets: string;
+    wbNextHintEdit: string;
+    wbNextHintIdle: string;
     greetingMorning: string;
     greetingAfternoon: string;
     greetingEvening: string;
@@ -920,6 +929,15 @@ export const zhCN: ToolsMessages = {
   workbench: {
     wbTitle: '工作台',
     wbSubtitle: '你的个人学习工作中心',
+    wbConfigure: '配置桌面空间',
+    wbConfigureDone: '完成配置',
+    wbExport: '导出备份',
+    wbImport: '导入恢复',
+    wbMetricTasks: '待办事项',
+    wbMetricNotes: '快捷便签',
+    wbMetricWidgets: '桌面组件',
+    wbNextHintEdit: '正在编辑布局：拖拽移动位置，右下角调整大小，完成后记得退出配置模式。',
+    wbNextHintIdle: '桌面已就绪。需要调整布局或增删组件时，进入配置模式。',
     greetingMorning: '早上好',
     greetingAfternoon: '下午好',
     greetingEvening: '晚上好',
@@ -1481,6 +1499,15 @@ export const en: ToolsMessages = {
   workbench: {
     wbTitle: 'Workbench',
     wbSubtitle: 'Your personal learning hub',
+    wbConfigure: 'Customize desk',
+    wbConfigureDone: 'Done',
+    wbExport: 'Export',
+    wbImport: 'Import',
+    wbMetricTasks: 'Tasks',
+    wbMetricNotes: 'Notes',
+    wbMetricWidgets: 'Widgets on desk',
+    wbNextHintEdit: 'Editing layout: drag to move, resize from the corner, exit customize mode when done.',
+    wbNextHintIdle: 'Desk is ready. Enter customize mode to rearrange or add widgets.',
     greetingMorning: 'Good morning',
     greetingAfternoon: 'Good afternoon',
     greetingEvening: 'Good evening',
