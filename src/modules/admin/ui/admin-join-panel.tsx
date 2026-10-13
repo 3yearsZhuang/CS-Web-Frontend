@@ -11,9 +11,8 @@ import { apiRequest } from '@/shared/hooks/use-api-request';
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { useToast } from '@/components/feedback/toast';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
-import { SectionLoading, Badge } from '@/components';
+import { SectionLoading, Badge, Button, Input } from '@/components';
 import type { BadgeVariant } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 
 /* ============= 类型定义（收敛自 join/types，波次 B1b） ============= */
@@ -283,20 +282,20 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
                 {/* 操作按钮（仅待审状态显示） */}
                 {app.status === 'pending' && (
                   <div className="flex items-center gap-3 pt-3 border-t border-[var(--border)]">
-                    <button
-                      type="button"
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={() => openReviewModal(app, 'approved')}
-                      className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                     >
                       {t('approveBtn')}
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
                       onClick={() => openReviewModal(app, 'rejected')}
-                      className="focus-amber meta-mono text-[11px] px-3 py-1.5 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
                     >
                       {t('rejectBtn')}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -325,12 +324,13 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
               </div>
 
               <Field label={t('reviewNoteOptional')} count={`${reviewNote.length}/200`}>
-                <textarea
+                <Input
+                  as="textarea"
                   value={reviewNote}
                   onChange={(e) => setReviewNote(e.target.value.slice(0, 200))}
                   maxLength={200}
                   rows={3}
-                  className={`${INPUT_CLASS} px-4 py-3 text-[13px] resize-y`}
+                  className="px-4 py-3 text-[13px] resize-y"
                   placeholder={
                     modal.action === 'approved'
                       ? t('approveNotePlaceholder')
@@ -346,30 +346,27 @@ export function AdminJoinPanel({ onForbidden }: AdminJoinPanelProps) {
               )}
 
               <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={closeModal}
                   disabled={saving}
-                  className="focus-amber meta-mono text-[12px] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 >
                   {t('cancel')}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant={modal.action === 'approved' ? 'primary' : 'outline-danger'}
+                  size="sm"
                   onClick={handleReview}
                   disabled={saving}
-                  className={`focus-amber meta-mono text-[12px] px-4 py-2 border transition-colors disabled:opacity-50 ${
-                    modal.action === 'approved'
-                      ? 'border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white'
-                      : 'border-red-400 text-red-400 hover:bg-red-400 hover:text-white'
-                  }`}
+                  loading={saving}
                 >
                   {saving
                     ? t('processing')
                     : modal.action === 'approved'
                       ? t('confirmApprove')
                       : t('confirmReject')}
-                </button>
+                </Button>
               </div>
             </div>
           </ModalShell>

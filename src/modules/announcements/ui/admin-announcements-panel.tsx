@@ -13,7 +13,7 @@ import { apiRequest } from '@/shared/hooks/use-api-request';
 import { useTransientMessage } from '@/shared/hooks/use-transient-message';
 import { Plus, X, Eye, EyeOff, Save, Trash2, Loader2 } from 'lucide-react';
 import { RevealItem } from '@/components/effects/motion-primitives';
-import { EmptyState, SectionLoading, Button } from '@/components';
+import { EmptyState, SectionLoading, Button, Input } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { Announcement, AnnouncementLevel } from '@/modules/announcements/types';
 
@@ -230,57 +230,59 @@ export function AnnouncementsPanel() {
           <div className="space-y-4">
             <div>
               <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldTitle')}</label>
-              <input
+              <Input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 maxLength={200}
-                className="w-full px-3 py-2 text-[12px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)]/30"
+                className="px-3 py-2 text-[12px]"
                 placeholder={t('titlePlaceholder')}
               />
             </div>
             <div>
               <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldContent')}</label>
-              <textarea
+              <Input
+                as="textarea"
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
                 maxLength={5000}
                 rows={3}
-                className="w-full px-3 py-2 text-[12px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)]/30 resize-none"
+                className="px-3 py-2 text-[12px] resize-none"
                 placeholder={t('contentPlaceholder')}
               />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldLevel')}</label>
-                <select
+                <Input
+                  as="select"
                   value={form.level}
                   onChange={(e) => setForm({ ...form, level: e.target.value as AnnouncementLevel })}
-                  className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
+                  className="px-2 py-2 text-[11px]"
                 >
                   {levelOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                   ))}
-                </select>
+                </Input>
               </div>
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldPriority')}</label>
-                <input
+                <Input
                   type="number"
                   value={form.priority}
                   onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
                   min={0}
                   max={100}
-                  className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
+                  className="px-2 py-2 text-[11px]"
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-mono text-[var(--muted-foreground)] mb-1">{t('fieldExpires')}</label>
-                <input
+                <Input
                   type="datetime-local"
                   value={form.expiresAt ? form.expiresAt.slice(0, 16) : ''}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value ? new Date(e.target.value).toISOString() : '' })}
-                  className="w-full px-2 py-2 text-[11px] font-mono border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
+                  className="px-2 py-2 text-[11px]"
                 />
               </div>
               <div className="flex items-end gap-2 pb-2">

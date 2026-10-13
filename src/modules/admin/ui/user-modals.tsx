@@ -6,10 +6,9 @@
 
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
-import { Button } from '@/components';
+import { Button, Input } from '@/components';
 import { useTranslations } from 'next-intl';
 import { LIMITS, type UserRole } from '@/modules/admin/ui/types';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { roleLabel, type EditForm, type UserModal } from './users-panel-utils';
 
 interface UserModalsProps {
@@ -78,45 +77,46 @@ export function UserModals({
             <div className="meta-mono text-[var(--muted-foreground)] break-all">{modal.user.email}</div>
 
             <Field label={t('displayName')} count={`${editForm.displayName.length}/${LIMITS.DISPLAY_NAME_MAX}`}>
-              <input
+              <Input
                 type="text"
                 value={editForm.displayName}
                 maxLength={LIMITS.DISPLAY_NAME_MAX}
                 onChange={(e) => setEditForm((f) => ({ ...f!, displayName: e.target.value }))}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                className="px-4 py-2.5 text-[13px]"
                 placeholder={t('howToAddress')}
               />
             </Field>
 
             <Field label={t('bio')} count={`${editForm.bio.length}/${LIMITS.BIO_MAX}`}>
-              <textarea
+              <Input
+                as="textarea"
                 value={editForm.bio}
                 maxLength={LIMITS.BIO_MAX}
                 rows={3}
                 onChange={(e) => setEditForm((f) => ({ ...f!, bio: e.target.value }))}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
+                className="px-4 py-2.5 text-[13px] resize-none"
                 placeholder={t('introOneLine')}
               />
             </Field>
 
             <Field label={t('github')}>
-              <input
+              <Input
                 type="url"
                 value={editForm.githubUrl}
                 maxLength={LIMITS.URL_MAX}
                 onChange={(e) => setEditForm((f) => ({ ...f!, githubUrl: e.target.value }))}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                className="px-4 py-2.5 text-[13px]"
                 placeholder="https://github.com/your-name"
               />
             </Field>
 
             <Field label={t('website')}>
-              <input
+              <Input
                 type="url"
                 value={editForm.websiteUrl}
                 maxLength={LIMITS.URL_MAX}
                 onChange={(e) => setEditForm((f) => ({ ...f!, websiteUrl: e.target.value }))}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                className="px-4 py-2.5 text-[13px]"
                 placeholder="https://your-site.com"
               />
             </Field>
@@ -167,13 +167,9 @@ export function UserModals({
               <Button type="submit" loading={editSaving}>
                 {editSaving ? t('saving') : t('saveChanges')}
               </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-              >
+              <Button variant="outline" type="button" onClick={onClose}>
                 {t('cancel')}
-              </button>
+              </Button>
             </div>
           </form>
         </ModalShell>
@@ -186,12 +182,12 @@ export function UserModals({
             <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetUser', { email: modal.user.email })}</div>
 
             <Field label={t('newPassword')} count={`≥ ${LIMITS.PASSWORD_MIN}`}>
-              <input
+              <Input
                 type="password"
                 value={resetPassword}
                 onChange={(e) => setResetPassword(e.target.value)}
                 autoFocus
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                className="px-4 py-2.5 text-[13px]"
                 placeholder={t('passwordMin', { min: LIMITS.PASSWORD_MIN })}
               />
             </Field>
@@ -210,13 +206,9 @@ export function UserModals({
               <Button type="submit" loading={resetSaving}>
                 {resetSaving ? t('resetting') : t('resetPasswordBtn')}
               </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-              >
+              <Button variant="outline" type="button" onClick={onClose}>
                 {t('cancel')}
-              </button>
+              </Button>
             </div>
           </form>
         </ModalShell>
@@ -236,13 +228,9 @@ export function UserModals({
               <Button type="button" onClick={onResetDefault}>
                 {t('confirmReset')}
               </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-              >
+              <Button variant="outline" type="button" onClick={onClose}>
                 {t('cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>
@@ -322,12 +310,13 @@ export function UserModals({
             </div>
 
             <Field label={t('approveNoteLabel')}>
-              <textarea
+              <Input
+                as="textarea"
                 value={approveNote}
                 onChange={(e) => setApproveNote(e.target.value)}
                 rows={3}
                 maxLength={200}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
+                className="px-4 py-2.5 text-[13px] resize-none"
                 placeholder={t('approveNotePlaceholder')}
               />
             </Field>
@@ -342,13 +331,9 @@ export function UserModals({
               <Button type="button" loading={resetActionLoading} onClick={onApprove}>
                 {resetActionLoading ? t('processing') : t('confirmApprove')}
               </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-              >
+              <Button variant="outline" type="button" onClick={onClose}>
                 {t('cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>
@@ -361,12 +346,13 @@ export function UserModals({
             <div className="meta-mono text-[var(--muted-foreground)] break-all">{t('targetRequest', { email: modal.request.email })}</div>
 
             <Field label={t('rejectNoteLabel')}>
-              <textarea
+              <Input
+                as="textarea"
                 value={rejectNote}
                 onChange={(e) => setRejectNote(e.target.value)}
                 rows={3}
                 maxLength={200}
-                className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
+                className="px-4 py-2.5 text-[13px] resize-none"
                 placeholder={t('rejectNotePlaceholder')}
                 autoFocus
               />
@@ -382,13 +368,9 @@ export function UserModals({
               <Button type="button" loading={resetActionLoading} variant="danger" onClick={onReject}>
                 {resetActionLoading ? t('processing') : t('confirmReject')}
               </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-              >
+              <Button variant="outline" type="button" onClick={onClose}>
                 {t('cancel')}
-              </button>
+              </Button>
             </div>
           </div>
         </ModalShell>

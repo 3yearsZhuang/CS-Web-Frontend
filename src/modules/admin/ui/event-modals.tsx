@@ -6,13 +6,12 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { EmptyState, Spinner, Button } from '@/components';
+import { EmptyState, Spinner, Button, Input } from '@/components';
 import { MarkdownEditorBase } from '@/modules/community/ui/community-markdown-editor-base';
 import { MarkdownRenderer } from '@/modules/community/ui/community-markdown-renderer';
 import { ModalShell, Field } from '@/modules/admin/ui/shared';
 import { ConfirmDialog } from '@/components/primitives/confirm-dialog';
 import type { EventForm, EventItem, RegistrationRecord } from '@/modules/admin/ui/types';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 import { splitTags, type EventModal } from './events-panel-utils';
 
@@ -144,24 +143,26 @@ export function EventModals({
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-end gap-2">
                             {r.status !== 'cancelled' && (
-                              <button
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
                                 type="button"
                                 disabled={regManageSaving === r.id}
                                 onClick={() => onManageRegistration(modal.event.id, r.id, 'cancelled')}
-                                className="meta-mono text-[10px] text-[var(--destructive)] hover:text-[var(--destructive)]/70 underline-grow focus-amber"
                               >
                                 {regManageSaving === r.id ? '...' : t('cancelRegistration')}
-                              </button>
+                              </Button>
                             )}
                             {r.status !== 'registered' && r.status !== 'waitlisted' && (
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 type="button"
                                 disabled={regManageSaving === r.id}
                                 onClick={() => onManageRegistration(modal.event.id, r.id, 'registered')}
-                                className="meta-mono text-[10px] text-[var(--primary)] hover:text-[var(--primary)]/70 underline-grow focus-amber"
                               >
                                 {regManageSaving === r.id ? '...' : t('restoreRegistration')}
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </td>
@@ -188,12 +189,12 @@ export function EventModals({
                   {/* 标题 — 跨两列 */}
                   <div className="md:col-span-2">
                     <Field label={t('fieldTitle')} count={`${form.title.length}/120`}>
-                      <input
+                      <Input
                         type="text"
                         value={form.title}
                         maxLength={120}
                         onChange={(e) => setForm((f) => ({ ...f!, title: e.target.value }))}
-                        className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                        className="px-4 py-2.5 text-[13px]"
                         placeholder={t('titlePlaceholder')}
                         autoFocus
                       />
@@ -203,12 +204,13 @@ export function EventModals({
                   {/* 描述 — 跨两列 */}
                   <div className="md:col-span-2">
                     <Field label={t('fieldDescription')} count={`${form.description.length}/500`}>
-                      <textarea
+                      <Input
+                        as="textarea"
                         value={form.description}
                         maxLength={500}
                         rows={3}
                         onChange={(e) => setForm((f) => ({ ...f!, description: e.target.value }))}
-                        className={`${INPUT_CLASS} px-4 py-2.5 text-[13px] resize-none`}
+                        className="px-4 py-2.5 text-[13px] resize-none"
                         placeholder={t('descPlaceholder')}
                       />
                     </Field>
@@ -217,22 +219,22 @@ export function EventModals({
                   {/* 月份 / 日期 */}
                   <>
                     <Field label={t('fieldMonth')} count={`${form.month.length}/8`}>
-                      <input
+                      <Input
                         type="text"
                         value={form.month}
                         maxLength={8}
                         onChange={(e) => setForm((f) => ({ ...f!, month: e.target.value }))}
-                        className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                        className="px-4 py-2.5 text-[13px]"
                         placeholder="Sep"
                       />
                     </Field>
                     <Field label={t('fieldDate')} count={`${form.date.length}/32`}>
-                      <input
+                      <Input
                         type="text"
                         value={form.date}
                         maxLength={32}
                         onChange={(e) => setForm((f) => ({ ...f!, date: e.target.value }))}
-                        className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                        className="px-4 py-2.5 text-[13px]"
                         placeholder="2026.09.15"
                       />
                     </Field>
@@ -241,12 +243,12 @@ export function EventModals({
                   {/* 年份 */}
                   <div className="md:col-span-2">
                     <Field label={t('fieldYear')} count={`${form.year.length}/8`}>
-                      <input
+                      <Input
                         type="text"
                         value={form.year}
                         maxLength={8}
                         onChange={(e) => setForm((f) => ({ ...f!, year: e.target.value }))}
-                        className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                        className="px-4 py-2.5 text-[13px]"
                         placeholder="2025"
                       />
                     </Field>
@@ -278,11 +280,11 @@ export function EventModals({
 
                   {/* 主题（逗号分隔） */}
                   <Field label={t('fieldTopics')} count={`${splitTags(form.topicsStr).length}/10`}>
-                    <input
+                    <Input
                       type="text"
                       value={form.topicsStr}
                       onChange={(e) => setForm((f) => ({ ...f!, topicsStr: e.target.value }))}
-                      className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                      className="px-4 py-2.5 text-[13px]"
                       placeholder="Recruiting, Open House"
                     />
                     <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('topicsHint')}</p>
@@ -290,11 +292,11 @@ export function EventModals({
 
                   {/* 标签（逗号分隔） */}
                   <Field label={t('fieldTags')} count={`${splitTags(form.tagsStr).length}/10`}>
-                    <input
+                    <Input
                       type="text"
                       value={form.tagsStr}
                       onChange={(e) => setForm((f) => ({ ...f!, tagsStr: e.target.value }))}
-                      className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                      className="px-4 py-2.5 text-[13px]"
                       placeholder="Hackathon, 24h"
                     />
                     <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('tagsHint')}</p>
@@ -315,7 +317,7 @@ export function EventModals({
 
                   {/* 活动容量 */}
                   <Field label={t('fieldCapacity')}>
-                    <input
+                    <Input
                       type="number"
                       value={form.capacity}
                       min={0}
@@ -327,7 +329,7 @@ export function EventModals({
                             : Math.max(0, e.target.valueAsNumber),
                         }))
                       }
-                      className={`${INPUT_CLASS} px-4 py-2.5 text-[13px]`}
+                      className="px-4 py-2.5 text-[13px]"
                       placeholder={t('capacityPlaceholder')}
                     />
                     <p className="meta-mono mt-1.5 text-[10px] text-[var(--muted-foreground)]">{t('capacityHint')}</p>
@@ -392,13 +394,9 @@ export function EventModals({
                         ? t('createEventBtn')
                         : t('saveChangesBtn')}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--foreground)] underline-grow"
-                  >
+                  <Button variant="outline" type="button" onClick={onClose}>
                     {t('cancel')}
-                  </button>
+                  </Button>
                 </div>
               </form>
         </ModalShell>

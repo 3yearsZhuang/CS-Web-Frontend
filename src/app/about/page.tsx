@@ -10,11 +10,10 @@ import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives'
 import { type CapsuleTab } from '@/components/layout/floating-capsule-sidebar';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { Button, DnaCard, SectionMarker, Title } from '@/components';
+import { Button, DnaCard, Input, SectionMarker, Title } from '@/components';
 import Link from 'next/link';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { TechTagSelector } from '@/components/tech-tag-selector';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 import { formatDate } from '@/shared/utils/utils';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 
@@ -486,13 +485,13 @@ export default function AboutPage() {
                           <label htmlFor="applicantName" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
                             [ 01 ] {tJoin('name')} *
                           </label>
-                          <input
+                          <Input
                             id="applicantName"
                             type="text"
                             value={form.applicantName}
                             onChange={(e) => setForm((f) => ({ ...f, applicantName: e.target.value }))}
                             maxLength={20}
-                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            className="px-4 py-3 text-[14px]"
                             placeholder={tJoin('namePlaceholder')}
                           />
                           {errors.applicantName && (
@@ -505,13 +504,13 @@ export default function AboutPage() {
                           <label htmlFor="studentId" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
                             [ 02 ] {tJoin('studentId')} *
                           </label>
-                          <input
+                          <Input
                             id="studentId"
                             type="text"
                             value={form.studentId}
                             onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
                             maxLength={20}
-                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            className="px-4 py-3 text-[14px]"
                             placeholder={tJoin('studentIdPlaceholder')}
                           />
                           {errors.studentId && (
@@ -524,13 +523,13 @@ export default function AboutPage() {
                           <label htmlFor="major" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
                             [ 03 ] {tJoin('major')} *
                           </label>
-                          <input
+                          <Input
                             id="major"
                             type="text"
                             value={form.major}
                             onChange={(e) => setForm((f) => ({ ...f, major: e.target.value }))}
                             maxLength={40}
-                            className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                            className="px-4 py-3 text-[14px]"
                             placeholder={tJoin('majorPlaceholder')}
                           />
                           {errors.major && (
@@ -551,13 +550,14 @@ export default function AboutPage() {
                             <span>[ 04 ] {tJoin('reason')} *</span>
                             <span>{form.reason.length}/500</span>
                           </label>
-                          <textarea
+                          <Input
+                            as="textarea"
                             id="reason"
                             value={form.reason}
                             onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value.slice(0, 500) }))}
                             maxLength={500}
                             rows={4}
-                            className={`${INPUT_CLASS} px-4 py-3 text-[14px] resize-none`}
+                            className="px-4 py-3 text-[14px] resize-none"
                             placeholder={tJoin('reasonPlaceholder')}
                           />
                           {errors.reason && (
@@ -571,13 +571,13 @@ export default function AboutPage() {
                             <label htmlFor="contactQq" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
                               [ 05 ] {tJoin('qq')}
                             </label>
-                            <input
+                            <Input
                               id="contactQq"
                               type="text"
                               value={form.contactQq}
                               onChange={(e) => setForm((f) => ({ ...f, contactQq: e.target.value }))}
                               maxLength={20}
-                              className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                              className="px-4 py-3 text-[14px]"
                               placeholder={tJoin('optional')}
                             />
                           </div>
@@ -585,13 +585,13 @@ export default function AboutPage() {
                             <label htmlFor="contactPhone" className="meta-mono mb-2 block text-[var(--muted-foreground)]">
                               [ 06 ] {tJoin('phone')}
                             </label>
-                            <input
+                            <Input
                               id="contactPhone"
                               type="text"
                               value={form.contactPhone}
                               onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
                               maxLength={20}
-                              className={`${INPUT_CLASS} px-4 py-3 text-[14px]`}
+                              className="px-4 py-3 text-[14px]"
                               placeholder={tJoin('optional')}
                             />
                           </div>

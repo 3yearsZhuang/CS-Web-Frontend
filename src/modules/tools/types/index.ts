@@ -428,25 +428,26 @@ export const VARIANT_PRESETS: { key: VariantPresetKey; label: string; hint: stri
 
 // ============= 组件注册表共享 UI 配置（避免 shell / detail 重复定义） =============
 
-/** 迁移状态展示配置 */
-export const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string }> = {
-  legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20' },
-  'in-progress': { label: 'In Progress', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  migrated: { label: 'Migrated', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  deprecated: { label: 'Deprecated', color: 'text-red-500', bg: 'bg-red-500/10' },
+/** 迁移状态展示配置（dot 供 FilterBar dotClassName 状态圆点使用） */
+export const STATUS_CONFIG: Record<MigrationStatus, { label: string; color: string; bg: string; dot: string }> = {
+  legacy: { label: 'Legacy', color: 'text-[var(--muted-foreground)]', bg: 'bg-[var(--muted)]/20', dot: 'bg-[var(--muted-foreground)]' },
+  'in-progress': { label: 'In Progress', color: 'text-amber-500', bg: 'bg-amber-500/10', dot: 'bg-amber-500' },
+  migrated: { label: 'Migrated', color: 'text-emerald-500', bg: 'bg-emerald-500/10', dot: 'bg-emerald-500' },
+  deprecated: { label: 'Deprecated', color: 'text-red-500', bg: 'bg-red-500/10', dot: 'bg-red-500' },
 };
 
 /** 兜底：后端若返回未定义的迁移状态，使用中性样式，避免读取 undefined.bg 崩溃。 */
-export const STATUS_FALLBACK: { label: string; color: string; bg: string } = {
+export const STATUS_FALLBACK: { label: string; color: string; bg: string; dot: string } = {
   label: 'Unknown',
   color: 'text-[var(--muted-foreground)]',
   bg: 'bg-[var(--muted)]/20',
+  dot: 'bg-[var(--muted-foreground)]',
 };
 
 /** 安全读取迁移状态配置 */
 export function getStatusConfig(
   status: MigrationStatus | undefined | null,
-): { label: string; color: string; bg: string } {
+): { label: string; color: string; bg: string; dot: string } {
   if (status && STATUS_CONFIG[status]) return STATUS_CONFIG[status];
   return STATUS_FALLBACK;
 }

@@ -74,13 +74,14 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
       {/* 管理员：创建按钮 + 待审核 */}
       {isAdmin && (
         <div className="flex flex-wrap items-center gap-3 mb-8">
-          <button
+          <Button
+            variant="primary-outline"
+            size="sm"
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors"
           >
             <Plus className="w-3 h-3" />
             {showCreateForm ? t('createCancel') : t('createTask')}
-          </button>
+          </Button>
           {pendingClaims.length > 0 && (
             <span className="meta-mono text-[11px] text-[var(--primary)]">
               {t('pendingBadge')} {pendingClaims.length}
@@ -271,12 +272,13 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                         </Button>
                       )}
                       {isAdmin && task.status === 'draft' && (
-                        <button
+                        <Button
+                          variant="primary-outline"
+                          size="xs"
                           onClick={(e) => { e.stopPropagation(); handlePublish(task.id); }}
-                          className="px-3 py-1.5 text-[11px] font-mono border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors"
                         >
                           {t('publish')}
-                        </button>
+                        </Button>
                       )}
                       <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
                         {task.status === 'draft' ? t('draft') : task.publishedAt ? t('publishedAt', { date: task.publishedAt }) : ''}

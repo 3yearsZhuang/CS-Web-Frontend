@@ -5,8 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { EmptyState, Button, SectionLoading } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { EmptyState, Button, Input, SectionLoading } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import type { CommunityCategory } from '@/modules/community/types';
 import { getError, type CategoryInput } from './community-admin-utils';
@@ -127,23 +126,23 @@ export function CategoriesManager() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('slugLabelRequired')}</label>
-            <input type="text" value={createForm.slug} onChange={(e) => setCreateForm((f) => ({ ...f, slug: e.target.value }))} placeholder="web" maxLength={50} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="text" value={createForm.slug} onChange={(e) => setCreateForm((f) => ({ ...f, slug: e.target.value }))} placeholder="web" maxLength={50} className="px-3 py-2 text-[13px]" />
           </div>
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('nameLabelRequired')}</label>
-            <input type="text" value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} placeholder={t('namePlaceholder')} maxLength={50} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="text" value={createForm.name} onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))} placeholder={t('namePlaceholder')} maxLength={50} className="px-3 py-2 text-[13px]" />
           </div>
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('iconLabel')}</label>
-            <input type="text" value={createForm.icon ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, icon: e.target.value }))} placeholder="</>" maxLength={20} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="text" value={createForm.icon ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, icon: e.target.value }))} placeholder="</>" maxLength={20} className="px-3 py-2 text-[13px]" />
           </div>
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortOrderLabel')}</label>
-            <input type="number" value={createForm.sortOrder ?? 0} onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} min={0} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="number" value={createForm.sortOrder ?? 0} onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} min={0} className="px-3 py-2 text-[13px]" />
           </div>
           <div className="sm:col-span-2 lg:col-span-4">
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('descriptionLabel')}</label>
-            <input type="text" value={createForm.description ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} placeholder={t('descPlaceholder')} maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="text" value={createForm.description ?? ''} onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))} placeholder={t('descPlaceholder')} maxLength={200} className="px-3 py-2 text-[13px]" />
           </div>
         </div>
         {createError && (
@@ -178,23 +177,23 @@ export function CategoriesManager() {
                 <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 border border-[var(--primary)] bg-[var(--primary)]/[0.03]">
                   <div>
                     <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('slugLabel')}</label>
-                    <input type="text" value={editForm.slug} onChange={(e) => setEditForm((f) => ({ ...f, slug: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+                    <Input type="text" value={editForm.slug} onChange={(e) => setEditForm((f) => ({ ...f, slug: e.target.value }))} className="px-3 py-2 text-[13px]" />
                   </div>
                   <div>
                     <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('nameLabel')}</label>
-                    <input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+                    <Input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className="px-3 py-2 text-[13px]" />
                   </div>
                   <div>
                     <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('iconLabel')}</label>
-                    <input type="text" value={editForm.icon ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, icon: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+                    <Input type="text" value={editForm.icon ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, icon: e.target.value }))} className="px-3 py-2 text-[13px]" />
                   </div>
                   <div>
                     <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('sortOrderLabel')}</label>
-                    <input type="number" value={editForm.sortOrder ?? 0} onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+                    <Input type="number" value={editForm.sortOrder ?? 0} onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))} className="px-3 py-2 text-[13px]" />
                   </div>
                   <div className="sm:col-span-2 lg:col-span-4">
                     <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('descriptionLabel')}</label>
-                    <input type="text" value={editForm.description ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+                    <Input type="text" value={editForm.description ?? ''} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} className="px-3 py-2 text-[13px]" />
                   </div>
                   {editError && (
                     <div className="sm:col-span-2 lg:col-span-4 meta-mono text-[var(--destructive)]">{editError}</div>

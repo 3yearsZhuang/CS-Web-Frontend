@@ -18,16 +18,8 @@ import {
   Check,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { Button, Input } from '@/components';
 import { useTwoFA } from './hooks/use-two-fa';
-
-/** 验证码输入框样式（INPUT_CLASS 基础 + 覆盖 padding/字号） */
-const CODE_INPUT_CLASS = `${INPUT_CLASS} px-4 py-2.5 text-[13px]`;
-
-/** 次要按钮样式（题目指定） */
-const OUTLINE_BTN_CLASS =
-  'px-4 py-2.5 text-[11px] font-mono uppercase tracking-wider border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--primary)] transition-colors focus-amber';
 
 /** 双因素认证 (2FA) 设置组件 — 支持启用/禁用/重新生成备用码 */
 export function TwoFactorSettings() {
@@ -79,9 +71,9 @@ export function TwoFactorSettings() {
       <div className="py-6">
         <div className="meta-mono text-[var(--destructive)] mb-2">[ Error ]</div>
         <p className="text-[13px] text-[var(--muted-foreground)]">{error || t('loadFailed')}</p>
-        <button onClick={fetchStatus} className={`${OUTLINE_BTN_CLASS} mt-4`}>
+        <Button variant="outline" size="sm" onClick={fetchStatus} className="mt-4">
           {t('retry')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -120,7 +112,7 @@ export function TwoFactorSettings() {
       {error && (
         <div className="flex items-start gap-2 p-3 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono text-[var(--destructive)]">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto underline shrink-0">
+          <button onClick={() => setError(null)} className="ml-auto underline shrink-0 focus-amber">
             {t('close')}
           </button>
         </div>
@@ -197,13 +189,15 @@ export function TwoFactorSettings() {
               <code className="flex-1 px-4 py-2.5 text-[13px] font-mono bg-[var(--foreground)]/[0.03] border border-[var(--border)] text-[var(--foreground)] break-all">
                 {setupData.secret}
               </code>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleCopySecret}
-                className={`${OUTLINE_BTN_CLASS} shrink-0`}
+                className="shrink-0"
                 title={t('copySecretTitle')}
               >
                 {copiedSecret ? <Check size={14} /> : <Copy size={14} />}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -237,7 +231,7 @@ export function TwoFactorSettings() {
             <label htmlFor="2fa-verify-code" className="meta-mono text-[var(--muted-foreground)] mb-2 block">
               [ 04 ] Verification Code (6 digits)
             </label>
-            <input
+            <Input
               id="2fa-verify-code"
               type="text"
               inputMode="numeric"
@@ -245,7 +239,7 @@ export function TwoFactorSettings() {
               maxLength={6}
               value={verifyCode}
               onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className={CODE_INPUT_CLASS}
+              className="px-4 py-2.5 text-[13px]"
               placeholder="000000"
               autoComplete="one-time-code"
               disabled={verifying}
@@ -261,9 +255,9 @@ export function TwoFactorSettings() {
             >
               {verifying ? 'Verifying...' : t('confirmEnable')}
             </Button>
-            <button onClick={handleCancelSetup} disabled={verifying} className={OUTLINE_BTN_CLASS}>
+            <Button variant="outline" size="sm" onClick={handleCancelSetup} disabled={verifying}>
               {t('cancel')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -293,7 +287,7 @@ export function TwoFactorSettings() {
                 <span>[ New Backup Codes ]</span>
                 <button
                   onClick={() => setRegeneratedCodes(null)}
-                  className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] focus-amber"
                   aria-label={t('close')}
                 >
                   <X size={14} />
@@ -318,17 +312,18 @@ export function TwoFactorSettings() {
           {/* 操作区：重新生成备用码 / 禁用 2FA */}
           {actionMode === 'idle' ? (
             <div className="flex flex-wrap items-center gap-3">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   setActionMode('regenerate');
                   setActionCode('');
                   setError(null);
                 }}
-                className={OUTLINE_BTN_CLASS}
               >
                 <Key size={14} />
                 {t('regenerateBackupCodes')}
-              </button>
+              </Button>
               <Button variant="outline-danger" size="sm" type="button" onClick={() => {
                   setActionMode('disable');
                   setActionCode('');
@@ -373,7 +368,7 @@ export function TwoFactorSettings() {
                 >
                   Current Verification Code (6 digits)
                 </label>
-                <input
+                <Input
                   id="2fa-action-code"
                   type="text"
                   inputMode="numeric"
@@ -381,7 +376,7 @@ export function TwoFactorSettings() {
                   maxLength={6}
                   value={actionCode}
                   onChange={(e) => setActionCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className={CODE_INPUT_CLASS}
+                  className="px-4 py-2.5 text-[13px]"
                   placeholder="000000"
                   autoComplete="one-time-code"
                   disabled={actionLoading}
@@ -401,13 +396,14 @@ export function TwoFactorSettings() {
                       ? t('confirmDisable')
                       : t('confirmRegenerate')}
                 </Button>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleCancelAction}
                   disabled={actionLoading}
-                  className={OUTLINE_BTN_CLASS}
                 >
                   {t('cancel')}
-                </button>
+                </Button>
               </div>
             </div>
           )}

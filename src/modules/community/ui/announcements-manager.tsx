@@ -5,8 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { EmptyState, Badge, Button, SectionLoading } from '@/components';
-import { INPUT_CLASS } from '@/shared/utils/ui-constants';
+import { EmptyState, Badge, Button, Input, SectionLoading } from '@/components';
 import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
 import { getError } from './community-admin-utils';
@@ -93,24 +92,24 @@ export function AnnouncementsManager() {
           </div>
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldTitle')}</label>
-            <input type="text" value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} placeholder={t('titlePlaceholder')} maxLength={200} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+            <Input type="text" value={createForm.title} onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))} placeholder={t('titlePlaceholder')} maxLength={200} className="px-3 py-2 text-[13px]" />
           </div>
           <div>
             <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldContent')}</label>
-            <textarea value={createForm.content} onChange={(e) => setCreateForm((f) => ({ ...f, content: e.target.value }))} placeholder={t('contentPlaceholder')} maxLength={5000} rows={4} className={`${INPUT_CLASS} px-3 py-2 text-[13px] resize-y`} />
+            <Input as="textarea" value={createForm.content} onChange={(e) => setCreateForm((f) => ({ ...f, content: e.target.value }))} placeholder={t('contentPlaceholder')} maxLength={5000} rows={4} className="px-3 py-2 text-[13px] resize-y" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldLevel')}</label>
-              <select value={createForm.level} onChange={(e) => setCreateForm((f) => ({ ...f, level: e.target.value as AnnouncementItem['level'] }))} className={`${INPUT_CLASS} appearance-none pr-8 cursor-pointer`}>
+              <Input as="select" value={createForm.level} onChange={(e) => setCreateForm((f) => ({ ...f, level: e.target.value as AnnouncementItem['level'] }))}>
                 {LEVEL_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
-              </select>
+              </Input>
             </div>
             <div>
               <label className="meta-mono text-[10px] mb-1.5 block text-[var(--muted-foreground)]">{t('fieldPriority')}</label>
-              <input type="number" value={createForm.priority} onChange={(e) => setCreateForm((f) => ({ ...f, priority: Number(e.target.value) || 0 }))} min={0} max={100} className={`${INPUT_CLASS} px-3 py-2 text-[13px]`} />
+              <Input type="number" value={createForm.priority} onChange={(e) => setCreateForm((f) => ({ ...f, priority: Number(e.target.value) || 0 }))} min={0} max={100} className="px-3 py-2 text-[13px]" />
             </div>
           </div>
           {createError && <div className="meta-mono text-[var(--destructive)]">{createError}</div>}

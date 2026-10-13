@@ -18,7 +18,7 @@ import {
 import { RevealTitle, RevealItem } from '@/components/effects/motion-primitives';
 import { CollapsingHero, type HeroState } from '@/components/layout/collapsing-hero';
 import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
-import { SectionLoading } from '@/components';
+import { Button, FilterBar, SectionLoading } from '@/components';
 import { ComponentRegistryStoreProvider, useComponentRegistryStore } from './component-registry-store';
 import { ComponentRegistryDrawer } from './component-registry-drawer';
 import { ComponentDetailPanel } from './component-registry-detail';
@@ -185,65 +185,29 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
             <>
               {/* ===== 筛选栏 ===== */}
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                {/* 分类筛选 */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)] uppercase mr-1">
-                    {t('categoryLabel')}
-                  </span>
-                  <button
-                    onClick={() => setFilter((f) => ({ ...f, category: null }))}
-                    className={`px-2.5 py-1 border meta-mono text-[10px] transition-colors ${
-                      filter.category === null
-                        ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                    }`}
-                  >
-                    {t('all')}
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setFilter((f) => ({ ...f, category: cat }))}
-                      className={`px-2.5 py-1 border meta-mono text-[10px] transition-colors ${
-                        filter.category === cat
-                          ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
-                          : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                      }`}
-                    >
-                      {t(CATEGORY_LABEL_KEY[cat] ?? cat)}
-                    </button>
-                  ))}
-                </div>
+                {/* 分类筛选（FilterBar 契约 · §16.4） */}
+                <FilterBar
+                  label={t('categoryLabel')}
+                  wrap
+                  value={filter.category ?? '__all__'}
+                  onChange={(v) => setFilter((f) => ({ ...f, category: v === '__all__' ? null : v }))}
+                  options={[
+                    { value: '__all__', label: t('all') },
+                    ...categories.map((cat) => ({ value: cat, label: t(CATEGORY_LABEL_KEY[cat] ?? cat) })),
+                  ]}
+                />
 
-                {/* 状态筛选 */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)] uppercase mr-1">
-                    {t('statusLabel')}
-                  </span>
-                  <button
-                    onClick={() => setFilter((f) => ({ ...f, migrationStatus: null }))}
-                    className={`px-2.5 py-1 border meta-mono text-[10px] transition-colors ${
-                      filter.migrationStatus === null
-                        ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
-                        : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                    }`}
-                  >
-                    {t('all')}
-                  </button>
-                  {STATUS_ORDER.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setFilter((f) => ({ ...f, migrationStatus: s }))}
-                      className={`px-2.5 py-1 border meta-mono text-[10px] transition-colors ${
-                        filter.migrationStatus === s
-                          ? `${STATUS_CONFIG[s].bg} ${STATUS_CONFIG[s].color} border-current`
-                          : 'border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-                      }`}
-                    >
-                      {STATUS_CONFIG[s].label}
-                    </button>
-                  ))}
-                </div>
+                {/* 状态筛选（FilterBar 契约 + 状态圆点 · §16.4） */}
+                <FilterBar
+                  label={t('statusLabel')}
+                  wrap
+                  value={filter.migrationStatus ?? '__all__'}
+                  onChange={(v) => setFilter((f) => ({ ...f, migrationStatus: v === '__all__' ? null : (v as typeof filter.migrationStatus) }))}
+                  options={[
+                    { value: '__all__', label: t('all') },
+                    ...STATUS_ORDER.map((s) => ({ value: s, label: STATUS_CONFIG[s].label, dotClassName: STATUS_CONFIG[s].dot })),
+                  ]}
+                />
 
                 {/* 统计 + 重置 */}
                 <div className="flex items-center gap-2 ml-auto">
@@ -251,12 +215,9 @@ function ShellContent({ embedded = false }: { embedded?: boolean }) {
                     {filteredComponents.length}/{stats.total}
                   </span>
                   {(filter.category !== null || filter.migrationStatus !== null) && (
-                    <button
-                      onClick={() => setFilter(DEFAULT_FILTER)}
-                      className="px-2 py-1 border border-[var(--border)] meta-mono text-[9px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors uppercase"
-                    >
+                    <Button variant="ghost" size="xs" onClick={() => setFilter(DEFAULT_FILTER)}>
                       {t('reset')}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

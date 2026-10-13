@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Compass, Filter, Flame, PenLine, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Avatar, Badge, Button, Pagination, SectionLoading } from '@/components';
+import { Avatar, Badge, Button, InlineTabs, Pagination, SectionLoading } from '@/components';
 import { VisibilityGate } from '@/shared/feature-visibility/visibility-gate';
 import { FeedItemCard } from '@/modules/community/ui/feed-item-card';
 import { CommunitySpotlight } from '@/modules/community/ui/community-spotlight';
@@ -48,7 +48,7 @@ function CommunityPageContent() {
         <CommunityHeader community={c} />
 
         <section className="border-b border-[var(--border)] bg-[var(--background)]">
-          <div className="mx-auto max-w-[1320px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 md:px-8 lg:py-8">
             <FeedHeading community={c} />
 
             {c.activeTab === 'mine' && c.currentUserId ? (
@@ -60,7 +60,7 @@ function CommunityPageContent() {
                 <AdminCommunityPanel />
               </VisibilityGate>
             ) : (
-              <div className="grid grid-cols-12 gap-8">
+              <div className="grid grid-cols-12 gap-6 lg:gap-8">
                 <div className="col-span-12 min-w-0 lg:col-span-8 xl:col-span-9">
                   {spotlight && !c.selectedTag && !c.selectedCategory && c.activeTab === 'all' && (
                     <div className="mb-8">
@@ -89,7 +89,7 @@ function CommunityHeader({ community: c }: { community: CommunityState }) {
   const t = useTranslations('community');
   return (
     <header className="border-b border-[var(--border)] bg-[var(--card)]">
-      <div className="mx-auto max-w-[1320px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+      <div className="mx-auto max-w-[1600px] px-4 py-7 sm:px-6 md:px-8 lg:py-9">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -187,14 +187,13 @@ function SortTabs({ sort, onChange }: { sort: CommunitySort; onChange: (sort: Co
     ['hot', t('sortHot')],
     ['top', t('sortTop')],
   ];
+  // InlineTabs 下划线契约（§16.4），取代手写选中态三元
   return (
-    <div className="flex items-center gap-1 rounded border border-[var(--border)] p-1">
-      {options.map(([value, label]) => (
-        <button key={value} type="button" onClick={() => onChange(value)} className={`px-2.5 py-1.5 text-xs ${sort === value ? 'bg-[var(--accent)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}`}>
-          {label}
-        </button>
-      ))}
-    </div>
+    <InlineTabs
+      value={sort}
+      onChange={(v) => onChange(v as CommunitySort)}
+      options={options.map(([value, label]) => ({ value, label }))}
+    />
   );
 }
 

@@ -9,6 +9,8 @@ import { INPUT_CLASS } from '@/shared/utils/ui-constants';
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** 渲染为 input / textarea / select（默认 input） */
   as?: 'input' | 'textarea' | 'select';
+  /** 行数（仅 as="textarea" 时有效；textarea 专有属性，input 类型系不含） */
+  rows?: number;
   /** meta-mono 编号标签（如 "[ 01 ] Email"） */
   label?: string;
   /** 错误提示文本 */

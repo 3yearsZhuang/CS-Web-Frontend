@@ -6,7 +6,7 @@
 
 import { RevealItem } from '@/components/effects/motion-primitives';
 import { Avatar } from '@/components/avatar';
-import { SectionLoading, Pagination } from '@/components';
+import { Button, SectionLoading, Pagination } from '@/components';
 import { useBreakpoint } from '@/shared/hooks';
 import { useTranslations } from 'next-intl';
 import type { SafeUser } from '@/modules/admin/ui/types';
@@ -110,14 +110,15 @@ export function UserListView({
             </div>
 
             <div className="col-span-12 md:col-span-2 flex md:justify-end">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => onFetch()}
                 disabled={listLoading}
-                className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30"
               >
                 {listLoading ? t('loading') : t('refresh')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -128,9 +129,9 @@ export function UserListView({
         {listError && (
           <div className="p-4 border-l-2 border-[var(--destructive)] bg-[var(--destructive)]/[0.04] text-[12px] font-mono leading-relaxed text-[var(--destructive)]">
             [ Error ] {listError}
-            <button type="button" onClick={() => onFetch()} className="focus-amber ml-3 underline hover:opacity-80">
+            <Button variant="ghost" size="sm" type="button" onClick={() => onFetch()} className="ml-3">
               {t('retry')}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -193,29 +194,29 @@ export function UserListView({
                             <span className="meta-mono text-[var(--muted-foreground)]">{t('notOperable')}</span>
                           ) : isRootAdmin ? (
                             <>
-                              <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? t('cantEditSelf') : t('editRootOnly')}>
+                              <Button variant="ghost" size="sm" type="button" disabled={self} onClick={() => onEdit(u)} title={self ? t('cantEditSelf') : t('editRootOnly')}>
                                 {t('edit')}
-                              </button>
-                              <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title={t('resetRootOnly')}>
+                              </Button>
+                              <Button variant="ghost" size="sm" type="button" onClick={() => onReset(u)} title={t('resetRootOnly')}>
                                 {t('resetPassword')}
-                              </button>
-                              <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline" title={self ? t('cantDeleteSelf') : t('deleteRootOnly')}>
+                              </Button>
+                              <Button variant="outline-danger" size="sm" type="button" disabled={self} onClick={() => onDelete(u)} title={self ? t('cantDeleteSelf') : t('deleteRootOnly')}>
                                 {t('delete')}
-                              </button>
-                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
+                              </Button>
+                              <Button variant={u.isActive ? 'outline-danger' : 'ghost'} size="sm" type="button" disabled={self} onClick={() => onDisable(u)} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
                                 {u.isActive ? t('disable') : t('enable')}
-                              </button>
+                              </Button>
                             </>
                           ) : isForbiddenForAdmin(u) ? (
                             <span className="meta-mono text-[var(--muted-foreground)]">{t('notOperable')}</span>
                           ) : (
                             <>
-                              <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow" title={t('resetDefault')}>
+                              <Button variant="ghost" size="sm" type="button" onClick={() => onResetDefault(u)} title={t('resetDefault')}>
                                 {t('resetPassword')}
-                              </button>
-                              <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
+                              </Button>
+                              <Button variant={u.isActive ? 'outline-danger' : 'ghost'} size="sm" type="button" disabled={self} onClick={() => onDisable(u)} title={self ? t('cantDisableSelf') : u.isActive ? t('disable') : t('enable')}>
                                 {u.isActive ? t('disable') : t('enable')}
-                              </button>
+                              </Button>
                             </>
                           )}
                         </div>
@@ -263,17 +264,17 @@ export function UserListView({
                       <span className="meta-mono text-[var(--muted-foreground)] ml-auto">{t('notOperable')}</span>
                     ) : isRootAdmin ? (
                       <>
-                        <button type="button" disabled={self} onClick={() => onEdit(u)} className="focus-amber meta-mono text-[var(--foreground)] hover:text-[var(--primary)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">{t('edit')}</button>
-                        <button type="button" onClick={() => onReset(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">{t('resetPassword')}</button>
-                        <button type="button" disabled={self} onClick={() => onDelete(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--destructive)] underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline">{t('delete')}</button>
-                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? t('disable') : t('enable')}</button>
+                        <Button variant="ghost" size="sm" type="button" disabled={self} onClick={() => onEdit(u)}>{t('edit')}</Button>
+                        <Button variant="ghost" size="sm" type="button" onClick={() => onReset(u)}>{t('resetPassword')}</Button>
+                        <Button variant="outline-danger" size="sm" type="button" disabled={self} onClick={() => onDelete(u)}>{t('delete')}</Button>
+                        <Button variant={u.isActive ? 'outline-danger' : 'ghost'} size="sm" type="button" disabled={self} onClick={() => onDisable(u)} className="ml-auto">{u.isActive ? t('disable') : t('enable')}</Button>
                       </>
                     ) : isForbiddenForAdmin(u) ? (
                       <span className="meta-mono text-[var(--muted-foreground)] ml-auto">{t('notOperable')}</span>
                     ) : (
                       <>
-                        <button type="button" onClick={() => onResetDefault(u)} className="focus-amber meta-mono text-[var(--muted-foreground)] hover:text-[var(--primary)] underline-grow">{t('resetPassword')}</button>
-                        <button type="button" disabled={self} onClick={() => onDisable(u)} className={`focus-amber meta-mono underline-grow disabled:opacity-30 disabled:cursor-not-allowed disabled:no-underline ml-auto ${u.isActive ? 'text-[var(--muted-foreground)] hover:text-[var(--destructive)]' : 'text-[var(--foreground)] hover:text-[var(--primary)]'}`}>{u.isActive ? t('disable') : t('enable')}</button>
+                        <Button variant="ghost" size="sm" type="button" onClick={() => onResetDefault(u)}>{t('resetPassword')}</Button>
+                        <Button variant={u.isActive ? 'outline-danger' : 'ghost'} size="sm" type="button" disabled={self} onClick={() => onDisable(u)} className="ml-auto">{u.isActive ? t('disable') : t('enable')}</Button>
                       </>
                     )}
                   </div>
