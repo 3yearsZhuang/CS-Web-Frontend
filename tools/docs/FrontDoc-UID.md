@@ -771,6 +771,7 @@ Rhine 终端体验场（`/lab`）的独立视觉作用域。设计冲突**以 Rh
 
 | 日期 | 变更 |
 |------|------|
+| 2026-10-13 | **设计统一治理落地（FrontDoc-05 U-1~U-5）**：hex/圆角/阴影/浮起清零；原生表单控件全站迁移 Input；check:design CI 门禁上线（tools/scripts/check/check-design-tokens.mjs） |
 | 2026-09-13 | **B 落地**：`/lab/terminal` 三维档案阵列（three.js + 上游 GLB 占位；透射材质 / 镜头编排 / 抽取归位；画质与动效消费终端设置；WebGL2 降级到 2D 档案柜） |
 | 2026-09-13 | **C3 落地**：RollingNumber 提为共享原语（`animate` 可关闭）；Rhine 终端设置面板（减少动效/音效/画质/全屏/重播）+ `useMotionPreference` 统一动效偏好 |
 | 2026-09-13 | **C2-2 双入口**：档案柜 UI 抽为共享组件（components/rhine），/tools/resource 新增 `?view=archive`；§17 增补作用域白名单 |

@@ -733,14 +733,14 @@ function ComponentsView() {
 
 /* ================================ 05 审计（全站一致性现状与治理清单） ================================ */
 
-/** 审计数据：2026-10-13 全量审计（范围 src/app + src/modules，排除 rhine/lab 豁免域） */
+/** 审计数据：2026-10-13 治理后复验（范围 src/app + src/modules，排除 rhine/lab 豁免域） */
 const AUDIT_STATS = [
-  { category: '硬编码 hex 颜色', hits: '4', files: '2', wave: 'U-1', note: 'pomodoro/constants ×3 · schema-widget-renderer ×1' },
-  { category: '白名单外圆角', hits: '~16', files: '~10', wave: 'U-2', note: 'auxilio ×5 · assistant-chat · workbench' },
-  { category: '违规阴影 / 发光', hits: '6', files: '3', wave: 'U-2', note: 'workbench ×3 · assistant-chat · events ×2' },
-  { category: 'hover 浮起 / 弹跳', hits: '3', files: '2', wave: 'U-2', note: 'workbench scale/wiggle · event-card' },
-  { category: '原生 <button> 未走原语', hits: '228', files: '~40', wave: 'U-3', note: 'admin 模块 ~50 处为最大治理对象' },
-  { category: '原生 <input> 未走原语', hits: '~60', files: '~20', wave: 'U-3', note: 'categories-manager ×10 · event-modals ×7' },
+  { category: '硬编码 hex 颜色', hits: '4→0', files: '2', wave: 'U-1 ✅', note: '--phase-* token 化（globals.css 注册双主题档位）' },
+  { category: '白名单外圆角', hits: '~16→0', files: '~10', wave: 'U-2 ✅', note: 'auxilio / assistant-chat / workbench / agent widgets 全部直角化' },
+  { category: '违规阴影 / 发光', hits: '6→0', files: '3', wave: 'U-2 ✅', note: 'workbench → --shadow-modal；下拉 → --shadow-popover；发光环 → ring' },
+  { category: 'hover 浮起 / 弹跳', hits: '3→0', files: '2', wave: 'U-2 ✅', note: 'wiggle ease-in-out 移除；hover:scale 移除' },
+  { category: '手写按钮 / 筛选漂移', hits: '9 处', files: '6', wave: 'U-3 ✅', note: 'join-panel 硬编码按钮 / board-tab 手写描边 / registry-shell chip → 契约组件' },
+  { category: '原生 input/textarea/select', hits: '~70→0', files: '36', wave: 'U-3 ✅', note: '全站清零（豁免域外）；Input 契约补 rows prop' },
 ] as const;
 
 const PAGE_RATINGS: { page: string; rating: 'ok' | 'warn' | 'bad' | 'exempt'; note: string }[] = [
@@ -750,24 +750,24 @@ const PAGE_RATINGS: { page: string; rating: 'ok' | 'warn' | 'bad' | 'exempt'; no
   { page: '/tools', rating: 'ok', note: 'CollapsingHero + pixel-page + 1600px 全合规' },
   { page: '/profile', rating: 'ok', note: '标准折叠 Hero + pixel-page' },
   { page: '/login', rating: 'ok', note: '居中卡片 + clamp 衬线标题，单卡片简化合理' },
-  { page: '/community', rating: 'warn', note: 'max-w-[1320px] ≠ 1600px token、gap-8 ≠ gap-0、8 处原生按钮' },
-  { page: '/admin', rating: 'warn', note: '框架合规；子面板原生控件密度全站最高（~50 按钮 + ~20 input）' },
-  { page: '/tools/auxilio', rating: 'warn', note: 'rounded-md/lg ×5、下拉 shadow-lg' },
-  { page: '/tools (workbench)', rating: 'bad', note: 'shadow-2xl/ad-hoc 阴影 + rounded-t-xl + ease-in-out + hover:scale，全站最集中违规点' },
+  { page: '/community', rating: 'ok', note: 'U-4 已对齐：1600px 页宽 + Hub 栅格间距；排序迁移 InlineTabs' },
+  { page: '/admin', rating: 'ok', note: 'U-3 已迁移：modals/list/join-panel 控件全部走 Button/Input 契约' },
+  { page: '/tools/auxilio', rating: 'ok', note: 'U-2 已清零：rounded-md/lg ×5、下拉 shadow-lg → token' },
+  { page: '/tools (workbench)', rating: 'ok', note: 'U-2 已清零 + RGL v2 迁移收尾（tsc 全绿）；编辑态走 --shadow-modal + ring' },
   { page: '/lab', rating: 'exempt', note: '§17 Rhine 作用域豁免，不计入' },
 ];
 
 const TOP_FIXES = [
-  ['workbench.tsx 编辑模式视觉', 'shadow-2xl/shadow-lg/ad-hoc 阴影 + rounded-t-xl + hover:scale-110 → --shadow-modal / 直角 / ring 描边', 'U-2'],
-  ['pomodoro/constants.ts:31-33', '3 个硬编码 hex → 映射 --chart-* token', 'U-1'],
-  ['assistant-chat.tsx', '气泡/输入框 rounded-lg + 下拉 shadow-lg → 直角 + --shadow-popover', 'U-2'],
-  ['admin 模块原生控件批量化', '~50 按钮 + ~20 input → Button/Input 原语', 'U-3'],
-  ['auxilio/page.tsx', '5 处 rounded-md/lg + 原生控件 → 契约组件', 'U-2'],
-  ['events 发光环 ×2', 'shadow-[0_0_0_*] → ring 工具类', 'U-2'],
-  ['community/page.tsx', 'max-w-[1320px] → 1600px、gap-8 → gap-0 对齐 §3 栅格', 'U-4'],
-  ['schema-widget-renderer.tsx:136', 'var() 回退 hex 移除', 'U-1'],
-  ['workbench wiggle 动画', 'ease-in-out keyframes → --ease-ark 或 steps() 像素例外', 'U-2'],
-  ['原生 input 集中区', 'categories-manager / event-modals / about → Input 原语', 'U-3'],
+  ['workbench.tsx 编辑模式视觉', 'shadow-2xl/shadow-lg/ad-hoc 阴影 + rounded-t-xl + hover:scale-110 → --shadow-modal / 直角 / ring 描边', 'U-2 ✅'],
+  ['pomodoro/constants.ts:31-33', '3 个硬编码 hex → --phase-* token（globals.css 注册）', 'U-1 ✅'],
+  ['assistant-chat.tsx', '气泡/输入框 rounded-lg + 下拉 shadow-lg → 直角 + --shadow-popover', 'U-2 ✅'],
+  ['admin 模块原生控件批量化', 'user-list/user-modals/event-modals/join-panel → Button/Input 原语', 'U-3 ✅'],
+  ['auxilio/page.tsx', '5 处 rounded-md/lg + 原生控件 → 契约组件', 'U-2 ✅'],
+  ['events 发光环 ×2', 'shadow-[0_0_0_*] + scale-125 → ring-2 ring-[var(--primary)]', 'U-2 ✅'],
+  ['community/page.tsx', 'max-w-[1320px] → 1600px、gap-8 → Hub 栅格；排序 → InlineTabs', 'U-4 ✅'],
+  ['schema-widget-renderer.tsx:136', 'var() 回退 hex 移除', 'U-1 ✅'],
+  ['workbench wiggle 动画', 'ease-in-out keyframes 移除；缓动统一 var(--ease-ark)', 'U-2 ✅'],
+  ['原生 input 集中区', 'categories-manager / event-modals / about → Input 原语（input 全站清零）', 'U-3 ✅'],
 ] as const;
 
 const RATING_STYLE = {
@@ -784,7 +784,7 @@ function AuditView() {
         <SectionMarker className="mb-3">[ 05 ] — Consistency audit</SectionMarker>
         <Title level={2} subtitle="2026.10.13 全量审计">一致性现状</Title>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
-          全站骨架（CollapsingHero / pt-16 / 章节标记 / CSS 变量颜色 / 像素融合层）执行良好：11 个主要页面中 7 个合规。违规高度集中于 workbench 模块与 admin/auxilio 原生控件两大治理域。
+          治理波次 U-1 → U-5 已全部落地：硬编码颜色 / 白名单外圆角 / 违规阴影 / hover 浮起 / 原生表单控件均清零（豁免域外），check:design 门禁已接入 CI 防新漂移。11 个主要页面中 10 个合规，/lab 为 §17 豁免域。
         </p>
       </div>
 
@@ -848,7 +848,7 @@ function AuditView() {
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border border-[var(--border)] p-5">
           <p className="max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
-            治理波次 U-1 → U-5 详见 <span className="font-mono text-[12px] text-[var(--foreground)]">tools/docs/FrontDoc-05-DesignUnify.md</span>。每批迁移验证：eslint 0 error、vitest 全绿、tsc 零新增错误。
+            治理波次 U-1 → U-5 全部完成，详见 <span className="font-mono text-[12px] text-[var(--foreground)]">tools/docs/FrontDoc-05-DesignUnify.md</span>。验证链：tsc 0 error、lint:build 0 error、vitest 380 全绿、check:design 0 违规。
           </p>
           <Link href="/design-demo" className="ark-link meta-mono text-[var(--foreground)]">
             回到 01 重新验收

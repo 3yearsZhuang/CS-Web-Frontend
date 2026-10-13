@@ -51,6 +51,12 @@ Layer 2  页面模板     Hub 总览 / 列表流 / 详情 / 表单 — 四种版
 
 ## 4. 治理波次（按 正确性 > 一致性 > 价值 排序）
 
+> **落地状态（2026-10-13 全部完成，分支 feat/unified-frontend-design）**：
+> U-1 ✅（hex 清零，--phase-* token 化）· U-2 ✅（圆角/阴影/发光/浮起清零）· U-3 ✅（原生表单控件清零 + 手写按钮漂移清零）· U-4 ✅（community 对齐 1600px + Hub 栅格）· U-5 ✅（check:design 门禁接入 validate 与 CI）。
+> 另完成前置：react-grid-layout v2 迁移收尾（tsc 清零）。
+> 验证链：tsc 0 error · lint:build 0 error · vitest 380 全绿 · check:design 0 违规。
+> 跳过清单（合法原生保留）：checkbox/file/hidden input、日历格子、整行点击区、文本链按钮、tab-chip 触发器、btn-*/badge 共享类按钮。
+
 > 审计明细见附录 A（由设计审计生成）。
 
 | 波次 | 内容 | 验收标准 | 依赖 |
