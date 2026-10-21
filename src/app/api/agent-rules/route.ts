@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
 import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { t } from '@/i18n';
 
 export const runtime = 'nodejs';
 
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
 
   const proxy = await proxyBackend(req, { path: `/agent-rules?${params.toString()}` });
   if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '获取规则失败');
+    const err = normalizeError(proxy.body, t('apiError.agentRulesFetch'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   });
 
   if (proxy.status !== 200 && proxy.status !== 201) {
-    const err = normalizeError(proxy.body, '创建规则失败');
+    const err = normalizeError(proxy.body, t('apiError.agentRulesCreate'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;

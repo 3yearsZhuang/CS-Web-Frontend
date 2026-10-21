@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
 import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { t } from '@/i18n';
 import { mapRuleBody } from '../route';
 
 export const runtime = 'nodejs';
@@ -24,7 +25,7 @@ export async function PATCH(
   });
 
   if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '更新规则失败');
+    const err = normalizeError(proxy.body, t('apiError.agentRuleUpdate'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
@@ -48,7 +49,7 @@ export async function DELETE(
   });
 
   if (proxy.status !== 200 && proxy.status !== 204) {
-    const err = normalizeError(proxy.body, '删除规则失败');
+    const err = normalizeError(proxy.body, t('apiError.agentRuleDelete'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;

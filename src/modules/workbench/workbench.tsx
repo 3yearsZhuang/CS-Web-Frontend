@@ -306,7 +306,7 @@ export function Workbench() {
                        {isEditMode && (
                          <button 
                            onClick={() => removeWidget(id)}
-                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-[var(--z-sticky)] transition-colors hover:opacity-85"
+                           className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-[var(--destructive)] text-white flex items-center justify-center z-[var(--z-sticky)] transition-colors hover:opacity-85 focus-ring after:absolute after:-inset-2.5 after:content-['']"
                          >
                            <X className="w-3.5 h-3.5" />
                          </button>
@@ -345,7 +345,7 @@ export function Workbench() {
               <button 
                 key={w.id} 
                 onClick={() => addWidget(w.id)}
-                className="shrink-0 w-32 h-24 border border-dashed border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)] flex flex-col items-center justify-center gap-2 bg-[var(--foreground)]/5 transition-colors"
+                className="shrink-0 w-32 h-24 border border-dashed border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)] flex flex-col items-center justify-center gap-2 bg-[var(--foreground)]/5 transition-colors focus-ring"
               >
                 <Plus className="w-5 h-5" />
                 <span className="meta-mono text-[10px]">{t(w.titleKey)}</span>

@@ -4,6 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { t } from '@/i18n';
 
 export const runtime = 'nodejs';
 
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
 
   const proxy = await proxyBackend(req, { path });
   if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '获取简报失败');
+    const err = normalizeError(proxy.body, t('apiError.agentBriefingFetch'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;

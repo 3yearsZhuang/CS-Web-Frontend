@@ -6,6 +6,7 @@
  */
 import { NextResponse } from 'next/server';
 import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { t } from '@/i18n';
 
 export const runtime = 'nodejs';
 
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
   const proxy = await proxyBackend(req, { path: `/agent-inbox?${params.toString()}` });
 
   if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '获取收件箱失败');
+    const err = normalizeError(proxy.body, t('apiError.agentInboxFetch'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;

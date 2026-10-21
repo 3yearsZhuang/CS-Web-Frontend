@@ -41,6 +41,10 @@ jobs:
       - name: Lint
         run: pnpm run lint:build
 
+      - name: BFF copy gate (i18n freeze)
+        # BFF 路由硬编码中文增量冻结：基线外新增即红（存量迁移见 docs/项目待办v2.md i18n 条目）
+        run: pnpm run check:bff-copy
+
       - name: Design token drift gate (U-5)
         # 设计规范禁止清单门禁（FrontDoc-UID §11/§16）：hex 硬编码 / 白名单外圆角 /
         # 违规阴影 / hover 浮起 / 全局 z-index 裸写 → CI 红。豁免域：rhine/lab/design-demo。

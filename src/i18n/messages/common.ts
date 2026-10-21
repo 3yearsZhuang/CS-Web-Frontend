@@ -28,6 +28,18 @@ export interface CommonMessages {
     warningHint: string;
     infoHint: string;
   },
+  apiError: {
+    agentRulesFetch: string;
+    agentRulesCreate: string;
+    agentRuleUpdate: string;
+    agentRuleDelete: string;
+    agentRuleToggle: string;
+    agentBriefingFetch: string;
+    agentInboxFetch: string;
+    agentInboxUpdate: string;
+    invalidParams: string;
+    agentWeeklyReviewFetch: string;
+  },
   fallback: {
     errorTitle: string;
     globalErrorTitle: string;
@@ -222,6 +234,18 @@ export const zhCN: CommonMessages = {
     warningHint: '此操作可能影响系统状态，请确认后再继续。',
     infoHint: '请确认以上信息后再继续操作。',
   },
+  apiError: {
+    agentRulesFetch: '获取规则失败',
+    agentRulesCreate: '创建规则失败',
+    agentRuleUpdate: '更新规则失败',
+    agentRuleDelete: '删除规则失败',
+    agentRuleToggle: '操作失败',
+    agentBriefingFetch: '获取简报失败',
+    agentInboxFetch: '获取收件箱失败',
+    agentInboxUpdate: '操作失败',
+    invalidParams: '参数不合法',
+    agentWeeklyReviewFetch: '获取周复盘失败',
+  },
   fallback: {
     errorTitle: '页面出错了',
     globalErrorTitle: '出错了',
@@ -415,6 +439,18 @@ export const en: CommonMessages = {
     avatarAlt: 'Avatar',
     warningHint: 'This action may affect the system state. Please confirm before continuing.',
     infoHint: 'Please confirm the above information before continuing.',
+  },
+  apiError: {
+    agentRulesFetch: 'Failed to load rules',
+    agentRulesCreate: 'Failed to create rule',
+    agentRuleUpdate: 'Failed to update rule',
+    agentRuleDelete: 'Failed to delete rule',
+    agentRuleToggle: 'Operation failed',
+    agentBriefingFetch: 'Failed to load briefing',
+    agentInboxFetch: 'Failed to load inbox',
+    agentInboxUpdate: 'Operation failed',
+    invalidParams: 'Invalid parameters',
+    agentWeeklyReviewFetch: 'Failed to load weekly review',
   },
   fallback: {
     errorTitle: 'Page error',

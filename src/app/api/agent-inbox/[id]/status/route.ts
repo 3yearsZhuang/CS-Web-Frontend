@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
 import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
+import { t } from '@/i18n';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +24,7 @@ export async function PATCH(
   };
   if (!body.action || !['accept', 'dismiss', 'snooze'].includes(body.action)) {
     return NextResponse.json(
-      { error: '参数不合法', code: 'VALIDATION_FAILED' },
+      { error: t('apiError.invalidParams'), code: 'VALIDATION_FAILED' },
       { status: 400 },
     );
   }
@@ -41,7 +42,7 @@ export async function PATCH(
   });
 
   if (proxy.status !== 200) {
-    const err = normalizeError(proxy.body, '操作失败');
+    const err = normalizeError(proxy.body, t('apiError.agentInboxUpdate'));
     const res = NextResponse.json(err, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
