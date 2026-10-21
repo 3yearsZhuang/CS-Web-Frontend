@@ -95,6 +95,18 @@ Layer 2  页面模板     Hub 总览 / 列表流 / 详情 / 表单 — 四种版
 3. 移动端（<md）单列堆叠 + 触控区检查
 4. `pnpm validate`（tsc + eslint）零错误
 
+### 7.1 复核记录（2026-10-21）
+
+| 项 | 结论 |
+|---|---|
+| 设计门禁 `check:design` | 0 违规；已接入 `validate` 与 ci.yml |
+| BFF 硬编码中文门禁 `check:bff-copy` | 基线外 4 文件 9 行 → 迁移 `apiError` 词条后 **无新增**；此前脚本未接入 CI 导致 PR #77~#80 漏检，现已加入 ci.yml |
+| §12 清单（改动页） | design-demo / community 逐项通过；workbench 为子区块（pt-16 在 `/tools` 页 main），补 focus-ring 与 ≥44px 触控热区 |
+| 双主题 | design-demo 五视图 + /tools、/community、/design-demo 真浅色抽查通过 |
+| 移动端 | design-demo / tools / community 单列堆叠与触控区抽查通过 |
+| RGL 默认布局偏挤 | 复现为**首帧测量瞬态**；稳定后实测 6 列栅格（1 列 196px / 2 列 408px）正常 |
+| 已知残余（不阻断） | design-demo 文档字符串含 hex（演示数据，非样式）；community 等页面既有 `transition-colors` 未显式挂 `--ease-ark`（全站存量，另行治理） |
+
 ## 附录 A：设计审计摘要
 
 > 2026-10-13 全量审计。范围：`src/app` + `src/modules`（排除 rhine/lab 豁免域与测试文件）。
