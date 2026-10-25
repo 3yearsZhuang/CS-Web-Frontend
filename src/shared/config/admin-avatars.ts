@@ -74,5 +74,13 @@ export const ADMIN_AVATARS: AdminAvatar[] = [
     position: '普通会员',
     qq: '576863281',
   },
+
+  {
+    id: 'dky',
+    name: '丁凯奕',
+    grade: '2025级',
+    position: '普通会员',
+    qq: '2627939015',
+  },
 ];
 
