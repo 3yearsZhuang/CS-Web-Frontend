@@ -417,18 +417,37 @@ export function arrayFrom(body: Record<string, unknown>, key: string): Array<Rec
   return Array.isArray(v) ? (v as Array<Record<string, unknown>>) : [];
 }
 
-/** 成功响应：写回轮换后的 JWT（如有 authPair）并返回 JSON 响应 */
-export function okJson(data: unknown, proxy: ProxyResult, init?: ResponseInit): NextResponse {
-  const res = NextResponse.json(data, init);
+/**
+ * 认证 Cookie 变更统一落地（A06 修复核心）。
+ *
+ * 一次 401→刷新成功→业务错误（403/409/422）的链路里，proxy 会带回**新签发的 authPair**。
+ * 旧实现只在成功分支写回、错误分支只清 Cookie，导致浏览器继续持有已被轮换掉的 refresh，
+ * 超出后端重用宽限后触发会话家族撤销（用户被莫名登出）。
+ *
+ * 因此所有终局响应（含错误）都必须先应用 authPair，再处理 clearAuth：
+ * 两者互斥（刷新失败才 clearAuth，刷新成功必带 authPair）。
+ */
+export function applyAuth(res: NextResponse, proxy: ProxyResult): NextResponse {
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
+  else if (proxy.clearAuth) clearAuthCookies(res);
   return res;
 }
 
-/** 错误响应：规范化错误体（normalizeError），刷新失败时清 Cookie；默认沿用 proxy.status */
+/** 成功响应：写回轮换后的 JWT（如有 authPair）并返回 JSON 响应 */
+export function okJson(data: unknown, proxy: ProxyResult, init?: ResponseInit): NextResponse {
+  return applyAuth(NextResponse.json(data, init), proxy);
+}
+
+/**
+ * 错误响应：规范化错误体（normalizeError）；默认沿用 proxy.status。
+ *
+ * 与 okJson 一样经 applyAuth：错误分支同样可能携带轮换后的 authPair（A06）。
+ */
 export function errJson(proxy: ProxyResult, fallback = '请求失败', init?: ResponseInit): NextResponse {
-  const res = NextResponse.json(normalizeError(proxy.body, fallback), init ?? { status: proxy.status });
-  if (proxy.clearAuth) clearAuthCookies(res);
-  return res;
+  return applyAuth(
+    NextResponse.json(normalizeError(proxy.body, fallback), init ?? { status: proxy.status }),
+    proxy,
+  );
 }
 
 /** 安全读取请求 JSON 体，解析失败兜底为空对象（route 内常做 req.json().catch(() => ({}))） */

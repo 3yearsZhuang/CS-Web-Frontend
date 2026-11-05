@@ -26,6 +26,7 @@
     "check:bff-boundary": "node ./tools/scripts/check/check-bff-boundary.mjs",
     "check:design": "node ./tools/scripts/check/check-design-tokens.mjs",
     "check:bff-copy": "node ./tools/scripts/check/check-bff-copy.mjs",
+    "check:bff-handler": "node ./tools/scripts/check/check-bff-handler.mjs",
     "deploy:build": "docker compose -f tools/deploy/docker-compose.yml build",
     "deploy:up": "docker compose -f tools/deploy/docker-compose.yml up -d",
     "deploy:down": "docker compose -f tools/deploy/docker-compose.yml down",

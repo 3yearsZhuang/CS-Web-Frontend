@@ -39,6 +39,7 @@ export interface CommonMessages {
     agentInboxUpdate: string;
     invalidParams: string;
     agentWeeklyReviewFetch: string;
+    originNotAllowed: string;
   },
   fallback: {
     errorTitle: string;
@@ -235,6 +236,7 @@ export const zhCN: CommonMessages = {
     infoHint: '请确认以上信息后再继续操作。',
   },
   apiError: {
+    originNotAllowed: '来源不被允许',
     agentRulesFetch: '获取规则失败',
     agentRulesCreate: '创建规则失败',
     agentRuleUpdate: '更新规则失败',
@@ -441,6 +443,7 @@ export const en: CommonMessages = {
     infoHint: 'Please confirm the above information before continuing.',
   },
   apiError: {
+    originNotAllowed: 'Origin not allowed',
     agentRulesFetch: 'Failed to load rules',
     agentRulesCreate: 'Failed to create rule',
     agentRuleUpdate: 'Failed to update rule',
