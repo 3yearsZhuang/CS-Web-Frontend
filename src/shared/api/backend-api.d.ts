@@ -3585,7 +3585,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Resource */
+        /**
+         * Get Resource
+         * @description 资源详情：默认只开放已审核通过；作者本人或持管理权限者可预览任意状态。
+         */
         get: operations["get_resource_api_v1_tools_resources__resource_id__get"];
         put?: never;
         post?: never;

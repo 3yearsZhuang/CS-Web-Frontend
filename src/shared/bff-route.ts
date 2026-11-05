@@ -23,6 +23,7 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 
+import type { operations, paths } from '@/shared/api/backend-api';
 import {
   applyAuth,
   normalizeError,
@@ -141,3 +142,64 @@ export function asArray(body: unknown): Array<Record<string, unknown>> {
 export function asObject(body: unknown): Record<string, unknown> {
   return (body ?? {}) as Record<string, unknown>;
 }
+
+// ---------------------------------------------------------------- 契约类型辅助
+//
+// 目的：让 `openapi.baseline.json` 生成的类型真正参与编译（ER-47 的消费端闭环）。
+// 现有 BFF 主体用 `Record<string, unknown>` + 断言，字段漂移（如 P1-8 的
+// snake/camel 混用导致字段恒空）无法在编译期发现。
+//
+// 用法（新增/改动路由 SHOULD 采用）：
+//   type Resp = BackendResponse<'list_active_announcements_api_v1_announcements_get'>;
+//   routeHandler({ path: '/announcements' }, ({ proxy }) => asArray(proxy.body).map(toAnnouncement) as Resp)
+
+/** 契约路径字面量（`/api/v1/announcements` 这类），用于约束 operation 查找 */
+export type ContractPath = keyof paths & `/api/v1${string}`;
+
+/**
+ * 某契约路径上某 HTTP 方法对应的 operation **名称**（`operations` 的键）。
+ *
+ * 注意：openapi-typescript 生成的是 `operations` 索引签名，`paths[P][M]` 的值本身就是
+ * 一个巨大的结构化类型而非字符串字面量，故不能直接 `infer Op & string`——那样会得到
+ * 整个 operation 对象类型。正确做法是反向查找 `operations` 中值等于该方法的键。
+ */
+export type OperationName<
+  P extends ContractPath,
+  M extends 'get' | 'post' | 'put' | 'patch' | 'delete',
+> = paths[P] extends Record<M, infer Op>
+  ? {
+      [K in keyof operations]: operations[K] extends Op ? K : never;
+    }[keyof operations]
+  : never;
+
+/** 某契约操作的 2xx 响应体类型（取签约类型里的 200/201 成功响应） */
+export type BackendResponse<Op extends string> = Op extends keyof operations
+  ? operations[Op] extends { responses: infer R }
+    ? R extends Record<200, infer Ok>
+      ? Ok extends { content: { 'application/json': infer Json } }
+        ? Json
+        : R extends Record<201, infer Created>
+          ? Created extends { content: { 'application/json': infer CJson } }
+            ? CJson
+            : unknown
+          : unknown
+      : R extends Record<201, infer Created>
+        ? Created extends { content: { 'application/json': infer CJson } }
+          ? CJson
+          : unknown
+        : unknown
+    : unknown
+  : unknown;
+
+/** 某契约操作的请求体类型（无请求体时为 never） */
+export type BackendRequestBody<Op extends string> = Op extends keyof operations
+  ? operations[Op] extends { requestBody?: { content: { 'application/json': infer Json } } }
+    ? Json
+    : never
+  : never;
+
+/** 便捷：按「路径 + 方法」取响应类型 */
+export type ResponseOf<
+  P extends ContractPath,
+  M extends 'get' | 'post' | 'put' | 'patch' | 'delete',
+> = BackendResponse<OperationName<P, M>>;

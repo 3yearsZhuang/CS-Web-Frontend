@@ -5,7 +5,12 @@
  * 本文件只保留「参数映射 + 出参翻译」两件业务相关的事。
  */
 import { assertAllowedOrigin } from '@/shared/security/security';
-import { BffError, routeHandler } from '@/shared/bff-route';
+import {
+  BffError,
+  routeHandler,
+  type OperationName,
+  type BackendResponse,
+} from '@/shared/bff-route';
 import { asArray } from '@/shared/bff-route';
 import { NextResponse } from 'next/server';
 import { toAnnouncement } from '@/shared/backend-client';
@@ -13,8 +18,13 @@ import { t } from '@/i18n';
 
 export const runtime = 'nodejs';
 
-export const GET = routeHandler({ path: '/announcements' }, ({ proxy }) =>
-  asArray(proxy.body).map((item) => toAnnouncement(item)),
+/** 契约锚点：GET /announcements 的 2xx 响应类型（后端契约变更时此处编译期报错） */
+type AnnouncementListOp = OperationName<'/api/v1/announcements', 'get'>;
+type AnnouncementListBody = BackendResponse<AnnouncementListOp>;
+
+export const GET = routeHandler<AnnouncementListBody | Array<Record<string, unknown>>>(
+  { path: '/announcements' },
+  ({ proxy }) => asArray(proxy.body).map((item) => toAnnouncement(item)),
 );
 
 /** 前端 camelCase → 后端 snake_case 白名单映射（不透传未知键） */
