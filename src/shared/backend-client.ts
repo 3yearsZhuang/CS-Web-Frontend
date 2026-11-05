@@ -13,7 +13,7 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 import { getCookieValue } from '@/shared/security/security';
-import { isDemoActive, markBackendUnreachable, resolveDemoMock } from '@/shared/demo/demo-mode';
+import { isDemoActive, isDemoAllowed, markBackendUnreachable, resolveDemoMock } from '@/shared/demo/demo-mode';
 // 副作用导入：注册演示模式 mock 路由表（幂等，仅在服务端加载）
 import '@/shared/demo/mock-data';
 import type { SafeUser, UserRole } from '@/shared/types';
@@ -175,8 +175,10 @@ export async function fetchMeWithPair(
       headers: { Authorization: `Bearer ${pair.accessToken}` },
     }));
   } catch (err) {
-    // 后端不可达（自动/手动演示）：回落到 mock /auth/me（登录闭环的关键兜底）
+    // 后端不可达：仅在演示能力被允许时回落到 mock /auth/me；
+    // 生产环境必须如实失败（否则会把「后端故障」伪装成「已登录」）。
     if (err instanceof BackendUnreachableError) {
+      if (!isDemoAllowed()) return null;
       const demo = resolveDemoMock('/auth/me', 'GET');
       if (demo) {
         ({ status, body } = demo.route.respond({ searchParams: demo.searchParams, pathParams: demo.pathParams }));
@@ -287,10 +289,11 @@ export async function proxyBackend(
 
     return { status: first.status, body: first.body, clearAuth: false };
   } catch (err) {
-    // 后端网络层不可达：requestJson 已置自动降级标记，此处尝试 mock 兜底（本次请求直接演示）
+    // 后端网络层不可达：requestJson 已置自动降级标记，此处尝试 mock 兜底（本次请求直接演示）。
+    // 演示能力被禁止（生产）时跳过 mock，直接走下方 502 —— 不允许假成功。
     if (err instanceof BackendUnreachableError) {
       markBackendUnreachable();
-      const demo = resolveDemoMock(opts.path, opts.method || 'GET');
+      const demo = isDemoAllowed() ? resolveDemoMock(opts.path, opts.method || 'GET') : null;
       if (demo) {
         const { status, body } = demo.route.respond({
           searchParams: demo.searchParams,
@@ -301,7 +304,7 @@ export async function proxyBackend(
       }
       return {
         status: 502,
-        body: { message: '后端服务暂不可达，已进入演示模式', errorCode: 'BACKEND_UNREACHABLE' },
+        body: { message: '后端服务暂不可达，请稍后重试', errorCode: 'BACKEND_UNREACHABLE' },
         clearAuth: false,
       };
     }

@@ -10,6 +10,14 @@
  * mock 命中返回的是后端 snake_case 原始形状，route.ts 既有 to* 翻译继续生效。
  *
  * 边界：自动降级状态为进程内内存态（多实例各自判定）。演示为降级体验，无需强一致。
+ *
+ * **生产隔离（A01）**：自动降级会让「后端不可达」表现为「业务成功」
+ * （登录返回演示用户并把演示 token 写进认证 Cookie、写入接口返回 mock 201），
+ * 而该标记是**进程级**的——一个请求失败会让同实例的其他用户一起进入演示态。
+ * 故：
+ *   - `NODE_ENV === 'production'` 时**禁止自动降级**，后端不可达一律如实 502；
+ *   - 手动 demo（cookie `fztbu_demo=1`）也仅在非生产环境可用，避免线上被诱导进入假数据；
+ *   - 两者均可用 `DEMO_MODE_ENABLED=0` 显式关闭（生产默认即关闭）。
  */
 
 import 'server-only';
@@ -49,13 +57,19 @@ const mockRoutes: DemoMockRoute[] = [];
 /** 进程内"后端不可达"时间戳（null = 可达） */
 let backendUnreachableAt: number | null = null;
 
-/** 标记后端不可达（自动降级触发；requestJson 网络失败时调用） */
+/**
+ * 标记后端不可达（自动降级触发；requestJson 网络失败时调用）。
+ *
+ * **生产环境为 no-op**：不允许把「后端故障」静默转成「业务成功」。
+ */
 export function markBackendUnreachable(now = Date.now()): void {
+  if (!isDemoAllowed()) return;
   backendUnreachableAt = now;
 }
 
-/** 后端不可达标记是否仍有效（TTL 内） */
+/** 后端不可达标记是否仍有效（TTL 内；且演示能力须被允许） */
 export function isBackendUnreachable(now = Date.now()): boolean {
+  if (!isDemoAllowed()) return false;
   return backendUnreachableAt !== null && now - backendUnreachableAt < UNREACHABLE_TTL_MS;
 }
 
@@ -71,8 +85,21 @@ export function unreachableRemainingMs(now = Date.now()): number | null {
   return Math.max(0, remaining);
 }
 
-/** 手动演示模式：cookie 显式开启 */
+/**
+ * 演示能力是否允许（环境级开关，非请求级）。
+ *
+ * 生产环境一律禁止；非生产可用 `DEMO_MODE_ENABLED=0` 关闭。
+ * 注意：这是「能否进入演示」的总闸，`markBackendUnreachable` 与手动 cookie 都要先过它。
+ */
+export function isDemoAllowed(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  const flag = process.env.DEMO_MODE_ENABLED;
+  return flag === undefined ? true : flag !== '0' && flag !== 'false';
+}
+
+/** 手动演示模式：cookie 显式开启（且仅当演示能力被环境允许） */
 export function isManualDemo(req: Request): boolean {
+  if (!isDemoAllowed()) return false;
   return getCookieValue(req, DEMO_COOKIE) === '1';
 }
 
