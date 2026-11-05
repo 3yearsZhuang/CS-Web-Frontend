@@ -835,6 +835,154 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent-briefing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Briefing
+         * @description 我的每日学习简报（当日不存在则生成；生成失败不影响读取）。
+         */
+        get: operations["get_briefing_api_v1_agent_briefing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent-inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Inbox
+         * @description 我的建议收件箱（读取时惰性回收 snooze 到期与过期项）。
+         */
+        get: operations["list_inbox_api_v1_agent_inbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent-inbox/{item_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Inbox Status
+         * @description 处理建议：accept / dismiss / snooze（+snoozeMinutes）。
+         */
+        patch: operations["update_inbox_status_api_v1_agent_inbox__item_id__status_patch"];
+        trace?: never;
+    };
+    "/api/v1/agent-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Rules
+         * @description 我的自动化规则列表。
+         */
+        get: operations["list_rules_api_v1_agent_rules_get"];
+        put?: never;
+        /**
+         * Create Rule
+         * @description 创建规则（默认停用，创建后经启停接口打开）。
+         */
+        post: operations["create_rule_api_v1_agent_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Rule
+         * @description 删除规则。
+         */
+        delete: operations["delete_rule_api_v1_agent_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Rule
+         * @description 更新规则（所有权校验；部分字段更新）。
+         */
+        patch: operations["update_rule_api_v1_agent_rules__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/agent-rules/{rule_id}/enabled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Enabled
+         * @description 逐条启停。
+         */
+        patch: operations["set_enabled_api_v1_agent_rules__rule_id__enabled_patch"];
+        trace?: never;
+    };
+    "/api/v1/agent-weekly-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Weekly Review
+         * @description 我的每周复盘（当周不存在则生成；单节失败不影响读取）。
+         */
+        get: operations["get_weekly_review_api_v1_agent_weekly_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/announcements": {
         parameters: {
             query?: never;
@@ -1938,6 +2086,9 @@ export interface paths {
          * @description 聚合公开文章（published）中出现过的全部标签，去重排序后返回。
          *
          *     供前端 Feed 页标签云使用；标签云为空时不视为错误。
+         *
+         *     实现：数据库侧用 ``jsonb_array_elements_text`` 展开 + DISTINCT 去重，
+         *     不再把全表 tags 列拉回 Python 遍历（文章量增长后原实现是明显的读放大）。
          */
         get: operations["list_tags_api_v1_community_tags_get"];
         put?: never;
@@ -2042,7 +2193,7 @@ export interface paths {
         };
         /**
          * List Events
-         * @description 活动列表（status/search/tag 筛选 + 分页，含报名人数）。
+         * @description 活动列表（status/month/search/tag 筛选 + 分页，含报名人数）。
          */
         get: operations["list_events_api_v1_events_get"];
         put?: never;
@@ -3976,6 +4127,224 @@ export interface components {
             websiteUrl?: string | null;
         };
         /**
+         * AgentAutomationRuleOut
+         * @description 规则出参。
+         */
+        AgentAutomationRuleOut: {
+            /** Actionpayload */
+            actionPayload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Actiontype */
+            actionType: string;
+            /** Condition */
+            condition?: {
+                [key: string]: unknown;
+            } | null;
+            /** Cooldownminutes */
+            cooldownMinutes: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Id */
+            id: number;
+            /** Lastfiredat */
+            lastFiredAt?: string | null;
+            /** Maxperhour */
+            maxPerHour: number;
+            /** Name */
+            name: string;
+            /** Quiethoursend */
+            quietHoursEnd?: string | null;
+            /** Quiethoursstart */
+            quietHoursStart?: string | null;
+            /** Triggertype */
+            triggerType: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * AgentBriefingOut
+         * @description 简报出参：分节内容 + 状态（failed 时前端静默降级）。
+         */
+        AgentBriefingOut: {
+            /**
+             * Briefdate
+             * Format: date
+             */
+            briefDate: string;
+            /** Content */
+            content?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Id */
+            id: number;
+            /** Status */
+            status: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * AgentInboxItemOut
+         * @description 建议收件箱出参。
+         */
+        AgentInboxItemOut: {
+            /** Confidence */
+            confidence?: number | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Estimatedminutes */
+            estimatedMinutes?: number | null;
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Id */
+            id: number;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Reason */
+            reason?: string | null;
+            /** Resolvedat */
+            resolvedAt?: string | null;
+            /** Snoozeduntil */
+            snoozedUntil?: string | null;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Type */
+            type: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * AgentRuleEnableIn
+         * @description 启停入参。
+         */
+        AgentRuleEnableIn: {
+            /** Enabled */
+            enabled: boolean;
+        };
+        /**
+         * AgentRuleInput
+         * @description 创建入参（enabled 固定 False，创建后由用户启停）。
+         */
+        AgentRuleInput: {
+            /** Action Payload */
+            action_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Condition */
+            condition?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Cooldown Minutes
+             * @default 240
+             */
+            cooldown_minutes: number;
+            /**
+             * Max Per Hour
+             * @default 3
+             */
+            max_per_hour: number;
+            /** Name */
+            name: string;
+            /** Quiet Hours End */
+            quiet_hours_end?: string | null;
+            /** Quiet Hours Start */
+            quiet_hours_start?: string | null;
+            /** Trigger Type */
+            trigger_type: string;
+        };
+        /**
+         * AgentRuleUpdateIn
+         * @description 更新入参（部分字段可选；action_type 不可变）。
+         */
+        AgentRuleUpdateIn: {
+            /** Action Payload */
+            action_payload?: {
+                [key: string]: unknown;
+            } | null;
+            /** Condition */
+            condition?: {
+                [key: string]: unknown;
+            } | null;
+            /** Cooldown Minutes */
+            cooldown_minutes?: number | null;
+            /** Max Per Hour */
+            max_per_hour?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Quiet Hours End */
+            quiet_hours_end?: string | null;
+            /** Quiet Hours Start */
+            quiet_hours_start?: string | null;
+            /** Trigger Type */
+            trigger_type?: string | null;
+        };
+        /**
+         * AgentWeeklyReviewOut
+         * @description 周复盘出参。
+         */
+        AgentWeeklyReviewOut: {
+            /** Content */
+            content?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Id */
+            id: number;
+            /** Status */
+            status: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Userid */
+            userId: number;
+            /**
+             * Weekstart
+             * Format: date
+             */
+            weekStart: string;
+        };
+        /**
          * AnnouncementInput
          * @description 创建/更新公告输入。
          */
@@ -4533,6 +4902,10 @@ export interface components {
         EventRegistrationOut: {
             /** Cancelledat */
             cancelledAt?: string | null;
+            /** Displayname */
+            displayName?: string | null;
+            /** Email */
+            email?: string | null;
             /** Eventid */
             eventId: number;
             /** Formdata */
@@ -4732,6 +5105,24 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * InboxStatusActionIn
+         * @description 用户对建议的处理动作：accept / dismiss / snooze。
+         *
+         *     model_config 显式声明（In 入参非 TZModel，不享受全局 from_attributes）。
+         */
+        InboxStatusActionIn: {
+            /**
+             * Action
+             * @description accept | dismiss | snooze
+             */
+            action: string;
+            /**
+             * Snooze Minutes
+             * @description snooze 时的延后分钟数
+             */
+            snooze_minutes?: number | null;
         };
         /**
          * JoinApplicationInput
@@ -7582,6 +7973,319 @@ export interface operations {
             };
         };
     };
+    get_briefing_api_v1_agent_briefing_get: {
+        parameters: {
+            query?: {
+                /** @description 简报日期（默认今天，配置时区） */
+                date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentBriefingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_inbox_api_v1_agent_inbox_get: {
+        parameters: {
+            query?: {
+                /** @description 按状态过滤 */
+                status?: string | null;
+                /** @description 按建议类型过滤 */
+                type?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInboxItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_inbox_status_api_v1_agent_inbox__item_id__status_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InboxStatusActionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInboxItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rules_api_v1_agent_rules_get: {
+        parameters: {
+            query?: {
+                /** @description 按启停过滤 */
+                enabled?: boolean | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentAutomationRuleOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rule_api_v1_agent_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRuleInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentAutomationRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_rule_api_v1_agent_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_v1_agent_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRuleUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentAutomationRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_enabled_api_v1_agent_rules__rule_id__enabled_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRuleEnableIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentAutomationRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_weekly_review_api_v1_agent_weekly_review_get: {
+        parameters: {
+            query?: {
+                /** @description 周起始日（周一，默认本周） */
+                weekStart?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentWeeklyReviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_active_announcements_api_v1_announcements_get: {
         parameters: {
             query?: never;
@@ -10132,6 +10836,7 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string | null;
+                month?: string | null;
                 search?: string | null;
                 tag?: string | null;
                 /** @description 跳过的记录数（与 page 互斥） */
