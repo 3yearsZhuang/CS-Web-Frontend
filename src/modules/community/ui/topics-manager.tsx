@@ -44,7 +44,7 @@ export function TopicsManager() {
   } = useTopicsManager();
   const { confirm } = useConfirm();
 
-  // 视图态（筛选/排序/分页；搜索已聚合至顶栏，2026-08-20）
+  // 视图态（筛选/排序/分页）
   const [statusFilter, setStatusFilter] = useState<TopicStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [sort, setSort] = useState<SortValue>('latest');

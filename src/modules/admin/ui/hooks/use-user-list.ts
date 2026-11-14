@@ -3,7 +3,7 @@
 /**
  * @file useUserList — 管理员用户列表 Hook（从 use-admin-users 拆出，GENERAL 2.4）
  *
- * 专注用户列表数据：分页 / 角色筛选 / 启用状态筛选（搜索已聚合至顶栏，2026-08-20）。
+ * 专注用户列表数据：分页 / 角色筛选 / 启用状态筛选。
  * 暴露 setUsers / setTotal / setPage 供父级模态框操作后原地更新列表。
  */
 

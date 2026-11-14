@@ -10,7 +10,7 @@ import { useConfirm } from '@/components/primitives/confirm-dialog';
 import { formatDateTime } from '@/shared/utils/utils';
 import { useUsersManager, type AdminUserItem } from './hooks/use-users-manager';
 
-/** 用户管理 — 禁言/解禁用户（搜索已聚合至顶栏，2026-08-20） */
+/** 用户管理 — 禁言/解禁用户 */
 export function UsersManager() {
   const { users, loading, error, actionError, total, totalPages, busyIds, loadUsers, disableUser, enableUser } =
     useUsersManager();
@@ -21,7 +21,7 @@ export function UsersManager() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    // search 已聚合至顶栏（2026-08-20），固定传空串保持 hook 签名不变
+    // search 已聚合至顶栏，固定传空串保持 hook 签名不变
     void loadUsers({ search: '', page });
   }, [loadUsers, page]);
 
@@ -50,7 +50,7 @@ export function UsersManager() {
         </div>
       )}
 
-      {/* 搜索已聚合至顶栏（2026-08-20），此处无筛选条 */}
+      {/* 搜索已聚合至顶栏，此处无筛选条 */}
 
       <div className="meta-mono text-[var(--muted-foreground)]">
         {loading ? t('loading') : error ? <span className="text-[var(--destructive)]">{'// '}{error}</span> : <>{t('countPrefix')}<span className="text-[var(--foreground)] tabular-nums">{total}</span>{t('countSuffix')}</>}

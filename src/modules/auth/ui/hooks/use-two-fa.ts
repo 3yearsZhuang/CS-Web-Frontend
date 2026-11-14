@@ -20,7 +20,8 @@ export interface TwoFAStatus {
 export interface SetupData {
   secret: string;
   otpauthURI: string;
-  qrCode: string;
+  /** 二维码 data URL；后端未提供时为空字符串，UI 回退到手动输入密钥 */
+  qrCode?: string;
   backupCodes: string[];
 }
 

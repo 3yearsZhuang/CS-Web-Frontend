@@ -6,15 +6,6 @@ export type ToolSubView = 'resources' | 'exams' | 'tasks';
 
 export { formatDateTime as formatDate } from '@/shared/utils';
 
-export const TASK_CATEGORY_LABELS: Record<string, string> = {
-  general: '通用',
-  documentation: '文档贡献',
-  event: '活动协助',
-  maintenance: '项目维护',
-  mentoring: '新人指导',
-  other: '其他',
-};
-
 export interface PendingResource {
   id: string;
   title: string;
@@ -44,32 +35,5 @@ export interface Exam {
   created_at: string;
 }
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  points: number;
-  maxClaimants: number;
-  status: string;
-  createdBy: string;
-  publishedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-  claimCount: number;
-}
-
-export interface TaskClaim {
-  id: string;
-  taskId: string;
-  userId: string;
-  status: string;
-  claimNote: string | null;
-  displayName: string | null;
-  createdAt: string;
-}
-
 export const RESOURCE_PAGE_SIZE = 10;
 export const EXAM_PAGE_SIZE = 10;
-export const TASK_PAGE_SIZE = 10;

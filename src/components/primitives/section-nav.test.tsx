@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { SectionNav } from './section-nav';
 
 /**
- * SectionNav 冒烟测试（2026-08-13 补全 primitives 测试盲区）
+ * SectionNav 冒烟测试
  */
 const options = [
   { value: 'profile', label: '个人主页', num: '01' },

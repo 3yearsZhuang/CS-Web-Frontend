@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useCategoriesManager — 版块管理数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useCategoriesManager — 版块管理数据逻辑 hook
  *
  * 从 categories-manager.tsx 抽出版块列表加载 + 新建/编辑/删除 3 个操作，
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一/JSON/状态判定）。

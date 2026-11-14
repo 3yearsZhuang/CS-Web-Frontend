@@ -11,6 +11,7 @@ import { Trophy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { EmptyState, SectionLoading, GhostTitle, Title } from '@/components';
 import type { useTasks } from './hooks/use-tasks';
+import { WalletTransfer } from './wallet-transfer';
 
 const LEVEL_THRESHOLDS = [
   { l: 1, key: 'levelL1', p: 0 },
@@ -59,6 +60,11 @@ export function PointsTab(props: ReturnType<typeof useTasks>) {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* 灵石转账与最近流水（队长奖励分发入口） */}
+          {pointsProfile && (
+            <WalletTransfer balance={pointsProfile.balance} onDone={props.loadPoints} />
           )}
 
           {/* 等级说明 */}

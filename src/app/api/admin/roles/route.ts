@@ -3,23 +3,27 @@
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
-import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies, toAdminRole } from '@/shared/backend-client';
-import { PERMISSION_MODULES } from '@/shared/security/permission-points';
+import {
+  clearAuthCookies,
+  frontendKeyToBackendName,
+  normalizeError,
+  proxyBackend,
+  setAuthCookies,
+  toAdminRole,
+} from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
-
-const KNOWN_KEYS = new Set(PERMISSION_MODULES.flatMap((group) => group.permissions.map((p) => p.key)));
 
 export async function GET(req: Request) {
   const proxy = await proxyBackend(req, { path: '/admin/roles' });
 
   if (proxy.status !== 200) {
-    const res = NextResponse.json({ roles: [] });
+    const res = NextResponse.json({ roles: [] }, { status: proxy.status });
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
   const list = (Array.isArray(proxy.body) ? proxy.body : []) as Array<Record<string, unknown>>;
-  const roles = list.map((r) => toAdminRole(r, KNOWN_KEYS));
+  const roles = list.map((r) => toAdminRole(r));
   const res = NextResponse.json({ roles });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
@@ -32,6 +36,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     key?: string;
     displayName?: string;
+    fantasyDisplayName?: string;
     description?: string;
     permissions?: string[];
   };
@@ -45,8 +50,12 @@ export async function POST(req: Request) {
     jsonBody: {
       name: body.key,
       display_name: body.displayName ?? '',
+      fantasy_display_name: body.fantasyDisplayName || null,
       description: body.description ?? '',
-      permissions: Array.isArray(body.permissions) ? body.permissions : [],
+      // 前端权限 key（module.resource.action）→ 后端权限名（resource:action）
+      permissions: Array.isArray(body.permissions)
+        ? body.permissions.map(frontendKeyToBackendName)
+        : [],
     },
   });
 
@@ -56,7 +65,7 @@ export async function POST(req: Request) {
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const res = NextResponse.json({ role: toAdminRole(proxy.body as Record<string, unknown>, KNOWN_KEYS) });
+  const res = NextResponse.json({ role: toAdminRole(proxy.body) });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

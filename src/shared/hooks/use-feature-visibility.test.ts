@@ -5,7 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useFeatureVisibility, useComponentVisible, useModuleVisible, deriveUserClass } from './use-feature-visibility';
 
 /**
- * use-feature-visibility 单测（2026-08-13 补全 shared/hooks 测试盲区）
+ * use-feature-visibility 单测
  * 隔离 SWR 与 useAuth，聚焦：
  *  - deriveUserClass 三态推导
  *  - 配置缺失 / 未知组件时 fail-open（一律可见）

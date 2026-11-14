@@ -1,9 +1,6 @@
 /**
  * @file shared/security 统一导出 — HTTP 安全工具、校验 schema、权限点
  *
- * 注（B1 阶段5，2026-08-06）：原「管理员操作审计日志 logAdminAction / AuditContext」
- * 已随各模块 server 子层与 src/shared/db 整层删除。前端审计改由后端
- * POST /api/v1/audit/logs 承担（actor 取自鉴权用户，避免伪造），详见后端审计服务。
  */
 
 // ---- HTTP 响应与请求体校验 ----

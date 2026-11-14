@@ -44,7 +44,26 @@ export interface ToolsMessages {
   toolsTask: {
     tabBoard: string;
     tabMyClaims: string;
+    tabTeams: string;
     tabPoints: string;
+    teamCreate: string;
+    teamName: string;
+    teamInviteeHint: string;
+    teamCreateAction: string;
+    teamInvitations: string;
+    teamNoInvitations: string;
+    teamInvitedBy: string;
+    teamId: string;
+    teamAccept: string;
+    teamReject: string;
+    teamEmpty: string;
+    teamCaptain: string;
+    teamMembers: string;
+    teamInvite: string;
+    teamLeave: string;
+    teamUserId: string;
+    teamLeaderPays: string;
+    teamLoading: string;
     heroLabel: string;
     heroTitle1: string;
     heroTitle2: string;
@@ -102,15 +121,56 @@ export interface ToolsMessages {
     catMentoring: string;
     catOther: string;
     statusClaimed: string;
-    statusSubmitted: string;
     statusApproved: string;
-    statusRejected: string;
     taskHash: string;
     reviewNote: string;
     cancel: string;
     loadFailed: string;
     actionFailed: string;
     createFailed: string;
+    diffAll: string;
+    diffBlackIron: string;
+    diffBronze: string;
+    diffSilver: string;
+    diffGold: string;
+    fldDifficulty: string;
+    fldReward: string;
+    fldDeadline: string;
+    fldTechRequirements: string;
+    techReqPlaceholder: string;
+    techReqLabel: string;
+    rewardUnit: string;
+    deadlineLabel: string;
+    completerLabel: string;
+    noCompleter: string;
+    claimTaken: string;
+    submissionLabel: string;
+    attachmentLabel: string;
+    rejectReasonLabel: string;
+    statusPendingReview: string;
+    statusPublished: string;
+    statusInProgress: string;
+    statusSubmitted: string;
+    statusRejected: string;
+    statusClosed: string;
+    statusExpired: string;
+    pendingReviewTitle: string;
+    submitResultTitle: string;
+    submitDescPlaceholder: string;
+    attachUrlPlaceholder: string;
+    submitting: string;
+    submit: string;
+    rejectReasonPrompt: string;
+    transferTitle: string;
+    transferRecipientHint: string;
+    transferSearch: string;
+    transferAmount: string;
+    transferRemark: string;
+    transferAction: string;
+    transferSuccess: string;
+    transferNoRecipient: string;
+    entriesTitle: string;
+    entriesEmpty: string;
   },
   toolsDevCenter: {
     heroLabel: string;
@@ -301,6 +361,13 @@ export interface ToolsMessages {
     publish: string;
     close: string;
     delete: string;
+    colDifficulty: string;
+    colReward: string;
+    pendingTasksTitle: string;
+    taskApproveFailed: string;
+    taskRejectFailed: string;
+    deleteConfirm: string;
+    rewardUnit: string;
     docList: string;
     noDoc: string;
     saveFailed: string;
@@ -605,7 +672,26 @@ export const zhCN: ToolsMessages = {
   toolsTask: {
     tabBoard: '任务板',
     tabMyClaims: '我的认领',
+    tabTeams: '我的队伍',
     tabPoints: '积分',
+    teamCreate: '创建队伍',
+    teamName: '队伍名称',
+    teamInviteeHint: '受邀成员用户 ID（逗号分隔，可选）',
+    teamCreateAction: '建队',
+    teamInvitations: '入队邀请',
+    teamNoInvitations: '暂无待处理邀请。',
+    teamInvitedBy: '邀请人',
+    teamId: '队伍',
+    teamAccept: '接受',
+    teamReject: '拒绝',
+    teamEmpty: '你还没有加入任何队伍。',
+    teamCaptain: '队长',
+    teamMembers: '成员',
+    teamInvite: '邀请',
+    teamLeave: '退出',
+    teamUserId: '用户 ID',
+    teamLeaderPays: '团队任务奖励全额发放给队长，由队长自行分配。',
+    teamLoading: '处理中...',
     heroLabel: 'TASK BOARD',
     heroTitle1: '任务',
     heroTitle2: '发布板',
@@ -663,15 +749,56 @@ export const zhCN: ToolsMessages = {
     catMentoring: '带新',
     catOther: '其他',
     statusClaimed: '已认领',
-    statusSubmitted: '已提交待审核',
     statusApproved: '已通过',
-    statusRejected: '未通过',
     taskHash: '任务 #',
     reviewNote: '审核备注:',
     cancel: '取消',
     loadFailed: '加载失败',
     actionFailed: '操作失败',
     createFailed: '创建失败',
+    diffAll: '全部难度',
+    diffBlackIron: '黑铁',
+    diffBronze: '青铜',
+    diffSilver: '白银',
+    diffGold: '黄金',
+    fldDifficulty: '难度',
+    fldReward: '悬赏（灵石）',
+    fldDeadline: '截止时间',
+    fldTechRequirements: '技术要求（逗号分隔）',
+    techReqPlaceholder: '用逗号分隔，如：TypeScript, React',
+    techReqLabel: '技术要求',
+    rewardUnit: '灵石',
+    deadlineLabel: '截止',
+    completerLabel: '接取人',
+    noCompleter: '暂无接取人',
+    claimTaken: '已被接取',
+    submissionLabel: '成果描述',
+    attachmentLabel: '附件链接',
+    rejectReasonLabel: '驳回原因',
+    statusPendingReview: '审核中',
+    statusPublished: '可接取',
+    statusInProgress: '进行中',
+    statusSubmitted: '待验收',
+    statusRejected: '已驳回',
+    statusClosed: '已结项',
+    statusExpired: '已结束',
+    pendingReviewTitle: '[ 待审核任务 ]',
+    submitResultTitle: '[ 提交成果 ]',
+    submitDescPlaceholder: '请描述你的完成情况...',
+    attachUrlPlaceholder: '附件链接（可选）',
+    submitting: '提交中...',
+    submit: '提交',
+    rejectReasonPrompt: '请输入驳回原因',
+    transferTitle: '[ 灵石转账 ]',
+    transferRecipientHint: '搜索收款人（用户名/展示名，至少 3 个字符）',
+    transferSearch: '搜索',
+    transferAmount: '金额',
+    transferRemark: '备注（可选）',
+    transferAction: '确认转账',
+    transferSuccess: '转账成功',
+    transferNoRecipient: '未找到收款人',
+    entriesTitle: '[ 最近流水 ]',
+    entriesEmpty: '暂无流水。',
   },
   toolsDevCenter: {
     heroLabel: '开发者中心',
@@ -862,6 +989,13 @@ export const zhCN: ToolsMessages = {
     publish: '发布',
     close: '关闭',
     delete: '删除',
+    colDifficulty: '难度 / Difficulty',
+    colReward: '悬赏 / Reward',
+    pendingTasksTitle: '待审核任务 {count} 个',
+    taskApproveFailed: '审核通过失败',
+    taskRejectFailed: '驳回失败',
+    deleteConfirm: '确认删除该任务？',
+    rewardUnit: '{count} 灵石',
     docList: '文档列表',
     noDoc: '无文档',
     saveFailed: '保存失败',
@@ -1166,7 +1300,26 @@ export const en: ToolsMessages = {
   toolsTask: {
     tabBoard: 'Task Board',
     tabMyClaims: 'My Claims',
+    tabTeams: 'My Teams',
     tabPoints: 'Points',
+    teamCreate: 'Create Team',
+    teamName: 'Team name',
+    teamInviteeHint: 'Invitee user IDs (comma separated, optional)',
+    teamCreateAction: 'Create',
+    teamInvitations: 'Invitations',
+    teamNoInvitations: 'No pending invitations.',
+    teamInvitedBy: 'Invited by',
+    teamId: 'Team',
+    teamAccept: 'Accept',
+    teamReject: 'Reject',
+    teamEmpty: 'You have not joined any team yet.',
+    teamCaptain: 'Captain',
+    teamMembers: 'Members',
+    teamInvite: 'Invite',
+    teamLeave: 'Leave',
+    teamUserId: 'User ID',
+    teamLeaderPays: 'Team rewards are paid in full to the captain, who distributes them.',
+    teamLoading: 'Working...',
     heroLabel: 'TASK BOARD',
     heroTitle1: 'Task',
     heroTitle2: 'Board',
@@ -1224,15 +1377,56 @@ export const en: ToolsMessages = {
     catMentoring: 'Mentoring',
     catOther: 'Other',
     statusClaimed: 'Claimed',
-    statusSubmitted: 'Submitted',
     statusApproved: 'Approved',
-    statusRejected: 'Rejected',
     taskHash: 'Task #',
     reviewNote: 'Review note:',
     cancel: 'Cancel',
     loadFailed: 'Failed to load',
     actionFailed: 'Action failed',
     createFailed: 'Failed to create',
+    diffAll: 'All difficulties',
+    diffBlackIron: 'Black Iron',
+    diffBronze: 'Bronze',
+    diffSilver: 'Silver',
+    diffGold: 'Gold',
+    fldDifficulty: 'Difficulty',
+    fldReward: 'Reward (Spirit Stones)',
+    fldDeadline: 'Deadline',
+    fldTechRequirements: 'Tech requirements (comma-separated)',
+    techReqPlaceholder: 'Comma-separated, e.g. TypeScript, React',
+    techReqLabel: 'Tech requirements',
+    rewardUnit: 'stones',
+    deadlineLabel: 'Deadline',
+    completerLabel: 'Claimant',
+    noCompleter: 'No claimant yet',
+    claimTaken: 'Already claimed',
+    submissionLabel: 'Submission',
+    attachmentLabel: 'Attachment',
+    rejectReasonLabel: 'Reject reason',
+    statusPendingReview: 'Pending review',
+    statusPublished: 'Open',
+    statusInProgress: 'In progress',
+    statusSubmitted: 'Awaiting review',
+    statusRejected: 'Rejected',
+    statusClosed: 'Closed',
+    statusExpired: 'Expired',
+    pendingReviewTitle: '[ Pending Review ]',
+    submitResultTitle: '[ Submit Result ]',
+    submitDescPlaceholder: 'Describe what you have done...',
+    attachUrlPlaceholder: 'Attachment URL (optional)',
+    submitting: 'Submitting...',
+    submit: 'Submit',
+    rejectReasonPrompt: 'Enter the reject reason',
+    transferTitle: '[ Spirit Stone Transfer ]',
+    transferRecipientHint: 'Search recipient (username/display name, at least 3 chars)',
+    transferSearch: 'Search',
+    transferAmount: 'Amount',
+    transferRemark: 'Remark (optional)',
+    transferAction: 'Transfer',
+    transferSuccess: 'Transfer completed',
+    transferNoRecipient: 'No recipient found',
+    entriesTitle: '[ Recent Entries ]',
+    entriesEmpty: 'No entries yet.',
   },
   toolsDevCenter: {
     heroLabel: 'Dev Center',
@@ -1423,6 +1617,13 @@ export const en: ToolsMessages = {
     publish: 'Publish',
     close: 'Close',
     delete: 'Delete',
+    colDifficulty: '难度 / Difficulty',
+    colReward: '悬赏 / Reward',
+    pendingTasksTitle: '{count} pending tasks',
+    taskApproveFailed: 'Approve failed',
+    taskRejectFailed: 'Reject failed',
+    deleteConfirm: 'Delete this task?',
+    rewardUnit: '{count} stones',
     docList: 'Documents',
     noDoc: 'No documents',
     saveFailed: 'Save failed',

@@ -18,12 +18,14 @@ export interface AdminMessages {
     tabJoin: string;
     tabLogs: string;
     tabFeatureVisibility: string;
+    tabOps: string;
     tabTitleRoles: string;
     tabTitleUsers: string;
     tabTitleMessages: string;
     tabTitleJoin: string;
     tabTitleLogs: string;
     tabTitleFeatureVisibility: string;
+    tabTitleOps: string;
     adminEn: string;
     verifying: string;
     accessDenied: string;
@@ -438,6 +440,8 @@ export interface AdminMessages {
     disabledDesc: string;
     enableBtn: string;
     scanQrDesc: string;
+    qrUnavailable: string;
+    qrManualHint: string;
     copySecretTitle: string;
     backupCodesHint: string;
     backupCodesWarn: string;
@@ -571,12 +575,14 @@ export const zhCN: AdminMessages = {
     tabJoin: '入社申请 / Join',
     tabLogs: '日志 / Logs',
     tabFeatureVisibility: '功能可见性 / Visibility',
+    tabOps: '组织财务 / Ops',
     tabTitleRoles: '角色权限',
     tabTitleUsers: '用户管理',
     tabTitleMessages: '消息管理',
     tabTitleJoin: '入社申请',
     tabTitleLogs: '日志管理',
     tabTitleFeatureVisibility: '功能模块可见性',
+    tabTitleOps: '组织与财务',
     adminEn: '/ Admin',
     verifying: '验证中 / Verifying...',
     accessDenied: '[ 拒绝访问 / Access Denied ]',
@@ -991,6 +997,8 @@ export const zhCN: AdminMessages = {
     disabledDesc: '启用后，登录时除密码外还需输入由认证 App（如 Google Authenticator、1Password）生成的 6 位验证码，显著提升账号安全性。',
     enableBtn: '启用双因素认证 →',
     scanQrDesc: '使用认证 App 扫描二维码，或手动输入下方密钥。',
+    qrUnavailable: '二维码暂不可用',
+    qrManualHint: '请在认证 App 选择「手动输入设置密钥」，粘贴下方 Secret。',
     copySecretTitle: '复制密钥',
     backupCodesHint: '一次性使用',
     backupCodesWarn: '⚠ 请立即保存以下备用码。丢失认证设备时可用其完成登录，每个仅可使用一次。',
@@ -1124,12 +1132,14 @@ export const en: AdminMessages = {
     tabJoin: 'Join / 入社申请',
     tabLogs: 'Logs / 日志',
     tabFeatureVisibility: 'Visibility / 功能可见性',
+    tabOps: 'Ops / 组织财务',
     tabTitleRoles: 'Roles & Permissions',
     tabTitleUsers: 'User Management',
     tabTitleMessages: 'Message Management',
     tabTitleJoin: 'Join Requests',
     tabTitleLogs: 'Log Management',
     tabTitleFeatureVisibility: 'Feature Module Visibility',
+    tabTitleOps: 'Organization & Finance',
     adminEn: '/ Admin',
     verifying: 'Verifying / 验证中...',
     accessDenied: '[ Access Denied / 拒绝访问 ]',
@@ -1544,6 +1554,8 @@ export const en: AdminMessages = {
     disabledDesc: 'Once enabled, sign-in requires a 6-digit code from an authenticator app (e.g. Google Authenticator, 1Password) in addition to your password, significantly improving account security.',
     enableBtn: 'Enable 2FA →',
     scanQrDesc: 'Scan the QR code with your authenticator app, or enter the secret below manually.',
+    qrUnavailable: 'QR code unavailable',
+    qrManualHint: 'Choose "Enter setup key" in your authenticator app and paste the Secret below.',
     copySecretTitle: 'Copy secret',
     backupCodesHint: 'one-time use',
     backupCodesWarn: '⚠ Save these backup codes now. Use them to sign in if you lose your authenticator device. Each can be used only once.',

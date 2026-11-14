@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { describeAction, formatAdminName } from '@/modules/admin/ui/logs-utils';
 import { eventStatusLabel, splitTags, blankEventForm } from '@/modules/admin/ui/events-panel-utils';
-import { formatDate, TASK_CATEGORY_LABELS } from '@/modules/tools/ui/tool-types';
+import { formatDate } from '@/modules/tools/ui/tool-types';
 import { roleBadgeLabel } from '@/modules/admin/ui/roles-types';
 import { roleLabel, resetStatusLabel } from '@/modules/admin/ui/users-panel-utils';
 import { getError } from '@/modules/community/ui/community-admin-utils';
@@ -66,11 +66,6 @@ describe('events-panel-utils (admin-events-panel 拆分)', () => {
 });
 
 describe('tool-types (admin-tools-panel 拆分)', () => {
-  it('TASK_CATEGORY_LABELS 覆盖通用分类', () => {
-    expect(TASK_CATEGORY_LABELS.general).toBe('通用');
-    expect(TASK_CATEGORY_LABELS.event).toBe('活动协助');
-  });
-
   it('formatDate 格式化 ISO 时间', () => {
     // formatDate 使用本地时区，断言与 TZ 无关的日期片段；无效输入原样返回（utils.formatDateTime 约定）
     expect(formatDate('2026-01-01T00:00:00Z')).toMatch(/2026.*01.*01/);

@@ -124,4 +124,5 @@ export type AdminTab =
   | 'messages'
   | 'join'
   | 'logs'
-  | 'feature-visibility';
+  | 'feature-visibility'
+  | 'ops';

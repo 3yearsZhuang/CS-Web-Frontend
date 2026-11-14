@@ -19,7 +19,6 @@ export type TargetType = 'post' | 'comment';
 /** @ 提及来源类型 */
 export type MentionSourceType = 'post' | 'comment';
 
-// 阶段一兼容别名（保留旧枚举值，阶段二移除）
 export type LikeTargetType = 'topic' | 'reply';
 
 /** 作者摘要（列表/详情均使用） */
@@ -40,7 +39,7 @@ export interface CommunityCategory {
   icon: string | null;
   sortOrder: number;
   postCount: number;
-  /** 兼容旧 CommunityCategory.topicCount（阶段二移除） */
+  /** 兼容旧 CommunityCategory.topicCount */
   topicCount: number;
   createdBy: string | null;
   createdAt: string;
@@ -81,7 +80,7 @@ export interface CommunityPost {
   viewCount: number;
   likeCount: number;
   author: AuthorSummary | null;
-  /** 兼容旧 CommunityPost.authorName（阶段二移除） */
+  /** 兼容旧 CommunityPost.authorName */
   authorName: string | null;
   category: CategorySummary | null;
   createdAt: string;
@@ -114,11 +113,11 @@ export interface PostInput {
 export interface CommunityComment {
   id: string;
   postId: string;
-  /** 兼容旧 CommunityComment.topicId（阶段二移除） */
+  /** 兼容旧 CommunityComment.topicId */
   topicId: string | null;
   authorId: string;
   parentCommentId: string | null;
-  /** 兼容旧 CommunityComment.parentReplyId（阶段二移除） */
+  /** 兼容旧 CommunityComment.parentReplyId */
   parentReplyId: string | null;
   contentMarkdown: string;
   status: PostStatus;
@@ -142,7 +141,7 @@ export interface CommunityCommentDetail extends CommunityComment {
     kind: PostKind;
     category: CategorySummary | null;
   } | null;
-  /** 兼容旧 CommunityCommentDetail.topic（阶段二移除） */
+  /** 兼容旧 CommunityCommentDetail.topic */
   topic?: {
     id: string;
     title: string;
@@ -291,7 +290,7 @@ export interface FeedTag {
   memberCount: number;
 }
 
-// ============= 阶段一兼容别名（保留有语义差异的部分，纯别名已合并到规范名） =============
+// ============= 兼容别名 =============
 export type CommunityPostStatus = PostStatus;
 export type CommunityPostInput = PostInput;
 export type CommunityListOptions = {

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useDashboardManager — 数据看板数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useDashboardManager — 数据看板数据逻辑 hook
  *
  * 从 dashboard-manager.tsx 抽出版板聚合加载（4 个 GET 经 Promise.all），
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一/JSON/状态判定）。

@@ -1,17 +1,24 @@
 'use client';
 
 /**
- * @file BoardTab — 任务板（Tab 01）：列表 + 分类筛选 + 管理员创建/审核
+ * @file BoardTab — 任务板（Tab 01）：难度筛选 + 管理员建单/审核 + 任务列表
  *
- * 从 `app/tools/task/page.tsx` 拆出（GENERAL 2.4「组件 > 500 行拆分」）。
+ * 任务数据唯一事实源为旧项目（经官网后端 BFF 代理）：单接取人模型，
+ * 字段为 难度 / 悬赏灵石 / 截止时间 / 接取人；状态对外为官网英文 code（附旧项目中文原值回落）。
  * 仅负责渲染；状态与逻辑由父页面注入的 `useTasks` 返回值提供（GENERAL 2.2）。
  */
 
-import { Plus, Zap, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Zap, Calendar } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { EmptyState, Button, SectionLoading, GhostTitle, Title } from '@/components';
+import { EmptyState, Button, SectionLoading, Title } from '@/components';
 import type { useTasks } from './hooks/use-tasks';
-import { categoryLabel, categoryOptions, TASK_INPUT_CLASS } from './task-shared';
+import {
+  DIFFICULTY_KEYS,
+  TASK_INPUT_CLASS,
+  difficultyLabel,
+  difficultyOptions,
+  statusBadge,
+} from './task-shared';
 
 export function BoardTab(props: ReturnType<typeof useTasks>) {
   const t = useTranslations('toolsTask');
@@ -20,9 +27,8 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
     tasksError,
     tasks,
     filteredTasks,
-    categories,
-    categoryFilter,
-    setCategoryFilter,
+    difficultyFilter,
+    setDifficultyFilter,
     isAdmin,
     showCreateForm,
     setShowCreateForm,
@@ -30,15 +36,15 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
     setNewTask,
     creating,
     handleCreate,
-    pendingClaims,
+    pendingTasks,
     reviewingId,
-    handleReview,
+    handleApprove,
+    handleReject,
     expandedId,
     setExpandedId,
     user,
     claimingId,
     handleClaim,
-    handlePublish,
   } = props;
 
   return (
@@ -47,31 +53,29 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
         {t('boardTitle')}
       </Title>
 
-      {/* 分类筛选 */}
-      {categories.length > 0 && (
-        <div className="border-t border-[var(--border)] py-6 mb-8">
-          <div className="meta-mono mb-2">Category</div>
-          <div className="flex gap-0 overflow-x-auto flex-wrap">
+      {/* 难度筛选 */}
+      <div className="border-t border-[var(--border)] py-6 mb-8">
+        <div className="meta-mono mb-2">Difficulty</div>
+        <div className="flex gap-0 overflow-x-auto flex-wrap">
+          <button
+            onClick={() => setDifficultyFilter('')}
+            className={`tab-chip focus-ring whitespace-nowrap ${!difficultyFilter ? 'tab-chip-active' : ''}`}
+          >
+            {t('diffAll')} ({tasks.length})
+          </button>
+          {DIFFICULTY_KEYS.map((d) => (
             <button
-              onClick={() => setCategoryFilter('')}
-              className={`tab-chip focus-ring whitespace-nowrap ${!categoryFilter ? 'tab-chip-active' : ''}`}
+              key={d}
+              onClick={() => setDifficultyFilter(d === difficultyFilter ? '' : d)}
+              className={`tab-chip focus-ring whitespace-nowrap ${d === difficultyFilter ? 'tab-chip-active' : ''}`}
             >
-              {t('filterAll')} ({tasks.length})
+              {difficultyLabel(t, d)}
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
-                className={`tab-chip focus-ring whitespace-nowrap ${cat === categoryFilter ? 'tab-chip-active' : ''}`}
-              >
-                {categoryLabel(t, cat)}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
-      )}
+      </div>
 
-      {/* 管理员：创建按钮 + 待审核 */}
+      {/* 管理员：建单按钮 + 待审核计数 */}
       {isAdmin && (
         <div className="flex flex-wrap items-center gap-3 mb-8">
           <button
@@ -81,15 +85,15 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
             <Plus className="w-3 h-3" />
             {showCreateForm ? t('createCancel') : t('createTask')}
           </button>
-          {pendingClaims.length > 0 && (
+          {pendingTasks.length > 0 && (
             <span className="meta-mono text-[11px] text-[var(--primary)]">
-              {t('pendingBadge')} {pendingClaims.length}
+              {t('pendingBadge')} {pendingTasks.length}
             </span>
           )}
         </div>
       )}
 
-      {/* 创建表单 */}
+      {/* 建单表单：旧项目落库后进入「审核中」 */}
       {showCreateForm && isAdmin && (
         <form onSubmit={handleCreate} className="border border-[var(--border)] p-6 sm:p-8 mb-8 space-y-4">
           <div>
@@ -115,47 +119,44 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 03 ] {t('fldCategory')}</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 03 ] {t('fldDifficulty')}</label>
               <select
-                value={newTask.category}
-                onChange={(e) => setNewTask((f) => ({ ...f, category: e.target.value }))}
+                value={newTask.difficulty}
+                onChange={(e) => setNewTask((f) => ({ ...f, difficulty: e.target.value }))}
                 className={TASK_INPUT_CLASS}
               >
-                {categoryOptions(t).map(({ value, label }) => (
+                {difficultyOptions(t).map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 04 ] {t('fldPoints')}</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 04 ] {t('fldReward')}</label>
               <input
                 type="number"
-                value={newTask.points}
-                onChange={(e) => setNewTask((f) => ({ ...f, points: parseInt(e.target.value) || 0 }))}
+                value={newTask.reward}
+                onChange={(e) => setNewTask((f) => ({ ...f, reward: parseInt(e.target.value) || 0 }))}
                 className={TASK_INPUT_CLASS}
                 min={0}
-                max={100}
               />
             </div>
             <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 05 ] {t('fldMaxClaimants')}</label>
+              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 05 ] {t('fldDeadline')}</label>
               <input
-                type="number"
-                value={newTask.maxClaimants}
-                onChange={(e) => setNewTask((f) => ({ ...f, maxClaimants: parseInt(e.target.value) || 1 }))}
+                type="datetime-local"
+                value={newTask.deadline}
+                onChange={(e) => setNewTask((f) => ({ ...f, deadline: e.target.value }))}
                 className={TASK_INPUT_CLASS}
-                min={1}
-                max={50}
               />
             </div>
           </div>
           <div>
-              <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 06 ] {t('fldTags')}</label>
+            <label className="meta-mono mb-2 block text-[var(--muted-foreground)]">[ 06 ] {t('fldTechRequirements')}</label>
             <input
-              value={newTask.tags}
-              onChange={(e) => setNewTask((f) => ({ ...f, tags: e.target.value }))}
+              value={newTask.techRequirements}
+              onChange={(e) => setNewTask((f) => ({ ...f, techRequirements: e.target.value }))}
               className={TASK_INPUT_CLASS}
-              placeholder={t('tagsPlaceholder')}
+              placeholder={t('techReqPlaceholder')}
             />
           </div>
           <div className="flex gap-3">
@@ -166,21 +167,26 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
         </form>
       )}
 
-      {/* 待审核认领 */}
-      {isAdmin && pendingClaims.length > 0 && (
+      {/* 管理员待审核任务（旧项目「审核中」） */}
+      {isAdmin && pendingTasks.length > 0 && (
         <div className="border border-[var(--border)] p-6 mb-8">
-          <div className="meta-mono mb-4">[ Pending Reviews ]</div>
-          {pendingClaims.map((c) => (
-            <div key={c.id} className="flex items-center justify-between py-3 border-b border-[var(--border)] last:border-0">
-              <div>
-                <span className="text-[13px] text-[var(--foreground)]">{c.displayName || c.userId}</span>
-                <span className="meta-mono text-[10px] text-[var(--muted-foreground)] ml-3">{c.createdAt}</span>
-                {c.claimNote && <p className="text-[12px] text-[var(--muted-foreground)] mt-1">{c.claimNote}</p>}
+          <div className="meta-mono mb-4">{t('pendingReviewTitle')}</div>
+          {pendingTasks.map((task) => (
+            <div
+              key={task.id}
+              className="flex items-center justify-between gap-3 py-3 border-b border-[var(--border)] last:border-0"
+            >
+              <div className="min-w-0">
+                <span className="text-[13px] text-[var(--foreground)]">{task.title}</span>
+                <span className="meta-mono text-[10px] text-[var(--muted-foreground)] ml-3">
+                  {difficultyLabel(t, task.difficulty)}
+                </span>
+                <span className="meta-mono text-[10px] text-[var(--muted-foreground)] ml-3">{task.createdAt}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 <button
-                  onClick={() => handleReview(c.id, true)}
-                  disabled={reviewingId === c.id}
+                  onClick={() => handleApprove(task.id)}
+                  disabled={reviewingId === task.id}
                   className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border border-green-500/30 text-green-600 dark:text-green-400 hover:bg-green-500/10 transition-colors"
                 >
                   {t('reviewPass')}
@@ -188,8 +194,8 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
                 <Button
                   variant="outline-danger"
                   size="sm"
-                  onClick={() => handleReview(c.id, false)}
-                  disabled={reviewingId === c.id}
+                  onClick={() => handleReject(task.id)}
+                  disabled={reviewingId === task.id}
                 >
                   {t('reviewReject')}
                 </Button>
@@ -208,85 +214,136 @@ export function BoardTab(props: ReturnType<typeof useTasks>) {
         <EmptyState label={`[ ${t('emptyTasks')} ]`} message={t('emptyTasksText')} className="py-12" />
       ) : (
         <div className="space-y-0 border-t border-[var(--border)]">
-          {filteredTasks.map((task, idx) => (
-            <div
-              key={task.id}
-              className={`border-b border-[var(--border)] transition-colors hover:bg-[var(--primary)]/[0.02] ${
-                expandedId === task.id ? 'bg-[var(--primary)]/[0.03]' : ''
-              }`}
-            >
-              <button
-                onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
-                className="w-full text-left p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6"
+          {filteredTasks.map((task) => {
+            const badge = statusBadge(task.status, t, task.statusLabel);
+            return (
+              <div
+                key={task.id}
+                className={`border-b border-[var(--border)] transition-colors hover:bg-[var(--primary)]/[0.02] ${
+                  expandedId === task.id ? 'bg-[var(--primary)]/[0.03]' : ''
+                }`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-[14px] sm:text-[15px] text-[var(--foreground)] font-medium truncate">
-                      {task.title}
-                    </span>
-                    <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
-                      {categoryLabel(t, task.category)}
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-[var(--muted-foreground)] mt-2 line-clamp-2">
-                    {task.description}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <span className="flex items-center gap-1 meta-mono text-[11px] text-[var(--primary)]">
-                    <Zap className="w-3 h-3" />
-                    {task.points} {t('pointsUnit')}
-                  </span>
-                  <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                    {task.claimCount}/{task.maxClaimants}
-                  </span>
-                  <span className={`meta-mono text-[10px] transition-transform duration-300 ${expandedId === task.id ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </div>
-              </button>
-
-              {expandedId === task.id && (
-                <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-[var(--border)] pt-4">
-                  <div className="space-y-4">
-                    <p className="text-[13px] text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
+                <button
+                  onClick={() => setExpandedId(expandedId === task.id ? null : task.id)}
+                  className="w-full text-left p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-[14px] sm:text-[15px] text-[var(--foreground)] font-medium truncate">
+                        {task.title}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 meta-mono text-[10px] px-2 py-0.5 border ${badge.cls}`}>
+                        {badge.icon}
+                        {badge.label}
+                      </span>
+                      {task.difficulty && (
+                        <span className="meta-mono text-[10px] px-2 py-0.5 border border-[var(--border)] text-[var(--muted-foreground)]">
+                          {difficultyLabel(t, task.difficulty)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] text-[var(--muted-foreground)] mt-2 line-clamp-2">
                       {task.description}
                     </p>
-                    {task.tags.length > 0 && (
-                      <div className="flex gap-2 flex-wrap">
-                        {task.tags.map((tag, i) => (
-                          <span key={`${tag}-${i}`} className="tag-badge">{tag}</span>
-                        ))}
-                      </div>
-                    )}
+                  </div>
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <span className="flex items-center gap-1 meta-mono text-[11px] text-[var(--primary)]">
+                      <Zap className="w-3 h-3" />
+                      {task.reward} {t('rewardUnit')}
+                    </span>
+                    <span className={`meta-mono text-[10px] transition-transform duration-300 ${expandedId === task.id ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </div>
+                </button>
 
-                    <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
-                      {user && task.status === 'published' && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); handleClaim(task.id); }}
-                          disabled={claimingId === task.id || task.claimCount >= task.maxClaimants}
-                        >
-                          {task.claimCount >= task.maxClaimants ? t('claimFull') : claimingId === task.id ? t('claiming') : t('claimTask')}
-                        </Button>
+                {expandedId === task.id && (
+                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-[var(--border)] pt-4">
+                    <div className="space-y-4">
+                      <p className="text-[13px] text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">
+                        {task.description}
+                      </p>
+
+                      {task.techRequirements.length > 0 && (
+                        <div>
+                          <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-2">
+                            {t('techReqLabel')}
+                          </div>
+                          <div className="flex gap-2 flex-wrap">
+                            {task.techRequirements.map((req, i) => (
+                              <span key={`${req}-${i}`} className="tag-badge">{req}</span>
+                            ))}
+                          </div>
+                        </div>
                       )}
-                      {isAdmin && task.status === 'draft' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handlePublish(task.id); }}
-                          className="px-3 py-1.5 text-[11px] font-mono border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] transition-colors"
-                        >
-                          {t('publish')}
-                        </button>
+
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 meta-mono text-[11px] text-[var(--muted-foreground)]">
+                        {task.deadline && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {t('deadlineLabel')} {task.deadline}
+                          </span>
+                        )}
+                        <span>
+                          {t('completerLabel')} {task.completer?.name || t('noCompleter')}
+                        </span>
+                      </div>
+
+                      {task.submissionDescription && (
+                        <div className="border-t border-[var(--border)] pt-3">
+                          <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-1">
+                            {t('submissionLabel')}
+                          </div>
+                          <p className="text-[13px] text-[var(--foreground)] whitespace-pre-wrap">
+                            {task.submissionDescription}
+                          </p>
+                          {task.attachmentUrl && (
+                            <a
+                              href={task.attachmentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="meta-mono text-[11px] text-[var(--primary)] underline-grow"
+                            >
+                              {t('attachmentLabel')}
+                            </a>
+                          )}
+                        </div>
                       )}
-                      <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
-                        {task.status === 'draft' ? t('draft') : task.publishedAt ? t('publishedAt', { date: task.publishedAt }) : ''}
-                      </span>
+
+                      {task.rejectReason && (
+                        <div className="border-t border-[var(--border)] pt-3">
+                          <div className="meta-mono text-[10px] text-[var(--muted-foreground)] mb-1">
+                            {t('rejectReasonLabel')}
+                          </div>
+                          <p className="text-[13px] text-[var(--destructive)] whitespace-pre-wrap">
+                            {task.rejectReason}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
+                        {user && task.status === 'published' && !task.completer && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => { e.stopPropagation(); handleClaim(task.id); }}
+                            disabled={claimingId === task.id}
+                          >
+                            {claimingId === task.id ? t('claiming') : t('claimTask')}
+                          </Button>
+                        )}
+                        {task.status === 'published' && task.completer && (
+                          <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">
+                            {t('claimTaken')}
+                          </span>
+                        )}
+                        <span className="meta-mono text-[10px] text-[var(--muted-foreground)]">{task.createdAt}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

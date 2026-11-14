@@ -2,7 +2,7 @@
  * @file 管理员身份校验守卫（纯 BFF 版，无 server 依赖）— 请求级身份校验 + 模块权限判定
  *
  * 从请求解析后端身份（/auth/me），以角色实时判定 admin/module 权限。
- * 不依赖 src/modules 下各模块的 server 层与 src/shared/db（纯 BFF 收口，B1 阶段1），
+ * 不依赖 src/modules 下各模块的 server 层与 src/shared/db（纯 BFF 收口），
  * RBAC 纯函数 hasModulePermission 来自 src/modules/auth/types（无 DB 依赖）。
  */
 import { type SafeUser, isAdminRole } from '@/shared/types';

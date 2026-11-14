@@ -3,14 +3,28 @@
 /**
  * @file useTasks — 协会任务页共享状态与逻辑 Hook
  *
- * 从 `app/tools/task/page.tsx` 拆出，遵循 GENERAL 2.2「展示与容器分离」、
- * 2.4「逻辑 > 150 行提为 Hook / 组件 > 500 行拆分」。各 tab 子组件复用本 Hook 的返回值。
+ * 任务数据来自统一后端的原生 `/api/tasks`；页面继续消费既有
+ * TaskData / ClaimData 视图模型，旧项目 8081 代理不再是运行依赖。
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { apiRequest } from '@/shared/hooks/use-api-request';
 import type { TaskData, ClaimData, PointsProfile, LeaderboardEntry } from '../task-shared';
+import { toClaimData, toTaskData } from '../task-shared';
+
+/** 管理员创建表单初值（难度沿用旧端文案；截止时间默认 7 天后） */
+const EMPTY_NEW_TASK = {
+  title: '',
+  description: '',
+  difficulty: '黑铁',
+  reward: 10,
+  deadline: '',
+  techRequirements: '',
+};
+
+type NativeTask = Record<string, unknown>;
+type NativeClaim = Record<string, unknown>;
 
 export function useTasks() {
   const t = useTranslations('toolsTask');
@@ -18,32 +32,55 @@ export function useTasks() {
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('');
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // 我的认领
+  // 我的任务
   const [myClaims, setMyClaims] = useState<ClaimData[]>([]);
   const [claimsLoading, setClaimsLoading] = useState(false);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; role: string } | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
 
-  // 积分
+  // 积分/钱包
   const [pointsProfile, setPointsProfile] = useState<PointsProfile | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [pointsLoading, setPointsLoading] = useState(false);
 
   // 管理员创建表单
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newTask, setNewTask] = useState({ title: '', description: '', category: 'general', points: 10, maxClaimants: 1, tags: '' });
+  const [newTask, setNewTask] = useState({ ...EMPTY_NEW_TASK });
   const [creating, setCreating] = useState(false);
 
-  // 审核状态
-  const [pendingClaims, setPendingClaims] = useState<ClaimData[]>([]);
+  // 管理员待审核任务
+  const [pendingTasks, setPendingTasks] = useState<TaskData[]>([]);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'root' || user?.role === 'task_publisher';
+  const isAdmin =
+    permissions.includes('task:review') ||
+    permissions.includes('task:publish') ||
+    user?.role === 'admin' ||
+    user?.role === 'root' ||
+    user?.role === 'task_publisher';
 
-  // 初始化：获取用户信息 + 任务列表
+  /** 拉取任务大厅（原生 /tasks，默认仅 published） */
+  const loadTasks = useCallback(() => {
+    setTasksLoading(true);
+    apiRequest<{ items?: NativeTask[] }>('/api/tasks?status=published&limit=50')
+      .then((r) => {
+        if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
+        setTasks((r.data?.items || []).map(toTaskData));
+        setTasksError(null);
+      })
+      .catch((err) => {
+        setTasksError(err.message);
+      })
+      .finally(() => setTasksLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 初始化：获取用户信息 + 权限 + 任务列表
   useEffect(() => {
     apiRequest<{ user: { id: string; role: string } }>('/api/auth/me')
       .then((r) => r.data)
@@ -51,164 +88,229 @@ export function useTasks() {
         if (data?.user) setUser(data.user);
       })
       .catch(() => {});
-
-    setTasksLoading(true);
-    apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
+    apiRequest<{ permissions?: string[] }>('/api/rbac/me/permissions')
       .then((r) => {
-        if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
-        setTasks(r.data?.tasks || []);
-        setTasksError(null);
+        if (r.ok && Array.isArray(r.data?.permissions)) setPermissions(r.data.permissions);
       })
-      .catch((err) => {
-        setTasksError(err.message);
-      })
-      .finally(() => setTasksLoading(false));
-  }, []);
+      .catch(() => {});
+    loadTasks();
+  }, [loadTasks]);
 
-  // 获取我的认领
+  // 获取我的任务
   const loadMyClaims = useCallback(() => {
     if (!user) return;
     setClaimsLoading(true);
-    apiRequest<{ claims?: ClaimData[] }>('/api/tools/task/claims')
+    apiRequest<{ items?: NativeClaim[] }>('/api/tasks/me/claims?limit=50')
       .then((r) => {
         if (!r.ok) throw new Error(r.error ?? t('loadFailed'));
-        setMyClaims(r.data?.claims || []);
+        setMyClaims((r.data?.items || []).map(toClaimData));
       })
       .catch(() => {})
       .finally(() => setClaimsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // 获取积分
+  // 获取统一钱包档案与公开余额排行
   const loadPoints = useCallback(() => {
     if (!user) return;
     setPointsLoading(true);
     Promise.all([
-      apiRequest<{ profile?: PointsProfile }>('/api/tools/points'),
-      apiRequest<{ leaderboard?: LeaderboardEntry[] }>('/api/tools/points/leaderboard'),
+      apiRequest<Record<string, unknown>>('/api/wallet/me/profile'),
+      apiRequest<LeaderboardEntry[]>('/api/wallet/leaderboard?limit=20'),
     ])
       .then(([pResult, lResult]) => {
-        if (pResult.ok && pResult.data?.profile) setPointsProfile(pResult.data.profile);
-        if (lResult.ok && lResult.data?.leaderboard) setLeaderboard(lResult.data.leaderboard);
+        if (pResult.ok && pResult.data) {
+          const p = pResult.data;
+          setPointsProfile({
+            balance: Number(p.balance ?? 0),
+            level: Number(p.level ?? 1),
+            levelTitle: String(p.levelTitle ?? p.level_title ?? ''),
+            transactions: [],
+          });
+        }
+        if (lResult.ok && Array.isArray(lResult.data)) {
+          setLeaderboard(
+            lResult.data.map((entry) => ({
+              ...entry,
+              userId: String(entry.userId),
+              balance: Number(entry.balance),
+            })),
+          );
+        }
       })
       .catch(() => {})
       .finally(() => setPointsLoading(false));
   }, [user]);
 
-  // 管理员获取待审核认领
-  useEffect(() => {
+  // 管理员获取待审核任务
+  const loadPendingTasks = useCallback(() => {
     if (!isAdmin) return;
-    apiRequest<{ claims?: ClaimData[] }>('/api/admin/tools/task?sub=claims')
+    apiRequest<{ items?: NativeTask[] }>('/api/admin/tasks?status=pending_review&limit=50')
       .then((r) => {
-        if (r.ok && r.data?.claims) setPendingClaims(r.data.claims);
+        if (r.ok && Array.isArray(r.data?.items)) {
+          setPendingTasks(r.data.items.map(toTaskData));
+        }
       })
       .catch(() => {});
-  }, [isAdmin, tasks]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
-  // 认领任务
+  useEffect(() => {
+    loadPendingTasks();
+  }, [loadPendingTasks, tasks]);
+
+  /** 接取任务：单人任务无业务体；团队入口由后续页面显式传 teamId */
   const handleClaim = useCallback(async (taskId: string) => {
     setClaimingId(taskId);
     try {
-      const r = await apiRequest(`/api/tools/task/${taskId}/claim`, { method: 'POST' });
+      const r = await apiRequest(`/api/tasks/${taskId}/claims`, {
+        method: 'POST',
+        body: {},
+      });
       if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
-      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, claimCount: t.claimCount + 1 } : t)));
+      loadTasks();
+      loadMyClaims();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
     } finally {
       setClaimingId(null);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadTasks, loadMyClaims]);
 
-  // 取消认领
-  const handleCancelClaim = useCallback(async (taskId: string) => {
-    try {
-      const r = await apiRequest(`/api/tools/task/${taskId}/claim`, { method: 'DELETE' });
-      if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
-      loadMyClaims();
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : String(e));
-    }
-  }, [loadMyClaims]);
+  /** 提交成果：claimId 为执行实例 ID，附件以数组传输 */
+  const handleSubmitResult = useCallback(
+    async (claimId: string, description: string, attachmentUrl: string) => {
+      setSubmittingId(claimId);
+      try {
+        const r = await apiRequest(`/api/task-claims/${claimId}/submissions`, {
+          method: 'POST',
+          body: {
+            description,
+            attachments: attachmentUrl ? [attachmentUrl] : [],
+          },
+        });
+        if (!r.ok) throw new Error(r.error ?? t('submitFailed'));
+        loadMyClaims();
+        return true;
+      } catch (e: unknown) {
+        alert(e instanceof Error ? e.message : String(e));
+        return false;
+      } finally {
+        setSubmittingId(null);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [loadMyClaims],
+  );
 
-  // 创建任务
-  const handleCreate = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      const r = await apiRequest('/api/admin/tools/task', {
-        method: 'POST',
-        body: {
-          title: newTask.title,
-          description: newTask.description,
-          category: newTask.category,
-          points: newTask.points,
-          maxClaimants: newTask.maxClaimants,
-          tags: newTask.tags.split(',').map((s) => s.trim()).filter(Boolean),
-        },
-      });
-      if (!r.ok) throw new Error(r.error ?? t('createFailed'));
-      setShowCreateForm(false);
-      setNewTask({ title: '', description: '', category: 'general', points: 10, maxClaimants: 1, tags: '' });
-      // 刷新
-      apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
-        .then((rr) => { if (rr.ok) setTasks(rr.data?.tasks || []); });
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : String(e));
-    } finally {
-      setCreating(false);
-    }
-  }, [newTask]);
+  /** 管理员建单：创建草稿后立即申请上架 */
+  const handleCreate = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setCreating(true);
+      try {
+        const deadline = newTask.deadline
+          ? new Date(newTask.deadline).toISOString()
+          : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+        const created = await apiRequest<{ id?: number }>('/api/tasks', {
+          method: 'POST',
+          body: {
+            title: newTask.title,
+            description: newTask.description,
+            difficulty: newTask.difficulty,
+            rewardTotal: String(newTask.reward),
+            executionMode: 'single',
+            maxMembers: 1,
+            deadline,
+            visibility: 'members',
+            tags: newTask.techRequirements
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean),
+          },
+        });
+        if (!created.ok || !created.data?.id) {
+          throw new Error(created.error ?? t('createFailed'));
+        }
+        const review = await apiRequest(`/api/tasks/${created.data.id}/review-requests`, {
+          method: 'POST',
+        });
+        if (!review.ok) throw new Error(review.error ?? t('createFailed'));
+        setShowCreateForm(false);
+        setNewTask({ ...EMPTY_NEW_TASK });
+        loadTasks();
+        loadPendingTasks();
+      } catch (e: unknown) {
+        alert(e instanceof Error ? e.message : String(e));
+      } finally {
+        setCreating(false);
+      }
+    },
+    [newTask, loadTasks, loadPendingTasks, t],
+  );
 
-  // 发布任务
-  const handlePublish = useCallback(async (taskId: string) => {
-    try {
-      const r = await apiRequest('/api/admin/tools/task?sub=publish', {
-        method: 'POST',
-        body: { taskId },
-      });
-      if (!r.ok) throw new Error(r.error ?? '操作失败');
-      apiRequest<{ tasks?: TaskData[] }>('/api/tools/task?status=published&pageSize=50')
-        .then((rr) => { if (rr.ok) setTasks(rr.data?.tasks || []); });
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : String(e));
-    }
-  }, []);
+  /** 管理员审核通过：批准时后端原子托管奖励 */
+  const handleApprove = useCallback(
+    async (taskId: string) => {
+      setReviewingId(taskId);
+      try {
+        const r = await apiRequest(`/api/admin/tasks/${taskId}/reviews`, {
+          method: 'POST',
+          body: { decision: 'approve' },
+        });
+        if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
+        setPendingTasks((prev) => prev.filter((x) => x.id !== taskId));
+        loadTasks();
+      } catch (e: unknown) {
+        alert(e instanceof Error ? e.message : String(e));
+      } finally {
+        setReviewingId(null);
+      }
+    },
+    [loadTasks, t],
+  );
 
-  // 审核认领
-  const handleReview = useCallback(async (claimId: string, approved: boolean) => {
-    setReviewingId(claimId);
-    try {
-      const r = await apiRequest('/api/admin/tools/task?sub=claim', {
-        method: 'POST',
-        body: { claimId, approved },
-      });
-      if (!r.ok) throw new Error(r.error ?? '操作失败');
-      setPendingClaims((prev) => prev.filter((c) => c.id !== claimId));
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : String(e));
-    } finally {
-      setReviewingId(null);
-    }
-  }, []);
-
-  const categories = Array.from(new Set(tasks.map((t) => t.category)));
+  /** 管理员审核驳回：必须填写原因 */
+  const handleReject = useCallback(
+    async (taskId: string) => {
+      const reason = window.prompt(t('rejectReasonPrompt')) ?? '';
+      if (!reason.trim()) return;
+      setReviewingId(taskId);
+      try {
+        const r = await apiRequest(`/api/admin/tasks/${taskId}/reviews`, {
+          method: 'POST',
+          body: { decision: 'reject', note: reason },
+        });
+        if (!r.ok) throw new Error(r.error ?? t('actionFailed'));
+        setPendingTasks((prev) => prev.filter((x) => x.id !== taskId));
+      } catch (e: unknown) {
+        alert(e instanceof Error ? e.message : String(e));
+      } finally {
+        setReviewingId(null);
+      }
+    },
+    [t],
+  );
 
   return {
     // 任务列表
     tasks,
     tasksLoading,
     tasksError,
-    categoryFilter,
-    setCategoryFilter,
+    difficultyFilter,
+    setDifficultyFilter,
     claimingId,
     expandedId,
     setExpandedId,
-    filteredTasks: categoryFilter ? tasks.filter((t) => t.category === categoryFilter) : tasks,
-    categories,
-    // 我的认领
+    filteredTasks: difficultyFilter ? tasks.filter((x) => x.difficulty === difficultyFilter) : tasks,
+    loadTasks,
+    // 我的任务
     myClaims,
     claimsLoading,
+    submittingId,
     user,
     loadMyClaims,
+    handleSubmitResult,
     // 积分
     pointsProfile,
     leaderboard,
@@ -221,12 +323,11 @@ export function useTasks() {
     newTask,
     setNewTask,
     creating,
-    pendingClaims,
+    pendingTasks,
     reviewingId,
     handleClaim,
-    handleCancelClaim,
     handleCreate,
-    handlePublish,
-    handleReview,
+    handleApprove,
+    handleReject,
   };
 }

@@ -8,6 +8,7 @@ import { en as communityEn } from '../messages/community';
 import { en as eventsEn } from '../messages/events';
 import { en as toolsEn } from '../messages/tools';
 import { en as adminEn } from '../messages/admin';
+import { en as adminOpsEn } from '../messages/admin-ops';
 import { en as userEn } from '../messages/user';
 
 export const en: AppMessages = {
@@ -16,5 +17,6 @@ export const en: AppMessages = {
   ...eventsEn,
   ...toolsEn,
   ...adminEn,
+  ...adminOpsEn,
   ...userEn,
 };

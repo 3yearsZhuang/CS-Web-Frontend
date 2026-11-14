@@ -10,6 +10,7 @@ import type { SafeUser } from '@/modules/admin/ui/types';
 import { UserModals } from './user-modals';
 import { UserListView } from './user-list-view';
 import { UserResetsView } from './user-resets-view';
+import { UserBindingsView } from './user-bindings-view';
 import { useAdminUsers } from './hooks/use-admin-users';
 
 /* ============= 面板组件 ============= */
@@ -19,7 +20,7 @@ interface AdminUsersPanelProps {
   onForbidden: () => void;
 }
 
-/** 管理员用户管理面板 — 用户列表（分页/筛选）+ 密码重置申请审核（搜索已聚合至顶栏，2026-08-20） */
+/** 管理员用户管理面板 — 用户列表（分页/筛选）+ 密码重置申请审核 */
 export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelProps) {
   const {
     // 列表
@@ -107,6 +108,15 @@ export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelPro
         >
           [ 重置申请 / Resets ]
         </button>
+        <button
+          type="button"
+          onClick={() => switchUserSubView('bindings')}
+          className={`focus-amber meta-mono text-[12px] tracking-wider transition-colors ${
+            userSubView === 'bindings' ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
+          }`}
+        >
+          [ 角色授权 / Bindings ]
+        </button>
       </div>
 
       {/* 子视图 A：用户列表 */}
@@ -134,6 +144,9 @@ export function AdminUsersPanel({ currentUser, onForbidden }: AdminUsersPanelPro
           onDisable={openDisable}
         />
       )}
+
+      {/* 子视图 C：用户角色授权（scope 绑定） */}
+      {userSubView === 'bindings' && <UserBindingsView users={users} />}
 
       {/* 子视图 B：密码重置申请 */}
       {userSubView === 'resets' && (
