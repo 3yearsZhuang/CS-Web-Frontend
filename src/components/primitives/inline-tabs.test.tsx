@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { InlineTabs } from './inline-tabs';
 
 /**
- * InlineTabs 冒烟测试（2026-08-13 补全 primitives 测试盲区）
+ * InlineTabs 冒烟测试
  */
 const options = [
   { value: 'reply', label: '回复' },

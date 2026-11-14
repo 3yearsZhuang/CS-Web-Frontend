@@ -784,7 +784,7 @@ body {
 
 /* ============= 长文排版 — 活动详情正文 =============
  * 编辑式技术极简：衬线正文 + 等宽元信息 + 发丝线分割
- * 全站唯一权威来源（原散落在 events/[id] 的内联 <style jsx global> 已迁移至此） */
+ * 全站唯一权威来源 */
 .prose-ark {
   --prose-gap: 1.5rem;
   color: var(--foreground);

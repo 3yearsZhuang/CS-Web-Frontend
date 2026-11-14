@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useNotificationBell — 通知铃铛数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useNotificationBell — 通知铃铛数据逻辑 hook
  *
  * 从 notification-bell.tsx 抽出未读数 / 通知列表的拉取与「标记已读 / 全部已读」逻辑，
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一 / JSON / 状态判定）。

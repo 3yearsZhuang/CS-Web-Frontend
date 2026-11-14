@@ -1,11 +1,10 @@
 'use client';
 
 /**
- * @file useFollow — 关注/取关 数据逻辑 hook（C-19 收敛样板）
+ * @file useFollow — 关注/取关 数据逻辑 hook
  *
- * 从 follow-button.tsx 抽出的关注态管理：移除组件内联 fetch，统一收敛到
  * 「组件 → use-* hook → BFF fetch」范式（对齐 useTopicActions 的乐观更新+失败回滚）。
- * 底层 fetch 已收敛至共享原语 `apiRequest`（C-19 收尾，消除裸 fetch 样板）。
+ * 底层 fetch 已收敛至共享原语 `apiRequest`（消除裸 fetch 样板）。
  *
  * - 首屏若未显式传入 initialFollowing 且非本人，拉取 GET /api/community/users/[id]/follow 取状态
  * - toggle() 执行 POST 关注/取关，乐观翻转 + 失败回滚

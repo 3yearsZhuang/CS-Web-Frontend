@@ -20,12 +20,15 @@ export async function POST(req: Request) {
   const body = proxy.body as {
     secret: string;
     otpauthUri: string;
-    backupCodes: string[];
+    backupCodes?: string[];
+    qrCode?: string;
   };
   const res = NextResponse.json({
     secret: body.secret,
     otpauthURI: body.otpauthUri,
-    backupCodes: body.backupCodes,
+    backupCodes: body.backupCodes ?? [],
+    // 后端当前只返回 otpauth URI；若未来提供 data URL 二维码则直接透传
+    qrCode: body.qrCode ?? '',
   });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;

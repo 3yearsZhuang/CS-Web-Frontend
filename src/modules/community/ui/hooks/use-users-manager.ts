@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useUsersManager — 用户管理数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useUsersManager — 用户管理数据逻辑 hook
  *
  * 从 users-manager.tsx 抽出用户列表加载 + 禁言/解禁 2 个操作，
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一/JSON/状态判定）。

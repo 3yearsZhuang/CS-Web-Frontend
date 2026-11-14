@@ -6,7 +6,7 @@ import type { PasswordResetRequest, SafeUser, UserRole } from '@/modules/admin/u
 
 export type RoleFilter = 'all' | UserRole;
 export type ActiveFilter = 'all' | 'active' | 'inactive';
-export type UserSubView = 'list' | 'resets';
+export type UserSubView = 'list' | 'resets' | 'bindings';
 export type ResetStatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 export interface EditForm {

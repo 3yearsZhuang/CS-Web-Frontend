@@ -5,7 +5,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAuth } from './use-auth';
 
 /**
- * use-auth 单测（2026-08-13 补全 shared/hooks 测试盲区）
+ * use-auth 单测
  * 受控 SWR mock（useSyncExternalStore）以可靠驱动 data / isLoading / mutate 重渲染，聚焦：
  *  - 登录态判定（user / sessionMarker 乐观首帧 / 加载中）
  *  - data.user 为 null → 视为已登出并清本地标记

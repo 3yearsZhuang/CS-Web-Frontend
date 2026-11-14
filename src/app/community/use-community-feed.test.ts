@@ -7,7 +7,7 @@ import { useCommunityFeed } from './use-community-feed';
 /**
  * useCommunityFeed 单测（GENERAL 3.8「tests 覆盖拆分后组件」、2.4「拆分即补测」）
  * mock next-intl / next/navigation / fetch，聚焦 auth、feed 加载、标签过滤。
- * 注：搜索逻辑已聚合至顶栏（2026-08-20），本 hook 不再包含搜索。
+ * 注：搜索逻辑已聚合至顶栏，本 hook 不再包含搜索。
  */
 
 vi.mock('next-intl', () => ({

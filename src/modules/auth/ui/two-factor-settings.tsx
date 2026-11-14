@@ -176,12 +176,23 @@ export function TwoFactorSettings() {
               <QrCode size={14} />
               <span>[ 01 ] Scan QR Code</span>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element -- QR 是 data URL，无需 next/image */}
-            <img
-              src={setupData.qrCode}
-              alt="2FA QR Code"
-              className="w-[240px] h-[240px] border border-[var(--border)] p-2 bg-white"
-            />
+            {setupData.qrCode ? (
+              /* eslint-disable-next-line @next/next/no-img-element -- QR 是 data URL，无需 next/image */
+              <img
+                src={setupData.qrCode}
+                alt="2FA QR Code"
+                className="w-[240px] h-[240px] border border-[var(--border)] p-2 bg-white"
+              />
+            ) : (
+              /* 后端暂未提供二维码 data URL：明确回退到手动输入，避免展示破图 */
+              <div className="w-[240px] min-h-[140px] border border-[var(--border)] p-4 bg-[var(--foreground)]/[0.02] flex flex-col items-center justify-center gap-2 text-center">
+                <QrCode size={28} className="text-[var(--muted-foreground)]" />
+                <p className="text-[12px] text-[var(--foreground)]">{t('qrUnavailable')}</p>
+                <p className="text-[11px] font-mono text-[var(--muted-foreground)] leading-relaxed">
+                  {t('qrManualHint')}
+                </p>
+              </div>
+            )}
               <p className="text-[11px] font-mono text-[var(--muted-foreground)] text-center max-w-[320px]">
                 {t('scanQrDesc')}
               </p>

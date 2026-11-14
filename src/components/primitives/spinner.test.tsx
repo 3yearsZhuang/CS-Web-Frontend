@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react';
 import { Spinner } from './spinner';
 
 /**
- * Spinner 冒烟测试（2026-08-13 补全 primitives 测试盲区）
+ * Spinner 冒烟测试
  */
 describe('Spinner', () => {
   it('默认 primary 变体带 spin 动画', () => {

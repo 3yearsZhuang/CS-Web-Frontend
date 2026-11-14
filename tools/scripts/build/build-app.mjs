@@ -12,6 +12,7 @@
  * （实测可膨胀到 2~4G+）。缓存可再生成，构建完成后立即删除，仅保留运行必需产物。
  */
 import { execSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,14 +31,15 @@ function run(cmd) {
 
 function main() {
   console.log('▶ Installing dependencies...');
-  run('pnpm install --prefer-frozen-lockfile --prefer-offline');
+  // --ignore-scripts：构建阶段不执行 prepare 等开发机初始化脚本（Windows 无 bash 时也能构建）
+  run('pnpm install --prefer-frozen-lockfile --prefer-offline --ignore-scripts');
 
   console.log('▶ Building Next.js project...');
   run('pnpm next build');
 
   // 删除 Turbopack/Next 增量编译缓存（可再生，避免 .build 无限膨胀）
   console.log('▶ Removing build cache (.build/cache, regenerable)...');
-  run('rm -rf .build/cache');
+  rmSync(resolve(projectRoot, '.build/cache'), { recursive: true, force: true });
 
   console.log('▶ Bundling custom server with tsup...');
   run(

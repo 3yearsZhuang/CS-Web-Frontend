@@ -246,7 +246,7 @@ export function useCommunityFeed() {
     return range;
   })();
 
-  // 标签筛选激活（搜索已聚合至顶栏，2026-08-20）
+  // 标签筛选激活
   const hasSearch = !!selectedTag;
   const isInitialLoading = loading && items.length === 0;
 

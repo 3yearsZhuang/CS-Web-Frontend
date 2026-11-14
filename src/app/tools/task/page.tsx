@@ -18,6 +18,7 @@ import { useCollapsingHero } from '@/shared/hooks/use-collapsing-hero';
 import { useTasks } from '@/modules/tools/ui/hooks/use-tasks';
 import { BoardTab } from '@/modules/tools/ui/board-tab';
 import { MyClaimsTab } from '@/modules/tools/ui/my-claims-tab';
+import { TeamsTab } from '@/modules/tools/ui/teams-tab';
 import { PointsTab } from '@/modules/tools/ui/points-tab';
 import type { TaskTab } from '@/modules/tools/ui/task-shared';
 
@@ -40,7 +41,8 @@ export default function TaskPage() {
     () => [
       { key: 'board', num: '01', label: t('tabBoard') },
       { key: 'my-claims', num: '02', label: t('tabMyClaims') },
-      { key: 'points', num: '03', label: t('tabPoints') },
+      { key: 'teams', num: '03', label: t('tabTeams') },
+      { key: 'points', num: '04', label: t('tabPoints') },
     ],
     [t],
   );
@@ -91,6 +93,7 @@ export default function TaskPage() {
           <div>
             {activeTab === 'board' && <BoardTab {...tasks} />}
             {activeTab === 'my-claims' && <MyClaimsTab {...tasks} />}
+            {activeTab === 'teams' && <TeamsTab />}
             {activeTab === 'points' && <PointsTab {...tasks} />}
           </div>
         </div>

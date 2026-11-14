@@ -7,12 +7,19 @@ import type { CommunityMessages } from './messages/community';
 import type { EventsMessages } from './messages/events';
 import type { ToolsMessages } from './messages/tools';
 import type { AdminMessages } from './messages/admin';
+import type { AdminOpsMessages } from './messages/admin-ops';
 import type { UserMessages } from './messages/user';
 
 export type Language = 'zh-CN' | 'en';
 
 /** 聚合所有业务模块的消息结构 */
-export type AppMessages = CommonMessages & CommunityMessages & EventsMessages & ToolsMessages & AdminMessages & UserMessages;
+export type AppMessages = CommonMessages &
+  CommunityMessages &
+  EventsMessages &
+  ToolsMessages &
+  AdminMessages &
+  AdminOpsMessages &
+  UserMessages;
 
 export type MessageKey = {
   [K in keyof AppMessages]: AppMessages[K] extends Record<string, unknown>

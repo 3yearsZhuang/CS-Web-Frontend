@@ -29,7 +29,7 @@ import type {
 } from '../users-panel-utils';
 
 export function useAdminUsers(currentUser: SafeUser, onForbidden: () => void) {
-  // 列表数据（用户列表 / 筛选 / 分页；搜索已聚合至顶栏，2026-08-20）
+  // 列表数据（用户列表 / 筛选 / 分页）
   const {
     users,
     total,

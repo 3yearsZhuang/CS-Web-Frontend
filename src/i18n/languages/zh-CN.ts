@@ -8,6 +8,7 @@ import { zhCN as communityZh } from '../messages/community';
 import { zhCN as eventsZh } from '../messages/events';
 import { zhCN as toolsZh } from '../messages/tools';
 import { zhCN as adminZh } from '../messages/admin';
+import { zhCN as adminOpsZh } from '../messages/admin-ops';
 import { zhCN as userZh } from '../messages/user';
 
 export const zhCN: AppMessages = {
@@ -16,5 +17,6 @@ export const zhCN: AppMessages = {
   ...eventsZh,
   ...toolsZh,
   ...adminZh,
+  ...adminOpsZh,
   ...userZh,
 };

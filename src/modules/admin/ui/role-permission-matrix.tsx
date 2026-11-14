@@ -40,11 +40,12 @@ export function RolePermissionMatrix({
   onDelete,
 }: RolePermissionMatrixProps) {
   const t = useTranslations('adminRoles');
-  const isReadOnly = role.isProtected;
   // root 角色展示全部权限（含 root_only），但不可编辑
   const isRootRole = role.key === 'root';
-  // user 角色无任何权限
-  const isUserRole = role.key === 'user';
+  // member（旧称 user）角色无任何权限
+  const isUserRole = role.key === 'user' || role.key === 'member';
+  // 仅 root/member 特殊角色只读；系统内置角色的权限矩阵仍允许调整（后端支持）
+  const isReadOnly = isRootRole || isUserRole;
 
   // 对于 root 角色：展示所有权限为"已授予"状态
   // 对于 user 角色：展示所有权限为"未授予"状态

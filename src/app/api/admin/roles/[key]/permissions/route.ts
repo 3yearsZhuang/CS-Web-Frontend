@@ -3,8 +3,14 @@
  */
 import { NextResponse } from 'next/server';
 import { assertAllowedOrigin } from '@/shared/security/security';
-import { clearAuthCookies, normalizeError, proxyBackend, setAuthCookies } from '@/shared/backend-client';
-import { frontendKeyToBackendName } from '@/shared/backend-client';
+import {
+  clearAuthCookies,
+  frontendKeyToBackendName,
+  normalizeError,
+  proxyBackend,
+  setAuthCookies,
+  toAdminRole,
+} from '@/shared/backend-client';
 
 export const runtime = 'nodejs';
 
@@ -47,7 +53,8 @@ export async function PUT(
     if (proxy.clearAuth) clearAuthCookies(res);
     return res;
   }
-  const res = NextResponse.json({ ok: true });
+  // 后端返回更新后的角色（含最新权限名），供面板就地刷新权限计数
+  const res = NextResponse.json({ role: toAdminRole(proxy.body) });
   if (proxy.authPair) setAuthCookies(res, proxy.authPair);
   return res;
 }

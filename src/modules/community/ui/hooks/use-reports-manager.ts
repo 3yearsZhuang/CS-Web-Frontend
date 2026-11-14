@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useReportsManager — 举报处理数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useReportsManager — 举报处理数据逻辑 hook
  *
  * 从 reports-manager.tsx 抽出举报列表加载 + 处理/驳回 2 个操作，
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一/JSON/状态判定）。

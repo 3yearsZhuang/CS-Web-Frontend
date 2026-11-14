@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * @file useAnnouncementsManager — 公告管理数据逻辑 hook（P1-6 / C-19 架构收敛）
+ * @file useAnnouncementsManager — 公告管理数据逻辑 hook
  *
  * 从 announcements-manager.tsx 抽出公告列表加载 + 启用/停用/删除/新建 4 个操作，
  * 全部裸 fetch 收敛到 apiRequest（统一错误归一/JSON/状态判定）。

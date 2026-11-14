@@ -1,27 +1,26 @@
 /**
- * @file task-shared 纯函数测试：任务分类标签映射（含未知 key 回退）与选项生成。
+ * @file task-shared 纯函数测试：任务难度标签映射（含空值回退）与选项生成。
  */
 import { describe, expect, it } from 'vitest';
-import { categoryLabel, CATEGORY_KEYS, categoryOptions, type TFn } from './task-shared';
+import { difficultyLabel, DIFFICULTY_KEYS, difficultyOptions, type TFn } from './task-shared';
 
 const t: TFn = (key) => `i18n:${key}`;
 
-describe('categoryLabel', () => {
-  it('已注册分类映射到 i18n key', () => {
-    expect(categoryLabel(t, 'general')).toBe('i18n:catGeneral');
-    expect(categoryLabel(t, 'documentation')).toBe('i18n:catDocumentation');
-    expect(categoryLabel(t, 'mentoring')).toBe('i18n:catMentoring');
+describe('difficultyLabel', () => {
+  it('已注册难度映射到 i18n key', () => {
+    expect(difficultyLabel(t, '黑铁')).toBe('i18n:diffBlackIron');
+    expect(difficultyLabel(t, '黄金')).toBe('i18n:diffGold');
   });
 
-  it('未知 key 原样回退', () => {
-    expect(categoryLabel(t, 'bogus')).toBe('bogus');
+  it('空值返回空串', () => {
+    expect(difficultyLabel(t, null)).toBe('');
   });
 });
 
-describe('categoryOptions', () => {
-  it('与 CATEGORY_KEYS 一一对应生成选项', () => {
-    const opts = categoryOptions(t);
-    expect(opts.map((o) => o.value)).toEqual([...CATEGORY_KEYS]);
-    expect(opts[0].label).toBe('i18n:catGeneral');
+describe('difficultyOptions', () => {
+  it('与 DIFFICULTY_KEYS 一一对应生成选项', () => {
+    const opts = difficultyOptions(t);
+    expect(opts.map((o) => o.value)).toEqual([...DIFFICULTY_KEYS]);
+    expect(opts[0].label).toBe('i18n:diffBlackIron');
   });
 });

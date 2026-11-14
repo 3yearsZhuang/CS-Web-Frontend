@@ -394,6 +394,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/events/{event_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Event
+         * @description 取消活动；不清除报名与签到证据。
+         */
+        post: operations["cancel_event_api_v1_admin_events__event_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/events/{event_id}/checkin": {
         parameters: {
             query?: never;
@@ -468,6 +488,26 @@ export interface paths {
         get: operations["checkin_stats_api_v1_admin_events__event_id__checkins_stats_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/events/{event_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close Event
+         * @description 显式结束活动（真实结束动作，时间到期不等于取消）。
+         */
+        post: operations["close_event_api_v1_admin_events__event_id__close_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -553,6 +593,412 @@ export interface paths {
          */
         put: operations["update_feature_visibility_api_v1_admin_feature_visibility__module_key__put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Accounts */
+        get: operations["list_accounts_api_v1_admin_finance_accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Adjustment */
+        post: operations["create_adjustment_api_v1_admin_finance_adjustments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/allocations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Allocation */
+        post: operations["create_allocation_api_v1_admin_finance_allocations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/peak-transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Peak Transfer
+         * @description 峰间调拨：两侧峰均需在授权范围内，锁账户后整笔成功或失败。
+         */
+        post: operations["create_peak_transfer_api_v1_admin_finance_peak_transfers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/peaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Finance Peaks
+         * @description 峰资金列表：峰身份 + 峰账户余额 + 在册成员数，按授权范围过滤。
+         */
+        get: operations["list_finance_peaks_api_v1_admin_finance_peaks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/peaks/{peak_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Finance Peak
+         * @description 单个峰资金视图（峰范围账号仅能读绑定峰）。
+         */
+        get: operations["get_finance_peak_api_v1_admin_finance_peaks__peak_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/peaks/{peak_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Finance Peak Members
+         * @description 峰成员资金摘要：仅身份与余额，最小披露。
+         */
+        get: operations["list_finance_peak_members_api_v1_admin_finance_peaks__peak_id__members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/reconciliations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Reconciliations */
+        get: operations["list_reconciliations_api_v1_admin_finance_reconciliations_get"];
+        put?: never;
+        /** Run Reconciliation */
+        post: operations["run_reconciliation_api_v1_admin_finance_reconciliations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/reversals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Reversal
+         * @description 交易冲正：保留原流水，按相反分录取反；一笔原交易只允许冲正一次。
+         */
+        post: operations["create_reversal_api_v1_admin_finance_reversals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Stats
+         * @description 全范围财务总览；峰范围账号请使用峰资金视图。
+         */
+        get: operations["get_stats_api_v1_admin_finance_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Transactions
+         * @description 交易/分录查询：统一账本，不另建调整日志账本。
+         */
+        get: operations["list_transactions_api_v1_admin_finance_transactions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/treasury": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Treasury */
+        get: operations["get_treasury_api_v1_admin_finance_treasury_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/finance/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Finance User
+         * @description 成员资金详情：账号、成员档案与钱包余额。
+         */
+        get: operations["get_finance_user_api_v1_admin_finance_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Organization History
+         * @description 组织历史：仅全范围账号可读（峰范围无法安全还原跨峰历史）。
+         */
+        get: operations["organization_history_api_v1_admin_organization_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin List Members */
+        get: operations["admin_list_members_api_v1_admin_organization_members_get"];
+        put?: never;
+        /** Create Member */
+        post: operations["create_member_api_v1_admin_organization_members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/members/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Member */
+        patch: operations["update_member_api_v1_admin_organization_members__member_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/organization/members/{member_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Member History
+         * @description 成员历史：成员范围校验 + audit:read，返回脱敏审计条目。
+         */
+        get: operations["member_history_api_v1_admin_organization_members__member_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/members/{member_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move Member */
+        post: operations["move_member_api_v1_admin_organization_members__member_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/members/{member_id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Member */
+        post: operations["remove_member_api_v1_admin_organization_members__member_id__remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/peaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Peak */
+        post: operations["create_peak_api_v1_admin_organization_peaks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/organization/peaks/{peak_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Peak */
+        patch: operations["update_peak_api_v1_admin_organization_peaks__peak_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/organization/peaks/{peak_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Peak */
+        post: operations["archive_peak_api_v1_admin_organization_peaks__peak_id__archive_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -670,7 +1116,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Role
+         * @description 角色详情（含权限名、双展示名与审计域）。
+         */
+        get: operations["get_role_api_v1_admin_roles__role_id__get"];
         /**
          * Update Role
          * @description 更新角色元数据（display_name/description）。
@@ -684,7 +1134,11 @@ export interface paths {
         delete: operations["delete_role_api_v1_admin_roles__role_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Role
+         * @description 更新角色元数据（display_name/description）。
+         */
+        patch: operations["update_role_api_v1_admin_roles__role_id__patch"];
         trace?: never;
     };
     "/api/v1/admin/roles/{role_id}/permissions": {
@@ -701,6 +1155,80 @@ export interface paths {
          */
         put: operations["replace_permissions_api_v1_admin_roles__role_id__permissions_put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/task-submissions/{submission_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review Submission
+         * @description 成果验收：通过全额支付给锁定队长；驳回写入返工截止时间。
+         */
+        post: operations["review_submission_api_v1_admin_task_submissions__submission_id__reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Admin Tasks */
+        get: operations["list_admin_tasks_api_v1_admin_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tasks/{task_id}/force-close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Force Close Task */
+        post: operations["force_close_task_api_v1_admin_tasks__task_id__force_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tasks/{task_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review Task
+         * @description 上架审核：批准时原子托管发布者奖励；余额不足 409 且保持待审核。
+         */
+        post: operations["review_task_api_v1_admin_tasks__task_id__reviews_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -835,6 +1363,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{user_id}/role-bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Role Bindings
+         * @description 读取用户的角色绑定与授权版本（需要 user:manage_roles）。
+         */
+        get: operations["get_user_role_bindings_api_v1_admin_users__user_id__role_bindings_get"];
+        /**
+         * Replace User Role Bindings
+         * @description 整组替换用户角色绑定（If-Match 版本 + 防提权 + 同事务审计）。
+         */
+        put: operations["replace_user_role_bindings_api_v1_admin_users__user_id__role_bindings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/announcements": {
         parameters: {
             query?: never;
@@ -844,7 +1396,7 @@ export interface paths {
         };
         /**
          * List Active Announcements
-         * @description 生效公告（公开）。带登录态时按角色定向过滤。
+         * @description 生效公告（公开）。登录态按可见范围与角色定向过滤。
          */
         get: operations["list_active_announcements_api_v1_announcements_get"];
         put?: never;
@@ -864,7 +1416,7 @@ export interface paths {
         };
         /**
          * List All Announcements
-         * @description 管理员：全部公告。
+         * @description 管理员：全部公告；created_by=me 时只看本人创建。
          */
         get: operations["list_all_announcements_api_v1_announcements_admin_get"];
         put?: never;
@@ -905,6 +1457,46 @@ export interface paths {
          * @description 管理员：更新公告。
          */
         patch: operations["update_announcement_api_v1_announcements_admin__announcement_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/announcements/admin/{announcement_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Announcement
+         * @description 管理员：归档公告（不影响历史阅读）。
+         */
+        post: operations["archive_announcement_api_v1_announcements_admin__announcement_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/announcements/admin/{announcement_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish Announcement
+         * @description 管理员：发布公告。
+         */
+        post: operations["publish_announcement_api_v1_announcements_admin__announcement_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/announcements/admin/{announcement_id}/toggle": {
@@ -1113,7 +1705,7 @@ export interface paths {
         put?: never;
         /**
          * Login
-         * @description 用户登录（OAuth2 表单，用户名），返回 access + refresh 双 token。
+         * @description 用户登录（OAuth2 表单，用户名）：统一走 2FA 安全登录流程。
          */
         post: operations["login_api_v1_auth_login_post"];
         delete?: never;
@@ -1153,7 +1745,7 @@ export interface paths {
         put?: never;
         /**
          * Login Json
-         * @description 用户登录（JSON，用户名），返回 access + refresh 双 token。
+         * @description 用户登录（JSON，用户名）：统一走 2FA 安全登录流程。
          */
         post: operations["login_json_api_v1_auth_login_json_post"];
         delete?: never;
@@ -2082,7 +2674,7 @@ export interface paths {
         };
         /**
          * Get Event
-         * @description 活动详情（含报名人数）。
+         * @description 活动详情（含报名人数）；非公开活动按可见范围校验。
          */
         get: operations["get_event_api_v1_events__event_id__get"];
         put?: never;
@@ -2417,6 +3009,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organization/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Organization
+         * @description 本人组织信息：成员档案 + 角色绑定 + 授权版本。
+         */
+        get: operations["get_my_organization_api_v1_organization_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organization/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Members */
+        get: operations["list_members_api_v1_organization_members_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organization/members/{member_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Member */
+        get: operations["get_member_api_v1_organization_members__member_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organization/peaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Peaks */
+        get: operations["list_peaks_api_v1_organization_peaks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profile": {
         parameters: {
             query?: never;
@@ -2501,6 +3164,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rbac/me/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Bindings
+         * @description 获取当前用户的角色绑定与授权版本（两端同源）。
+         */
+        get: operations["get_my_bindings_api_v1_rbac_me_bindings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rbac/me/permissions": {
         parameters: {
             query?: never;
@@ -2554,11 +3237,7 @@ export interface paths {
          */
         get: operations["get_permissions_api_v1_rbac_permissions_get"];
         put?: never;
-        /**
-         * Create Permission
-         * @description 创建权限（需要 permission:create）。
-         */
-        post: operations["create_permission_api_v1_rbac_permissions_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2577,17 +3256,9 @@ export interface paths {
          * @description 获取指定权限（需要 permission:read）。
          */
         get: operations["get_permission_api_v1_rbac_permissions__permission_id__get"];
-        /**
-         * Update Permission
-         * @description 更新权限（需要 permission:update）。
-         */
-        put: operations["update_permission_api_v1_rbac_permissions__permission_id__put"];
+        put?: never;
         post?: never;
-        /**
-         * Delete Permission
-         * @description 删除权限（需要 permission:delete）。
-         */
-        delete: operations["delete_permission_api_v1_rbac_permissions__permission_id__delete"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2606,11 +3277,7 @@ export interface paths {
          */
         get: operations["get_roles_api_v1_rbac_roles_get"];
         put?: never;
-        /**
-         * Create Role
-         * @description 创建角色（需要 role:create）。
-         */
-        post: operations["create_role_api_v1_rbac_roles_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2629,41 +3296,9 @@ export interface paths {
          * @description 获取指定角色（需要 role:read）。
          */
         get: operations["get_role_api_v1_rbac_roles__role_id__get"];
-        /**
-         * Update Role
-         * @description 更新角色（需要 role:update）。
-         */
-        put: operations["update_role_api_v1_rbac_roles__role_id__put"];
-        post?: never;
-        /**
-         * Delete Role
-         * @description 删除角色（需要 role:delete）。
-         */
-        delete: operations["delete_role_api_v1_rbac_roles__role_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/rbac/roles/{role_id}/permissions/{permission_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
         put?: never;
-        /**
-         * Assign Permission To Role
-         * @description 为角色分配权限（需要 role:manage_permissions）。
-         */
-        post: operations["assign_permission_to_role_api_v1_rbac_roles__role_id__permissions__permission_id__post"];
-        /**
-         * Revoke Permission From Role
-         * @description 从角色撤销权限（需要 role:manage_permissions）。
-         */
-        delete: operations["revoke_permission_from_role_api_v1_rbac_roles__role_id__permissions__permission_id__delete"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2729,30 +3364,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/rbac/users/{user_id}/roles/{role_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Assign Role To User
-         * @description 为用户分配角色（需要 user:manage_roles）。
-         */
-        post: operations["assign_role_to_user_api_v1_rbac_users__user_id__roles__role_id__post"];
-        /**
-         * Revoke Role From User
-         * @description 从用户撤销角色（需要 user:manage_roles）。
-         */
-        delete: operations["revoke_role_from_user_api_v1_rbac_users__user_id__roles__role_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -2767,6 +3378,290 @@ export interface paths {
         get: operations["global_search_api_v1_search_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/task-claims/{claim_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Claim */
+        post: operations["cancel_claim_api_v1_task_claims__claim_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/task-claims/{claim_id}/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit Claim */
+        post: operations["submit_claim_api_v1_task_claims__claim_id__submissions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tasks
+         * @description 任务大厅：默认仅 published，按可见范围过滤。
+         */
+        get: operations["list_tasks_api_v1_tasks_get"];
+        put?: never;
+        /** Create Task */
+        post: operations["create_task_api_v1_tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/me/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Claims */
+        get: operations["list_my_claims_api_v1_tasks_me_claims_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/me/published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Published */
+        get: operations["list_my_published_api_v1_tasks_me_published_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Task */
+        get: operations["get_task_api_v1_tasks__task_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Archive Task
+         * @description 归档草稿/驳回任务；有资金历史的任务必须先关闭。
+         */
+        delete: operations["archive_task_api_v1_tasks__task_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Task */
+        patch: operations["update_task_api_v1_tasks__task_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Task Claims */
+        get: operations["list_task_claims_api_v1_tasks__task_id__claims_get"];
+        put?: never;
+        /** Claim Task */
+        post: operations["claim_task_api_v1_tasks__task_id__claims_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Task History */
+        get: operations["list_task_history_api_v1_tasks__task_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}/review-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request Task Review */
+        post: operations["request_task_review_api_v1_tasks__task_id__review_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Teams */
+        get: operations["list_my_teams_api_v1_teams_get"];
+        put?: never;
+        /** Create Team */
+        post: operations["create_team_api_v1_teams_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/invitations/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List My Invitations */
+        get: operations["list_my_invitations_api_v1_teams_invitations_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/invitations/{invitation_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invitation */
+        post: operations["accept_invitation_api_v1_teams_invitations__invitation_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/invitations/{invitation_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Invitation */
+        post: operations["reject_invitation_api_v1_teams_invitations__invitation_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/{team_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Team */
+        get: operations["get_team_api_v1_teams__team_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename Team */
+        patch: operations["rename_team_api_v1_teams__team_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/teams/{team_id}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite Member */
+        post: operations["invite_member_api_v1_teams__team_id__invitations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/{team_id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave Team */
+        post: operations["leave_team_api_v1_teams__team_id__leave_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2983,130 +3878,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tools/admin/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Admin List Tasks */
-        get: operations["admin_list_tasks_api_v1_tools_admin_tasks_get"];
-        put?: never;
-        /** Create Task */
-        post: operations["create_task_api_v1_tools_admin_tasks_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/claims/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Pending Claims */
-        get: operations["pending_claims_api_v1_tools_admin_tasks_claims_pending_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/claims/{claim_id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Approve Claim
-         * @description 通过认领（触发积分联动，见 service.review_claim）。
-         */
-        post: operations["approve_claim_api_v1_tools_admin_tasks_claims__claim_id__approve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/claims/{claim_id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reject Claim */
-        post: operations["reject_claim_api_v1_tools_admin_tasks_claims__claim_id__reject_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Update Task */
-        put: operations["update_task_api_v1_tools_admin_tasks__task_id__put"];
-        post?: never;
-        /** Delete Task */
-        delete: operations["delete_task_api_v1_tools_admin_tasks__task_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/{task_id}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Close Task */
-        post: operations["close_task_api_v1_tools_admin_tasks__task_id__close_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/admin/tasks/{task_id}/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publish Task */
-        post: operations["publish_task_api_v1_tools_admin_tasks__task_id__publish_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/tools/auxilio": {
         parameters: {
             query?: never;
@@ -3171,11 +3942,8 @@ export interface paths {
         /** Get Guide */
         get: operations["get_guide_api_v1_tools_components__component_id__guide_get"];
         put?: never;
-        /**
-         * Update Guide
-         * @description 指南 upsert（service 仅有 update_guide；不存在则创建）。
-         */
-        post: operations["update_guide_api_v1_tools_components__component_id__guide_post"];
+        /** Create Guide */
+        post: operations["create_guide_api_v1_tools_components__component_id__guide_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3189,15 +3957,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get Migration Status
-         * @description 派生自 ComponentItemOut（service 无独立读取入口；old == current）。
-         */
+        /** Get Migration Status */
         get: operations["get_migration_status_api_v1_tools_components__component_id__migration_status_get"];
-        /**
-         * Set Migration Status
-         * @description 更新迁移状态；达到 migrated 时联动开放对应可见性模块（service 内闭环）。
-         */
+        /** Set Migration Status */
         put: operations["set_migration_status_api_v1_tools_components__component_id__migration_status_put"];
         post?: never;
         delete?: never;
@@ -3216,12 +3978,12 @@ export interface paths {
         /** List Variants */
         get: operations["list_variants_api_v1_tools_components__component_id__variants_get"];
         put?: never;
-        post?: never;
+        /** Create Variant */
+        post: operations["create_variant_api_v1_tools_components__component_id__variants_post"];
         delete?: never;
         options?: never;
         head?: never;
-        /** Toggle Variant */
-        patch: operations["toggle_variant_api_v1_tools_components__component_id__variants_patch"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/tools/components/{component_id}/variants/preset": {
@@ -3233,8 +3995,42 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Apply Variant Preset */
-        post: operations["apply_variant_preset_api_v1_tools_components__component_id__variants_preset_post"];
+        /** Apply Preset */
+        post: operations["apply_preset_api_v1_tools_components__component_id__variants_preset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tools/components/{component_id}/variants/toggle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle Variant */
+        post: operations["toggle_variant_api_v1_tools_components__component_id__variants_toggle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tools/components/{component_id}/variants/{variant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Variant */
+        put: operations["update_variant_api_v1_tools_components__component_id__variants__variant_id__put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3326,66 +4122,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tools/points/leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Leaderboard
-         * @description 积分排行榜（按余额倒序，limit 控制返回条数）。
-         */
-        get: operations["leaderboard_api_v1_tools_points_leaderboard_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/points/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * My Points
-         * @description 我的积分档案（余额/等级 + 最近流水）。
-         */
-        get: operations["my_points_api_v1_tools_points_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/points/me/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * My History
-         * @description 积分流水分页（时间倒序）。
-         */
-        get: operations["my_history_api_v1_tools_points_me_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/tools/resources": {
         parameters: {
             query?: never;
@@ -3396,11 +4132,7 @@ export interface paths {
         /** List Resources */
         get: operations["list_resources_api_v1_tools_resources_get"];
         put?: never;
-        /**
-         * Submit Resource
-         * @description 普通用户提交资源（入待审核池，由管理员审核）。
-         */
-        post: operations["submit_resource_api_v1_tools_resources_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3416,10 +4148,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Upload Resource
-         * @description 上传文件并创建待审核资源（标题取文件名，file_url 指向存储路径）。
-         */
+        /** Upload Resource */
         post: operations["upload_resource_api_v1_tools_resources_upload_post"];
         delete?: never;
         options?: never;
@@ -3451,10 +4180,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Download Resource
-         * @description 返回资源文件地址（仅审核通过且带文件的资源对外开放）。
-         */
+        /** Download Resource */
         get: operations["download_resource_api_v1_tools_resources__resource_id__download_get"];
         put?: never;
         post?: never;
@@ -3464,61 +4190,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tools/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Tasks */
-        get: operations["list_tasks_api_v1_tools_tasks_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/tasks/claimed/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My Claims */
-        get: operations["my_claims_api_v1_tools_tasks_claimed_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/tasks/claims/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * My Claims Alias
-         * @description ``/tasks/claimed/me`` 的等价别名（前端 BFF 使用本路径）。
-         */
-        get: operations["my_claims_alias_api_v1_tools_tasks_claims_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/tasks/claims/{claim_id}/submit": {
+    "/api/v1/tools/resources/{resource_id}/rate": {
         parameters: {
             query?: never;
             header?: never;
@@ -3527,52 +4199,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Submit Proof
-         * @description 用户提交完成（认领 → submitted），可选携带证明材料链接（Slice E 落库）。
-         *
-         *     注：BFF 还会发送 note 字段，暂无落点（claim_note 语义属认领备注），保持忽略。
-         */
-        post: operations["submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post"];
+        /** Rate Resource */
+        post: operations["rate_resource_api_v1_tools_resources__resource_id__rate_post"];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/tasks/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Task */
-        get: operations["get_task_api_v1_tools_tasks__task_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tools/tasks/{task_id}/claim": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Claim Task */
-        post: operations["claim_task_api_v1_tools_tasks__task_id__claim_post"];
-        /**
-         * Cancel Claim
-         * @description 按任务维度取消本人认领（BFF 以 taskId 发起）。
-         */
-        delete: operations["cancel_claim_api_v1_tools_tasks__task_id__claim_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3649,6 +4278,146 @@ export interface paths {
          * @description 软删除用户（需要 user:delete）。
          */
         delete: operations["delete_user_api_v1_users__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Wallet Leaderboard
+         * @description 公开余额排行：仅包含已同意公开的有效用户。
+         */
+        get: operations["wallet_leaderboard_api_v1_wallet_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Wallet
+         * @description 本人钱包余额与托管汇总（金额字符串）。
+         */
+        get: operations["get_my_wallet_api_v1_wallet_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/me/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Entries
+         * @description 本人钱包流水（最多 100 条/页，稳定倒序）。
+         */
+        get: operations["list_my_entries_api_v1_wallet_me_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Profile
+         * @description 统一余额档案：可用余额、托管汇总与按余额派生的等级。
+         */
+        get: operations["get_my_profile_api_v1_wallet_me_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Recipients
+         * @description 按用户名/展示名前缀搜索收款人（最小披露）。
+         */
+        get: operations["search_recipients_api_v1_wallet_recipients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Transfer
+         * @description 本人钱包转账：仅从登录用户钱包扣款，同事务写账本 + 幂等 + 审计。
+         */
+        post: operations["create_transfer_api_v1_wallet_transfers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wallet/transfers/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Transfer Detail
+         * @description 交易详情：仅参与方、超级用户或具备 finance:read 的财务角色可读。
+         */
+        get: operations["get_transfer_detail_api_v1_wallet_transfers__transaction_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3782,6 +4551,32 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActiveClaimMemberOut */
+        ActiveClaimMemberOut: {
+            /** Displayname */
+            displayName?: string | null;
+            /**
+             * Isleader
+             * @default false
+             */
+            isLeader: boolean;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * ActiveClaimOut
+         * @description 任务详情附带的当前执行实例摘要（不递归包含任务）。
+         */
+        ActiveClaimOut: {
+            /** Id */
+            id: number;
+            /** Leaderuserid */
+            leaderUserId: number;
+            /** Members */
+            members?: components["schemas"]["ActiveClaimMemberOut"][];
+            /** Status */
+            status: string;
+        };
         /**
          * ActivityParticipationOut
          * @description 用户主页活动参与记录。
@@ -3822,10 +4617,14 @@ export interface components {
          * @description 管理员创建角色：name + 展示名 + 描述 + 权限名列表（resource:action）。
          */
         AdminRoleCreate: {
+            /** Audit Domains */
+            audit_domains?: string[];
             /** Description */
             description?: string | null;
             /** Display Name */
             display_name: string;
+            /** Fantasy Display Name */
+            fantasy_display_name?: string | null;
             /** Name */
             name: string;
             /** Permissions */
@@ -3836,12 +4635,16 @@ export interface components {
          * @description 管理员视图角色：含权限名列表与用户数。
          */
         AdminRoleOut: {
+            /** Auditdomains */
+            auditDomains?: string[];
             /** Createdat */
             createdAt?: string | null;
             /** Description */
             description?: string | null;
             /** Displayname */
             displayName?: string | null;
+            /** Fantasydisplayname */
+            fantasyDisplayName?: string | null;
             /** Id */
             id: number;
             /**
@@ -3881,10 +4684,14 @@ export interface components {
         };
         /** AdminRoleUpdate */
         AdminRoleUpdate: {
+            /** Audit Domains */
+            audit_domains?: string[] | null;
             /** Description */
             description?: string | null;
             /** Display Name */
             display_name?: string | null;
+            /** Fantasy Display Name */
+            fantasy_display_name?: string | null;
         };
         /**
          * AdminUserListOut
@@ -3999,15 +4806,25 @@ export interface components {
              * @default info
              */
             level: string;
+            /** Peak Id */
+            peak_id?: number | null;
             /**
              * Priority
              * @default 0
              */
             priority: number;
+            /** Status */
+            status?: ("draft" | "published" | "archived") | null;
             /** Target Roles */
             target_roles?: string[] | null;
             /** Title */
             title: string;
+            /**
+             * Visibility
+             * @default public
+             * @enum {string}
+             */
+            visibility: "public" | "members" | "peak";
         };
         /**
          * AnnouncementOut
@@ -4033,8 +4850,14 @@ export interface components {
             isDismissible: boolean;
             /** Level */
             level: string;
+            /** Peakid */
+            peakId?: number | null;
             /** Priority */
             priority: number;
+            /** Publishedat */
+            publishedAt?: string | null;
+            /** Status */
+            status: string;
             /** Targetroles */
             targetRoles?: string[] | null;
             /** Title */
@@ -4044,6 +4867,13 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /** Visibility */
+            visibility: string;
         };
         /** ArchiveRequest */
         ArchiveRequest: {
@@ -4179,6 +5009,35 @@ export interface components {
             /** Role */
             role: string;
         };
+        /** ClaimCancelOut */
+        ClaimCancelOut: {
+            /** Claimid */
+            claimId: number;
+            /** Settlement */
+            settlement?: string | null;
+            /** Taskstatus */
+            taskStatus: string;
+        };
+        /**
+         * ClaimCreate
+         * @description 单人任务无业务体；团队任务必须提供 team_id。
+         */
+        ClaimCreate: {
+            /** Team Id */
+            team_id?: number | null;
+        };
+        /** ClaimMemberOut */
+        ClaimMemberOut: {
+            /** Displayname */
+            displayName?: string | null;
+            /**
+             * Isleader
+             * @default false
+             */
+            isLeader: boolean;
+            /** Userid */
+            userId: number;
+        };
         /** ComponentGuideInput */
         ComponentGuideInput: {
             /**
@@ -4186,21 +5045,6 @@ export interface components {
              * @default []
              */
             antiPatterns: string[];
-            /**
-             * Usecases
-             * @default []
-             */
-            useCases: string[];
-        };
-        /** ComponentGuideOut */
-        ComponentGuideOut: {
-            /**
-             * Antipatterns
-             * @default []
-             */
-            antiPatterns: string[];
-            /** Id */
-            id: number;
             /**
              * Usecases
              * @default []
@@ -4231,41 +5075,6 @@ export interface components {
              */
             sortOrder: number;
         };
-        /** ComponentItemOut */
-        ComponentItemOut: {
-            /** Category */
-            category: string;
-            /**
-             * Createdat
-             * Format: date-time
-             */
-            createdAt: string;
-            /** Description */
-            description?: string | null;
-            guide?: components["schemas"]["ComponentGuideOut"] | null;
-            /** Id */
-            id: number;
-            /** Migrationstatus */
-            migrationStatus: string;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-            /** Sortorder */
-            sortOrder: number;
-            /**
-             * Updatedat
-             * Format: date-time
-             */
-            updatedAt: string;
-            /**
-             * Variants
-             * @default []
-             */
-            variants: components["schemas"]["ComponentVariantOut"][];
-            /** Visibilityopen */
-            visibilityOpen?: boolean | null;
-        };
         /**
          * ComponentMigrationStatusInput
          * @description 迁移状态更新输入：PATCH 单个 item 的 migrationStatus。
@@ -4274,35 +5083,14 @@ export interface components {
             /** Migrationstatus */
             migrationStatus: string;
         };
-        /**
-         * ComponentMigrationStatusOutput
-         * @description 迁移状态更新结果：携带旧状态与可见性联动结果，供治理事件审计。
-         */
-        ComponentMigrationStatusOutput: {
-            /** Migrationstatus */
-            migrationStatus: string;
-            /** Name */
-            name: string;
-            /** Oldmigrationstatus */
-            oldMigrationStatus: string;
-            /**
-             * Visibilitykey
-             * @default
-             */
-            visibilityKey: string;
-            /**
-             * Visibilityopened
-             * @default false
-             */
-            visibilityOpened: boolean;
-        };
-        /** ComponentVariantOut */
-        ComponentVariantOut: {
+        /** ComponentVariantInput */
+        ComponentVariantInput: {
             /** Color */
             color: string;
-            /** Id */
-            id: number;
-            /** Isenabled */
+            /**
+             * Isenabled
+             * @default true
+             */
             isEnabled: boolean;
             /** Size */
             size: string;
@@ -4411,15 +5199,23 @@ export interface components {
             date?: string | null;
             /** Description */
             description?: string | null;
+            /** Ends At */
+            ends_at?: string | null;
             /**
              * Is Pinned
              * @default false
              */
             is_pinned: boolean;
+            /** Location */
+            location?: string | null;
             /** Month */
             month?: string | null;
+            /** Peak Id */
+            peak_id?: number | null;
             /** Registration Fields */
             registration_fields?: components["schemas"]["RegistrationField"][] | null;
+            /** Starts At */
+            starts_at?: string | null;
             /**
              * Status
              * @default upcoming
@@ -4431,6 +5227,12 @@ export interface components {
             title: string;
             /** Topics */
             topics?: string[] | null;
+            /**
+             * Visibility
+             * @default public
+             * @enum {string}
+             */
+            visibility: "public" | "members" | "peak";
             /** Year */
             year?: string | null;
         };
@@ -4476,6 +5278,8 @@ export interface components {
             date?: string | null;
             /** Description */
             description?: string | null;
+            /** Endsat */
+            endsAt?: string | null;
             /** Id */
             id: number;
             /**
@@ -4483,8 +5287,14 @@ export interface components {
              * @default false
              */
             isPinned: boolean;
+            /** Location */
+            location?: string | null;
             /** Month */
             month?: string | null;
+            /** Organizerid */
+            organizerId?: number | null;
+            /** Peakid */
+            peakId?: number | null;
             /** Registeredcount */
             registeredCount?: number | null;
             /**
@@ -4494,6 +5304,8 @@ export interface components {
             registrationFields: {
                 [key: string]: unknown;
             }[];
+            /** Startsat */
+            startsAt?: string | null;
             /** Status */
             status?: string | null;
             /**
@@ -4513,6 +5325,16 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /**
+             * Visibility
+             * @default public
+             */
+            visibility: string;
             /** Year */
             year?: string | null;
         };
@@ -4692,23 +5514,265 @@ export interface components {
             /** Modules */
             modules: components["schemas"]["ModuleVisibility"][];
         };
+        /** FinanceAccountOut */
+        FinanceAccountOut: {
+            /** Balance */
+            balance: string;
+            /** Id */
+            id: number;
+            /**
+             * Isactive
+             * @default true
+             */
+            isActive: boolean;
+            /** Kind */
+            kind: string;
+            /** Ownerpeakid */
+            ownerPeakId?: number | null;
+            /** Ownertaskid */
+            ownerTaskId?: number | null;
+            /** Owneruserid */
+            ownerUserId?: number | null;
+        };
+        /** FinanceAdjustCreate */
+        FinanceAdjustCreate: {
+            /** Amount */
+            amount: string;
+            /** Direction */
+            direction: string;
+            /** Reason */
+            reason: string;
+            /** Target Account Id */
+            target_account_id: number;
+        };
+        /** FinanceAllocationCreate */
+        FinanceAllocationCreate: {
+            /** Amount */
+            amount: string;
+            /** From Account Id */
+            from_account_id: number;
+            /**
+             * Operation Kind
+             * @default allocation
+             */
+            operation_kind: string;
+            /** Reason */
+            reason: string;
+            /** To Account Id */
+            to_account_id: number;
+        };
+        /**
+         * FinanceEntryOut
+         * @description 交易分录视图：账户归属与展示名在同一行返回，避免前端拼全库。
+         */
+        FinanceEntryOut: {
+            /** Accountid */
+            accountId: number;
+            /** Balanceafter */
+            balanceAfter: string;
+            /** Delta */
+            delta: string;
+            /** Entryno */
+            entryNo: number;
+            /** Kind */
+            kind: string;
+            /** Ownername */
+            ownerName?: string | null;
+            /** Ownerpeakid */
+            ownerPeakId?: number | null;
+            /** Ownertaskid */
+            ownerTaskId?: number | null;
+            /** Owneruserid */
+            ownerUserId?: number | null;
+            /** Peakid */
+            peakId?: number | null;
+            /** Peakname */
+            peakName?: string | null;
+        };
+        /**
+         * FinanceMemberRowOut
+         * @description 峰成员资金视图：最小披露，仅身份与余额。
+         */
+        FinanceMemberRowOut: {
+            /** Accountid */
+            accountId?: number | null;
+            /** Balance */
+            balance: string;
+            /** Displayname */
+            displayName?: string | null;
+            /** Memberid */
+            memberId: number;
+            /** Membershipstatus */
+            membershipStatus: string;
+            /** Studentid */
+            studentId?: string | null;
+            /** Userid */
+            userId: number;
+            /** Username */
+            username: string;
+        };
+        /**
+         * FinancePeakRowOut
+         * @description 峰资金视图：峰身份 + 峰账户余额 + 在册成员数。
+         */
+        FinancePeakRowOut: {
+            /** Accountid */
+            accountId?: number | null;
+            /** Balance */
+            balance: string;
+            /**
+             * Isactive
+             * @default true
+             */
+            isActive: boolean;
+            /** Membercount */
+            memberCount: number;
+            /** Peakcode */
+            peakCode: string;
+            /** Peakid */
+            peakId: number;
+            /** Peakname */
+            peakName: string;
+        };
+        /**
+         * FinancePeakTransferCreate
+         * @description 峰间调拨：两侧峰账户加锁，禁止同峰。
+         */
+        FinancePeakTransferCreate: {
+            /** Amount */
+            amount: string;
+            /** From Peak Id */
+            from_peak_id: number;
+            /** Reason */
+            reason: string;
+            /** To Peak Id */
+            to_peak_id: number;
+        };
+        /**
+         * FinanceReversalCreate
+         * @description 交易冲正：按原分录取反，一笔原交易只允许冲正一次。
+         */
+        FinanceReversalCreate: {
+            /** Reason */
+            reason: string;
+            /** Transaction Id */
+            transaction_id: number;
+        };
+        /** FinanceReversalOut */
+        FinanceReversalOut: {
+            /** Amount */
+            amount: string;
+            /** Businesskey */
+            businessKey: string;
+            /** Originaltransactionid */
+            originalTransactionId: number;
+            /** Transactionid */
+            transactionId: number;
+        };
+        /**
+         * FinanceStatsOut
+         * @description 财务总览统计：按账户类型汇总余额。
+         */
+        FinanceStatsOut: {
+            /** Issuance */
+            issuance: string;
+            /** Peakcount */
+            peakCount: number;
+            /** Peaktotal */
+            peakTotal: string;
+            /** Taskescrowtotal */
+            taskEscrowTotal: string;
+            /** Treasury */
+            treasury: string;
+            /** Useraccountcount */
+            userAccountCount: number;
+            /** Usertotal */
+            userTotal: string;
+        };
+        /** FinanceTransactionOut */
+        FinanceTransactionOut: {
+            /** Amount */
+            amount: string;
+            /** Businesskey */
+            businessKey: string;
+            /** Direction */
+            direction?: string | null;
+            /** Fromaccountid */
+            fromAccountId?: number | null;
+            /** Targetaccountid */
+            targetAccountId?: number | null;
+            /** Toaccountid */
+            toAccountId?: number | null;
+            /** Transactionid */
+            transactionId: number;
+        };
+        /**
+         * FinanceTransactionRowOut
+         * @description 财务流水行：交易头 + 分录。
+         */
+        FinanceTransactionRowOut: {
+            /** Actorname */
+            actorName?: string | null;
+            /** Actoruserid */
+            actorUserId?: number | null;
+            /** Businesskey */
+            businessKey: string;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Entries */
+            entries?: components["schemas"]["FinanceEntryOut"][];
+            /** Reason */
+            reason?: string | null;
+            /** Relatedtaskid */
+            relatedTaskId?: number | null;
+            /** Transactionid */
+            transactionId: number;
+            /** Type */
+            type: string;
+        };
+        /**
+         * FinanceUserDetailOut
+         * @description 成员资金详情：账号、成员档案与钱包余额。
+         */
+        FinanceUserDetailOut: {
+            /** Accountid */
+            accountId?: number | null;
+            /** Balance */
+            balance: string;
+            /** Displayname */
+            displayName?: string | null;
+            /** Memberid */
+            memberId?: number | null;
+            /** Membershipstatus */
+            membershipStatus?: string | null;
+            /** Peakid */
+            peakId?: number | null;
+            /** Peakname */
+            peakName?: string | null;
+            /** Userid */
+            userId: number;
+            /** Username */
+            username: string;
+        };
         /**
          * FocusSessionIn
          * @description 前端完成一轮专注后的上报。
-         *
-         *     camel_config()：JSON 入参走 camelCase（durationSeconds），与全站 camelCase 传输契约一致；
-         *     populate_by_name=True 同时保留 snake_case 兼容（迁移期旧调用方/测试不破）。
          */
         FocusSessionIn: {
             /** Duration Seconds */
-            durationSeconds: number;
+            duration_seconds: number;
             /**
              * Phase
              * @default focus
              */
             phase: string;
             /** Sound Source */
-            soundSource?: string | null;
+            sound_source?: string | null;
+        };
+        /** ForceCloseCreate */
+        ForceCloseCreate: {
+            /** Reason */
+            reason: string;
         };
         /**
          * ForgotPasswordRequest
@@ -4732,6 +5796,30 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InvitationCreate */
+        InvitationCreate: {
+            /** Invitee User Id */
+            invitee_user_id: number;
+        };
+        /** InvitationOut */
+        InvitationOut: {
+            /** Createdat */
+            createdAt?: string | null;
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Id */
+            id: number;
+            /** Inviteeuserid */
+            inviteeUserId: number;
+            /** Inviteruserid */
+            inviterUserId: number;
+            /** Respondedat */
+            respondedAt?: string | null;
+            /** Status */
+            status: string;
+            /** Teamid */
+            teamId: number;
         };
         /**
          * JoinApplicationInput
@@ -4806,19 +5894,6 @@ export interface components {
             /** Status */
             status: string;
         };
-        /** LeaderboardEntry */
-        LeaderboardEntry: {
-            /** Balance */
-            balance: number;
-            /** Display Name */
-            display_name?: string | null;
-            /** Level */
-            level: number;
-            /** Level Title */
-            level_title: string;
-            /** User Id */
-            user_id: number;
-        };
         /** LearningGoalCreateRequest */
         LearningGoalCreateRequest: {
             /** Description */
@@ -4862,6 +5937,40 @@ export interface components {
             locked?: boolean | null;
             /** Status */
             status?: string | null;
+        };
+        /** LedgerEntryOut */
+        LedgerEntryOut: {
+            /** Accountid */
+            accountId: number;
+            /** Balanceafter */
+            balanceAfter: string;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Delta */
+            delta: string;
+            /** Entryno */
+            entryNo: number;
+            /** Id */
+            id: number;
+            /** Transactionid */
+            transactionId: number;
+        };
+        /** LedgerTransactionOut */
+        LedgerTransactionOut: {
+            /** Businesskey */
+            businessKey: string;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Entries */
+            entries?: components["schemas"]["LedgerEntryOut"][];
+            /** Id */
+            id: number;
+            /** Reason */
+            reason?: string | null;
+            /** Relatedtaskid */
+            relatedTaskId?: number | null;
+            /** Type */
+            type: string;
         };
         /**
          * LlmConfigIn
@@ -4938,6 +6047,57 @@ export interface components {
             twoFactorEnabled: boolean;
             user: components["schemas"]["UserOut"];
         };
+        /** MemberCreate */
+        MemberCreate: {
+            /** Peak Id */
+            peak_id?: number | null;
+            /** Student Id */
+            student_id?: string | null;
+            /** User Id */
+            user_id: number;
+        };
+        /** MemberMove */
+        MemberMove: {
+            /** Peak Id */
+            peak_id?: number | null;
+        };
+        /** MemberOut */
+        MemberOut: {
+            /** Displayname */
+            displayName?: string | null;
+            /** Id */
+            id: number;
+            /** Joinedat */
+            joinedAt?: string | null;
+            /** Leftat */
+            leftAt?: string | null;
+            /** Membershipstatus */
+            membershipStatus: string;
+            /** Peakid */
+            peakId?: number | null;
+            /** Peakname */
+            peakName?: string | null;
+            /** Studentid */
+            studentId?: string | null;
+            /** Userid */
+            userId: number;
+            /** Username */
+            username: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** MemberUpdate */
+        MemberUpdate: {
+            /** Membership Status */
+            membership_status?: string | null;
+            /** Peak Id */
+            peak_id?: number | null;
+            /** Student Id */
+            student_id?: string | null;
+        };
         /** MistakeReviewRequest */
         MistakeReviewRequest: {
             /** Error Reason */
@@ -4994,6 +6154,23 @@ export interface components {
             /** Userid */
             userId: number;
         };
+        /** OrganizationMeOut */
+        OrganizationMeOut: {
+            /**
+             * Authorizationversion
+             * @default 1
+             */
+            authorizationVersion: number;
+            /** Bindings */
+            bindings?: components["schemas"]["RoleBindingBrief"][];
+            /** Displayname */
+            displayName?: string | null;
+            member?: components["schemas"]["MemberOut"] | null;
+            /** Userid */
+            userId: number;
+            /** Username */
+            username: string;
+        };
         /** PaginatedResponse[AuditLogItem] */
         PaginatedResponse_AuditLogItem_: {
             /** Items */
@@ -5042,10 +6219,138 @@ export interface components {
              */
             total_pages: number;
         };
+        /** PaginatedResponse[FinanceAccountOut] */
+        PaginatedResponse_FinanceAccountOut_: {
+            /** Items */
+            items: components["schemas"]["FinanceAccountOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[FinanceMemberRowOut] */
+        PaginatedResponse_FinanceMemberRowOut_: {
+            /** Items */
+            items: components["schemas"]["FinanceMemberRowOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[FinancePeakRowOut] */
+        PaginatedResponse_FinancePeakRowOut_: {
+            /** Items */
+            items: components["schemas"]["FinancePeakRowOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[FinanceTransactionRowOut] */
+        PaginatedResponse_FinanceTransactionRowOut_: {
+            /** Items */
+            items: components["schemas"]["FinanceTransactionRowOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[InvitationOut] */
+        PaginatedResponse_InvitationOut_: {
+            /** Items */
+            items: components["schemas"]["InvitationOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[LedgerEntryOut] */
+        PaginatedResponse_LedgerEntryOut_: {
+            /** Items */
+            items: components["schemas"]["LedgerEntryOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[MemberOut] */
+        PaginatedResponse_MemberOut_: {
+            /** Items */
+            items: components["schemas"]["MemberOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
         /** PaginatedResponse[NotificationOut] */
         PaginatedResponse_NotificationOut_: {
             /** Items */
             items: components["schemas"]["NotificationOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[PeakOut] */
+        PaginatedResponse_PeakOut_: {
+            /** Items */
+            items: components["schemas"]["PeakOut"][];
             /** Limit */
             limit: number;
             /** Skip */
@@ -5074,10 +6379,90 @@ export interface components {
              */
             total_pages: number;
         };
+        /** PaginatedResponse[ReconciliationOut] */
+        PaginatedResponse_ReconciliationOut_: {
+            /** Items */
+            items: components["schemas"]["ReconciliationOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
         /** PaginatedResponse[Role] */
         PaginatedResponse_Role_: {
             /** Items */
             items: components["schemas"]["Role"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[TaskActionOut] */
+        PaginatedResponse_TaskActionOut_: {
+            /** Items */
+            items: components["schemas"]["TaskActionOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[TaskClaimOut] */
+        PaginatedResponse_TaskClaimOut_: {
+            /** Items */
+            items: components["schemas"]["TaskClaimOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[TaskOut] */
+        PaginatedResponse_TaskOut_: {
+            /** Items */
+            items: components["schemas"]["TaskOut"][];
+            /** Limit */
+            limit: number;
+            /** Skip */
+            skip: number;
+            /** Total */
+            total: number;
+            /**
+             * Total Pages
+             * @default 0
+             */
+            total_pages: number;
+        };
+        /** PaginatedResponse[TeamOut] */
+        PaginatedResponse_TeamOut_: {
+            /** Items */
+            items: components["schemas"]["TeamOut"][];
             /** Limit */
             limit: number;
             /** Skip */
@@ -5124,6 +6509,53 @@ export interface components {
              */
             total_pages: number;
         };
+        /** PeakCreate */
+        PeakCreate: {
+            /** Code */
+            code: string;
+            /** Description */
+            description?: string | null;
+            /** Fantasy Name */
+            fantasy_name?: string | null;
+            /** Name */
+            name: string;
+        };
+        /** PeakOut */
+        PeakOut: {
+            /** Archivedat */
+            archivedAt?: string | null;
+            /** Code */
+            code: string;
+            /** Description */
+            description?: string | null;
+            /** Fantasyname */
+            fantasyName?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Isactive
+             * @default true
+             */
+            isActive: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** PeakUpdate */
+        PeakUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Fantasy Name */
+            fantasy_name?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Name */
+            name?: string | null;
+        };
         /** Permission */
         Permission: {
             /** Action */
@@ -5140,64 +6572,6 @@ export interface components {
             resource: string;
             /** Updatedat */
             updatedAt?: string | null;
-        };
-        /** PermissionCreate */
-        PermissionCreate: {
-            /** Action */
-            action: string;
-            /** Description */
-            description?: string | null;
-            /** Name */
-            name: string;
-            /** Resource */
-            resource: string;
-        };
-        /** PermissionUpdate */
-        PermissionUpdate: {
-            /** Action */
-            action?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Name */
-            name?: string | null;
-            /** Resource */
-            resource?: string | null;
-        };
-        /** PointsProfileOut */
-        PointsProfileOut: {
-            /** Balance */
-            balance: number;
-            /** Level */
-            level: number;
-            /** Level Title */
-            level_title: string;
-            /**
-             * Transactions
-             * @default []
-             */
-            transactions: components["schemas"]["PointsTransactionOut"][];
-        };
-        /** PointsTransactionOut */
-        PointsTransactionOut: {
-            /** Amount */
-            amount: number;
-            /** Balance After */
-            balance_after: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Id */
-            id: number;
-            /** Reason */
-            reason: string;
-            /** Source Id */
-            source_id?: number | null;
-            /** Source Type */
-            source_type: string;
-            /** User Id */
-            user_id: number;
         };
         /**
          * ProfileResponse
@@ -5304,6 +6678,33 @@ export interface components {
              * @default single_choice
              */
             type: string;
+        };
+        /**
+         * RecipientOut
+         * @description 收款人候选：最小披露资料。
+         */
+        RecipientOut: {
+            /** Display Name */
+            display_name?: string | null;
+            /** User Id */
+            user_id: number;
+            /** Username */
+            username?: string | null;
+        };
+        /** ReconciliationOut */
+        ReconciliationOut: {
+            /** Counts */
+            counts?: {
+                [key: string]: unknown;
+            };
+            /** Finishedat */
+            finishedAt?: string | null;
+            /** Id */
+            id: number;
+            /** Startedat */
+            startedAt?: string | null;
+            /** Status */
+            status: string;
         };
         /**
          * RefreshRequest
@@ -5436,42 +6837,64 @@ export interface components {
             /** Updatedat */
             updatedAt?: string | null;
         };
-        /** RoleCreate */
-        RoleCreate: {
-            /** Description */
-            description?: string | null;
-            /** Display Name */
-            display_name?: string | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Is System
-             * @default false
-             */
-            is_system: boolean;
-            /** Name */
-            name: string;
-            /**
-             * Sort Order
-             * @default 0
-             */
-            sort_order: number;
+        /** RoleBindingBrief */
+        RoleBindingBrief: {
+            /** Displayname */
+            displayName?: string | null;
+            /** Fantasydisplayname */
+            fantasyDisplayName?: string | null;
+            /** Rolename */
+            roleName: string;
+            /** Scopepeakid */
+            scopePeakId?: number | null;
+            /** Scopetype */
+            scopeType: string;
         };
-        /** RoleUpdate */
-        RoleUpdate: {
-            /** Description */
-            description?: string | null;
-            /** Display Name */
-            display_name?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
-            /** Name */
-            name?: string | null;
-            /** Sort Order */
-            sort_order?: number | null;
+        /**
+         * RoleBindingIn
+         * @description 单条角色绑定：角色 + 作用范围（own / peak / all）。
+         */
+        RoleBindingIn: {
+            /** Role Id */
+            role_id: number;
+            /** Scope Peak Id */
+            scope_peak_id?: number | null;
+            /**
+             * Scope Type
+             * @default own
+             * @enum {string}
+             */
+            scope_type: "own" | "peak" | "all";
+        };
+        /**
+         * RoleBindingOut
+         * @description 用户角色绑定视图。
+         */
+        RoleBindingOut: {
+            /** Createdat */
+            createdAt?: string | null;
+            /** Displayname */
+            displayName?: string | null;
+            /** Fantasydisplayname */
+            fantasyDisplayName?: string | null;
+            /** Id */
+            id: number;
+            /** Roleid */
+            roleId: number;
+            /** Rolename */
+            roleName: string;
+            /** Scopepeakid */
+            scopePeakId?: number | null;
+            /** Scopetype */
+            scopeType: string;
+        };
+        /**
+         * RoleBindingsReplace
+         * @description 整组替换用户角色绑定。
+         */
+        RoleBindingsReplace: {
+            /** Bindings */
+            bindings?: components["schemas"]["RoleBindingIn"][];
         };
         /**
          * SearchGroup
@@ -5571,44 +6994,101 @@ export interface components {
             /** Useragent */
             userAgent?: string | null;
         };
-        /**
-         * SubmitProofIn
-         * @description 完成提交的可选证明材料链接（TOOLS-GOV Slice E 落库）。
-         */
-        SubmitProofIn: {
-            /** Submission Url */
-            submission_url?: string | null;
+        /** SubmissionCreate */
+        SubmissionCreate: {
+            /** Attachments */
+            attachments?: string[];
+            /** Description */
+            description: string;
+        };
+        /** SubmissionOut */
+        SubmissionOut: {
+            /** Attachments */
+            attachments?: string[];
+            /** Claimid */
+            claimId: number;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Id */
+            id: number;
+            /** Reviewnote */
+            reviewNote?: string | null;
+            /** Reviewstatus */
+            reviewStatus: string;
+            /** Reviewedat */
+            reviewedAt?: string | null;
+            /** Reviewerid */
+            reviewerId?: number | null;
+            /** Revision */
+            revision: number;
+            /** Submittedby */
+            submittedBy: number;
+        };
+        /** SubmissionReviewCreate */
+        SubmissionReviewCreate: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+            /** Rework Deadline */
+            rework_deadline?: string | null;
+        };
+        /** TaskActionOut */
+        TaskActionOut: {
+            /** Action */
+            action: string;
+            /** Actorid */
+            actorId: number;
+            /** Claimid */
+            claimId?: number | null;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Fromstatus */
+            fromStatus?: string | null;
+            /** Id */
+            id: number;
+            /** Reason */
+            reason?: string | null;
+            /** Taskid */
+            taskId: number;
+            /** Tostatus */
+            toStatus?: string | null;
         };
         /** TaskClaimOut */
         TaskClaimOut: {
-            /** Claim Note */
-            claim_note?: string | null;
-            /** Completed At */
-            completed_at?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Display Name */
-            display_name?: string | null;
+            /** Completedat */
+            completedAt?: string | null;
             /** Id */
             id: number;
-            /** Review Note */
-            review_note?: string | null;
-            /** Reviewed By */
-            reviewed_by?: number | null;
+            /** Leaderuserid */
+            leaderUserId: number;
+            /** Members */
+            members?: components["schemas"]["ClaimMemberOut"][];
+            /** Startedat */
+            startedAt?: string | null;
             /** Status */
             status: string;
-            /** Submission Url */
-            submission_url?: string | null;
-            /** Task Id */
-            task_id: number;
-            /** User Id */
-            user_id: number;
+            submission?: components["schemas"]["SubmissionOut"] | null;
+            /** Submittedat */
+            submittedAt?: string | null;
+            task?: components["schemas"]["TaskOut"] | null;
+            /** Taskid */
+            taskId: number;
+            /** Teamid */
+            teamId?: number | null;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
         };
-        /** TaskInput */
-        TaskInput: {
+        /** TaskCreate */
+        TaskCreate: {
             /**
              * Category
              * @default general
@@ -5616,27 +7096,182 @@ export interface components {
             category: string;
             /** Content Markdown */
             content_markdown?: string | null;
+            /**
+             * Deadline
+             * Format: date-time
+             */
+            deadline: string;
             /** Description */
             description: string;
+            /** Difficulty */
+            difficulty?: string | null;
             /**
-             * Max Claimants
+             * Execution Mode
+             * @default single
+             * @enum {string}
+             */
+            execution_mode: "single" | "team";
+            /**
+             * Max Members
              * @default 1
              */
-            max_claimants: number;
+            max_members: number;
+            /** Peak Id */
+            peak_id?: number | null;
+            /** Reward Total */
+            reward_total: string;
+            /** Tags */
+            tags?: string[];
+            /** Title */
+            title: string;
             /**
-             * Points
-             * @default 10
+             * Visibility
+             * @default members
+             * @enum {string}
              */
-            points: number;
+            visibility: "public" | "members" | "peak";
+        };
+        /** TaskOut */
+        TaskOut: {
+            activeClaim?: components["schemas"]["ActiveClaimOut"] | null;
+            /** Archivedat */
+            archivedAt?: string | null;
+            /** Category */
+            category: string;
+            /** Closedat */
+            closedAt?: string | null;
+            /** Contentmarkdown */
+            contentMarkdown?: string | null;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Deadline */
+            deadline?: string | null;
+            /** Description */
+            description: string;
+            /** Difficulty */
+            difficulty?: string | null;
+            /** Executionmode */
+            executionMode: string;
+            /** Id */
+            id: number;
+            /** Maxmembers */
+            maxMembers: number;
+            /** Peakid */
+            peakId?: number | null;
+            /** Publishedat */
+            publishedAt?: string | null;
+            /** Publisherid */
+            publisherId: number;
+            /** Publishername */
+            publisherName?: string | null;
             /**
-             * Status
-             * @default draft
+             * Reviewcycle
+             * @default 0
              */
+            reviewCycle: number;
+            /** Reviewedat */
+            reviewedAt?: string | null;
+            /** Rewardtotal */
+            rewardTotal: string;
+            /** Status */
             status: string;
+            /** Tags */
+            tags?: string[];
+            /** Title */
+            title: string;
+            /** Updatedat */
+            updatedAt?: string | null;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /** Visibility */
+            visibility: string;
+        };
+        /** TaskReviewCreate */
+        TaskReviewCreate: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Note */
+            note?: string | null;
+        };
+        /** TaskUpdate */
+        TaskUpdate: {
+            /** Category */
+            category?: string | null;
+            /** Content Markdown */
+            content_markdown?: string | null;
+            /** Deadline */
+            deadline?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Difficulty */
+            difficulty?: string | null;
+            /** Execution Mode */
+            execution_mode?: ("single" | "team") | null;
+            /** Max Members */
+            max_members?: number | null;
+            /** Peak Id */
+            peak_id?: number | null;
+            /** Reward Total */
+            reward_total?: string | null;
             /** Tags */
             tags?: string[] | null;
             /** Title */
-            title: string;
+            title?: string | null;
+            /** Visibility */
+            visibility?: ("public" | "members" | "peak") | null;
+        };
+        /** TeamCreate */
+        TeamCreate: {
+            /** Invitee User Ids */
+            invitee_user_ids?: number[];
+            /** Name */
+            name: string;
+        };
+        /** TeamMemberOut */
+        TeamMemberOut: {
+            /** Displayname */
+            displayName?: string | null;
+            /** Joinedat */
+            joinedAt?: string | null;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /** Userid */
+            userId: number;
+        };
+        /** TeamOut */
+        TeamOut: {
+            /** Captainuserid */
+            captainUserId: number;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Id */
+            id: number;
+            /** Members */
+            members?: components["schemas"]["TeamMemberOut"][];
+            /** Name */
+            name: string;
+            /** Status */
+            status: string;
+            /** Updatedat */
+            updatedAt?: string | null;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+        };
+        /** TeamUpdate */
+        TeamUpdate: {
+            /** Name */
+            name: string;
         };
         /**
          * TokenPair
@@ -5656,6 +7291,35 @@ export interface components {
              * @default bearer
              */
             tokenType: string;
+        };
+        /**
+         * TransferCreate
+         * @description 本人钱包转账：付款人由登录身份决定，禁止客户端传入。
+         */
+        TransferCreate: {
+            /** Amount */
+            amount: string;
+            /** Recipient User Id */
+            recipient_user_id: number;
+            /** Related Task Id */
+            related_task_id?: number | null;
+            /** Remark */
+            remark?: string | null;
+        };
+        /** TransferOut */
+        TransferOut: {
+            /** Amount */
+            amount: string;
+            /** Businesskey */
+            businessKey: string;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Fromaccountid */
+            fromAccountId: number;
+            /** Toaccountid */
+            toAccountId: number;
+            /** Transactionid */
+            transactionId: number;
         };
         /**
          * TwoFactorCodeRequest
@@ -5741,6 +7405,18 @@ export interface components {
             isSuperuser: boolean;
             /** Username */
             username: string;
+        };
+        /**
+         * UserBindingsResponse
+         * @description 用户角色绑定与授权版本。
+         */
+        UserBindingsResponse: {
+            /** Authorizationversion */
+            authorizationVersion: number;
+            /** Bindings */
+            bindings?: components["schemas"]["RoleBindingOut"][];
+            /** Userid */
+            userId: number;
         };
         /** UserCreate */
         UserCreate: {
@@ -5860,6 +7536,52 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * WalletLeaderboardEntryOut
+         * @description 公开余额排行条目：仅包含已同意公开的有效用户。
+         */
+        WalletLeaderboardEntryOut: {
+            /** Balance */
+            balance: string;
+            /** Displayname */
+            displayName?: string | null;
+            /** Level */
+            level: number;
+            /** Leveltitle */
+            levelTitle: string;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * WalletProfileOut
+         * @description 统一余额档案：等级由当前可用余额派生。
+         */
+        WalletProfileOut: {
+            /** Balance */
+            balance: string;
+            /** Escrowtotal */
+            escrowTotal: string;
+            /** Level */
+            level: number;
+            /** Leveltitle */
+            levelTitle: string;
+            /** Userid */
+            userId: number;
+        };
+        /**
+         * WalletSummaryOut
+         * @description 本人钱包摘要：可用余额 + 托管汇总。
+         */
+        WalletSummaryOut: {
+            /** Accountid */
+            accountId?: number | null;
+            /** Balance */
+            balance: string;
+            /** Escrowtotal */
+            escrowTotal: string;
+            /** Userid */
+            userId: number;
         };
     };
     responses: never;
@@ -6781,6 +8503,37 @@ export interface operations {
             };
         };
     };
+    cancel_event_api_v1_admin_events__event_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     checkin_by_code_api_v1_admin_events__event_id__checkin_post: {
         parameters: {
             query?: never;
@@ -6898,6 +8651,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_event_api_v1_admin_events__event_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
                 };
             };
             /** @description Validation Error */
@@ -7032,6 +8816,815 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModuleVisibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_accounts_api_v1_admin_finance_accounts_get: {
+        parameters: {
+            query?: {
+                kind?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_FinanceAccountOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_adjustment_api_v1_admin_finance_adjustments_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinanceAdjustCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceTransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_allocation_api_v1_admin_finance_allocations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinanceAllocationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceTransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_peak_transfer_api_v1_admin_finance_peak_transfers_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinancePeakTransferCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceTransactionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_finance_peaks_api_v1_admin_finance_peaks_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_FinancePeakRowOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_finance_peak_api_v1_admin_finance_peaks__peak_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                peak_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancePeakRowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_finance_peak_members_api_v1_admin_finance_peaks__peak_id__members_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path: {
+                peak_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_FinanceMemberRowOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_reconciliations_api_v1_admin_finance_reconciliations_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_ReconciliationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_reconciliation_api_v1_admin_finance_reconciliations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationOut"];
+                };
+            };
+        };
+    };
+    create_reversal_api_v1_admin_finance_reversals_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FinanceReversalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceReversalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_stats_api_v1_admin_finance_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceStatsOut"];
+                };
+            };
+        };
+    };
+    list_transactions_api_v1_admin_finance_transactions_get: {
+        parameters: {
+            query?: {
+                type?: string | null;
+                account_id?: number | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_FinanceTransactionRowOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_treasury_api_v1_admin_finance_treasury_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceAccountOut"];
+                };
+            };
+        };
+    };
+    get_finance_user_api_v1_admin_finance_users__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceUserDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    organization_history_api_v1_admin_organization_history_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AuditLogItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_members_api_v1_admin_organization_members_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                peak_id?: number | null;
+                membership_status?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_MemberOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_member_api_v1_admin_organization_members_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_member_api_v1_admin_organization_members__member_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    member_history_api_v1_admin_organization_members__member_id__history_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AuditLogItem_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_member_api_v1_admin_organization_members__member_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberMove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_member_api_v1_admin_organization_members__member_id__remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_peak_api_v1_admin_organization_peaks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeakCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeakOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_peak_api_v1_admin_organization_peaks__peak_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                peak_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeakUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeakOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_peak_api_v1_admin_organization_peaks__peak_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                peak_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeakOut"];
                 };
             };
             /** @description Validation Error */
@@ -7219,6 +9812,37 @@ export interface operations {
             };
         };
     };
+    get_role_api_v1_admin_roles__role_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRoleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_role_api_v1_admin_roles__role_id__put: {
         parameters: {
             query?: never;
@@ -7285,6 +9909,41 @@ export interface operations {
             };
         };
     };
+    update_role_api_v1_admin_roles__role_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminRoleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRoleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     replace_permissions_api_v1_admin_roles__role_id__permissions_put: {
         parameters: {
             query?: never;
@@ -7307,6 +9966,159 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminRoleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_submission_api_v1_admin_task_submissions__submission_id__reviews_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                submission_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_admin_tasks_api_v1_admin_tasks_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                keyword?: string | null;
+                peak_id?: number | null;
+                publisher_id?: number | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    force_close_task_api_v1_admin_tasks__task_id__force_close_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForceCloseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_task_api_v1_admin_tasks__task_id__reviews_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
                 };
             };
             /** @description Validation Error */
@@ -7582,6 +10394,72 @@ export interface operations {
             };
         };
     };
+    get_user_role_bindings_api_v1_admin_users__user_id__role_bindings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserBindingsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replace_user_role_bindings_api_v1_admin_users__user_id__role_bindings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleBindingsReplace"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserBindingsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_active_announcements_api_v1_announcements_get: {
         parameters: {
             query?: never;
@@ -7604,7 +10482,10 @@ export interface operations {
     };
     list_all_announcements_api_v1_announcements_admin_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description me=本人创建，或指定用户 ID */
+                created_by?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7618,6 +10499,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnnouncementOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -7731,6 +10621,68 @@ export interface operations {
                 "application/json": components["schemas"]["AnnouncementInput"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_announcement_api_v1_announcements_admin__announcement_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_announcement_api_v1_announcements_admin__announcement_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -8146,7 +11098,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenPair"];
+                    "application/json": components["schemas"]["LoginResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8212,7 +11164,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenPair"];
+                    "application/json": components["schemas"]["LoginResponse"];
                 };
             };
             /** @description Validation Error */
@@ -10744,6 +13696,137 @@ export interface operations {
             };
         };
     };
+    get_my_organization_api_v1_organization_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganizationMeOut"];
+                };
+            };
+        };
+    };
+    list_members_api_v1_organization_members_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                peak_id?: number | null;
+                membership_status?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_MemberOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_member_api_v1_organization_members__member_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_peaks_api_v1_organization_peaks_get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_PeakOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_profile_api_v1_profile_get: {
         parameters: {
             query?: never;
@@ -10896,6 +13979,26 @@ export interface operations {
             };
         };
     };
+    get_my_bindings_api_v1_rbac_me_bindings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserBindingsResponse"];
+                };
+            };
+        };
+    };
     get_my_permissions_api_v1_rbac_me_permissions_get: {
         parameters: {
             query?: never;
@@ -10974,39 +14077,6 @@ export interface operations {
             };
         };
     };
-    create_permission_api_v1_rbac_permissions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PermissionCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Permission"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_permission_api_v1_rbac_permissions__permission_id__get: {
         parameters: {
             query?: never;
@@ -11025,72 +14095,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Permission"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_permission_api_v1_rbac_permissions__permission_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                permission_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PermissionUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Permission"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_permission_api_v1_rbac_permissions__permission_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                permission_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -11142,39 +14146,6 @@ export interface operations {
             };
         };
     };
-    create_role_api_v1_rbac_roles_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Role"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_role_api_v1_rbac_roles__role_id__get: {
         parameters: {
             query?: never;
@@ -11193,136 +14164,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_role_api_v1_rbac_roles__role_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Role"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_role_api_v1_rbac_roles__role_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    assign_permission_to_role_api_v1_rbac_roles__role_id__permissions__permission_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-                permission_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    revoke_permission_from_role_api_v1_rbac_roles__role_id__permissions__permission_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-                permission_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -11433,70 +14274,6 @@ export interface operations {
             };
         };
     };
-    assign_role_to_user_api_v1_rbac_users__user_id__roles__role_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    revoke_role_from_user_api_v1_rbac_users__user_id__roles__role_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     global_search_api_v1_search_get: {
         parameters: {
             query: {
@@ -11520,6 +14297,795 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_claim_api_v1_task_claims__claim_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                claim_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimCancelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_claim_api_v1_task_claims__claim_id__submissions_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                claim_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmissionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tasks_api_v1_tasks_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                category?: string | null;
+                keyword?: string | null;
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_task_api_v1_tasks_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_claims_api_v1_tasks_me_claims_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TaskClaimOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_published_api_v1_tasks_me_published_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task_api_v1_tasks__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_task_api_v1_tasks__task_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_task_api_v1_tasks__task_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string | null;
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_task_claims_api_v1_tasks__task_id__claims_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskClaimOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_task_api_v1_tasks__task_id__claims_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClaimCreate"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskClaimOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_task_history_api_v1_tasks__task_id__history_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TaskActionOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_task_review_api_v1_tasks__task_id__review_requests_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                task_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_teams_api_v1_teams_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_TeamOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_team_api_v1_teams_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_invitations_api_v1_teams_invitations_me_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_InvitationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_invitation_api_v1_teams_invitations__invitation_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_invitation_api_v1_teams_invitations__invitation_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                invitation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_team_api_v1_teams__team_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_team_api_v1_teams__team_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeamUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    invite_member_api_v1_teams__team_id__invitations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    leave_team_api_v1_teams__team_id__leave_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                team_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -12140,292 +15706,6 @@ export interface operations {
             };
         };
     };
-    admin_list_tasks_api_v1_tools_admin_tasks_get: {
-        parameters: {
-            query?: {
-                status?: string | null;
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_task_api_v1_tools_admin_tasks_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    pending_claims_api_v1_tools_admin_tasks_claims_pending_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    approve_claim_api_v1_tools_admin_tasks_claims__claim_id__approve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                claim_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskClaimOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    reject_claim_api_v1_tools_admin_tasks_claims__claim_id__reject_post: {
-        parameters: {
-            query?: {
-                reason?: string | null;
-            };
-            header?: never;
-            path: {
-                claim_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskClaimOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_task_api_v1_tools_admin_tasks__task_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_task_api_v1_tools_admin_tasks__task_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    close_task_api_v1_tools_admin_tasks__task_id__close_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    publish_task_api_v1_tools_admin_tasks__task_id__publish_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     auxilio_analysis_api_v1_tools_auxilio_get: {
         parameters: {
             query?: never;
@@ -12448,7 +15728,9 @@ export interface operations {
     };
     list_components_api_v1_tools_components_get: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -12461,7 +15743,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentItemOut"][];
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -12480,12 +15771,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentItemOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12504,7 +15795,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12516,7 +15807,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentItemOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12535,7 +15826,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12551,7 +15842,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentItemOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12570,7 +15861,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12601,7 +15892,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12627,12 +15918,12 @@ export interface operations {
             };
         };
     };
-    update_guide_api_v1_tools_components__component_id__guide_post: {
+    create_guide_api_v1_tools_components__component_id__guide_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12648,7 +15939,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentItemOut"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12667,7 +15958,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12679,7 +15970,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentMigrationStatusOutput"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12698,7 +15989,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12714,7 +16005,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentMigrationStatusOutput"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12733,7 +16024,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12745,7 +16036,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentVariantOut"][];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12759,18 +16050,18 @@ export interface operations {
             };
         };
     };
-    toggle_variant_api_v1_tools_components__component_id__variants_patch: {
+    create_variant_api_v1_tools_components__component_id__variants_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ComponentVariantToggleInput"];
+                "application/json": components["schemas"]["ComponentVariantInput"];
             };
         };
         responses: {
@@ -12780,7 +16071,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentVariantOut"][];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12794,12 +16085,12 @@ export interface operations {
             };
         };
     };
-    apply_variant_preset_api_v1_tools_components__component_id__variants_preset_post: {
+    apply_preset_api_v1_tools_components__component_id__variants_preset_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                component_id: number;
+                component_id: string;
             };
             cookie?: never;
         };
@@ -12815,7 +16106,78 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ComponentVariantOut"][];
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    toggle_variant_api_v1_tools_components__component_id__variants_toggle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentVariantToggleInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_variant_api_v1_tools_components__component_id__variants__variant_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                component_id: string;
+                variant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentVariantInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -12997,90 +16359,6 @@ export interface operations {
             };
         };
     };
-    leaderboard_api_v1_tools_points_leaderboard_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LeaderboardEntry"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    my_points_api_v1_tools_points_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PointsProfileOut"];
-                };
-            };
-        };
-    };
-    my_history_api_v1_tools_points_me_history_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_resources_api_v1_tools_resources_get: {
         parameters: {
             query?: {
@@ -13107,41 +16385,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedResponse_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    submit_resource_api_v1_tools_resources_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResourceInput"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
                 };
             };
             /** @description Validation Error */
@@ -13252,126 +16495,14 @@ export interface operations {
             };
         };
     };
-    list_tasks_api_v1_tools_tasks_get: {
+    rate_resource_api_v1_tools_resources__resource_id__rate_post: {
         parameters: {
-            query?: {
-                status?: string | null;
-                /** @description 跳过的记录数（与 page 互斥） */
-                skip?: number;
-                /** @description 每页返回的最大记录数 */
-                limit?: number;
-                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
-                page?: number | null;
-                /** @description 每页大小（提供时覆盖 limit） */
-                page_size?: number | null;
+            query: {
+                score: number;
             };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_dict_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    my_claims_api_v1_tools_tasks_claimed_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    my_claims_alias_api_v1_tools_tasks_claims_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    submit_proof_api_v1_tools_tasks_claims__claim_id__submit_post: {
-        parameters: {
-            query?: never;
             header?: never;
             path: {
-                claim_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["SubmitProofIn"] | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskClaimOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_task_api_v1_tools_tasks__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
+                resource_id: number;
             };
             cookie?: never;
         };
@@ -13385,66 +16516,6 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    claim_task_api_v1_tools_tasks__task_id__claim_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskClaimOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_claim_api_v1_tools_tasks__task_id__claim_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -13665,6 +16736,212 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    wallet_leaderboard_api_v1_wallet_leaderboard_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletLeaderboardEntryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_wallet_api_v1_wallet_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletSummaryOut"];
+                };
+            };
+        };
+    };
+    list_my_entries_api_v1_wallet_me_entries_get: {
+        parameters: {
+            query?: {
+                /** @description 跳过的记录数（与 page 互斥） */
+                skip?: number;
+                /** @description 每页返回的最大记录数 */
+                limit?: number;
+                /** @description 页码（1-based，提供时与 page_size 一起计算 skip/limit） */
+                page?: number | null;
+                /** @description 每页大小（提供时覆盖 limit） */
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_LedgerEntryOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_profile_api_v1_wallet_me_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletProfileOut"];
+                };
+            };
+        };
+    };
+    search_recipients_api_v1_wallet_recipients_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipientOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_transfer_api_v1_wallet_transfers_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transfer_detail_api_v1_wallet_transfers__transaction_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerTransactionOut"];
                 };
             };
             /** @description Validation Error */

@@ -10,7 +10,7 @@ vi.mock('@/components/effects/scroll-indicator', () => ({
 }));
 
 /**
- * FilterBar 冒烟测试（2026-08-13 补全 primitives 测试盲区）
+ * FilterBar 冒烟测试
  */
 const options = [
   { value: 'all', label: '全部' },

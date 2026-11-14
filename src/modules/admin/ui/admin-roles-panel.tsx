@@ -143,7 +143,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     setSaving(true);
     try {
       const result = await apiRequest<{ role: RoleRecord }>(
-        `/api/admin/roles/${encodeURIComponent(selectedRole.key)}/permissions`,
+        `/api/admin/roles/${selectedRole.id}/permissions`,
         { method: 'PUT', body: { permissions: Array.from(draftPermissions) } },
       );
       if (!result.ok) {
@@ -223,7 +223,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     setEditSaving(true);
     try {
       const result = await apiRequest<{ role: RoleRecord }>(
-        `/api/admin/roles/${encodeURIComponent(modal.role.key)}`,
+        `/api/admin/roles/${modal.role.id}`,
         {
           method: 'PATCH',
           body: {
@@ -255,7 +255,7 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
     setEditSaving(true);
     try {
       const result = await apiRequest<{ role: RoleRecord }>(
-        `/api/admin/roles/${encodeURIComponent(modal.role.key)}`,
+        `/api/admin/roles/${modal.role.id}`,
         { method: 'DELETE' },
       );
       if (!result.ok) {
@@ -368,6 +368,12 @@ export function AdminRolesPanel({ onForbidden }: AdminRolesPanelProps) {
                   </div>
                   <div className="meta-mono text-[11px] text-[var(--muted-foreground)] flex items-center gap-3">
                     <span>{role.key}</span>
+                    {role.fantasyDisplayName ? (
+                      <>
+                        <span>·</span>
+                        <span>{role.fantasyDisplayName}</span>
+                      </>
+                    ) : null}
                     <span>·</span>
                     <span>{t('permissionsCount', { count: role.permissions.length })}</span>
                     {role.userCount !== undefined && role.userCount > 0 && (
