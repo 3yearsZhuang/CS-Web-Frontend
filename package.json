@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "node ./tools/scripts/build/build-app.mjs",
-    "clean": "rm -rf .build dist node_modules && pnpm install",
+    "clean": "node tools/scripts/build/clean-generated.mjs",
     "dev": "node ./tools/scripts/build/dev-server.mjs",
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint",
@@ -13,7 +13,7 @@
     "start": "node ./tools/scripts/build/start-server.mjs",
     "tunnel": "node ./tools/scripts/deploy/cloudflare-tunnel.mjs",
     "prepare": "bash ./tools/scripts/build/install-deps.sh",
-    "test": "vitest run",
+    "test": "node --test tools/scripts/build/clean-generated.test.mjs && vitest run --execArgv=--no-experimental-webstorage",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "ts-check": "tsc -p tsconfig.json",

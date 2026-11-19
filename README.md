@@ -24,6 +24,10 @@ pnpm build            # 构建生产版本
 pnpm start            # 启动生产服务器
 ```
 
+`pnpm clean --dry-run` 预览 `.build`、`dist`、覆盖率和浏览器测试输出，`pnpm clean` 释放这些生成目录及 TypeScript 增量文件。依赖重装使用独立的 `pnpm install --frozen-lockfile`。先停止开发服务、生产服务及构建进程，macOS/Linux 清理入口会检查打开的输出文件，Windows 需自行确认进程已停止。任务验收后按需执行清理，并记录仍需保存的产物。
+
+清理回归随 `pnpm test` 执行。测试工作进程显式关闭 Node 实验性 Web Storage，以兼容 jsdom。
+
 管理员账号通过 CLI 创建，详见「常用命令」。
 
 内网穿透（Cloudflare Tunnel）：

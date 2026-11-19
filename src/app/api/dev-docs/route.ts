@@ -22,7 +22,7 @@ const DOCS_DIR = path.resolve(process.cwd(), 'tools/docs');
 /** 从文件第一行 `# 标题` 提取标题，失败返回文件名 */
 function extractTitle(filePath: string, fallback: string): string {
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = fs.readFileSync(/* turbopackIgnore: true */ filePath, 'utf-8');
     const match = content.match(/^#\s+(.+)$/m);
     return match?.[1]?.trim() || fallback;
   } catch {
@@ -44,13 +44,14 @@ export async function GET(req: Request) {
 
   try {
     const files = fs
-      .readdirSync(DOCS_DIR)
+      // 运行时读取 docs 目录，非静态导入；避免 Turbopack 追踪整个项目
+      .readdirSync(/* turbopackIgnore: true */ DOCS_DIR)
       .filter((f) => f.endsWith('.md'))
       .sort();
 
     const docs = files.map((f) => {
       const fullPath = path.join(DOCS_DIR, f);
-      const stat = fs.statSync(fullPath);
+      const stat = fs.statSync(/* turbopackIgnore: true */ fullPath);
       return {
         slug: f.replace(/\.md$/, ''),
         title: extractTitle(fullPath, f),

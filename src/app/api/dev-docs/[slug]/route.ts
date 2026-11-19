@@ -75,13 +75,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     return jsonError('无效的文档标识', 400);
   }
 
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(/* turbopackIgnore: true */ filePath)) {
     return jsonError('文档不存在', 404);
   }
 
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const stat = fs.statSync(filePath);
+    const content = fs.readFileSync(/* turbopackIgnore: true */ filePath, 'utf-8');
+    const stat = fs.statSync(/* turbopackIgnore: true */ filePath);
     return NextResponse.json({
       slug,
       content,
@@ -126,7 +126,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
   }
 
   try {
-    fs.writeFileSync(filePath, body.content, 'utf-8');
+    fs.writeFileSync(/* turbopackIgnore: true */ filePath, body.content, 'utf-8');
     // 审计失败不应阻断文档写入（后端审计 actor/client_meta 自鉴权与请求自动填充）。
     await auditDevDoc(req, 'dev-docs.update', { slug, size: body.content.length }).catch(() => {});
     return NextResponse.json({ ok: true, slug });
@@ -149,12 +149,12 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ slug:
     return jsonError('无效的文档标识', 400);
   }
 
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(/* turbopackIgnore: true */ filePath)) {
     return jsonError('文档不存在', 404);
   }
 
   try {
-    fs.unlinkSync(filePath);
+    fs.unlinkSync(/* turbopackIgnore: true */ filePath);
     // 审计失败不应阻断文档删除（同 PUT 说明）。
     await auditDevDoc(req, 'dev-docs.delete', { slug }).catch(() => {});
     return NextResponse.json({ ok: true, slug });
