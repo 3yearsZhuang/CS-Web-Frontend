@@ -12,15 +12,21 @@
 services:
   # ============ 后端 FastAPI（BFF 转发目标）============
   db:
-    image: postgres:16-alpine
-    container_name: cs-backend-db
+    # 与根编排、后端独立编排保持一致：统一自建 PG18+zhparser 镜像。
+    # 直接用官方 postgres:16-alpine 会静默缺失中文分词能力。
+    build:
+      context: ../../CS-Web-Backend
+      dockerfile: docker/db/Dockerfile
+    image: fztbucs/pg18-zhparser:latest
+    container_name: cs-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DATABASE_NAME:-domefff}
       POSTGRES_USER: ${DATABASE_USER:-postgres}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?请在 ../CS-Web-Backend/.env 中设置 DATABASE_PASSWORD}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # PG18 起官方镜像要求挂载父目录，挂 /data 子路径会拒绝启动
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres} -d ${DATABASE_NAME:-domefff}"]
       interval: 5s
